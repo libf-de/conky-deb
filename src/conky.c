@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: conky.c,v 1.37 2005/08/31 23:18:54 winkj Exp $
+ *  $Id: conky.c,v 1.40 2005/09/11 23:07:28 brenden1 Exp $
  */
 
 #include "conky.h"
@@ -385,7 +385,7 @@ static int special_count;
 static int special_index;	/* used when drawing */
 #endif /* X11 */
 
-#define MAX_GRAPH_DEPTH 512	/* why 512? who knows. */
+#define MAX_GRAPH_DEPTH 256	/* why 256? cause an array of more then 256 doubles seems excessive, and who needs that kind of precision anyway? */
 
 static struct special_t *new_special(char *buf, int t)
 {
@@ -394,18 +394,6 @@ static struct special_t *new_special(char *buf, int t)
 
 	buf[0] = SPECIAL_CHAR;
 	buf[1] = '\0';
-	if (t == GRAPH && specials[special_count].graph == NULL) {
-		if (specials[special_count].width > 0
-		    && specials[special_count].width < MAX_GRAPH_DEPTH)
-			specials[special_count].graph_width = specials[special_count].width - 3;	// subtract 3 for the box
-		else
-			specials[special_count].graph_width =
-			    MAX_GRAPH_DEPTH;
-		specials[special_count].graph =
-		    calloc(specials[special_count].graph_width,
-			   sizeof(double));
-		specials[special_count].graph_scale = 100;
-	}
 	specials[special_count].type = t;
 	return &specials[special_count++];
 }
@@ -552,7 +540,16 @@ static unsigned int adjust_colors(unsigned int color)
 static void new_graph(char *buf, int w, int h, unsigned int first_colour, unsigned int second_colour, double i, int scale, int append)
 {
 	struct special_t *s = new_special(buf, GRAPH);
-	s->width = (w < MAX_GRAPH_DEPTH) ? w : MAX_GRAPH_DEPTH;
+	s->width = w;
+	if (s->graph == NULL) {
+		if (s->width > 0 && s->width < MAX_GRAPH_DEPTH) {
+			s->graph_width = s->width - 3;	// subtract 3 for the box
+		} else {
+			s->graph_width = MAX_GRAPH_DEPTH - 3;
+		}
+		s->graph = malloc(s->graph_width * sizeof(double));
+		s->graph_scale = 100;
+	}
 	s->height = h;
 	s->first_colour = adjust_colors(first_colour);
 	s->last_colour = adjust_colors(second_colour);
@@ -561,9 +558,9 @@ static void new_graph(char *buf, int w, int h, unsigned int first_colour, unsign
 	} else {
 		s->scaled = 1;
 	}
-	if (s->width) {
+	/*if (s->width) {
 		s->graph_width = s->width - 3;	// subtract 3 for rectangle around
-	}
+	}*/
 	if (s->scaled) {
 		s->graph_scale = 1;
 	} else {
@@ -1126,7 +1123,7 @@ if (s[0] == '#') {
 			arg += 4;
 		}
 				(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
-} else {
+			} else {
 	(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
 	obj->data.cpu_index = 0;
 			}
@@ -1298,7 +1295,7 @@ if (s[0] == '#') {
 	if (!arg) {
 		ERR("i2c needs arguments");
 		obj->type = OBJ_text;
-		obj->data.s = strdup("${i2c}");
+		//obj->data.s = strdup("${i2c}");
 		return;
 	}
 
@@ -1309,12 +1306,12 @@ if (s[0] == '#') {
 		obj->data.i2c.fd =
 		    open_i2c_sensor(0, buf2, n, &obj->data.i2c.arg,
 				    obj->data.i2c.devtype);
-		strcpy(obj->data.i2c.type, buf2);
+		strncpy(obj->data.i2c.type, buf2, 63);
 	} else {
 		obj->data.i2c.fd =
 		    open_i2c_sensor(buf1, buf2, n, &obj->data.i2c.arg,
 				    obj->data.i2c.devtype);
-		strcpy(obj->data.i2c.type, buf2);
+		strncpy(obj->data.i2c.type, buf2, 63);
 	}
 
 	END OBJ(top, INFO_TOP)
@@ -1323,7 +1320,7 @@ if (s[0] == '#') {
 	if (!arg) {
 		ERR("top needs arguments");
 		obj->type = OBJ_text;
-		obj->data.s = strdup("${top}");
+		//obj->data.s = strdup("${top}");
 		return;
 	}
 	if (sscanf(arg, "%63s %i", buf, &n) == 2) {
@@ -2784,11 +2781,11 @@ static void generate_text()
 				}
 				seconds = tmp;
 				if (days > 0)
-					snprintf(p, n, "%i days %i:%i:%2i",
+					snprintf(p, n, "%i days %i:%02i:%02i",
 						 days, hours, minutes,
 						 seconds);
-				else if (days > 0)
-					snprintf(p, n, "%i:%i:%02i", hours,
+				else if (hours > 0)
+					snprintf(p, n, "%i:%02i:%02i", hours,
 						 minutes, seconds);
 				else
 					snprintf(p, n, "%i:%02i", minutes,
@@ -2813,11 +2810,11 @@ static void generate_text()
 				seconds = tmp;
 				if (days > 0)
 					snprintf(p, n,
-						 "%i days %i:%i:%02i",
+						 "%i days %i:%02i:%02i",
 						 days, hours, minutes,
 						 seconds);
-				else if (days > 0)
-					snprintf(p, n, "%i:%i:%02i", hours,
+				else if (hours > 0)
+					snprintf(p, n, "%i:%02i:%02i", hours,
 						 minutes, seconds);
 				else
 					snprintf(p, n, "%i:%02i", minutes,
@@ -2919,7 +2916,7 @@ static void generate_text()
 					else {
 						obj->data.tail.readlines = 0;
 
-						while (fgets(obj->data.tail.buffer, TEXT_BUFFER_SIZE*4, fp) != NULL) {
+						while (fgets(obj->data.tail.buffer, TEXT_BUFFER_SIZE*20, fp) != NULL) {
 							if (added >= 30) {
 								freelasttail(head);
 							}
@@ -2944,7 +2941,7 @@ static void generate_text()
 							headtmp = headtmp->next;
 							for (i = 1;i < obj->data.tail.wantedlines + 1 && i < obj->data.tail.readlines; i++) {
 								if (headtmp) {
-									strncat(obj->data.tail.buffer, headtmp->data, (TEXT_BUFFER_SIZE * 20 / obj->data.tail.wantedlines) - strlen(obj->data.tail.buffer)); /* without strlen() at the end this becomes a possible */
+									strncat(obj->data.tail.buffer, headtmp->data, (TEXT_BUFFER_SIZE * 20) - strlen(obj->data.tail.buffer)); /* without strlen() at the end this becomes a possible */
 									headtmp = headtmp->next;
 								}
 							}
@@ -2979,7 +2976,7 @@ static void generate_text()
 					}
 					else {
 						obj->data.tail.readlines = 0;
-						while (fgets(obj->data.tail.buffer, TEXT_BUFFER_SIZE*4, fp) != NULL && obj->data.tail.readlines <= obj->data.tail.wantedlines) {
+						while (fgets(obj->data.tail.buffer, TEXT_BUFFER_SIZE*20, fp) != NULL && obj->data.tail.readlines <= obj->data.tail.wantedlines) {
 							addtail(&head, obj->data.tail.buffer);
 							obj->data.tail.readlines++;
 						}
@@ -2995,7 +2992,7 @@ static void generate_text()
 							strcpy(obj->data.tail.buffer, headtmp->data);
 							headtmp = headtmp->next;
 							while (headtmp) {
-								strncat(obj->data.tail.buffer, headtmp->data, (TEXT_BUFFER_SIZE * 20 / obj->data.tail.wantedlines) - strlen(obj->data.tail.buffer)); /* without strlen() at the end this becomes a possible */
+								strncat(obj->data.tail.buffer, headtmp->data, (TEXT_BUFFER_SIZE * 20) - strlen(obj->data.tail.buffer)); /* without strlen() at the end this becomes a possible */
 								headtmp = headtmp->next;
 							}
 							freetail(freetmp);
@@ -3850,8 +3847,9 @@ static void clear_text(int exposures)
 #ifdef XDBE
 	if (use_xdbe) {
 		return;		/* The swap action is XdbeBackground, which clears */
-	}
+	} else
 #endif
+	{
 	/* there is some extra space for borders and outlines */
 	XClearArea(display, window.drawable,
 		   text_start_x - border_margin - 1,
@@ -3859,6 +3857,7 @@ static void clear_text(int exposures)
 		   text_width + border_margin * 2 + 2,
 		   text_height + border_margin * 2 + 2,
 		   exposures ? True : 0);
+	}
 }
 #endif /* X11 */
 
@@ -4060,6 +4059,7 @@ static void main_loop()
 						|| ev.xconfigure.y != 0)) {
 						fixed_pos = 1;
 				}*/
+					set_font();
 				}
 				break;
 #endif

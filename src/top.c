@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: top.c,v 1.2 2005/08/25 01:13:01 brenden1 Exp $
+ *  $Id: top.c,v 1.3 2005/09/04 03:43:18 brenden1 Exp $
  */
 
 #include "top.h"
@@ -30,7 +30,7 @@ static struct process *find_process(pid_t pid)
 static struct process *new_process(int p)
 {
 	struct process *process;
-	process = malloc(sizeof(struct process));
+	process = (struct process*)malloc(sizeof(struct process));
 
 	/*
 	 * Do stitching necessary for doubly linked list
