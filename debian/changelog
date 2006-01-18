@@ -1,3 +1,15 @@
+conky (1.3.1-1.1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * High-urgency upload for RC bugfix.
+  * Build-depend on libx11-dev, libxext-dev, libxft-dev, and x-dev instead of
+    on the obsolete xlibs-dev; thanks to Justin Pryzby
+    <justinpryzby@users.sf.net> for testing.  The build-dependency on
+    libxt-dev can be dropped once upstream has moved to a new version of
+    autoconf.  Closes: #346643.
+
+ -- Steve Langasek <vorlon@debian.org>  Wed, 18 Jan 2006 03:44:30 -0800
+
 conky (1.3.1-1) unstable; urgency=low
 
   * New upstream release
