@@ -77,6 +77,13 @@
 </varlistentry>
 
 <varlistentry>
+	<term><command><option>draw_graph_borders</option></command></term>
+	<listitem>
+		Draw borders around graphs?
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
 	<term><command><option>draw_shades</option></command></term>
 	<listitem>
 		Draw shades?
@@ -140,6 +147,20 @@
 	</term>
 	<listitem>
 		Minimum size of window
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>min_port_monitors</option></command></term>
+	<listitem>
+		Allow for the creation of at least this number of port monitors (if 0 or not set, default is 16) 
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>min_port_monitor_connections</option></command></term>
+	<listitem>
+		Allow each port monitor to track at least this many connections (if 0 or not set, default is 256)
 	<para></para></listitem>
 </varlistentry>
 
@@ -230,6 +251,13 @@
 </varlistentry>
 
 <varlistentry>
+	<term><command><option>out_to_console</option></command>
+	</term>
+	<listitem>
+		Print text to stdout.
+		<para></para></listitem>
+</varlistentry>
+<varlistentry>
 	<term><command><option>pad_percents</option></command></term>
 	<listitem>
 		Pad percentages to this many decimals (0 = no padding)
@@ -275,6 +303,20 @@
 	<term><command><option>use_xft</option></command></term>
 	<listitem>
 		Use Xft (anti-aliased font and stuff)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>wm_class_name</option></command></term>
+	<listitem>
+		Manually set the WM_CLASS name.  Defaults to "conky".
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>xmms_player</option></command></term>
+	<listitem>
+		Use specified player/plugin for the xmms status variables.  Valid items are: none, xmms, bmp, audacious and infopipe. (default is none).  Note that bmpx is currently handled separately.
 	<para></para></listitem>
 </varlistentry>
 

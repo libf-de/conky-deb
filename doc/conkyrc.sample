@@ -74,6 +74,9 @@ draw_outline no
 # Draw borders around text
 draw_borders yes
 
+# Draw borders around graphs
+draw_graph_borders yes
+
 # Stippled borders?
 stippled_borders 8
 
@@ -115,7 +118,7 @@ cpu_avg_samples 2
 net_avg_samples 2
 
 # Force UTF8? note that UTF8 support required XFT
-override_utf8_locale no
+override_utf8_locale yes
 
 
 # Add spaces to keep things from moving about?  This only affects certain objects.
@@ -128,6 +131,15 @@ use_spacer no
 
 # boinc (seti) dir
 # seti_dir /opt/seti
+
+# Allow for the creation of at least this number of port monitors (if 0 or not set, default is 16) 
+#min_port_monitors 16
+
+# Allow each port monitor to track at least this many connections (if 0 or not set, default is 256)
+#min_port_monitor_connections 256
+
+# none, xmms, bmp, audacious, infopipe (default is none)
+#xmms_player none
 
 # variable is given either in format $variable or in ${variable}. Latter
 # allows characters right after the variable and must be used in network
@@ -150,8 +162,6 @@ ${color lightgrey}Networking:
 ${color #0000ff}${downspeedgraph eth0 32,150 ff0000 0000ff} ${color #22ccff}${upspeedgraph eth0 32,150 0000ff ff0000}
 ${color lightgrey}File systems:
  / $color${fs_used /}/${fs_size /} ${fs_bar /}
-${color lightgrey}Temperatures:
- CPU:$color ${i2c temp 2}C${color grey} - MB:$color ${i2c temp 1}C
 ${color #88aadd}MPD: ${alignc}$mpd_artist - $mpd_title
 ${color #88aadd}$mpd_bar
 ${color #88aadd}${alignc}$mpd_status
@@ -165,3 +175,25 @@ ${color #ddaa00} ${top_mem name 1} ${top_mem pid 1} ${top_mem cpu 1} ${top_mem m
 ${color lightgrey} ${top_mem name 2} ${top_mem pid 2} ${top_mem cpu 2} ${top_mem mem 2}
 ${color lightgrey} ${top_mem name 3} ${top_mem pid 3} ${top_mem cpu 3} ${top_mem mem 3}
 ${tail /var/log/Xorg.0.log 3 30}
+$stippled_hr
+${color #ddaa00}Port(s)${alignr}#Connections
+$color ALL:     ${alignr}$color ${tcp_portmon 1 65535 count}
+$color mpd:     ${alignr}$color ${tcp_portmon 6600 6600 count}
+$color sshd:    ${alignr}$color ${tcp_portmon 9229 9229 count}
+$color torrent: ${alignr}$color ${tcp_portmon 6881 6999 count}
+${color #ddaa00}Remote Address ${alignr} Local Service/Port$color
+ ${tcp_portmon 1 65535 rhost 0} ${alignr} ${tcp_portmon 1 65535 lservice 0}
+ ${tcp_portmon 1 65535 rhost 1} ${alignr} ${tcp_portmon 1 65535 lservice 1}
+ ${tcp_portmon 1 65535 rhost 2} ${alignr} ${tcp_portmon 1 65535 lservice 2}
+ ${tcp_portmon 1 65535 rhost 3} ${alignr} ${tcp_portmon 1 65535 lservice 3}
+ ${tcp_portmon 1 65535 rhost 4} ${alignr} ${tcp_portmon 1 65535 lservice 4}
+ ${tcp_portmon 1 65535 rhost 5} ${alignr} ${tcp_portmon 1 65535 lservice 5}
+ ${tcp_portmon 1 65535 rhost 6} ${alignr} ${tcp_portmon 1 65535 lservice 6}
+ ${tcp_portmon 1 65535 rhost 7} ${alignr} ${tcp_portmon 1 65535 lservice 7}
+ ${tcp_portmon 1 65535 rhost 8} ${alignr} ${tcp_portmon 1 65535 lservice 8}
+ ${tcp_portmon 1 65535 rhost 9} ${alignr} ${tcp_portmon 1 65535 lservice 9}
+ ${tcp_portmon 1 65535 rhost 10} ${alignr} ${tcp_portmon 1 65535 lservice 10}
+ ${tcp_portmon 1 65535 rhost 11} ${alignr} ${tcp_portmon 1 65535 lservice 11}
+ ${tcp_portmon 1 65535 rhost 12} ${alignr} ${tcp_portmon 1 65535 lservice 12}
+ ${tcp_portmon 1 65535 rhost 13} ${alignr} ${tcp_portmon 1 65535 lservice 13}
+ ${tcp_portmon 1 65535 rhost 14} ${alignr} ${tcp_portmon 1 65535 lservice 14}

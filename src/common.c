@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: common.c,v 1.5 2005/08/30 14:59:37 winkj Exp $
+ *  $Id: common.c,v 1.16 2006/01/08 14:51:47 pkovacs Exp $
  */
 
 #include "conky.h"
@@ -27,7 +27,7 @@ double get_time()
 {
 	struct timeval tv;
 	gettimeofday(&tv, 0);
-	return tv.tv_sec + tv.tv_usec / 1000000.0;
+	return tv.tv_sec + (tv.tv_usec / 1000000.0);
 }
 
 FILE *open_file(const char *file, int *reported)
@@ -35,7 +35,7 @@ FILE *open_file(const char *file, int *reported)
 	FILE *fp = fopen(file, "r");
 	if (!fp) {
 		if (!reported || *reported == 0) {
-			CRIT_ERR("can't open %s: %s", file, strerror(errno));
+			ERR("can't open %s: %s", file, strerror(errno));
 			if (reported)
 				*reported = 1;
 		}
@@ -205,8 +205,7 @@ void update_stuff()
 	if (NEED(INFO_MAIL))
 		update_mail_count();
 
-	if (NEED(INFO_TOP))
-		update_top();
+
 
 #if defined(__linux__)
 	if (NEED(INFO_I8K))
@@ -227,23 +226,40 @@ void update_stuff()
 	if (NEED(INFO_MPD))
 		update_mpd();
 #endif
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+	if (NEED(INFO_XMMS))
+		update_xmms();
+#endif
+#ifdef BMPX
+	if (NEED(INFO_BMPX))
+                update_bmpx();
+#endif
 
 	if (NEED(INFO_LOADAVG))
 		update_load_average();
 
-	if ((NEED(INFO_MEM) || NEED(INFO_BUFFERS)) &&
+
+	if ((NEED(INFO_MEM) || NEED(INFO_BUFFERS) || NEED(INFO_TOP)) &&
 	    current_update_time - last_meminfo_update > 6.9) {
 		update_meminfo();
-		if (no_buffers)
+		if (no_buffers) {
 			info.mem -= info.bufmem;
+		}
 		last_meminfo_update = current_update_time;
 	}
+
+	if (NEED(INFO_TOP))
+		update_top();
 
 	/* update_fs_stat() won't do anything if there aren't fs -things */
 	if (NEED(INFO_FS) && current_update_time - last_fs_update > 12.9) {
 		update_fs_stats();
 		last_fs_update = current_update_time;
 	}
+#ifdef TCP_PORT_MONITOR
+	if (NEED(INFO_TCP_PORT_MONITOR))
+		update_tcp_port_monitor_collection( info.p_tcp_port_monitor_collection );
+#endif
 }
 
 int round_to_int(float f)

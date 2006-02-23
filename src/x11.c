@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: x11.c,v 1.8 2005/09/11 23:07:28 brenden1 Exp $
+ *  $Id: x11.c,v 1.16 2006/01/26 19:57:12 pkovacs Exp $
  */
 
 
@@ -17,6 +17,8 @@
 #include <X11/Xft/Xft.h>
 #endif
 
+#include <stdio.h>
+
 #ifdef XDBE
 int use_xdbe;
 #endif
@@ -24,6 +26,8 @@ int use_xdbe;
 #ifdef XFT
 int use_xft = 0;
 #endif
+
+#define WINDOW_NAME_FMT "%s - conky" 
 
 /* some basic X11 stuff */
 Display *display;
@@ -171,9 +175,9 @@ inline void set_transparent_background(Window win)
 }
 
 #if defined OWN_WINDOW
-void init_window(int own_window, int w, int h, int l, int fixed_pos, int set_trans, int back_colour)
+void init_window(int own_window, char* wm_class_name, int w, int h, int l, int fixed_pos, int set_trans, int back_colour, char * nodename)
 #else
-void init_window(int own_window, int w, int h, int l, int set_trans, int back_colour)
+void init_window(int own_window, int w, int h, int l, int set_trans, int back_colour, char * nodename)
 #endif
 {
 	/* There seems to be some problems with setting transparent background (on
@@ -181,6 +185,7 @@ void init_window(int own_window, int w, int h, int l, int set_trans, int back_co
 	 * happens but I bet the bug is somewhere here. */
 	set_transparent = set_trans;
 	background_colour = back_colour;
+	char * window_name = NULL;
 #ifdef OWN_WINDOW
 	if (own_window) {
 
@@ -197,16 +202,26 @@ void init_window(int own_window, int w, int h, int l, int set_trans, int back_co
 						      CopyFromParent,	/* class */
 						      CopyFromParent,	/* visual */
 						      CWBackPixel, &attrs);
+/*			XWMHints wmhints;
 
-			class_hints.res_class = "conky";
-			class_hints.res_name = "conky";
+			this doesn't work properly
+
+			wmhints.flags = StateHint;
+			wmhints.initial_state = WithdrawnState;
+			XSetWMHints(display, window.window, &wmhints);*/
+
+
+
+			class_hints.res_class = wm_class_name;
+			class_hints.res_name = wm_class_name;
 			XSetClassHint(display, window.window,
 				      &class_hints);
 
 			/*set_transparent_background(window.window);*/
-
-			XStoreName(display, window.window, "conky");
-
+			window_name = (char *) malloc(strlen(WINDOW_NAME_FMT) + strlen(nodename)+1);
+		        sprintf(window_name, WINDOW_NAME_FMT, nodename);
+			XStoreName(display, window.window, window_name);
+			free(window_name);
 			XClearWindow(display, window.window);
 
 			if (!fixed_pos)
@@ -235,16 +250,72 @@ void init_window(int own_window, int w, int h, int l, int set_trans, int back_co
 						(unsigned char *) &prop,
 						1);
 			}
+
+			/* PHK: Use EWMH window type NORMAL for _NET_WM_WINDOW_TYPE. 
+                           For XFCE 4+, keeps the window from going under the desktop. */
+			a = XInternAtom(display, "_NET_WM_WINDOW_TYPE", True);
+			if (a != None) {
+				Atom prop = XInternAtom(display, "_NET_WM_WINDOW_TYPE_NORMAL", True);
+				XChangeProperty(display, window.window, a,
+						XA_ATOM, 32,
+						PropModeReplace,
+						(unsigned char *) &prop,
+						1);
+			}
+
+			/* PHK: Add EWMH hint STICKY to _NET_WM_STATE */
+			a = XInternAtom(display, "_NET_WM_STATE", True);
+			if (a != None) {
+				Atom prop = XInternAtom(display, "_NET_WM_STATE_STICKY", True);
+				XChangeProperty(display, window.window, a,
+						XA_ATOM, 32,
+						PropModeAppend,
+						(unsigned char *) &prop,
+						1);
+			}
+
+			/* PHK: Add EWMH hint SKIP_TASKBAR to _NET_WM_STATE */
+			a = XInternAtom(display, "_NET_WM_STATE", True);
+			if (a != None) {
+				Atom prop = XInternAtom(display, "_NET_WM_STATE_SKIP_TASKBAR", True);
+				XChangeProperty(display, window.window, a,
+						XA_ATOM, 32,
+						PropModeAppend,
+						(unsigned char *) &prop,
+						1);
+			}
+
+			/* PHK: Add EWMH hint SKIP_PAGER to _NET_WM_STATE */
+			a = XInternAtom(display, "_NET_WM_STATE", True);
+			if (a != None) {
+				Atom prop = XInternAtom(display, "_NET_WM_STATE_SKIP_PAGER", True);
+				XChangeProperty(display, window.window, a,
+						XA_ATOM, 32,
+						PropModeAppend,
+						(unsigned char *) &prop,
+						1);
+			}
+
 			if(l) {
-			/* make sure the layer is on the bottom */
-         a = XInternAtom(display, "_WIN_LAYER", True);
-         if (a != None) {
-            long prop = 0;
-            XChangeProperty(display, window.window, a,
-            XA_CARDINAL, 32,
-            PropModeReplace,
-            (unsigned char *) &prop, 1);
-         }
+				/* make sure the layer is on the bottom */
+         			a = XInternAtom(display, "_WIN_LAYER", True);
+         			if (a != None) {
+            				long prop = 0;
+            				XChangeProperty(display, window.window, a,
+            						XA_CARDINAL, 32,
+            						PropModeReplace,
+            						(unsigned char *) &prop, 1);
+         			}
+				/* PHK: also append EWMH hint for BELOW also */
+				a = XInternAtom(display, "_NET_WM_STATE", True);
+				if (a != None) {
+					Atom prop = XInternAtom(display, "_NET_WM_STATE_BELOW", True);
+					XChangeProperty(display, window.window, a,
+						XA_ATOM, 32,
+						PropModeAppend,
+						(unsigned char *) &prop,
+						1);
+				}
 			}
 		}
 
@@ -351,8 +422,17 @@ long get_x11_color(const char *name)
 	color.pixel = 0;
 	if (!XParseColor
 	    (display, DefaultColormap(display, screen), name, &color)) {
-		ERR("can't parse X color '%s'", name);
-		return 0xFF00FF;
+		/* lets check if it's a hex colour with the # missing in front
+		 * if yes, then do something about it
+		 */
+		char newname[64];
+		newname[0] = '#';
+		strncpy(&newname[1], name, 62);
+		/* now lets try again */
+		if (!XParseColor(display, DefaultColormap(display, screen), &newname[0], &color)) {
+			ERR("can't parse X color '%s'", name);
+			return 0xFF00FF;
+		}
 	}
 	if (!XAllocColor
 	    (display, DefaultColormap(display, screen), &color))

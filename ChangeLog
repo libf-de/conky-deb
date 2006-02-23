@@ -1,4 +1,154 @@
-# $Id: ChangeLog,v 1.45 2005/09/11 23:07:26 brenden1 Exp $
+# $Id: ChangeLog,v 1.98 2006/02/13 04:14:16 brenden1 Exp $
+
+2006-02-12
+	* Conky 1.4.0 released
+
+2006-01-27
+	* Cleaned up texeci code
+
+2006-01-26
+	* Added freedesktop.org extended window manager hints (EWMH)
+	for window type NORMAL and state's STICKY/SKIP_PAGER/SKIP_TASKBAR.
+	Fixes stacking order issues with freedesktop-compliant wm's,
+	such as XFCE4+. 
+
+2006-01-25
+	* Fixed stupid graph code (it still sucks) sf.net bug 1372962
+	* Fixed $if_* stuff, sf.net bug 1401338 and 1400854
+	* Fixed xmms.c code to load glib 1.2 shared object lib.
+
+2006-01-11
+	* Added xmms version 1 support.
+	* Added bmp through 0.9.7.1 support.
+	* Added config item xmms_player: none, xmms, bmp, audacious or
+	infopipe.
+
+2006-01-07
+	* Added Audacious media player support.
+
+2006-01-06
+	* Fixed infopipe bug (select() affects timer as a side effect on
+	Linux!)
+
+2006-01-05
+	* Added draw_graph_borders option
+	* Added XMMS/BMP InfoPipe plugin support
+
+2006-01-01
+	* Conky 1.3.5 released
+
+2005-12-31
+	* Fixed bug with use_xft causing ignorance of font selection (sf.net
+	bug 1387564)
+	* Fixed issue with parsing of hex values for colours
+
+2005-12-30
+	* Added BMPx (http://beep-media-player.org/) support
+
+2005-12-14
+	* Fixed issues with execi stuff
+
+2005-12-10
+	* Added sf.net patch 1374576
+
+2005-12-05
+	* Fixed sf.net bug 1367745
+
+2005-11-30
+	* Fixed sf.net bugs 1369607, 1367735 and gentoo bug 113921, 
+	  all variations of the same array out of bounds issue.
+	* "Fixed" code in fs.c and conky.c to make fs stats match those displayed by df (affects reporting against ext3 filesystems only)
+
+2005-11-27 
+	* new code in linux.c and top.c to calculate CPU % correctly on 2.6 kernels.
+
+2005-11-24
+	* Fixed gentoo bug# 113219
+
+2005-11-23
+	* Added #define/#undef SIGNAL_BLOCKING in conky.c for experimenting
+	with synchronous signal processing. set to #undef for previous behavior.
+	* Use POSIX signal api's, not the ANSI signal().
+
+2005-11-22
+	* Fixed IP address bug (sf.net bug 1359055)
+
+2005-11-16
+	* Conky 1.3.4 released
+
+2005-11-12
+	* Replaced bitwise copy of tcp_connection_t with function
+	copy_tcp_connection().
+	* Changed call interfaces for get_acpi_fan(), get_acpi_ac_adapter(),   
+	get_freq(), get_freq_dynamic(), get_adt746x_cpu(), get_adt746x_fan(),
+	eliminating all mallocs.  pkovacs.  See bug 1355470.
+
+2005-11-11
+	* moved hash sizing code into portmon lib, where it belongs
+	* More mem leaks fixed.
+
+2005-11-10
+	* Added config items min_port_monitors / min_port_monitor_connections
+
+2005-11-09
+	* Cleaned up top code, bug fixes
+	* Fixed some memory leaks
+
+2005-11-08
+	* Fix bug# 1351686.  Patch by boojit.
+	* Fixed 1331576 (I think) with bad cpu usage reporting
+
+2005-11-01
+	* Documentation updates for compiling and port monitoring
+	* Removed cairo stuff (it's useless)
+
+2005-10-31
+	* Added statfs sf.net patch 1344493
+
+2005-10-30
+	* Added tcp port monitor support (pkovacs)
+
+2005-10-28
+	* Added WM_CLASS patch from sf.net patch 1340825
+
+2005-10-21
+	* acpi segfault should be fixed (sf.net bug 1330893)
+	* SIGUSR1 bug fixed? (sf.net bug 1330914)
+
+2005-10-17
+	* Ugly MPD mem leak fixed
+	* Other mem leaks fixed
+	* Fixed thing where conky exits if LC_ALL and friends isn't set
+	* Conky 1.3.3 released
+
+2005-10-13
+	* Conky 1.3.2 released
+
+2005-10-10
+	* More MPD objects (sf.net patch 1319461)
+
+2005-10-07
+	* fixed mldonkey bug? sf.net bug 1316531
+
+2005-09-30
+	* Linkstatus patch from btlee on f.g.o (see
+	http://forums.gentoo.org/viewtopic-p-2765647.html#2765647)
+
+2005-09-29
+	* Fixed build on FreeBSD for non-i386
+	* Made it so top_mem doesn't show all the forks of one process
+
+2005-09-27
+	* Fixed small bug in config parsing (thanks robgrady, bug 1306032)
+
+2005-09-24
+	* Fixed bug where graphs/bars don't show when maximum_width is enabled
+
+2005-09-15
+	* Fixed right-alignment bug thanks to Pascal Eberhard
+	* Applied patch 1291420 from sf.net
+	* Fixed issue with whack graph data
+	* Fixed issue with Conky quitting when a file fails to load
 
 2005-09-11
 	* Fixed bug with xft and double buffer in own window
@@ -196,7 +346,8 @@
 =========================================================================
 	
 2005-06-21
-	* Version 1.0. Conky is born from the ashes of torsmo. Main site: http://conky.rty.ca/
+	* Version 1.0. Conky is born from the ashes of torsmo. Main site:
+	http://conky.sf.net/
 	* Added xwin patch
 	* Added new feature for sample averaging of CPU and net info
 
