@@ -29,7 +29,7 @@
    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    
-   $Id: libmpdclient.h,v 1.1 2005/08/21 22:10:54 brenden1 Exp $
+   $Id: libmpdclient.h 548 2006-03-07 04:23:55Z brenden1 $
 
 */
 
@@ -502,6 +502,9 @@ extern "C" {
  * returns 0 if advanced to the next list_OK,
  * returns -1 if it advanced to an OK or ACK */
 	int mpd_nextListOkCommand(mpd_Connection * connection);
+
+/* handles SIGPIPE from full close on the server side */
+	void mpd_signalHandler(int);
 
 #ifdef __cplusplus
 }

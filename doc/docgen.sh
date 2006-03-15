@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: docgen.sh,v 1.4 2005/08/24 20:42:15 jtan325 Exp $
+# $Id: docgen.sh 165 2005-08-24 20:42:15Z jtan325 $
 
 xsltproc http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl docs.xml > docs.html
 

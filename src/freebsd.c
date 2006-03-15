@@ -1,7 +1,7 @@
 /** freebsd.c
  * Contains FreeBSD specific stuff
  *
- * $Id: freebsd.c,v 1.21 2005/12/08 13:20:29 mirrorbox Exp $
+ * $Id: freebsd.c 586 2006-03-12 23:26:12Z brenden1 $
  */
 
 #include <fcntl.h>
@@ -273,9 +273,19 @@ void get_cpu_count()
 {
 	int cpu_count = 0;	
 
+	/* XXX
+	 * FreeBSD doesn't allow to get per CPU load stats
+	 * on SMP machines. It's possible to get a CPU count,
+	 * but as we fulfil only info.cpu_usage[0], it's better
+	 * to report there's only one CPU. It should fix some bugs
+	 * (e.g. cpugraph)
+	 */
+#if 0
 	if (GETSYSCTL("hw.ncpu", cpu_count) == 0)
 		info.cpu_count = cpu_count;
-
+#endif
+	info.cpu_count = 1;
+	
 	info.cpu_usage = malloc(info.cpu_count * sizeof(float));
 	if (info.cpu_usage == NULL)
 		CRIT_ERR("malloc");

@@ -4,7 +4,7 @@
  *
  *  Reference: RFC 959
  *
- *  $Id: ftp.h,v 1.1 2005/08/21 22:10:54 brenden1 Exp $
+ *  $Id: ftp.h 130 2005-08-21 22:10:54Z brenden1 $
  */
 
 #ifndef __MIRRORS_FTP_H__

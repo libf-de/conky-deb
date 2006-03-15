@@ -1,7 +1,7 @@
 /* linux.c
  * Contains linux specific code
  *
- *  $Id: linux.c,v 1.38 2005/11/27 16:42:49 boojit Exp $
+ *  $Id: linux.c 553 2006-03-07 06:39:25Z brenden1 $
  */
 
 
@@ -861,11 +861,21 @@ void get_freq( char * p_client_buffer, size_t client_buffer_size, char * p_forma
 #if defined(__i386) || defined(__x86_64)
 		if (strncmp(s, "cpu MHz", 7) == 0) {	//and search for the cpu mhz
 #else
+#if defined(__alpha)
+		if (strncmp(s, "cycle frequency [Hz]", 20) == 0) {		// different on alpha
+#else
 		if (strncmp(s, "clock", 5) == 0) {	// this is different on ppc for some reason
-#endif
+#endif // defined(__alpha)
+#endif // defined(__i386) || defined(__x86_64)
+
 		strcpy(frequency, strchr(s, ':') + 2);	//copy just the number
+#if defined(__alpha)
+		frequency[strlen(frequency) - 6] = '\0';// strip " est.\n"
+		freq = strtod(frequency, NULL)/1000000; // kernel reports in Hz 
+#else
 		frequency[strlen(frequency) - 1] = '\0'; // strip \n
 		freq = strtod(frequency, NULL);
+#endif
 		break;
 		}
 	}
@@ -1109,11 +1119,9 @@ void get_battery_stuff(char *buf, unsigned int n, const char *bat)
 					char b[256];
 					if (fgets(b, 256, fp) == NULL)
 						break;
-
-					if (sscanf
-					    (b, "last full capacity: %d",
-					     &acpi_last_full) != 0)
+					if (sscanf(b, "last full capacity: %d", &acpi_last_full) != 0) {
 						break;
+					}
 				}
 
 				fclose(fp);
@@ -1174,12 +1182,6 @@ void get_battery_stuff(char *buf, unsigned int n, const char *bat)
 		/* charged */
 		/* thanks to Lukas Zapletal <lzap@seznam.cz> */
 		else if (strcmp(charging_state, "charged") == 0) {
-			if (acpi_last_full != 0
-			    && remaining_capacity != acpi_last_full)
-				sprintf(last_battery_str, "charged %d%%",
-					remaining_capacity * 100 /
-					acpi_last_full);
-			else
 				strcpy(last_battery_str, "charged");
 		}
 		/* unknown, probably full / AC */

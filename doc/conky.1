@@ -1,5 +1,5 @@
 .\" -*- coding: us-ascii -*-
-.TH conky 1 2006-02-12  
+.TH conky 1 2006-03-12  
 .SH NAME
 conky \- A system monitor for X originally based on the torsmo code, but more kickass. It just keeps on given'er. Yeah.
 .SH SYNOPSIS
@@ -26,14 +26,14 @@ For users compiling from source, make sure you have the X development libraries 
 This should be a package along the lines of "libx11-dev or xorg-x11-dev". 
 .PP
 Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
-There is also usually an up-to-date ebuild within Conky's package or in CVS.
+There is also usually an up-to-date ebuild within Conky's package or in Svn.
 .PP
 Debian,etc. users -- Conky will be in Debian's repositories soon (by mid-September, hopefully), and then 
 Ubuntu shortly thereafter. Until then, "dpkg -i" the .deb package to install. 
 .PP
 Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
 .TP 
-\fBsh autogen.sh\fR \fB# Only required if building from CVS\fR 
+\fBsh autogen.sh\fR \fB# Only required if building from Svn\fR 
 .TP 
 \fB\&./configure \fR\fB\-\-prefix=/usr \-\-mandir=/usr/share/man \-\-infodir=/usr/share/info \-\-datadir=/usr/share \-\-sysconfdir=/etc \-\-localstatedir=/var/lib \-\-enable\-xft \-\-enable\-seti \-\-enable\-double\-buffer \-\-enable\-own\-window \-\-enable\-proc\-uptime \-\-enable\-mpd \-\-enable\-mldonkey \-\-enable\-x11 \-\-enable\-portmon \-\-enable\-xmms \-\-enable\-bmp \-\-enable\-audacious \-\-enable\-infopipe \-\-enable\-bmpx \fR
 .TP 
@@ -263,8 +263,22 @@ Boolean, create own window to draw?
 Boolean, set pseudo-transparency?
 
 .TP 
+\fBown_window_type\fR
+if own_window is yes, you may specify type normal, desktop or override (default: normal).
+Desktop windows are special windows that have no window decorations; are always visible 
+on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
+Override windows are not under the control of the window manager. Hints are ignored. This type
+of window can be useful for certain situations.
+
+.TP 
 \fBown_window_colour\fR \fBcolour\fR 
 If own_window_transparent no, set a specified background colour (defaults to black). Takes either a hex value (#ffffff) or a valid RGB name (see /usr/lib/X11/rgb.txt)
+
+.TP 
+\fBown_window_hints\fR \fBundecorated,below,above,sticky,skip_taskbar,skip_pager\fR 
+If own_window is yes, you may use these window manager hints to affect the way conky displays. 
+Notes: Use own_window_type desktop as another way to implement many of these hints implicitly.
+If you use own_window_type override, window manager hints have no meaning and are ignored.
 
 .TP 
 \fBout_to_console\fR 
@@ -669,6 +683,10 @@ Prints the MPD name field
 .TP 
 \fBmpd_file\fR 
 Prints the file name of the current MPD song
+
+.TP 
+\fBmpd_smart\fR 
+Prints the song name in either the form "artist - title" or file name, depending on whats available
 
 .TP 
 \fBnew_mails\fR 

@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: fs.c,v 1.4 2005/12/01 06:32:14 boojit Exp $
+ *  $Id: fs.c 436 2005-12-01 06:32:14Z boojit $
  */
 
 #include "conky.h"

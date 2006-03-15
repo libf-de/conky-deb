@@ -1,3 +1,11 @@
+conky (1.4.1-0.1) unstable; urgency=low
+
+  * NMU for a general bugfix release.
+  * Enable portmon code (closes: #344235).
+  * Enable mldonkey code (closes: #335543).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Wed, 15 Mar 2006 18:55:07 +0000
+
 conky (1.4.0-0.1) unstable; urgency=low
 
   * NMU for new upstream release.

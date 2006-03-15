@@ -1,4 +1,33 @@
-# $Id: ChangeLog,v 1.98 2006/02/13 04:14:16 brenden1 Exp $
+# $Id: ChangeLog 564 2006-03-08 05:48:34Z brenden1 $
+
+2006-03-12
+	* FreeBSD cpu info patch
+	* Conky 1.4.1 released
+
+2006-03-07
+	* Fixed issue where some WM's don't control conky own_window windows.
+	* Added newly-updated vim file detection and syntax hilighting files to svn.
+	* Fixed issue with graphs resetting colours (sf.net bug #1420473)
+
+2006-03-06
+	* Fixed battery problems when charged
+	* MPD code handles broken pipe now, instead of just killing conky
+	* Switch from CVS to SVN.  Thanks SourceForge.
+
+2006-03-05
+	* Added patch to make $cpu stuff work on alpha (thanks Thomas Cort)
+	http://bugs.gentoo.org/show_bug.cgi?id=122637#c3
+	* Stop using override_redirect true -- conky back under WM control
+	when using 'own_window yes'.
+	* Fixed texeci breakage when forking to background is on
+
+2006-02-14
+	* Drastically simplified own_window=yes window creation code.
+	* on_bottom and wm_class_name deprecated (they do nothing)
+
+2006-02-13
+	* Fixed typo bug in portmon code that caused incorrect monitor data 
+	to be displayed.
 
 2006-02-12
 	* Conky 1.4.0 released

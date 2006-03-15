@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 1.28 2005/12/30 09:44:39 mirrorbox Exp $
+# $Id: AUTHORS 540 2006-03-06 00:33:32Z brenden1 $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -138,6 +138,9 @@ Roman Bogorodskiy <novel at clublife dot ru>
 
 Szymon Boniecki
   Reads current LC_TIME
+
+Thomas Cort
+  CPU frequency patch for alpha
 
 Toni <bleach at users dot sourceforge dot net>
   exec*/tail/head output evalution

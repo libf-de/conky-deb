@@ -1,7 +1,7 @@
 /** bmpx.c
  * BMPx client
  *
- * $Id: bmpx.c,v 1.7 2006/01/12 01:22:14 brenden1 Exp $
+ * $Id: bmpx.c 499 2006-01-12 01:22:14Z brenden1 $
  */
 
 #include <dbus/dbus-glib.h>

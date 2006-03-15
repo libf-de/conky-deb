@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: conky.h,v 1.43 2006/02/13 02:28:46 brenden1 Exp $
+ *  $Id: conky.h 570 2006-03-09 02:28:38Z pkovacs $
  */
 
 #ifndef _conky_h_
@@ -299,8 +299,26 @@ char tmpstring2[TEXT_BUFFER_SIZE];
 
 #define ATOM(a) XInternAtom(display, #a, False)
 
+#ifdef OWN_WINDOW
+enum _window_type {
+        TYPE_NORMAL = 0,
+        TYPE_DESKTOP,
+	TYPE_OVERRIDE
+};
+
+enum _window_hints {
+	HINT_UNDECORATED = 0,
+	HINT_BELOW,
+	HINT_ABOVE,
+	HINT_STICKY,
+	HINT_SKIP_TASKBAR,
+	HINT_SKIP_PAGER
+};
+#define SET_HINT(mask,hint)	(mask |= (1<<hint))
+#define TEST_HINT(mask,hint)	(mask & (1<<hint))
+#endif
 struct conky_window {
-	Window window;
+	Window root,window,desktop;
 	Drawable drawable;
 	GC gc;
 #ifdef XDBE
@@ -313,8 +331,11 @@ struct conky_window {
 	int width;
 	int height;
 #ifdef OWN_WINDOW
+	char wm_class_name[256];
 	int x;
 	int y;
+	unsigned int type;
+	unsigned long hints;
 #endif
 };
 
@@ -337,11 +358,8 @@ extern int workarea[4];
 extern struct conky_window window;
 
 void init_X11();
-#if defined OWN_WINDOW
-void init_window(int use_own_window, char* wm_class_name, int width, int height, int on_bottom, int fixed_pos, int set_trans, int back_colour, char * nodename);
-#else
-void init_window(int use_own_window, int width, int height, int on_bottom, int set_trans, int back_colour, char * nodename);
-#endif
+void init_window(int use_own_window, int width, int height, int set_trans, int back_colour, char * nodename,
+		 char **argv, int argc);
 void create_gc();
 void set_transparent_background(Window win);
 long get_x11_color(const char *);

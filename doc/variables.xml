@@ -512,7 +512,7 @@
 	<option></option>
 	</term>
 	<listitem>
-		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in celsius, as reported by /proc/i8k.
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Celsius, as reported by /proc/i8k.
 	<para></para></listitem>
 </varlistentry>
 
@@ -522,7 +522,7 @@
 	<option></option>
 	</term>
 	<listitem>
-		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in farenheit, as reported by /proc/i8k.
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Farenheit, as reported by /proc/i8k.
 	<para></para></listitem>
 </varlistentry>
 
@@ -833,6 +833,15 @@
 	</term>
 	<listitem>
 		Prints the file name of the current MPD song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_smart</option></command>
+	</term>
+	<listitem>
+		Prints the song name in either the form "artist - title" or file name, depending on whats available
 	<para></para></listitem>
 </varlistentry>
 
@@ -1171,7 +1180,7 @@
 		<option>(pixels)</option>
 	</term>
 	<listitem>
-		Change verticle offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
+		Change vertical offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
 		<para></para></listitem>
 </varlistentry>
 

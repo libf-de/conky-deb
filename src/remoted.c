@@ -3,7 +3,7 @@
 *
 * This program is licensed under BSD license, read COPYING
 *
-*  $Id: remoted.c,v 1.2 2005/08/26 03:26:23 brenden1 Exp $
+*  $Id: remoted.c 188 2005-08-26 03:26:23Z brenden1 $
 */
 
 #include <pthread.h>
