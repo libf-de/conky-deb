@@ -1,3 +1,11 @@
+conky (1.4.1-1) unstable; urgency=low
+
+  * New maintainer. (Closes: #357341)
+  * ACK previous NMUs. (Closes: #346643, #335543, #344235, #348967, 
+                                #345951, #352909)
+  
+ -- Bartosz Fenski <fenio@debian.org>  Sat, 18 Mar 2006 00:29:47 +0100
+
 conky (1.4.1-0.2) unstable; urgency=low
 
   * NMU to fix sigaction related compilation problem on 64 bit archs.
