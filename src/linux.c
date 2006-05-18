@@ -1,7 +1,7 @@
 /* linux.c
  * Contains linux specific code
  *
- *  $Id: linux.c 553 2006-03-07 06:39:25Z brenden1 $
+ *  $Id: linux.c 623 2006-04-23 21:37:59Z brenden1 $
  */
 
 
@@ -719,7 +719,12 @@ double get_i2c_info(int *fd, int div, char *devtype, char *type)
 	}
 }
 
-#define ADT746X_FAN "/sys/devices/temperatures/cpu_fan_speed"
+/* Prior to kernel version 2.6.12, the CPU fan speed was available
+ * in ADT746X_FAN_OLD, whereas later kernel versions provide this
+ * information in ADT746X_FAN.
+ */
+#define ADT746X_FAN "/sys/devices/temperatures/sensor1_fan_speed"
+#define ADT746X_FAN_OLD "/sys/devices/temperatures/cpu_fan_speed"
 
 void get_adt746x_fan( char * p_client_buffer, size_t client_buffer_size )
 {
@@ -730,14 +735,16 @@ void get_adt746x_fan( char * p_client_buffer, size_t client_buffer_size )
 	if ( !p_client_buffer || client_buffer_size <= 0 )
 		return;
 
-	fp = open_file(ADT746X_FAN, &rep);
-	if (!fp) 
+	if ((fp = open_file(ADT746X_FAN, &rep)) == NULL
+	         && (fp = open_file(ADT746X_FAN_OLD, &rep)) == NULL)
+
 	{
 		sprintf(adt746x_fan_state, "adt746x not found");
 	}
 	else
 	{
-		fscanf(fp, "%s", adt746x_fan_state);
+		fgets(adt746x_fan_state, sizeof(adt746x_fan_state), fp);
+		adt746x_fan_state[strlen(adt746x_fan_state) - 1] = 0;
 		fclose(fp);
 	}
 
@@ -745,7 +752,12 @@ void get_adt746x_fan( char * p_client_buffer, size_t client_buffer_size )
 	return;
 }
 
-#define ADT746X_CPU "/sys/devices/temperatures/cpu_temperature"
+/* Prior to kernel version 2.6.12, the CPU temperature was found
+ * in ADT746X_CPU_OLD, whereas later kernel versions provide this
+ * information in ADT746X_CPU.
+ */
+#define ADT746X_CPU "/sys/devices/temperatures/sensor1_temperature"
+#define ADT746X_CPU_OLD "/sys/devices/temperatures/cpu_temperature"
 
 void get_adt746x_cpu( char * p_client_buffer, size_t client_buffer_size )
 {
@@ -756,8 +768,8 @@ void get_adt746x_cpu( char * p_client_buffer, size_t client_buffer_size )
 	if ( !p_client_buffer || client_buffer_size <= 0 )
 		return;
 	
-	fp = open_file(ADT746X_CPU, &rep);
-	if (!fp)
+	if ((fp = open_file(ADT746X_CPU, &rep)) == NULL
+		 && (fp = open_file(ADT746X_CPU_OLD, &rep)) == NULL)
 	{
 		sprintf(adt746x_cpu_state, "adt746x not found");
 	}
@@ -1227,6 +1239,112 @@ void get_battery_stuff(char *buf, unsigned int n, const char *bat)
 	snprintf(buf, n, "%s", last_battery_str);
 }
 
+/* On Apple powerbook and ibook:
+$ cat /proc/pmu/battery_0
+flags      : 00000013
+charge     : 3623
+max_charge : 3720
+current    : 388
+voltage    : 16787
+time rem.  : 900
+$ cat /proc/pmu/info
+PMU driver version     : 2
+PMU firmware version   : 0c
+AC Power               : 1
+Battery count          : 1
+*/
+
+/* defines as in <linux/pmu.h> */
+#define PMU_BATT_PRESENT        0x00000001
+#define PMU_BATT_CHARGING       0x00000002
+
+static FILE* pmu_battery_fp;
+static FILE* pmu_info_fp;
+static char pb_battery_info[3][32];
+static double pb_battery_info_update;
+ 
+#define PMU_PATH "/proc/pmu"
+void get_powerbook_batt_info(char *buf, size_t n, int i)
+{
+        static int rep;
+        const char* batt_path = PMU_PATH "/battery_0";
+        const char* info_path = PMU_PATH "/info";
+        int flags, charge, max_charge, ac = -1;
+        long time = -1;
+
+        /* don't update battery too often */
+        if (current_update_time - pb_battery_info_update < 29.5) {
+                snprintf(buf, n, "%s", pb_battery_info[i]);
+                return;
+        }
+        pb_battery_info_update = current_update_time;
+
+        if (pmu_battery_fp == NULL)
+                pmu_battery_fp = open_file(batt_path, &rep);
+
+        if (pmu_battery_fp != NULL) {
+        	rewind(pmu_battery_fp);
+                while (!feof(pmu_battery_fp)) {
+                        char buf[32];
+                        if (fgets(buf, sizeof(buf), pmu_battery_fp) == NULL)
+                                break;
+
+                        if (buf[0] == 'f')
+                                sscanf(buf, "flags      : %8x", &flags);
+                        else if (buf[0] == 'c' && buf[1] == 'h')
+                                sscanf(buf, "charge     : %d", &charge);
+                        else if (buf[0] == 'm')
+                                sscanf(buf, "max_charge : %d", &max_charge);
+                        else if (buf[0] == 't')
+                                sscanf(buf, "time rem.  : %ld", &time);
+                }
+        }
+        if (pmu_info_fp == NULL)
+                pmu_info_fp = open_file(info_path, &rep);
+
+        if (pmu_info_fp != NULL) {
+        	rewind(pmu_info_fp);
+                while (!feof(pmu_info_fp)) {
+                        char buf[32];
+                        if (fgets(buf, sizeof(buf), pmu_info_fp) == NULL)
+                                break;
+                        if (buf[0] == 'A')
+                                sscanf(buf, "AC Power               : %d", &ac);
+                }
+        }
+        /* update status string */
+        if ((ac && !(flags & PMU_BATT_PRESENT)))
+                strcpy(pb_battery_info[PB_BATT_STATUS], "AC");
+        else if (ac && (flags & PMU_BATT_PRESENT)
+                  && !(flags & PMU_BATT_CHARGING))
+                strcpy(pb_battery_info[PB_BATT_STATUS], "charged");
+        else if ((flags & PMU_BATT_PRESENT)
+                && (flags & PMU_BATT_CHARGING))
+                strcpy(pb_battery_info[PB_BATT_STATUS], "charging");
+        else
+                strcpy(pb_battery_info[PB_BATT_STATUS], "discharging");
+
+        /* update percentage string */
+        if (time == 0)
+                pb_battery_info[PB_BATT_PERCENT][0] = 0; 
+        else
+                snprintf(pb_battery_info[PB_BATT_PERCENT],
+                        sizeof(pb_battery_info[PB_BATT_PERCENT]),
+                        "%d%%", (charge * 100)/max_charge);
+
+        /* update time string */
+        if (time == 0) /* fully charged or battery not present */
+                pb_battery_info[PB_BATT_TIME][0] = 0; 
+        else if (time < 60*60) /* don't show secs */
+                format_seconds_short(pb_battery_info[PB_BATT_TIME],
+                        sizeof(pb_battery_info[PB_BATT_TIME]), time);
+        else
+                format_seconds(pb_battery_info[PB_BATT_TIME],
+                        sizeof(pb_battery_info[PB_BATT_TIME]), time);
+
+        snprintf(buf, n, "%s", pb_battery_info[i]);
+}
+
 void update_top()
 {
 	show_nice_processes = 1;
@@ -1305,3 +1423,227 @@ void update_diskio()
 	diskio_value = tot;
 }
 
+/* Here come the IBM ACPI-specific things. For reference, see
+ http://ibm-acpi.sourceforge.net/README
+If IBM ACPI is installed, /proc/acpi/ibm contains the following files:
+bay
+beep
+bluetooth
+brightness
+cmos
+dock
+driver
+ecdump
+fan
+hotkey
+led
+light
+thermal
+video
+volume
+The content of these files is described in detail in the aforementioned
+README - some of them also in the following functions accessing them.
+Peter Tarjan (ptarjan@citromail.hu)
+*/
+
+#define IBM_ACPI_DIR "/proc/acpi/ibm"
+
+void get_ibm_acpi_fan( char * p_client_buffer, size_t client_buffer_size )
+{
+/* get fan speed on IBM/Lenovo laptops running the ibm acpi.
+   /proc/acpi/ibm/fan looks like this (3 lines):
+status:         disabled
+speed:          2944
+commands:       enable, disable
+Peter Tarjan (ptarjan@citromail.hu)
+*/
+
+    if ( !p_client_buffer || client_buffer_size <= 0 )
+	return;
+    
+    FILE *fp;
+    unsigned int speed=0;
+    char fan[128];
+    snprintf(fan, 127, "%s/fan",IBM_ACPI_DIR);    
+
+    fp = fopen(fan, "r");
+    if (fp != NULL)
+    {
+	while (!feof(fp))
+	{
+	    char line[256];
+	    if (fgets(line, 255, fp) == NULL) break;
+	    if (sscanf(line, "speed: %d", &speed)) break;	
+	}
+    }
+    else 
+    {
+	CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove ibm* from your Conky config file.", fan, strerror(errno));
+    }
+
+    fclose(fp);
+    snprintf( p_client_buffer, client_buffer_size, "%d", speed );
+    return;
+    
+}    
+
+static double last_ibm_acpi_temp_time;
+void get_ibm_acpi_temps()
+{
+/* get the measured temperatures from the temperature sensors 
+   on IBM/Lenovo laptops running the ibm acpi.
+   There are 8 values in /proc/acpi/ibm/thermal, and according to 
+   http://ibm-acpi.sourceforge.net/README
+   these mean the following (at least on an IBM R51...)
+0:  CPU (also on the T series laptops)
+1:  Mini PCI Module (?)
+2:  HDD (?)
+3:  GPU (also on the T series laptops)
+4:  Battery (?)
+5:  N/A
+6:  Battery (?)
+7:  N/A 
+   I'm not too sure about those with the question mark, but the values I'm 
+   reading from *my* thermal file (on a T42p) look realistic for the 
+   hdd and the battery. 
+   #5 and #7 are always -128. 
+   /proc/acpi/ibm/thermal looks like this (1 line):
+temperatures:   41 43 31 46 33 -128 29 -128
+Peter Tarjan (ptarjan@citromail.hu)
+*/
+
+/*    don't update too often */
+    if (current_update_time - last_ibm_acpi_temp_time < 10.00) 
+    {
+	return;
+    }
+    last_ibm_acpi_temp_time = current_update_time; 
+    
+/*    if ( !p_client_buffer || client_buffer_size <= 0 )
+      return; */
+
+    FILE *fp;
+
+    char thermal[128];
+    snprintf(thermal, 127, "%s/thermal",IBM_ACPI_DIR);    
+    fp = fopen(thermal, "r");
+
+    if (fp != NULL)
+    {
+	while (!feof(fp))
+	{
+	    char line[256];
+	    if (fgets(line, 255, fp) == NULL) break;
+	    if (sscanf(line, "temperatures: %d %d %d %d %d %d %d %d",
+		       &ibm_acpi.temps[0], &ibm_acpi.temps[1],
+		       &ibm_acpi.temps[2], &ibm_acpi.temps[3],
+		       &ibm_acpi.temps[4], &ibm_acpi.temps[5], 
+		       &ibm_acpi.temps[6], &ibm_acpi.temps[7])) break;
+	}
+    }
+    else 
+    {
+	CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove ibm* from your Conky config file.", thermal, strerror(errno));
+    }
+
+    fclose(fp);
+
+}	       
+
+
+void get_ibm_acpi_volume( char * p_client_buffer, size_t client_buffer_size )
+{
+
+/* get volume (0-14) on IBM/Lenovo laptops running the ibm acpi.
+   "Volume" here is none of the mixer volumes, but a "master of masters"
+   volume adjusted by the IBM volume keys.
+   /proc/acpi/ibm/fan looks like this (4 lines):
+level:          4
+mute:           off
+commands:       up, down, mute
+commands:       level <level> (<level> is 0-15)
+Peter Tarjan (ptarjan@citromail.hu)
+*/
+    
+    if ( !p_client_buffer || client_buffer_size <= 0 )
+	return;
+    
+    FILE *fp;
+
+    char volume[128];
+    snprintf(volume, 127, "%s/volume",IBM_ACPI_DIR);    
+    unsigned int vol=-1;
+    char mute[3]="";
+
+    fp = fopen(volume, "r");
+    if (fp != NULL)
+    {
+	while (!feof(fp))
+	{
+	    char line[256];
+	    if (fgets(line, 255, fp) == NULL) break;
+	    if (sscanf(line, "level: %d", &vol)) continue;
+	    if (sscanf(line, "mute: %s", mute)) break;
+	}
+    }
+    else 
+    {
+	CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove ibm* from your Conky config file.", volume, strerror(errno));
+    }
+
+    fclose(fp);
+
+    if (strcmp(mute, "on")==0)
+    {
+	snprintf( p_client_buffer, client_buffer_size, "%s", "mute" );
+	return;
+    }
+    else
+    {
+	snprintf( p_client_buffer, client_buffer_size, "%d", vol );
+	return;
+    }
+
+}
+
+/*static FILE *fp=NULL;*/
+
+void get_ibm_acpi_brightness(char * p_client_buffer, size_t client_buffer_size)
+{
+/* get LCD brightness on IBM/Lenovo laptops running the ibm acpi.
+   /proc/acpi/ibm/brightness looks like this (3 lines):
+level:          7
+commands:       up, down
+commands:       level <level> (<level> is 0-7)
+Peter Tarjan (ptarjan@citromail.hu)
+*/
+
+    if ( !p_client_buffer || client_buffer_size <= 0 )
+	return;
+
+    FILE *fp;
+    unsigned int brightness=0;
+    char filename[128];
+    snprintf(filename, 127, "%s/brightness",IBM_ACPI_DIR);    
+
+    fp = fopen(filename, "r");
+    if (fp != NULL)
+    {
+	while (!feof(fp))
+	{
+	    char line[256];
+	    if (fgets(line, 255, fp) == NULL) break;
+	    if (sscanf(line, "level: %d", &brightness)) break;	
+	}
+    }
+    else 
+    {
+	CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove ibm* from your Conky config file.", filename, strerror(errno));
+    }
+
+    fclose(fp);
+
+    snprintf( p_client_buffer, client_buffer_size, "%d", brightness );
+    return;
+    
+}    

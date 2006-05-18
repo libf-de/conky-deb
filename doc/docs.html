@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id260923"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id225654"></a><h2>Description</h2><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id224729"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id224788"></a><h2>Description</h2><p>
     Conky is a system monitor for X originally based on the torsmo code. 
     Since it's original conception, Conky has changed a fair bit from it's predecessor.  
     Conky can display just about anything, either on your root desktop or in it's own window.  
@@ -9,7 +9,7 @@
 		Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches.
 		</p><p>
 		Thanks for your interest in Conky.
-		</p></div><div class="refsect1" lang="en"><a name="id225675"></a><h2>Compiling</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id224809"></a><h2>Compiling</h2><p>
 		For users compiling from source, make sure you have the X development libraries installed. 
 		This should be a package along the lines of "libx11-dev or xorg-x11-dev". 
 		</p><p>
@@ -41,7 +41,7 @@
 			--disable-own-window to configure -script.
 		</p><p>
 			
-		</p></div><div class="refsect1" lang="en"><a name="id243218"></a><h2>You Should Know</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id224917"></a><h2>You Should Know</h2><p>
 		Conky is generally very good on resources.  However, certain objects in
 		Conky are harder on resources then others.  In particular, the $tail,
 		$top, $font, and $graph objects are quite costly in comparison to the rest of Conky.
@@ -54,7 +54,7 @@
 		</p><p>
 		IMPORTANT: For previous Conky users, Conky 1.3 no longer supports the metar stuff. 
 		mdsplib was causing way too many problems. Hopefully there'll be a better solution in Conky 2.x...
-		</p></div><div class="refsect1" lang="en"><a name="id243244"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span><strong class="command"><code class="option">-v | -V</code></strong></span></span></dt><dd>
+		</p></div><div class="refsect1" lang="en"><a name="id224942"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span><strong class="command"><code class="option">-v | -V</code></strong></span></span></dt><dd>
     Prints version and exits
     <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-a </code></strong></span><code class="option">ALIGNMENT</code></span></dt><dd>
       Text alignment on screen, {top,bottom}_{left,right} or none
@@ -80,7 +80,7 @@
       X position
     <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-y </code></strong></span><code class="option">Y_COORDINATE</code></span></dt><dd>
       Y position
-    <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id224913"></a><h2>Configuration Settings</h2><p>
+    <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id225176"></a><h2>Configuration Settings</h2><p>
 		Default configuration file is $HOME/.conkyrc (can be changed from
 		conky.c among other things). See conkyrc.sample. If installing from Debian package, 
 		this should be in /usr/share/doc/conky/examples ("gunzip conkyrc.sample.gz" to get conkyrc.sample).
@@ -92,7 +92,7 @@
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">background</code></strong></span></span></dt><dd>
 		Boolean value, if true, Conky will be forked to background when started
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">on_bottom</code></strong></span></span></dt><dd>
-		Set conky on the bottom of all other applications
+		Set Conky on the bottom of all other applications
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">border_margin</code></strong></span></span></dt><dd>
 		Border margin in pixels
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">border_width</code></strong></span></span></dt><dd>
@@ -121,6 +121,8 @@
 		Gap between right or left border of screen, same as passing -x at command line
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">gap_y</code></strong></span></span></dt><dd>
 		Gap between top or bottom border of screen, same as passing -y at command line
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">imap</code></strong></span></span></dt><dd>
+		Default global IMAP server.  Arguments are: "host user pass [-i interval] [-f folder] [-p port] [-e command]".  Default port is 143, default folder is 'INBOX', default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">no_buffers</code></strong></span></span></dt><dd>
 		Substract (file system) buffers from used memory?
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">mail_spool</code></strong></span></span></dt><dd>
@@ -172,7 +174,7 @@
 		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_hints</code></strong></span>
                 <code class="option">undecorated,below,above,sticky,skip_taskbar,skip_pager</code>
 	</span></dt><dd>
-		If own_window is yes, you may use these window manager hints to affect the way conky displays.  
+		If own_window is yes, you may use these window manager hints to affect the way Conky displays.  
 		Notes: Use own_window_type desktop as another way to implement many of these hints implicitly.
 		If you use own_window_type override, window manager hints have no meaning and are ignored.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">out_to_console</code></strong></span>
@@ -180,6 +182,8 @@
 		Print text to stdout.
 		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">pad_percents</code></strong></span></span></dt><dd>
 		Pad percentages to this many decimals (0 = no padding)
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">pop3</code></strong></span></span></dt><dd>
+		Default global POP3 server.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">stippled_borders</code></strong></span></span></dt><dd>
 		Border stippling (dashing) in pixels
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">total_run_times</code></strong></span></span></dt><dd>
@@ -194,11 +198,15 @@
 		Use Xft (anti-aliased font and stuff)
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">wm_class_name</code></strong></span></span></dt><dd>
 		Manually set the WM_CLASS name.  Defaults to "conky".
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">xftalpha</code></strong></span></span></dt><dd>
+		Alpha of Xft font.  Must be a value at or between 1 and 0.
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">xftfont</code></strong></span></span></dt><dd>
+		Xft font to use.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">xmms_player</code></strong></span></span></dt><dd>
 		Use specified player/plugin for the xmms status variables.  Valid items are: none, xmms, bmp, audacious and infopipe. (default is none).  Note that bmpx is currently handled separately.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">TEXT</code></strong></span></span></dt><dd>
 		After this begins text to be formatted on screen
-	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id269146"></a><h2>Variables</h2><p>
+	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id226906"></a><h2>Variables</h2><p>
 		Colors are parsed using XParsecolor(), there might be a list of them:
 		/usr/X11R6/lib/X11/rgb.txt. Also, <a href="http://sedition.com/perl/rgb.html" target="_top">
 																			 http://sedition.com/perl/rgb.html</a>.
@@ -375,9 +383,9 @@
 		Same as execigraph, but takes an interval arg graphs values
 		<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">font</code></strong></span>
-	<code class="option">font</code>
+	<code class="option">(font)</code>
 	</span></dt><dd>
-		Specify a different font. Only applies to one line.
+		Specify a different font. This new font will apply to the current line and everything following.  You can use a $font with no arguments to change back to the default font (much like with $color)
 	<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">freq</code></strong></span>
 		</span></dt><dd>
@@ -429,6 +437,16 @@
 	<code class="option">(height)</code>
 	</span></dt><dd>
 		Horizontal line, height is the height in pixels
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">iconv_start</code></strong></span>
+	<code class="option">codeset_from codeset_to</code>
+	</span></dt><dd>
+		Convert text from one codeset to another using GNU iconv.  Needs to be stopped with iconv_stop.
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">iconv_stop</code></strong></span>
+	<code class="option"></code>
+	</span></dt><dd>
+		Stop iconv codeset conversion.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">i2c</code></strong></span>
 	<code class="option">(dev) type n</code>
@@ -504,6 +522,16 @@
 	<code class="option">(mountpoint)</code>
 	</span></dt><dd>
 		if MOUNTPOINT is mounted, display everything between if_mounted and the matching $endif
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">imap_messages</code></strong></span>
+	<code class="option">(args)</code>
+	</span></dt><dd>
+		Displays the number of messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">imap_unseen</code></strong></span>
+	<code class="option">(args)</code>
+	</span></dt><dd>
+		Displays the number of unseen messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">kernel</code></strong></span>
 	</span></dt><dd>
@@ -621,6 +649,40 @@
 	</span></dt><dd>
 		Change outline color
 	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">pb_battery</code></strong></span>
+		<code class="option">item</code>
+	</span></dt><dd>
+                If running on Apple powerbook/ibook, display
+                information on battery status. The item parameter
+                specifies, what information to display. Exactly one item
+                must be specified. Valid items are:
+		<table class="simplelist" border="0" summary="Simple list"><tr><td><span><strong class="command">status</strong></span>:
+                                Display if battery is fully charged, charging,
+                                discharging or absent (running on AC)
+                        </td></tr><tr><td><span><strong class="command">percent</strong></span>:
+                                Display charge of battery in percent, if
+                                charging or discharging. Nothing will be
+                                displayed, if battery is fully charged
+                                or absent.
+                        </td></tr><tr><td><span><strong class="command">time</strong></span>:
+                                Display the time remaining until the battery
+                                will be fully charged or discharged at current
+                                rate.  Nothing is displayed, if battery is
+                                absent or if it's present but fully charged
+                                and not discharging.
+                        </td></tr></table><p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">pop3_unseen</code></strong></span>
+	<code class="option">(args)</code>
+	</span></dt><dd>
+		Displays the number of unseen messages in your global POP3 inbox by default.  You can define individual POP3 inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+
+		<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">pop3_used</code></strong></span>
+	<code class="option">(args)</code>
+	</span></dt><dd>
+		Displays the amount of space (in MiB, 2^20) used in your global POP3 inbox by default.  You can define individual POP3 inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+
+		<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">pre_exec</code></strong></span>
 	<code class="option">shell command</code>
 	</span></dt><dd>
@@ -674,8 +736,10 @@
 				</td></tr><tr><td><span><strong class="command">rip</strong></span> - remote ip address
 				</td></tr><tr><td><span><strong class="command">rhost</strong></span> - remote host name 
 				</td></tr><tr><td><span><strong class="command">rport</strong></span> - remote port number
+				</td></tr><tr><td><span><strong class="command">rservice</strong></span> - remote service name from /etc/services
 				</td></tr><tr><td><span><strong class="command">lip</strong></span> - local ip address
 				</td></tr><tr><td><span><strong class="command">lhost</strong></span> - local host name
+				</td></tr><tr><td><span><strong class="command">lport</strong></span> - local port number
 				</td></tr><tr><td><span><strong class="command">lservice</strong></span> - local service name from /etc/services
 				</td></tr></table>The connection index provides you with access to each connection in the port monitor.  The monitor will return information for index values from 0 to n-1 connections.  Values higher than n-1 are simply ignored.  For the "count" item, the connection index must be omitted.  It is required for all other items.
 		<table class="simplelist" border="0" summary="Simple list"><tr><td>Examples:</td></tr><tr><td><span><strong class="command">${tcp_portmon 6881 6999 count}</strong></span> -
@@ -824,8 +888,29 @@
 		<span><strong class="command"><code class="option">xmms_title</code></strong></span>
 	</span></dt><dd>
 		xmms / bmp / audacious / infopipe: title of current tune
-	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id274983"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%m}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id275022"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
-	</div><div class="refsect1" lang="en"><a name="id275035"></a><h2>Bugs</h2><p>	
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">ibm_fan</code></strong></span>
+	</span></dt><dd>
+		If running the IBM ACPI, displays the fan speed.
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">ibm_temps</code></strong></span>
+		<code class="option">N</code>
+	</span></dt><dd>
+		If running the IBM ACPI, displays the temperatures
+		from the IBM temperature sensors (N=0..7) Sensor 0 is
+		on the CPU, 3 is on the GPU.
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">ibm_volume</code></strong></span>
+	</span></dt><dd>
+		If running the IBM ACPI, displays the "master" volume,
+	controlled by the volume keys (0-14).
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">ibm_brightness</code></strong></span>
+	</span></dt><dd>
+		If running the IBM ACPI, displays the brigtness of the
+	laptops's LCD (0-7).
+	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id232608"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%m}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id232647"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
+	</div><div class="refsect1" lang="en"><a name="id232658"></a><h2>Bugs</h2><p>	
 		Drawing to root or some other desktop window directly doesn't work with 
 		all window managers. Especially doesn't work well with Gnome and it has 
 		been reported that it doesn't work with KDE either. Nautilus can be 
@@ -834,10 +919,10 @@
 		to set some specific window id. You might find xwininfo -tree useful to 
 		find the window to draw to. You can also use -o argument which makes
 		Conky to create its own window.
-		</p></div><div class="refsect1" lang="en"><a name="id275050"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net" target="_top">
+		</p></div><div class="refsect1" lang="en"><a name="id232673"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net" target="_top">
     http://conky.sourceforge.net</a></p><p><a href="http://www.sourceforge.net/projects/conky" target="_top">
     http://www.sourceforge.net/projects/conky</a></p><p>
 			#conky on irc.freenode.net
-		</p></div><div class="refsect1" lang="en"><a name="id275074"></a><h2>Authors</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id232698"></a><h2>Authors</h2><p>
 			The Conky dev team. What's up now!
 		</p></div></div></body></html>

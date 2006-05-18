@@ -1,4 +1,54 @@
-# $Id: ChangeLog 564 2006-03-08 05:48:34Z brenden1 $
+# $Id: ChangeLog 640 2006-05-16 03:50:53Z brenden1 $
+
+2006-05-15
+	* Conky 1.4.2 released
+
+2006-05-13
+	* GNU Iconv support added, new objects $iconv_start and $iconv_stop
+	* Added some safety to the threading code
+
+2006-05-09
+	* Changed $font behavior so that the font persists past the next
+	newline.  It can be set back to the default with $font with no args.
+	(closes bug 1478676 on sf.net)
+
+2006-05-08
+	* Added simple POP3/IMAP mail clients
+
+2006-04-23
+	* Added support for PowerBook batteries
+	* Fixed broken $if/$else stuff
+
+2006-04-15
+	* Added patch from Peter Tarjan to add support for IBM ACPI
+	* Added xmms2 patch from Lassi Selander (sf.net patch 1469523)
+
+2006-04-11
+	* Removed sa_restorer crap (may fix some compile errors for some
+	people)
+
+2006-04-07
+	* Added patch for adt746x fan/cpu speed for kernel >=2.6.12
+
+2006-03-30
+	* Added patch to support new port monitor REMOTESERVICE peekable.
+
+2006-03-29
+	* Scan port numbers as short.  Fixes debian bug# 359974.
+
+2006-03-25
+	* Added XMMS2 patch 1456203 from Lassi Selander
+	* Added FreeBSD battery patch 1456008 from Petr Holub
+
+2006-03-21
+	* Fixed ${top(_mem)} related code on FreeBSD (with help of Petr
+	Holub <hopet@users.sourceforge.net>)
+
+2006-03-15
+	* Removed bmp-infopipe dependency from 1.4.1 and 1.9999 ebuilds for Gentoo 
+	(Gentoo bug# 125226).
+	* Fixed subversion ebuild for conky1 (1.9999) so it pulls the new trunk
+	path for conky1.
 
 2006-03-12
 	* FreeBSD cpu info patch

@@ -1,11 +1,13 @@
-/** bmpx.c
+/*
+ * bmpx.c
  * BMPx client
  *
- * $Id: bmpx.c 499 2006-01-12 01:22:14Z brenden1 $
+ * $Id: bmpx.c 629 2006-05-12 12:41:18Z mirrorbox $
  */
 
+#include <bmp/dbus.h>
 #include <dbus/dbus-glib.h>
-#include <bmpx/dbus.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -22,7 +24,7 @@ void update_bmpx()
 {
 	GError *error = NULL;
 	struct information *current_info = &info;
-	gchar *uri;
+	gint current_track;
 	GHashTable *metadata;
 	
 	if (connected == 0) {
@@ -37,7 +39,7 @@ void update_bmpx()
 		
 		remote_object = dbus_g_proxy_new_for_name(bus,
 			BMP_DBUS_SERVICE,
-			BMP_DBUS_PATH_SYSTEMCONTROL,
+			BMP_DBUS_PATH,
 			BMP_DBUS_INTERFACE);
 		if (!remote_object) {
 			ERR("BMPx error 2: %s\n", error->message);
@@ -48,18 +50,17 @@ void update_bmpx()
 	} 
 	
 	if (connected == 1) {
-		if (dbus_g_proxy_call(remote_object, "GetCurrentUri", &error,
+		if (dbus_g_proxy_call(remote_object, "GetCurrentTrack", &error,
 					G_TYPE_INVALID,
-					G_TYPE_STRING, &uri, G_TYPE_INVALID)) {
-			current_info->bmpx.uri = uri;
+					G_TYPE_INT, &current_track, G_TYPE_INVALID)) {
 		} else {
 			ERR("BMPx error 3: %s\n", error->message);
 			goto fail;
 		}
 	
-		if (dbus_g_proxy_call(remote_object, "GetMetadataForUri", &error,
-				G_TYPE_STRING,
-				uri,
+		if (dbus_g_proxy_call(remote_object, "GetMetadataForListItem", &error,
+				G_TYPE_INT,
+				current_track,
 				G_TYPE_INVALID,
 				DBUS_TYPE_G_STRING_VALUE_HASHTABLE,
 				&metadata,
@@ -81,13 +82,12 @@ void update_bmpx()
 			current_info->bmpx.album = g_value_dup_string(g_hash_table_lookup(metadata, "album"));
 			current_info->bmpx.bitrate = g_value_get_int(g_hash_table_lookup(metadata, "bitrate"));
 			current_info->bmpx.track = g_value_get_int(g_hash_table_lookup(metadata, "track-number"));
+			current_info->bmpx.uri = g_value_get_string(g_hash_table_lookup(metadata, "location"));
 		} else {
 			ERR("BMPx error 4: %s\n", error->message);
 			goto fail;
 		}
 		
-		if (uri)
-			free(uri);
 		g_hash_table_destroy(metadata);
 	} else {
 fail: 

@@ -4,17 +4,18 @@
  *
  *  Reference: RFC 959
  *
- *  $Id: ftp.c 130 2005-08-21 22:10:54Z brenden1 $
+ *  $Id: ftp.c 594 2006-03-16 13:55:39Z jasper_la $
  */
 
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
+
+#include <netdb.h>
 #include <resolv.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <netdb.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "ftp.h"
 
@@ -193,7 +194,7 @@ int checkFtpResponse(void)
 }
 
 /*
- * Send the user authentification
+ * Send the user authentication
  */
 
 int sendUser(void)
@@ -213,7 +214,7 @@ int sendUser(void)
 }
 
 /*
- * Send the password authentification
+ * Send the password authentication
  */
 
 int sendPasswd(void)
@@ -261,7 +262,7 @@ int connectFtp(const char *server, int port)
 	int res;
 
 	/*
-	 * do the blocking DNS query.
+	 * Do the blocking DNS query.
 	 */
 	hp = gethostbyname(server);
 	if (hp == NULL)

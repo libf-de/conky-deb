@@ -237,7 +237,7 @@ void *xmms_thread_func_dynamic(void *pvoid)
 	    break;
 		    
     case (PROJECT_BMP) :
-	    handle = dlopen("libbeep.so.2", RTLD_LAZY);
+	    handle = dlopen("libbeep.so", RTLD_LAZY);
 	    if (!handle) {
 		 ERR("unable to open libbeep.so");
 		 pthread_exit(NULL);

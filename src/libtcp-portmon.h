@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005  Philip Kovacs kovacsp3@comcast.net
  *
- * $Id: libtcp-portmon.h 437 2005-12-05 23:50:08Z pkovacs $
+ * $Id: libtcp-portmon.h 615 2006-03-30 18:14:18Z pkovacs $
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,15 +23,18 @@
 #ifndef LIBTCP_PORTMON_H
 #define LIBTCP_PORTMON_H
 
-#include <math.h>
-#include <netdb.h>
+#include <sys/socket.h>
+
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+
+#include <math.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+
 #include "hash.h"
 
 /* ------------------------------------------------------------------------------------------------
@@ -80,7 +83,7 @@
  * ------------------------------------------------------------------- */
 
 /* The inventory of peekable items within the port monitor. */
-enum tcp_port_monitor_peekables { COUNT=0, REMOTEIP, REMOTEHOST, REMOTEPORT, LOCALIP, LOCALHOST, LOCALPORT, LOCALSERVICE };
+enum tcp_port_monitor_peekables { COUNT=0, REMOTEIP, REMOTEHOST, REMOTEPORT, REMOTESERVICE, LOCALIP, LOCALHOST, LOCALPORT, LOCALSERVICE };
 
 /* ------------------------------------------------------------------------
  * A single tcp connection 

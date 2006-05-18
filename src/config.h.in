@@ -15,9 +15,6 @@
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
-/* Define to 1 if you have the <bmpx/dbus.h> header file. */
-#undef HAVE_BMPX_DBUS_H
-
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
 
@@ -29,6 +26,9 @@
 
 /* Define if you have getloadavg */
 #undef HAVE_GETLOADAVG
+
+/* Define if you have the iconv() function. */
+#undef HAVE_ICONV
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -105,6 +105,9 @@
 /* Xdbe */
 #undef HAVE_XDBE
 
+/* Define as const if the declaration of iconv() needs const. */
+#undef ICONV_CONST
+
 /* Define for InfoPipe support */
 #undef INFOPIPE
 
@@ -158,6 +161,9 @@
 
 /* Define for XMMS Ver. 1 support */
 #undef XMMS
+
+/* Define if you want XMMS2 support */
+#undef XMMS2
 
 /* Define to 1 if the X Window System is missing or not being used. */
 #undef X_DISPLAY_MISSING

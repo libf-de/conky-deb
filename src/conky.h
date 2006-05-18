@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: conky.h 570 2006-03-09 02:28:38Z pkovacs $
+ *  $Id: conky.h 633 2006-05-14 04:49:55Z brenden1 $
  */
 
 #ifndef _conky_h_
@@ -24,6 +24,8 @@
 #if defined(__FreeBSD__)
 #include <sys/mount.h>
 #include <sys/ucred.h>
+#include <fcntl.h>
+#include <kvm.h>
 #endif /* __FreeBSD__ */
 
 #ifdef X11
@@ -44,6 +46,10 @@
 #include "xmms.h"
 #endif
 
+#ifdef XMMS2
+#include <xmmsclient/xmmsclient.h>
+#endif
+
 #define TOP_CPU 1
 #define TOP_NAME 2
 #define TOP_PID 3
@@ -60,15 +66,6 @@ fprintf(stderr, "Conky: " s "\n", ##varargs)
 /* critical error */
 #define CRIT_ERR(s, varargs...) \
 { fprintf(stderr, "Conky: " s "\n", ##varargs);  exit(EXIT_FAILURE); }
-
-/* in sys/param.h
-#ifndef MIN
-#define MIN(a,b) (a>b ? b : a)
-#endif
-#ifndef MAX
-#define MAX(a,b) (a<b ? b : a)
-#endif
-*/
 
 struct i8k_struct {
 	char *version;
@@ -105,6 +102,29 @@ struct fs_stat {
 	long long free;
 };
 
+struct thread_info_s {
+	pthread_t thread;
+	pthread_mutex_t mutex;
+};
+
+struct mail_s {			// for imap and pop3
+	unsigned long unseen;
+	unsigned long messages;
+	unsigned long used;
+	unsigned long quota;
+	unsigned long port;
+	float interval;
+	double last_update;
+	char host[128];
+	char user[128];
+	char pass[128];
+	char command[1024];
+	char folder[128];
+	int pos;
+	struct thread_info_s thread_info;
+	char secure;
+} mail;
+
 /*struct cpu_stat {
 	unsigned int user, nice, system, idle, iowait, irq, softirq;
 	int cpu_avg_samples;
@@ -129,6 +149,29 @@ struct mpd_s {
 	int bitrate;
 	int length;
 	int elapsed;
+};
+#endif
+
+#ifdef XMMS2
+struct xmms2_s {
+    char* artist;
+    char* album;
+    char* title;
+    char* genre;
+    char* comment;
+    char* decoder;
+    char* transport;
+    char* url;
+    char* date;
+    int tracknr;
+    int bitrate;
+    unsigned int id;
+    int duration;
+    int elapsed;
+    float size;
+
+    float progress;
+    char* status;
 };
 #endif
 
@@ -200,6 +243,9 @@ enum {
 #ifdef BMPX
 	INFO_BMPX = 24,
 #endif
+#ifdef XMMS2
+	INFO_XMMS2 = 25,
+#endif
 };
 
 
@@ -235,6 +281,8 @@ struct information {
 	float loadavg[3];
 
 	int new_mail_count, mail_count;
+	struct mail_s* mail;
+	int mail_running;
 #ifdef SETI
 	float seti_prog;
 	float seti_credit;
@@ -242,6 +290,13 @@ struct information {
 #ifdef MPD
 	struct mpd_s mpd;
 	mpd_Connection *conn;
+#endif
+#ifdef XMMS2
+	struct xmms2_s xmms2;
+	int xmms2_conn_state;
+	xmms_socket_t xmms2_fd; 
+	fd_set xmms2_fdset;
+	xmmsc_connection_t *xmms2_conn;
 #endif
 #if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
 	struct xmms_s xmms;
@@ -422,6 +477,19 @@ double get_acpi_temperature(int fd);
 void get_acpi_ac_adapter( char *, size_t ); /* pk */
 void get_acpi_fan( char *, size_t ); /* pk */
 void get_battery_stuff(char *buf, unsigned int n, const char *bat);
+void get_ibm_acpi_fan(char *buf, size_t client_buffer_size);
+void get_ibm_acpi_temps(void);
+void get_ibm_acpi_volume(char *buf, size_t client_buffer_size);
+void get_ibm_acpi_brightness(char *buf, size_t client_buffer_size);
+
+struct ibm_acpi_struct {
+    unsigned int temps[8];
+};
+
+struct ibm_acpi_struct ibm_acpi;
+
+enum { PB_BATT_STATUS, PB_BATT_PERCENT, PB_BATT_TIME};
+void get_powerbook_batt_info(char*, size_t, int);
 
 struct process {
 	struct process *next;
@@ -475,16 +543,25 @@ void update_seti();
 #endif
 
 /* in freebsd.c */
+#if defined(__FreeBSD__)
+kvm_t *kd;
+#endif
+
 #if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
 int apm_getinfo(int fd, apm_info_t aip);
 char *get_apm_adapter(void);
 char *get_apm_battery_life(void);
 char *get_apm_battery_time(void);
 #endif
-/* in mpd.c */
 
+/* in mpd.c */
 #ifdef MPD
 void update_mpd();
+#endif
+
+/* in xmm2.c */
+#ifdef XMMS2
+void update_xmms2();
 #endif
 
 #ifdef MLDONKEY
@@ -525,7 +602,6 @@ int get_mldonkey_status(mldonkey_config * config, mldonkey_info * info);
 /* nothing to see here */
 
 /* in cairo.c */
-
 extern int do_it(void);
 
 #endif

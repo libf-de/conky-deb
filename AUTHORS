@@ -1,4 +1,4 @@
-# $Id: AUTHORS 540 2006-03-06 00:33:32Z brenden1 $
+# $Id: AUTHORS 631 2006-05-13 19:51:26Z brenden1 $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -6,6 +6,9 @@ somebody or email address / name is wrong):
 adi <razorbladeworks at yahoo dot com>
   Outline stuff
   ACPI fan & adapter
+
+Alex <godexsoft at bk dot ru>
+  Iconv patch
 
 affinity <affy at users dot sourceforge dot net>
   X-Mozilla-Status support
@@ -47,8 +50,14 @@ Dennis Kaandorp <addict at quicknet dot nl>
 Elisey O. Savateev <bio3k at softboard dot ru>
   Fixed if_mounted on FreeBSD
 
+Egor(knick_)
+  Iconv patch
+
 Falk Feuersenger <lumberjack at users dot sourceforge dot net>
   I2C divisor from a file
+
+Fanat1k
+  Iconv patch
 
 Gwenhael LE MOINE <cycojesus at yahoo dot fr>
   Manual setting of the position
@@ -100,6 +109,9 @@ Jørgen P. Tjernø <daxxar at mental dot mine dot nu>
 killfire
   fs_used_perc and fs_bar_free patch
 
+Lassi Selander <sleipner at users dot sourceforge dot net>
+  XMMS2 patch
+
 Lauri Hakkarainen <b10nik at users dot sourceforge dot net>
   Some translating, web and other stuff
 
@@ -122,6 +134,13 @@ nathanj439 <nathanj439 at users dot sourceforge dot net>
 
 Pascal Eberhard <pascal dor eberhard at gmail dot com>
   graph and bar fix for right alignment
+
+Peter Tarjan <ptarjan at citromail dot hu>
+  IBM acpi support patch
+  
+Petr Holub <hopet@users.sourceforge.net>  
+  fix autotools on FreeBSD in autogen.sh
+  Improved battery readout on FreeBSD
 
 Philip Kovacs <pkovacs at users dot sourceforge dot net>
   tcp port monitor with hashing functionality
@@ -147,6 +166,10 @@ Toni <bleach at users dot sourceforge dot net>
 
 tyir <tyir at users dot sourceforge dot net>
   MPD features patch 1319461
+
+Vivenzio Pagliari <vivenzio@web.de>
+  Some useful patches for port monitoring
+  PowerBook battery patch
 
 Walt Nelson <wnelsonjr at comcast dot net>
   $freq fix

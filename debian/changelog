@@ -1,3 +1,10 @@
+conky (1.4.2-1) unstable; urgency=low
+
+  * New upstream release.
+    - fixes problems on powerpc. (Closes: #359974)
+
+ -- Bartosz Fenski <fenio@debian.org>  Thu, 18 May 2006 16:20:22 +0200
+
 conky (1.4.1-1) unstable; urgency=low
 
   * New maintainer. (Closes: #357341)
