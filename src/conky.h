@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: conky.h 633 2006-05-14 04:49:55Z brenden1 $
+ *  $Id: conky.h 757 2006-11-12 06:38:21Z mirrorbox $
  */
 
 #ifndef _conky_h_
@@ -17,6 +17,7 @@
 #include <sys/utsname.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <locale.h>
 #include <langinfo.h>
 #include <wchar.h>
@@ -28,22 +29,12 @@
 #include <kvm.h>
 #endif /* __FreeBSD__ */
 
-#ifdef X11
-#if defined(HAVE_CAIRO_H) && defined(HAVE_CAIRO_XLIB_H) && defined(WANT_CAIRO)
-#define CAIRO
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <cairo.h>
-#include <cairo-xlib.h>
-#endif
-#endif /* X11 */
-
 #if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
 #include <machine/apm_bios.h>
 #endif /* __FreeBSD__ */
 
-#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
-#include "xmms.h"
+#ifdef AUDACIOUS
+#include "audacious.h"
 #endif
 
 #ifdef XMMS2
@@ -57,6 +48,9 @@
 
 #define TEXT_BUFFER_SIZE 1280
 #define P_MAX_SIZE ((TEXT_BUFFER_SIZE * 4) - 2) 
+
+/* maximum size of config TEXT buffer, i.e. below TEXT line. */
+#define MAX_USER_TEXT_DEFAULT 16384
 
 #include <sys/socket.h>
 
@@ -175,13 +169,11 @@ struct xmms2_s {
 };
 #endif
 
-#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
-struct xmms_s {
-	unsigned int project_mask;
-	unsigned int current_project;
-	xmms_t items;                   /* e.g. items[XMMS_STATUS] yields char[] */
+#ifdef AUDACIOUS
+struct audacious_s {
+	audacious_t items;              /* e.g. items[AUDACIOUS_STATUS] */
 	int runnable;                   /* used to signal worker thread to stop */
-	pthread_t thread;               /* worker thread for xmms updating */
+	pthread_t thread;               /* worker thread */
 	pthread_attr_t thread_attr;     /* thread attributes */
 	pthread_mutex_t item_mutex;     /* mutex for item array */
 	pthread_mutex_t runnable_mutex; /* mutex for runnable flag */
@@ -211,40 +203,34 @@ enum {
 	INFO_MAIL = 1,
 	INFO_MEM = 2,
 	INFO_NET = 3,
-#ifdef SETI
-	INFO_SETI = 4,
-#endif
-	INFO_PROCS = 5,
-	INFO_RUN_PROCS = 6,
-	INFO_UPTIME = 7,
-	INFO_BUFFERS = 8,
-	INFO_FS = 9,
-	INFO_I2C = 10,
-	INFO_MIXER = 11,
-	INFO_LOADAVG = 12,
-	INFO_UNAME = 13,
-	INFO_FREQ = 14,
+	INFO_PROCS = 4,
+	INFO_RUN_PROCS = 5,
+	INFO_UPTIME = 6,
+	INFO_BUFFERS = 7,
+	INFO_FS = 8,
+	INFO_I2C = 9,
+	INFO_MIXER = 10,
+	INFO_LOADAVG = 11,
+	INFO_UNAME = 12,
+	INFO_FREQ = 13,
 #ifdef MPD
-	INFO_MPD = 15,
+	INFO_MPD = 14,
 #endif
-	INFO_TOP = 16,
-#ifdef MLDONKEY
-	INFO_MLDONKEY = 18,
-#endif
-	INFO_WIFI = 19,
-	INFO_DISKIO = 20,
-	INFO_I8K = 21,
+	INFO_TOP = 15,
+	INFO_WIFI = 16,
+	INFO_DISKIO = 17,
+	INFO_I8K = 18,
 #ifdef TCP_PORT_MONITOR
-        INFO_TCP_PORT_MONITOR = 22,
+        INFO_TCP_PORT_MONITOR = 19,
 #endif
-#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
-	INFO_XMMS = 23,
+#ifdef AUDACIOUS
+	INFO_AUDACIOUS = 20,
 #endif
 #ifdef BMPX
-	INFO_BMPX = 24,
+	INFO_BMPX = 21,
 #endif
 #ifdef XMMS2
-	INFO_XMMS2 = 25,
+	INFO_XMMS2 = 22,
 #endif
 };
 
@@ -283,10 +269,6 @@ struct information {
 	int new_mail_count, mail_count;
 	struct mail_s* mail;
 	int mail_running;
-#ifdef SETI
-	float seti_prog;
-	float seti_credit;
-#endif
 #ifdef MPD
 	struct mpd_s mpd;
 	mpd_Connection *conn;
@@ -298,8 +280,8 @@ struct information {
 	fd_set xmms2_fdset;
 	xmmsc_connection_t *xmms2_conn;
 #endif
-#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
-	struct xmms_s xmms;
+#ifdef AUDACIOUS
+	struct audacious_s audacious;
 #endif
 #ifdef BMPX
 	struct bmpx_s bmpx;
@@ -347,8 +329,7 @@ char tmpstring2[TEXT_BUFFER_SIZE];
 #include <X11/Xft/Xft.h>
 #endif
 
-#if defined(HAVE_XDBE) && defined(DOUBLE_BUFFER)
-#define XDBE
+#ifdef HAVE_XDBE
 #include <X11/extensions/Xdbe.h>
 #endif
 
@@ -376,7 +357,7 @@ struct conky_window {
 	Window root,window,desktop;
 	Drawable drawable;
 	GC gc;
-#ifdef XDBE
+#ifdef HAVE_XDBE
 	XdbeBackBuffer back_buffer;
 #endif
 #ifdef XFT
@@ -394,7 +375,7 @@ struct conky_window {
 #endif
 };
 
-#ifdef XDBE
+#ifdef HAVE_XDBE
 extern int use_xdbe;
 #endif
 
@@ -461,26 +442,28 @@ void update_cpu_usage(void);
 void update_total_processes(void);
 void update_running_processes(void);
 void update_i8k(void);
-void get_freq( char *, size_t, char *, int ); /* pk */
-void get_freq_dynamic( char *, size_t, char *, int ); /* pk */
+char get_freq( char *, size_t, char *, int, unsigned int ); 
+void get_freq_dynamic( char *, size_t, char *, int ); 
+char get_voltage(char *, size_t, char *, int, unsigned int ); /* ptarjan */
 void update_load_average();
 int open_i2c_sensor(const char *dev, const char *type, int n, int *div,
 		    char *devtype);
 double get_i2c_info(int *fd, int arg, char *devtype, char *type);
 
-void get_adt746x_cpu( char *, size_t ); /* pk */
-void get_adt746x_fan( char *, size_t ); /* pk */
+void get_adt746x_cpu( char *, size_t ); 
+void get_adt746x_fan( char *, size_t ); 
 unsigned int get_diskio(void);
 
 int open_acpi_temperature(const char *name);
 double get_acpi_temperature(int fd);
-void get_acpi_ac_adapter( char *, size_t ); /* pk */
-void get_acpi_fan( char *, size_t ); /* pk */
+void get_acpi_ac_adapter( char *, size_t ); 
+void get_acpi_fan( char *, size_t ); 
 void get_battery_stuff(char *buf, unsigned int n, const char *bat);
 void get_ibm_acpi_fan(char *buf, size_t client_buffer_size);
 void get_ibm_acpi_temps(void);
 void get_ibm_acpi_volume(char *buf, size_t client_buffer_size);
 void get_ibm_acpi_brightness(char *buf, size_t client_buffer_size);
+void get_cpu_count();
 
 struct ibm_acpi_struct {
     unsigned int temps[8];
@@ -534,14 +517,6 @@ extern char *current_mail_spool;
 
 void update_mail_count();
 
-/* in seti.c */
-
-#ifdef SETI
-extern char *seti_dir;
-
-void update_seti();
-#endif
-
 /* in freebsd.c */
 #if defined(__FreeBSD__)
 kvm_t *kd;
@@ -559,49 +534,19 @@ char *get_apm_battery_time(void);
 void update_mpd();
 #endif
 
-/* in xmm2.c */
+/* in xmms2.c */
 #ifdef XMMS2
 void update_xmms2();
 #endif
 
-#ifdef MLDONKEY
-/* in mldonkey.c */
-typedef long long int64;
-/* The info necessary to connect to mldonkey. login and password can be NULL. */
-typedef struct mldonkey_config {
-	char *mldonkey_hostname;
-	int mldonkey_port;
-	char *mldonkey_login;
-	char *mldonkey_password;
-} mldonkey_config;
-
-/* The MLDonkey status returned */
-typedef struct mldonkey_info {
-	int64 upload_counter;
-	int64 download_counter;
-	int nshared_files;
-	int64 shared_counter;
-	int tcp_upload_rate;
-	int tcp_download_rate;
-	int udp_upload_rate;
-	int udp_download_rate;
-	int ndownloaded_files;
-	int ndownloading_files;
-	int nconnected_networks;
-	int connected_networks[1];
-} mldonkey_info;
-
-extern mldonkey_info mlinfo;
-extern mldonkey_config mlconfig;
-
-int get_mldonkey_status(mldonkey_config * config, mldonkey_info * info);
-#endif
+/* in hddtemp.c */
+#ifdef HDDTEMP
+int scan_hddtemp(const char *arg, char **dev, char **addr, int *port);
+char *get_hddtemp_info(char *dev, char *addr, int port, char *unit);
+#endif /* HDDTEMP */
 
 /* in linux.c */
 
-/* nothing to see here */
-
-/* in cairo.c */
-extern int do_it(void);
-
 #endif
+
+

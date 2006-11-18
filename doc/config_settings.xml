@@ -14,13 +14,6 @@
 </varlistentry>
 
 <varlistentry>
-	<term><command><option>on_bottom</option></command></term>
-	<listitem>
-		Set Conky on the bottom of all other applications
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
 	<term><command><option>border_margin</option></command></term>
 	<listitem>
 		Border margin in pixels
@@ -49,16 +42,16 @@
 </varlistentry>
 
 <varlistentry>
-	<term><command><option>default_shade_color</option></command></term>
+	<term><command><option>default_outline_color</option></command></term>
 	<listitem>
-		Default shading color and border's shading color
+		Default outline color
 	<para></para></listitem>
 </varlistentry>
 
 <varlistentry>
-	<term><command><option>default_outline_color</option></command></term>
+	<term><command><option>default_shade_color</option></command></term>
 	<listitem>
-		Default outline color
+		Default shading color and border's shading color
 	<para></para></listitem>
 </varlistentry>
 
@@ -84,16 +77,16 @@
 </varlistentry>
 
 <varlistentry>
-	<term><command><option>draw_shades</option></command></term>
+	<term><command><option>draw_outline</option></command></term>
 	<listitem>
-		Draw shades?
+		Draw outlines?
 	<para></para></listitem>
 </varlistentry>
 
 <varlistentry>
-	<term><command><option>draw_outline</option></command></term>
+	<term><command><option>draw_shades</option></command></term>
 	<listitem>
-		Draw outlines?
+		Draw shades?
 	<para></para></listitem>
 </varlistentry>
 
@@ -126,17 +119,20 @@
 </varlistentry>
 
 <varlistentry>
-	<term><command><option>no_buffers</option></command></term>
-	<listitem>
-		Substract (file system) buffers from used memory?
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
 	<term><command><option>mail_spool</option></command></term>
 	<listitem>
 		Mail spool for mail checking
 	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>max_user_text</option></command>
+		<option>bytes</option>
+	</term>
+	<listitem>
+		Maximum size of user text buffer, i.e. layout below TEXT line in config file
+		(default is 16384 bytes)
+		<para></para></listitem>
 </varlistentry>
 
 <varlistentry>
@@ -172,34 +168,6 @@
 </varlistentry>
 
 <varlistentry>
-	<term><command><option>mldonkey_hostname</option></command></term>
-	<listitem>
-		Hostname for mldonkey stuff, defaults to localhost
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term><command><option>mldonkey_port</option></command></term>
-	<listitem>
-		Mldonkey port, 4001 default
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term><command><option>mldonkey_login</option></command></term>
-	<listitem>
-		Mldonkey login, default none
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term><command><option>mldonkey_password</option></command></term>
-	<listitem>
-		Mldonkey password, default none
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
 	<term><command><option>mpd_host</option></command></term>
 	<listitem>
 		Host of MPD server
@@ -224,6 +192,13 @@
 	<term><command><option>net_avg_samples</option></command></term>
 	<listitem>
 		The number of samples to average for net data
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>no_buffers</option></command></term>
+	<listitem>
+		Substract (file system) buffers from used memory?
 	<para></para></listitem>
 </varlistentry>
 
@@ -360,13 +335,6 @@
 	<term><command><option>xftfont</option></command></term>
 	<listitem>
 		Xft font to use.
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term><command><option>xmms_player</option></command></term>
-	<listitem>
-		Use specified player/plugin for the xmms status variables.  Valid items are: none, xmms, bmp, audacious and infopipe. (default is none).  Note that bmpx is currently handled separately.
 	<para></para></listitem>
 </varlistentry>
 

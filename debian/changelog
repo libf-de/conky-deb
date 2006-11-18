@@ -1,3 +1,10 @@
+conky (1.4.4-1) unstable; urgency=low
+
+  * New upstream release.
+  * COMPILING section has been removed from manpage. (Closes: #368176) 
+
+ -- Bartosz Fenski <fenio@debian.org>  Sat, 18 Nov 2006 11:18:46 +0100
+
 conky (1.4.2-1) unstable; urgency=low
 
   * New upstream release.

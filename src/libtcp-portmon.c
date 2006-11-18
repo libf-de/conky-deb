@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005  Philip Kovacs kovacsp3@comcast.net
  * 
- * $Id: libtcp-portmon.c 615 2006-03-30 18:14:18Z pkovacs $
+ * $Id: libtcp-portmon.c 698 2006-09-01 17:00:53Z pkovacs $
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -827,9 +827,9 @@ void update_tcp_port_monitor_collection(
         /* read all tcp connections */
         while (fgets (buf, sizeof (buf), fp) != NULL) {
 
-                if ( sscanf (buf, "%*d: %lx:%hx %lx:%hx %lx %*x:%*x %*x:%*x %*x %lu %*d %lu",
-                        (unsigned long *)&conn.local_addr, &conn.local_port,
-                        (unsigned long *)&conn.remote_addr, &conn.remote_port,
+                if ( sscanf (buf, "%*d: %x:%hx %x:%hx %lx %*x:%*x %*x:%*x %*x %lu %*d %lu",
+                        (unsigned int *)&conn.local_addr, &conn.local_port,
+                        (unsigned int *)&conn.remote_addr, &conn.remote_port,
                         (unsigned long *)&state, (unsigned long *)&uid, (unsigned long *)&inode) != 7 )
 
                         fprintf( stderr, "/proc/net/tcp: bad file format\n" );
