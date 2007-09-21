@@ -4,7 +4,6 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-
 # These are used for cross-compiling and for saving the configure script
 # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -18,25 +17,48 @@ else
 	CFLAGS += -O2
 endif
 
-config.status:
+DEB_QUILT_PATCHES = debian/patches
+
+patch: debian/patch-stamp
+debian/patch-stamp:
+	QUILT_PATCHES=$(DEB_QUILT_PATCHES) quilt push -a || test $$? = 2
+
+	touch debian/patch-stamp
+
+unpatch: 
+	QUILT_PATCHES=$(DEB_QUILT_PATCHES) quilt pop -a -R || test $$? = 2 
+
+	rm -rf ./.pc
+	rm -f debian/patch-stamp
+
+configure: debian/configure-stamp
+debian/configure-stamp:
 	dh_testdir
-	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --enable-double-buffer   --enable-own-window --enable-proc-uptime --enable-mpd --enable-xft --enable-seti --enable-portmon --enable-mldonkey
+	./configure \
+	  --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
+	  --prefix=/usr \
+	  --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
+	  --enable-debug
+	
+	touch debian/configure-stamp
 
-build: build-stamp
-
-build-stamp: config.status
+build: debian/build-stamp
+debian/build-stamp: debian/configure-stamp debian/patch-stamp
 	dh_testdir
 
 	$(MAKE)
 
-	touch build-stamp
+	touch debian/build-stamp
 
-clean:
+clean: unpatch
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp
-	-$(MAKE) clean
-	-$(MAKE) distclean
+	rm -f debian/build-stamp debian/configure-stamp
+	[ ! -f Makefile ] || $(MAKE) clean
+	# distclean removes configure.ac
+	-cp -p configure.ac debian/
+	[ ! -f Makefile ] || $(MAKE) distclean
+	-mv debian/configure.ac .
 
 	dh_clean 
 
@@ -45,7 +67,7 @@ install: build
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-	perl -pi -e 'BEGIN{undef $$/;} s/\.SH COMPILING.*?(\.SH.*)/$$1/sg' doc/conky.1
+	# perl -pi -e 'BEGIN{undef $$/;} s/\.SH COMPILING.*?(\.SH.*)/$$1/sg' doc/conky.1
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/conky
 
 binary-indep: build install
@@ -69,4 +91,4 @@ binary-arch: build install
 	dh_builddeb
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+.PHONY: build clean binary-indep binary-arch binary install configure patch reverse-patch

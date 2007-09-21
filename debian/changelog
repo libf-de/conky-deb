@@ -1,3 +1,42 @@
+conky (1.4.7-1) unstable; urgency=low
+
+  * New upstream release. Closes: #419066. See NEWS.Debian for
+    more about all the changes since the earlier version.
+  * New maintainer with the permission of earlier maintainer.
+    Thanks to Bartosz Fenski for maintaining this package so far.
+  * debian/watch: added this file pointing to sf.net upstream source.
+  * debian/control:
+    - added quilt to Build-Depends.
+    - added pkg-config, libglib2.0-0 to Build-Depends.
+    - removed libxt-dev from Build-Depends.
+    - updated Standards-Version to 3.7.2. No other changes required.
+  * debian/patches:
+    - ibm_acpi_volume: prevent volume always returning 0. Closes: #415782.
+    - dont_tail_xorglog: default configuration does not try to read
+      /var/log/Xorg.0.log. Closes: #353410, #401200.
+    - move_compile_end_man_page: move COMPILING section to the
+      end of the man page to implement a different fix for #368176.
+    - fix_hyphen_man_page: correct the use of "hyphen-as-minus" in the
+      man page.
+  * debian/rules:
+    - added support for patching/unpatching using quilt.
+    - modified configure rule to build based on current upstream
+      defaults.
+    - removed call to perl that removed COMPILING section from
+      manpage.
+    - changed "clean" target to catch errors from upstream targets
+      "clean" and "distclean".
+  * debian/NEWS: added explanation of new features for this
+    version.
+  * debian/README.Debian: added remarks about configuration issues
+    specific to Debian package.
+  * debian/copyright: rewritten to reflect upstream's work on
+    clarifying provenance of and licenses to the code.
+  * debian/menu: replaced "Apps/Tools" with
+    "Applications/System/Monitoring".
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Fri, 21 Sep 2007 09:24:48 +0530
+
 conky (1.4.4-1) unstable; urgency=low
 
   * New upstream release.

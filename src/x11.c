@@ -1,11 +1,30 @@
 /*
  * Conky, a system monitor, based on torsmo
  *
- * This program is licensed under BSD license, read COPYING
+ * Any original torsmo code is licensed under the BSD license
  *
- *  $Id: x11.c 757 2006-11-12 06:38:21Z mirrorbox $
+ * All code written since the fork of torsmo is licensed under the GPL
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
+ * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *
+ *  $Id: x11.c 904 2007-08-10 19:53:44Z brenden1 $
  */
-
 
 #include "conky.h"
 
@@ -25,8 +44,6 @@ int use_xdbe;
 #ifdef XFT
 int use_xft = 0;
 #endif
-
-#define WINDOW_NAME_FMT "%s - conky" 
 
 /* some basic X11 stuff */
 Display *display;
@@ -185,16 +202,14 @@ inline void set_transparent_background(Window win)
 	//XClearWindow(display, win); not sure why this was here
 }
 
-void init_window(int own_window, int w, int h, int set_trans, int back_colour, char * nodename, 
-		 char **argv, int argc)
+void init_window(int own_window, int w, int h, int set_trans, int back_colour, 
+		             char **argv, int argc)
 {
 	/* There seems to be some problems with setting transparent background (on
 	 * fluxbox this time). It doesn't happen always and I don't know why it
 	 * happens but I bet the bug is somewhere here. */
 	set_transparent = set_trans;
 	background_colour = back_colour;
-
-	nodename = (char *)nodename;
 
 #ifdef OWN_WINDOW
 	if (own_window) {
@@ -245,28 +260,26 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour, c
 			XClassHint classHint;
 			XWMHints wmHint;
 			Atom xa;
-			char window_title[256];
 
 			/* Parent is root window so WM can take control */
 			window.window = XCreateWindow(display, 
 						   window.root, 
-					      	   window.x, window.y, w, h, 0, 
+					     window.x, window.y, w, h, 0, 
 						   CopyFromParent,
 						   InputOutput,
 						   CopyFromParent,
 						   CWBackPixel|CWOverrideRedirect,
 						   &attrs);
 
-			classHint.res_name = window.wm_class_name;
+			classHint.res_name = window.class_name;
 			classHint.res_class = classHint.res_name;
 
 			wmHint.flags = InputHint | StateHint;
-			wmHint.input = False;
+      /* allow decorated windows to be given input focus by WM */
+			wmHint.input = TEST_HINT(window.hints,HINT_UNDECORATED) ? False : True;
 			wmHint.initial_state = NormalState;
 
-			sprintf(window_title,WINDOW_NAME_FMT,nodename);
-
-			XmbSetWMProperties (display, window.window, window_title, NULL, 
+			XmbSetWMProperties (display, window.window, window.title, NULL, 
 					    argv, argc,
 					    NULL, &wmHint, &classHint);
 
@@ -303,7 +316,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour, c
 			
 			/* Window decorations */
 			if (TEST_HINT(window.hints,HINT_UNDECORATED)) {
-			    fprintf(stderr, "Conky: hint - undecorated\n"); fflush(stderr);
+			    /*fprintf(stderr, "Conky: hint - undecorated\n"); fflush(stderr);*/
 
 			    xa = ATOM(_MOTIF_WM_HINTS);
 			    if (xa != None) {
@@ -316,7 +329,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour, c
 
 			/* Below other windows */
 			if (TEST_HINT(window.hints,HINT_BELOW)) {
-			    fprintf(stderr, "Conky: hint - below\n"); fflush(stderr);
+			    /*fprintf(stderr, "Conky: hint - below\n"); fflush(stderr); */
 
          		    xa = ATOM(_WIN_LAYER);
          		    if (xa != None) {
@@ -340,7 +353,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour, c
 
 			/* Above other windows */
 			if (TEST_HINT(window.hints,HINT_ABOVE)) {
-                            fprintf(stderr, "Conky: hint - above\n"); fflush(stderr);
+                            /*fprintf(stderr, "Conky: hint - above\n"); fflush(stderr);*/
 
                             xa = ATOM(_WIN_LAYER);
                             if (xa != None) {
@@ -364,7 +377,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour, c
 
 			/* Sticky */
 			if (TEST_HINT(window.hints,HINT_STICKY)) {
-                            fprintf(stderr, "Conky: hint - sticky\n"); fflush(stderr);
+                            /*fprintf(stderr, "Conky: hint - sticky\n"); fflush(stderr); */
 
                             xa = ATOM(_NET_WM_DESKTOP);
                             if (xa != None) {
@@ -389,7 +402,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour, c
 
 			/* Skip taskbar */
                         if (TEST_HINT(window.hints,HINT_SKIP_TASKBAR)) {
-                            fprintf(stderr, "Conky: hint - skip_taskbar\n"); fflush(stderr);
+                            /*fprintf(stderr, "Conky: hint - skip_taskbar\n"); fflush(stderr);*/
 
                             xa = ATOM(_NET_WM_STATE);
                             if (xa != None) {
@@ -404,7 +417,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour, c
 
 			/* Skip pager */
                         if (TEST_HINT(window.hints,HINT_SKIP_PAGER)) {
-                            fprintf(stderr, "Conky: hint - skip_pager\n"); fflush(stderr);
+                            /*fprintf(stderr, "Conky: hint - skip_pager\n"); fflush(stderr);*/
 
                             xa = ATOM(_NET_WM_STATE);
                             if (xa != None) {

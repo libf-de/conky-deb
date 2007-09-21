@@ -1,20 +1,39 @@
 /*
  * Conky, a system monitor, based on torsmo
  *
- * This program is licensed under BSD license, read COPYING
+ * Any original torsmo code is licensed under the BSD license
  *
- *  $Id: common.c 727 2006-11-05 00:23:18Z pkovacs $
+ * All code written since the fork of torsmo is licensed under the GPL
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
+ * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *
+ *  $Id: common.c 935 2007-08-31 02:05:02Z brenden1 $
  */
 
 #include "conky.h"
-#include "remoted.h"
-#include "remotec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 struct information info;
 
@@ -129,6 +148,11 @@ struct net_stat *get_net_stat(const char *dev)
 	return 0;
 }
 
+void clear_net_stats (void)
+{
+  memset (netstats, 0, sizeof(netstats));
+}
+
 void format_seconds(char *buf, unsigned int n, long t)
 {
 	if (t >= 24 * 60 * 60)	/* hours necessary when there are days? */
@@ -157,6 +181,7 @@ static double last_meminfo_update;
 static double last_fs_update;
 
 unsigned long long need_mask;
+#define NEED(a) ((need_mask & (1 << a)) && ((info.mask & (1 << a)) == 0))
 
 void update_stuff()
 {
@@ -178,8 +203,6 @@ void update_stuff()
 	}
 
 	prepare_update();
-	/* client(); this is approximately where the client should be called */
-#define NEED(a) ((need_mask & (1 << a)) && ((info.mask & (1 << a)) == 0))
 
 	if (NEED(INFO_UPTIME))
 		update_uptime();
@@ -199,13 +222,8 @@ void update_stuff()
 	if (NEED(INFO_DISKIO))
 		update_diskio();
 
-	if (NEED(INFO_WIFI))
-		update_wifi_stats();
-
 	if (NEED(INFO_MAIL))
 		update_mail_count();
-
-
 
 #if defined(__linux__)
 	if (NEED(INFO_I8K))
@@ -213,8 +231,16 @@ void update_stuff()
 #endif /* __linux__ */
 	
 #ifdef MPD
-	if (NEED(INFO_MPD))
-		update_mpd();
+	if (NEED(INFO_MPD)) {
+		if (!mpd_timed_thread) {
+			clear_mpd_stats(&info); 
+			mpd_timed_thread = timed_thread_create((void*)update_mpd, (void*) NULL, update_interval * 1000000);
+			if (!mpd_timed_thread) {
+				ERR("Failed to create MPD thread");
+			}
+			timed_thread_register(mpd_timed_thread, &mpd_timed_thread);
+		}
+	}
 #endif
 
 #ifdef XMMS2
@@ -257,6 +283,8 @@ void update_stuff()
 	if (NEED(INFO_TCP_PORT_MONITOR))
 		update_tcp_port_monitor_collection( info.p_tcp_port_monitor_collection );
 #endif
+	if (NEED(INFO_ENTROPY))
+		update_entropy();
 }
 
 int round_to_int(float f)

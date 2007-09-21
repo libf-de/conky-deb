@@ -34,8 +34,13 @@ endif
 #netbsd = netbsd.c
 #endif
 
+if BUILD_OPENBSD
+openbsd = openbsd.c
+PTHREAD_LIBS =  -pthread
+endif
+
 if BUILD_PORT_MONITORS
-port_monitors = libtcp-portmon.h libtcp-portmon.c hash.h hash.c
+port_monitors = libtcp-portmon.h libtcp-portmon.c
 endif
 
 if BUILD_X11
@@ -44,6 +49,10 @@ endif
 
 if BUILD_HDDTEMP
 hddtemp = hddtemp.c
+endif
+
+if BUILD_RSS
+rss = rss.c prss.c prss.h
 endif
 
 conky_SOURCES = 		\
@@ -60,12 +69,14 @@ conky_SOURCES = 		\
 	mixer.c 		\
 	$(mpd)                  \
 	$(netbsd)               \
+	$(openbsd)              \
 	$(port_monitors)        \
+	$(rss)			\
 	$(solaris) 		\
-	remotec.c               \
-	remotec.h               \
-	remoted.c 		\
-	remoted.h 		\
+	timed_thread.c		\
+	timed_thread.h		\
+	mboxscan.c		\
+	mboxscan.h		\
 	$(x11)                  \
 	$(xmms2) 
 
@@ -76,10 +87,6 @@ EXTRA_DIST = 			\
 	audacious.h		\
 	bmpx.c			\
 	freebsd.c		\
-	ftp.c                   \
-	ftp.h                   \
-	hash.c			\
-	hash.h			\
 	hddtemp.c		\
 	linux.c			\
 	libmpdclient.c          \
@@ -88,7 +95,10 @@ EXTRA_DIST = 			\
 	libtcp-portmon.h	\
 	mpd.c			\
 	netbsd.c		\
+	openbsd.c		\
 	solaris.c 		\
 	top.h                   \
 	x11.c                   \
 	xmms2.c
+
+# vi:set ts=8 sw=8 noet ai nocindent syntax=automake:

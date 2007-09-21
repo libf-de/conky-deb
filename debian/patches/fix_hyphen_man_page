@@ -1,0 +1,145 @@
+Index: conky-1.4.7/doc/conky.1
+===================================================================
+--- conky-1.4.7.orig/doc/conky.1	2007-09-21 07:31:22.000000000 +0530
++++ conky-1.4.7/doc/conky.1	2007-09-21 07:32:14.000000000 +0530
+@@ -79,7 +79,7 @@
+ 
+ .TP 
+ \fB\*(T<\fB\-t \fR\*(T>\fR\*(T<\fBTEXT\fR\*(T>
+-Text to render, remember single quotes, like -t ' $uptime '
++Text to render, remember single quotes, like \-t ' $uptime '
+ 
+ .TP 
+ \fB\*(T<\fB\-u \fR\*(T>\fR\*(T<\fBSECONDS\fR\*(T>
+@@ -202,17 +202,17 @@
+ 
+ .TP 
+ \fB\*(T<\fBgap_x\fR\*(T>\fR
+-Gap, in pixels, between right or left border of screen, same as passing -x at command line,
++Gap, in pixels, between right or left border of screen, same as passing \-x at command line,
+ e.g. gap_x 10
+ 
+ .TP 
+ \fB\*(T<\fBgap_y\fR\*(T>\fR
+-Gap, in pixels, between top or bottom border of screen, same as passing -y at command line,
++Gap, in pixels, between top or bottom border of screen, same as passing \-y at command line,
+ e.g. gap_y 10.
+ 
+ .TP 
+ \fB\*(T<\fBimap\fR\*(T>\fR
+-Default global IMAP server. Arguments are: "host user pass [-i interval] [-f folder] [-p port] [-e command]". Default port is 143, default folder is 'INBOX', default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
++Default global IMAP server. Arguments are: "host user pass [\-i interval] [\-f folder] [\-p port] [\-e command]". Default port is 143, default folder is 'INBOX', default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+ 
+ .TP 
+ \fB\*(T<\fBmail_spool\fR\*(T>\fR
+@@ -311,7 +311,7 @@
+ 
+ .TP 
+ \fB\*(T<\fBpop3\fR\*(T>\fR
+-Default global POP3 server. Arguments are: "host user pass [-i interval] [-p port] [-e command]". Default port is 110, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
++Default global POP3 server. Arguments are: "host user pass [\-i interval] [\-p port] [\-e command]". Default port is 110, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+ 
+ .TP 
+ \fB\*(T<\fBstippled_borders\fR\*(T>\fR
+@@ -795,11 +795,11 @@
+ 
+ .TP 
+ \fB\*(T<\fBimap_messages\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
+-Displays the number of messages in your global IMAP inbox by default. You can define individual IMAP inboxes seperately by passing arguments to this object. Arguments are: "host user pass [-i interval] [-p port] [-e command]". Default port is 143, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
++Displays the number of messages in your global IMAP inbox by default. You can define individual IMAP inboxes seperately by passing arguments to this object. Arguments are: "host user pass [\-i interval] [\-p port] [\-e command]". Default port is 143, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+ 
+ .TP 
+ \fB\*(T<\fBimap_unseen\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
+-Displays the number of unseen messages in your global IMAP inbox by default. You can define individual IMAP inboxes seperately by passing arguments to this object. Arguments are: "host user pass [-i interval] [-p port] [-e command]". Default port is 143, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
++Displays the number of unseen messages in your global IMAP inbox by default. You can define individual IMAP inboxes seperately by passing arguments to this object. Arguments are: "host user pass [\-i interval] [\-p port] [\-e command]". Default port is 143, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+ 
+ .TP 
+ \fB\*(T<\fBkernel\fR\*(T>\fR 
+@@ -819,7 +819,7 @@
+ 
+ .TP 
+ \fB\*(T<\fBmboxscan\fR\*(T>\fR \*(T<\fB(\-n number of messages to print) (\-fw from width) (\-sw subject width) mbox\fR\*(T> 
+-Print a summary of recent messages in an mbox format mailbox. mbox parameter is the filename of the mailbox (can be encapsulated using '"', ie. ${mboxscan -n 10 "/home/brenden/some box"}
++Print a summary of recent messages in an mbox format mailbox. mbox parameter is the filename of the mailbox (can be encapsulated using '"', ie. ${mboxscan \-n 10 "/home/brenden/some box"}
+ 
+ .TP 
+ \fB\*(T<\fBmem\fR\*(T>\fR 
+@@ -943,11 +943,11 @@
+ 
+ .TP 
+ \fB\*(T<\fBpop3_unseen\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
+-Displays the number of unseen messages in your global POP3 inbox by default. You can define individual POP3 inboxes seperately by passing arguments to this object. Arguments are: "host user pass [-i interval] [-p port] [-e command]". Default port is 110, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
++Displays the number of unseen messages in your global POP3 inbox by default. You can define individual POP3 inboxes seperately by passing arguments to this object. Arguments are: "host user pass [\-i interval] [\-p port] [\-e command]". Default port is 110, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+ 
+ .TP 
+ \fB\*(T<\fBpop3_used\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
+-Displays the amount of space (in MiB, 2^20) used in your global POP3 inbox by default. You can define individual POP3 inboxes seperately by passing arguments to this object. Arguments are: "host user pass [-i interval] [-p port] [-e command]". Default port is 110, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
++Displays the amount of space (in MiB, 2^20) used in your global POP3 inbox by default. You can define individual POP3 inboxes seperately by passing arguments to this object. Arguments are: "host user pass [\-i interval] [\-p port] [\-e command]". Default port is 110, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+ 
+ .TP 
+ \fB\*(T<\fBpre_exec\fR\*(T>\fR \*(T<\fBshell command\fR\*(T> 
+@@ -1011,26 +1011,26 @@
+ .br
+ \fBlservice\fR - local service name from /etc/services
+ 
+-The connection index provides you with access to each connection in the port monitor. The monitor will return information for index values from 0 to n-1 connections. Values higher than n-1 are simply ignored. For the "count" item, the connection index must be omitted. It is required for all other items.
++The connection index provides you with access to each connection in the port monitor. The monitor will return information for index values from 0 to n\-1 connections. Values higher than n\-1 are simply ignored. For the "count" item, the connection index must be omitted. It is required for all other items.
+ 
+ Examples:
+ .br
+-\fB${tcp_portmon 6881 6999 count}\fR -
++\fB${tcp_portmon 6881 6999 count}\fR \(hy
+ displays the number of connections in the bittorrent port range
+ .br
+-\fB${tcp_portmon 22 22 rip 0}\fR -
++\fB${tcp_portmon 22 22 rip 0}\fR \(hy
+ displays the remote host ip of the first sshd connection
+ .br
+-\fB${tcp_portmon 22 22 rip 9}\fR -
++\fB${tcp_portmon 22 22 rip 9}\fR \(hy
+ displays the remote host ip of the tenth sshd connection
+ .br
+-\fB${tcp_portmon 1 1024 rhost 0}\fR -
++\fB${tcp_portmon 1 1024 rhost 0}\fR \(hy
+ displays the remote host name of the first connection on a privileged port
+ .br
+-\fB${tcp_portmon 1 1024 rport 4}\fR -
++\fB${tcp_portmon 1 1024 rport 4}\fR \(hy
+ displays the remote host port of the fifth connection on a privileged port
+ .br
+-\fB${tcp_portmon 1 65535 lservice 14}\fR -
++\fB${tcp_portmon 1 65535 lservice 14}\fR \(hy
+ displays the local service name of the fifteenth connection in the range of all ports
+ 
+ Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors. 
+@@ -1240,9 +1240,9 @@
+ all window managers. Especially doesn't work well with Gnome and it has 
+ been reported that it doesn't work with KDE either. Nautilus can be 
+ disabled from drawing to desktop with program gconf-editor. Uncheck 
+-show_desktop in /apps/nautilus/preferences/. There is -w switch in Conky 
+-to set some specific window id. You might find xwininfo -tree useful to 
+-find the window to draw to. You can also use -o argument which makes
++show_desktop in /apps/nautilus/preferences/. There is \-w switch in Conky
++to set some specific window id. You might find xwininfo \-tree useful to
++find the window to draw to. You can also use \-o argument which makes
+ Conky to create its own window.
+ .SH "SEE ALSO"
+ \(lahttp://conky.sourceforge.net\(ra
+@@ -1258,7 +1258,7 @@
+ There is also usually an up-to-date ebuild within Conky's package or in Svn.
+ .PP
+ Debian,etc. users -- Conky will be in Debian's repositories soon (by mid-September, hopefully), and then 
+-Ubuntu shortly thereafter. Until then, "dpkg -i" the .deb package to install. 
++Ubuntu shortly thereafter. Until then, "dpkg \-i" the .deb package to install.
+ .PP
+ Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
+ .TP 
+@@ -1279,7 +1279,7 @@
+ statistics stuff when compiled with icc, I don't know exactly why.
+ .PP
+ You can disable 'drawing to own window' feature in case you don't need it by passing 
+---disable-own-window to configure -script.
++\-\-disable\-own\-window to configure script.
+ .PP
+ .SH AUTHORS
+ The Conky dev team. What's up now!

@@ -1,4 +1,4 @@
-# $Id: AUTHORS 716 2006-11-03 21:24:13Z pkovacs $
+# $Id: AUTHORS 908 2007-08-10 20:49:57Z brenden1 $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -7,11 +7,20 @@ adi <razorbladeworks at yahoo dot com>
   Outline stuff
   ACPI fan & adapter
 
+Adi Zaimi
+  original top code
+
 Alex <godexsoft at bk dot ru>
   Iconv patch
 
 affinity <affy at users dot sourceforge dot net>
   X-Mozilla-Status support
+
+akash <akash at users dot sourceforge dot net>
+  battery_percent and battery_bar
+
+Blondak <blondak_nesercz at users dot sourceforge dot net>
+  diskio read & write patch
 
 Bobby Beckmann <bbeckmann at users dot sourceforge dot net>
   Interface IP and Wireless Quality patch
@@ -28,8 +37,20 @@ Bruce Merry <bmerry at cs dot uct dot ac dot za>
 btlee
   linkstatus patch (http://forums.gentoo.org/viewtopic-p-2765647.html#2765647)
 
+calmar <mac at calmar dot ws>
+  mboxscan
+
+cromka <cromka at users dot sourceforge dot net>
+  if_existing patch for string matching
+
 dan-h <dan-h at users dot sourceforge dot net>
   adt746x fix
+
+Dan Piponi <dan at tanelorn dot demon dot co dot uk>
+  original top code
+
+Dave Clark <clarkd at skynet dot ca>
+  original top code
 
 David McCabe
   utime
@@ -56,11 +77,20 @@ Elisey O. Savateev <bio3k at softboard dot ru>
 Egor(knick_)
   Iconv patch
 
+Erik Scharwaechter <erik at diozaka dot org>
+  $if_empty patch
+
 Falk Feuersenger <lumberjack at users dot sourceforge dot net>
   I2C divisor from a file
 
 Fanat1k
   Iconv patch
+
+flitsch <flitsch at users dot sourceforge dot net>
+  hwmon support
+
+fow <facadedewalls at yahoo dot com>
+  mpd_title max length
 
 Gwenhael LE MOINE <cycojesus at yahoo dot fr>
   Manual setting of the position
@@ -155,6 +185,12 @@ Philip Kovacs <pkovacs at users dot sourceforge dot net>
   Audacious, Xmms, BMP, Infopipe stuff
   Various Xlib changes, e.g. own_window hints, etc.
 
+Phil <n0-1 at users dot sourceforge dot net>
+  multiple batteries support
+
+Psychon <psychon at users dot sourceforge dot net>
+  a bunch of code cleanups
+
 roiban adi <adiroiban at users dot sourceforge dot net>
   hex colour patch
 
@@ -164,6 +200,12 @@ Rui Paulo <rpaulo at netbsd-pt dot org>
 Roman Bogorodskiy <novel at clublife dot ru>
   FreeBSD support
   BMPx support
+
+Ryan Twitchell <tryan2 at rochester dot rr dot com>
+  head/tail rewrite patch
+
+Mikko Sysikaski <sisu at users dot sourceforge dot net>
+  prss.c and prss.h
 
 Stepan Zastupov <redchrom at gmail dot com>
   WiFi signal level detection support on FreeBSD
@@ -177,6 +219,11 @@ Thomas Cort
 Toni <bleach at users dot sourceforge dot net>
   exec*/tail/head output evalution
 
+Toni Spets hifi <spets at users dot sourceforge dot net>
+  OpenBSD support
+  Linux wifi code
+  RSS code (created with Mikko Sysikaski)
+
 tyir <tyir at users dot sourceforge dot net>
   MPD features patch 1319461
 
@@ -187,9 +234,15 @@ Vivenzio Pagliari <vivenzio@web.de>
 Walt Nelson <wnelsonjr at comcast dot net>
   $freq fix
 
+Warren Dukes <warren dot dukes at gmail dot com>
+  libmpdclient
+
 William DiPlacido <bimbasaari at yahoo dot com>
   Frequency from /proc/cpuinfo
   Some other SETI stuff
 
 zimba-tm <zimba-tm at users dot sourceforge dot net>
   alignment none patch
+
+zotrix <zotrix at users dot sourceforge dot net>
+  FreeBSD patch for <10 procs

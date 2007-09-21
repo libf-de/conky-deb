@@ -1,0 +1,18 @@
+Index: conky-1.4.7/src/linux.c
+===================================================================
+--- conky-1.4.7.orig/src/linux.c	2007-08-29 08:42:38.000000000 +0530
++++ conky-1.4.7/src/linux.c	2007-09-20 10:34:06.000000000 +0530
+@@ -1921,8 +1921,12 @@
+ 	while (!feof(fp))
+ 	{
+ 	    char line[256];
++            unsigned int read_vol=-1;
+ 	    if (fgets(line, 255, fp) == NULL) break;
+-	    if (sscanf(line, "level: %d", &vol)) continue;
++            if (sscanf(line, "level: %d", &read_vol)) {
++                        vol = read_vol;
++                        continue;
++                        }
+ 	    if (sscanf(line, "mute: %s", mute)) break;
+ 	}
+     }

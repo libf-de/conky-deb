@@ -1,8 +1,28 @@
 /*
- * freebsd.c
- * Contains FreeBSD specific stuff
+ * Conky, a system monitor, based on torsmo
  *
- * $Id: freebsd.c 758 2006-11-12 14:17:31Z mirrorbox $
+ * Any original torsmo code is licensed under the BSD license
+ *
+ * All code written since the fork of torsmo is licensed under the GPL
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *
+ *  $Id: freebsd.c 925 2007-08-22 05:11:06Z mirrorbox $
  */
 
 #include <sys/dkstat.h>
@@ -113,6 +133,19 @@ update_uptime()
 	}
 }
 
+int check_mount(char *s)
+{
+	struct statfs *mntbuf;
+	int i, mntsize;
+
+	mntsize = getmntinfo(&mntbuf, MNT_NOWAIT);
+	for (i = mntsize - 1; i >= 0; i--)
+		if (strcmp(mntbuf[i].f_mntonname, s) == 0)
+			return 1;
+
+	return 0;
+}
+
 void
 update_meminfo()
 {
@@ -172,7 +205,6 @@ update_net_stats()
 			struct ifaddrs *iftmp;
 
 			ns->up = 1;
-			ns->linkstatus = 1;
 			last_recv = ns->recv;
 			last_trans = ns->trans;
 
@@ -213,7 +245,6 @@ update_net_stats()
 			ns->trans_speed = (ns->trans - last_trans) / delta;
 		} else {
 			ns->up = 0;
-			ns->linkstatus = 0;
 		}
 	}
 
@@ -321,7 +352,7 @@ update_cpu_usage()
 }
 
 double
-get_i2c_info(int *fd, int arg, char *devtype, char *type)
+get_sysfs_info(int *fd, int arg, char *devtype, char *type)
 {
 	return (0);
 }
@@ -352,9 +383,11 @@ get_acpi_temperature(int fd)
 }
 
 void
-get_battery_stuff(char *buf, unsigned int n, const char *bat)
+get_battery_stuff(char *buf, unsigned int n, const char *bat, int item)
 {
 	int battime, batcapacity, batstate, ac;
+	char battery_status[64];
+	char battery_time[64];
 
 	if (GETSYSCTL("hw.acpi.battery.time", battime))
 		(void) fprintf(stderr,
@@ -372,28 +405,71 @@ get_battery_stuff(char *buf, unsigned int n, const char *bat)
 					   "Cannot read sysctl \"hw.acpi.acline\"\n");
 
 	if (batstate == 1) {
-		if (battime != -1)
+		if (battime != -1) {
+			snprintf (battery_status, sizeof(battery_status)-1,
+				  "remaining %d%%", batcapacity);
+			snprintf (battery_time, sizeof(battery_time)-1,
+				  "%d:%2.2d", battime / 60, battime % 60);
+			/*
 			snprintf(buf, n, "remaining %d%% (%d:%2.2d)",
 					batcapacity, battime / 60, battime % 60);
+			*/
+		}
 		else
 			/* no time estimate available yet */
+			snprintf(battery_status, sizeof(battery_status)-1,
+				 "remaining %d%%", batcapacity);
+			/*
 			snprintf(buf, n, "remaining %d%%",
 					batcapacity);
+			*/
 		if (ac == 1)
 			(void) fprintf(stderr, "Discharging while on AC!\n");
 	} else {
+		snprintf (battery_status, sizeof(battery_status)-1,
+			  batstate == 2 ? "charging (%d%%)" : "charged (%d%%)", batcapacity);
+		/*
 		snprintf(buf, n, batstate == 2 ? "charging (%d%%)" : "charged (%d%%)", batcapacity);
+		*/
 		if (batstate != 2 && batstate != 0)
-			(void) fprintf(stderr, "Unknow battery state %d!\n", batstate);
+			(void) fprintf(stderr, "Unknown battery state %d!\n", batstate);
 		if (ac == 0)
 			(void) fprintf(stderr, "Charging while not on AC!\n");
 	}
 
+	switch (item) {
+        case BATTERY_STATUS:
+                {
+                        snprintf(buf, n, "%s", battery_status);
+                        break;
+                }
+        case BATTERY_TIME:
+                {
+                        snprintf(buf, n, "%s", battery_time);
+                        break;
+                }
+        default:
+                        break;
+        }
+        return;
 }
 
 int
-open_i2c_sensor(const char *dev, const char *type, int n, int *div,
-		char *devtype)
+get_battery_perct(const char *bat)
+{
+	/* not implemented */
+	return (0);
+}
+
+int
+get_battery_perct_bar(const char *bar)
+{
+	/* not implemented */
+	return (0);
+}
+
+int
+open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n, int *div, char *devtype)
 {
 	return (0);
 }
@@ -498,7 +574,7 @@ get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
 	snprintf(p_client_buffer, client_buffer_size, p_format,
 		(float)((cycles[1] - cycles[0]) / microseconds) / divisor);
 #else
-	get_freq(p_client_buffer, client_buffer_size, p_format, divisor);
+	get_freq(p_client_buffer, client_buffer_size, p_format, divisor, 1);
 #endif
 }
 
@@ -514,7 +590,7 @@ get_freq(char *p_client_buffer, size_t client_buffer_size,
 	if (freq_sysctl == NULL)
 		exit(-1);
 
-	snprintf(freq_sysctl, 16, "dev.cpu.%d.freq", cpu);
+	snprintf(freq_sysctl, 16, "dev.cpu.%d.freq", (cpu - 1));
 	
 	if (!p_client_buffer || client_buffer_size <= 0 ||
 			!p_format || divisor <= 0)
@@ -536,6 +612,7 @@ update_top()
 	proc_find_top(info.cpu, info.memu);
 }
 
+#if 0
 void
 update_wifi_stats()
 {
@@ -592,6 +669,8 @@ cleanup:
 		close(s);
 	}
 }
+#endif
+
 void
 update_diskio()
 {
@@ -707,7 +786,7 @@ proc_find_top(struct process **cpu, struct process **mem)
 	}
 
 	qsort(processes, j - 1, sizeof (struct process), comparemem);
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 10 && i < n_processes; i++) {
 		struct process *tmp, *ttmp;
 
 		tmp = malloc(sizeof (struct process));
@@ -725,7 +804,7 @@ proc_find_top(struct process **cpu, struct process **mem)
 	}
 
 	qsort(processes, j - 1, sizeof (struct process), comparecpu);
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 10 && i < n_processes; i++) {
 		struct process *tmp, *ttmp;
 
 		tmp = malloc(sizeof (struct process));
@@ -772,29 +851,40 @@ char
 {
 	int fd;
 	struct apm_info info;
+	char *out;
+
+	out = (char *)calloc(16, sizeof (char));
 
 	fd = open(APMDEV, O_RDONLY);
-	if (fd < 0)
-		return ("ERR");
+	if (fd < 0) {
+		strncpy(out, "ERR", 16);
+		return (out);
+	}
 
 	if (apm_getinfo(fd, &info) != 0) {
 		close(fd);
-		return ("ERR");
+		strncpy(out, "ERR", 16);
+		return (out);
 	}
 	close(fd);
 
 	switch (info.ai_acline) {
 		case 0:
-			return ("off-line");
+			strncpy(out, "off-line", 16);
+			return (out);
 			break;
 		case 1:
-			if (info.ai_batt_stat == 3)
-				return ("charging");
-			else
-				return ("on-line");
+			if (info.ai_batt_stat == 3) {
+				strncpy(out, "charging", 16);
+				return (out);
+			} else {
+				strncpy(out, "on-line", 16);
+				return (out);
+			}
 			break;
 		default:
-			return ("unknown");
+			strncpy(out, "unknown", 16);
+			return (out);
 			break;
 	}
 }
@@ -875,6 +965,11 @@ char
 }
 
 #endif
+
+void update_entropy (void)
+{
+     /* mirrorbox: can you do anything equivalent in freebsd? -drphibes. */
+}
 
 /* empty stub so conky links */
 void

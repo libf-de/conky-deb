@@ -33,6 +33,66 @@
 	</td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">color0</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">color1</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">color2</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">color3</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">color4</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">color5</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">color6</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">color7</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">color8</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">color9</td>
+<td>
+		A color variable for use inside TEXT segments
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">cpu_avg_samples</td>
 <td>
 		The number of samples to average for CPU monitoring
@@ -95,13 +155,15 @@
 <tr bgcolor="#fffafa">
 <td align="center">gap_x</td>
 <td>
-		Gap between right or left border of screen, same as passing -x at command line
+		Gap, in pixels, between right or left border of screen, same as passing -x at command line,
+		e.g. gap_x 10
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
 <td align="center">gap_y</td>
 <td>
-		Gap between top or bottom border of screen, same as passing -y at command line
+		Gap, in pixels, between top or bottom border of screen, same as passing -y at command line,
+		e.g. gap_y 10.
 	</td>
 </tr>
 <tr bgcolor="#fffafa">
@@ -117,6 +179,18 @@
 	</td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">max_port_monitor_connections</td>
+<td>
+                Allow each port monitor to track at most this many connections (if 0 or not set, default is 256)
+        </td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">max_specials</td>
+<td>
+		Maximum number of special things, e.g. fonts, offsets, aligns, etc. (default is 512)
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">max_user_text</td>
 <td>
 		Maximum size of user text buffer, i.e. layout below TEXT line in config file
@@ -124,86 +198,70 @@
 		</td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">text_buffer_size</td>
+<td>
+		Size of the standard text buffer (default is 1280 bytes).
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">maximum_width</td>
 <td>
 		Maximum width of window
 		</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">minimum_size</td>
 <td>
 		Minimum size of window
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">min_port_monitors</td>
-<td>
-		Allow for the creation of at least this number of port monitors (if 0 or not set, default is 16) 
-	</td>
-</tr>
 <tr bgcolor="#fffafa">
-<td align="center">min_port_monitor_connections</td>
-<td>
-		Allow each port monitor to track at least this many connections (if 0 or not set, default is 256)
-	</td>
-</tr>
-<tr bgcolor="#b4cdcd">
 <td align="center">mpd_host</td>
 <td>
 		Host of MPD server
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">mpd_port</td>
 <td>
 		Port of MPD server
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">mpd_password</td>
 <td>
 		MPD server password
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">net_avg_samples</td>
 <td>
 		The number of samples to average for net data
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">no_buffers</td>
 <td>
 		Substract (file system) buffers from used memory?
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">override_utf8_locale</td>
 <td>
 		Force UTF8? requires XFT
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">own_window</td>
 <td>
 		Boolean, create own window to draw?
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
-<td align="center">own_window_transparent</td>
-<td>
-		Boolean, set pseudo-transparency?
-		</td>
-</tr>
 <tr bgcolor="#b4cdcd">
-<td align="center">own_window_type</td>
+<td align="center">own_window_class</td>
 <td>
-		if own_window is yes, you may specify type normal, desktop or override (default: normal).
-		Desktop windows are special windows that have no window decorations; are always visible 
-		on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
-		Override windows are not under the control of the window manager.  Hints are ignored. This type
-		of window can be useful for certain situations.
-		</td>
+                Manually set the WM_CLASS name.  Defaults to "Conky".
+        </td>
 </tr>
 <tr bgcolor="#fffafa">
 <td align="center">own_window_colour</td>
@@ -220,63 +278,79 @@
 	</td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">own_window_title</td>
+<td>
+                Manually set the window name.  Defaults to "&lt;hostname&gt; - conky".
+        </td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">own_window_transparent</td>
+<td>
+		Boolean, set pseudo-transparency?
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">own_window_type</td>
+<td>
+		if own_window is yes, you may specify type normal, desktop or override (default: normal).
+		Desktop windows are special windows that have no window decorations; are always visible 
+		on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
+		Override windows are not under the control of the window manager.  Hints are ignored. This type
+		of window can be useful for certain situations.
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
 <td align="center">out_to_console</td>
 <td>
 		Print text to stdout.
 		</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pad_percents</td>
 <td>
 		Pad percentages to this many decimals (0 = no padding)
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pop3</td>
 <td>
 		Default global POP3 server.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">stippled_borders</td>
 <td>
 		Border stippling (dashing) in pixels
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">total_run_times</td>
 <td>
 		Total number of times for Conky to update before quitting. Zero makes Conky run forever
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">update_interval</td>
 <td>
 		Update interval in seconds
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">uppercase</td>
 <td>
 		Boolean value, if true, text is rendered in upper case
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">use_spacer</td>
 <td>
 		Adds spaces after certain objects to stop them from moving other things around. Note that this only helps if you are using a mono font, such as Bitstream Vera Sans Mono.
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">use_xft</td>
 <td>
 		Use Xft (anti-aliased font and stuff)
-	</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">wm_class_name</td>
-<td>
-		Manually set the WM_CLASS name.  Defaults to "conky".
 	</td>
 </tr>
 <tr bgcolor="#fffafa">

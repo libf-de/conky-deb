@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id2454781"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id2477950"></a><h2>Description</h2><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.70.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id258410"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id258468"></a><h2>Description</h2><p>
     Conky is a system monitor for X originally based on the torsmo code. 
     Since it's original conception, Conky has changed a fair bit from it's predecessor.  
     Conky can display just about anything, either on your root desktop or in it's own window.  
@@ -9,7 +9,7 @@
 		Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches.
 		</p><p>
 		Thanks for your interest in Conky.
-		</p></div><div class="refsect1" lang="en"><a name="id2455696"></a><h2>Compiling</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id258490"></a><h2>Compiling</h2><p>
 		For users compiling from source, make sure you have the X development libraries installed. 
 		This should be a package along the lines of "libx11-dev or xorg-x11-dev". 
 		</p><p>
@@ -23,7 +23,7 @@
 		</p><div class="variablelist"><dl><dt><span class="term">
 					<span><strong class="command"><code class="option">sh autogen.sh</code></strong></span> <code class="option"># Only required if building from Svn</code>
 				</span></dt><dd></dd><dt><span class="term">
-					<span><strong class="command"><code class="option">./configure </code></strong></span><code class="option">--prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib --enable-xft --enable-own-window --enable-proc-uptime --enable-audacious --enable-bmpx --enable-hddtemp --enable-mpd --enable-xmms2 --enable-imlib2 --enable-portmon --enable-debug --enable-double-buffer --enable-xdamage --enable-x11</code>
+					<span><strong class="command"><code class="option">./configure </code></strong></span><code class="option">--prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib --disable-own-window --enable-audacious --enable-bmpx --disable-hddtemp --disable-mpd --enable-xmms2 --disable-portmon --disable-network --enable-debug --disable-x11 --disable-double-buffer --disable-xdamage --disable-xft</code>
 				</span></dt><dd></dd><dt><span class="term">
 					<span><strong class="command"><code class="option">make</code></strong></span>
 				</span></dt><dd></dd><dt><span class="term">
@@ -41,7 +41,7 @@
 			--disable-own-window to configure -script.
 		</p><p>
 			
-		</p></div><div class="refsect1" lang="en"><a name="id2455826"></a><h2>You Should Know</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id258601"></a><h2>You Should Know</h2><p>
 		Conky is generally very good on resources.  However, certain objects in
 		Conky are harder on resources then others.  In particular, the $tail,
 		$top, $font, and $graph objects are quite costly in comparison to the rest of Conky.
@@ -54,7 +54,7 @@
 		</p><p>
 		IMPORTANT: For previous Conky users, Conky 1.3 no longer supports the metar stuff. 
 		mdsplib was causing way too many problems. Hopefully there'll be a better solution in Conky 2.x...
-		</p></div><div class="refsect1" lang="en"><a name="id2455858"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span><strong class="command"><code class="option">-v | -V</code></strong></span></span></dt><dd>
+		</p></div><div class="refsect1" lang="en"><a name="id258626"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span><strong class="command"><code class="option">-v | -V</code></strong></span></span></dt><dd>
     Prints version and exits
     <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-a </code></strong></span><code class="option">ALIGNMENT</code></span></dt><dd>
       Text alignment on screen, {top,bottom}_{left,right} or none
@@ -80,7 +80,7 @@
       X position
     <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-y </code></strong></span><code class="option">Y_COORDINATE</code></span></dt><dd>
       Y position
-    <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id2454856"></a><h2>Configuration Settings</h2><p>
+    <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id258802"></a><h2>Configuration Settings</h2><p>
 		Default configuration file is $HOME/.conkyrc (can be changed from
 		conky.c among other things). See conkyrc.sample. If installing from Debian package, 
 		this should be in /usr/share/doc/conky/examples ("gunzip conkyrc.sample.gz" to get conkyrc.sample).
@@ -95,6 +95,26 @@
 		Border margin in pixels
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">border_width</code></strong></span></span></dt><dd>
 		Border width in pixels
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color0</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color1</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color2</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color3</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color4</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color5</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color6</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color7</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color8</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color9</code></strong></span></span></dt><dd>
+		A color variable for use inside TEXT segments
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">cpu_avg_samples</code></strong></span></span></dt><dd>
 		The number of samples to average for CPU monitoring
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">default_color</code></strong></span></span></dt><dd>
@@ -116,18 +136,28 @@
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">font</code></strong></span></span></dt><dd>
 		Font name in X, xfontsel can be used to get a nice font
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">gap_x</code></strong></span></span></dt><dd>
-		Gap between right or left border of screen, same as passing -x at command line
+		Gap, in pixels, between right or left border of screen, same as passing -x at command line,
+		e.g. gap_x 10
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">gap_y</code></strong></span></span></dt><dd>
-		Gap between top or bottom border of screen, same as passing -y at command line
+		Gap, in pixels, between top or bottom border of screen, same as passing -y at command line,
+		e.g. gap_y 10.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">imap</code></strong></span></span></dt><dd>
 		Default global IMAP server.  Arguments are: "host user pass [-i interval] [-f folder] [-p port] [-e command]".  Default port is 143, default folder is 'INBOX', default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">mail_spool</code></strong></span></span></dt><dd>
 		Mail spool for mail checking
-	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">max_user_text</code></strong></span>
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">max_port_monitor_connections</code></strong></span></span></dt><dd>
+                Allow each port monitor to track at most this many connections (if 0 or not set, default is 256)
+        <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">max_specials</code></strong></span></span></dt><dd>
+		Maximum number of special things, e.g. fonts, offsets, aligns, etc. (default is 512)
+		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">max_user_text</code></strong></span>
 		<code class="option">bytes</code>
 	</span></dt><dd>
 		Maximum size of user text buffer, i.e. layout below TEXT line in config file
 		(default is 16384 bytes)
+		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">text_buffer_size</code></strong></span>
+		<code class="option">bytes</code>
+	</span></dt><dd>
+		Size of the standard text buffer (default is 1280 bytes).
 		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">maximum_width</code></strong></span>
 		<code class="option">pixels</code>
 	</span></dt><dd>
@@ -136,10 +166,6 @@
 	<code class="option">width (height)</code>
 	</span></dt><dd>
 		Minimum size of window
-	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">min_port_monitors</code></strong></span></span></dt><dd>
-		Allow for the creation of at least this number of port monitors (if 0 or not set, default is 16) 
-	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">min_port_monitor_connections</code></strong></span></span></dt><dd>
-		Allow each port monitor to track at least this many connections (if 0 or not set, default is 256)
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">mpd_host</code></strong></span></span></dt><dd>
 		Host of MPD server
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">mpd_port</code></strong></span></span></dt><dd>
@@ -154,15 +180,9 @@
 		Force UTF8? requires XFT
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window</code></strong></span></span></dt><dd>
 		Boolean, create own window to draw?
-	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_transparent</code></strong></span></span></dt><dd>
-		Boolean, set pseudo-transparency?
-		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_type</code></strong></span></span></dt><dd>
-		if own_window is yes, you may specify type normal, desktop or override (default: normal).
-		Desktop windows are special windows that have no window decorations; are always visible 
-		on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
-		Override windows are not under the control of the window manager.  Hints are ignored. This type
-		of window can be useful for certain situations.
-		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_colour</code></strong></span>
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_class</code></strong></span></span></dt><dd>
+                Manually set the WM_CLASS name.  Defaults to "Conky".
+        <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_colour</code></strong></span>
 		<code class="option">colour</code>
 	</span></dt><dd>
 		If own_window_transparent no, set a specified background colour (defaults to black).  Takes either a hex value (#ffffff) or a valid RGB name (see /usr/lib/X11/rgb.txt)
@@ -172,7 +192,17 @@
 		If own_window is yes, you may use these window manager hints to affect the way Conky displays.  
 		Notes: Use own_window_type desktop as another way to implement many of these hints implicitly.
 		If you use own_window_type override, window manager hints have no meaning and are ignored.
-	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">out_to_console</code></strong></span>
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_title</code></strong></span></span></dt><dd>
+                Manually set the window name.  Defaults to "&lt;hostname&gt; - conky".
+        <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_transparent</code></strong></span></span></dt><dd>
+		Boolean, set pseudo-transparency?
+		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_type</code></strong></span></span></dt><dd>
+		if own_window is yes, you may specify type normal, desktop or override (default: normal).
+		Desktop windows are special windows that have no window decorations; are always visible 
+		on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
+		Override windows are not under the control of the window manager.  Hints are ignored. This type
+		of window can be useful for certain situations.
+		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">out_to_console</code></strong></span>
 	</span></dt><dd>
 		Print text to stdout.
 		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">pad_percents</code></strong></span></span></dt><dd>
@@ -191,15 +221,13 @@
 		Adds spaces after certain objects to stop them from moving other things around. Note that this only helps if you are using a mono font, such as Bitstream Vera Sans Mono.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">use_xft</code></strong></span></span></dt><dd>
 		Use Xft (anti-aliased font and stuff)
-	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">wm_class_name</code></strong></span></span></dt><dd>
-		Manually set the WM_CLASS name.  Defaults to "conky".
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">xftalpha</code></strong></span></span></dt><dd>
 		Alpha of Xft font.  Must be a value at or between 1 and 0.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">xftfont</code></strong></span></span></dt><dd>
 		Xft font to use.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">TEXT</code></strong></span></span></dt><dd>
 		After this begins text to be formatted on screen
-	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id2508423"></a><h2>Variables</h2><p>
+	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id260791"></a><h2>Variables</h2><p>
 		Colors are parsed using XParsecolor(), there might be a list of them:
 		/usr/X11R6/lib/X11/rgb.txt. Also, <a href="http://sedition.com/perl/rgb.html" target="_top">
 																			 http://sedition.com/perl/rgb.html</a>.
@@ -310,13 +338,29 @@
 		Player status (Playing/Paused/Stopped/Not running)
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">audacious_title</code></strong></span>
+		<code class="option">(max length)</code>
 	</span></dt><dd>
-		Title of current tune
+		Title of current tune with optional maximum length specifier
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">battery</code></strong></span>
 	<code class="option">(num)</code>
 	</span></dt><dd>
-		Remaining capacity in ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+		Battery status and remaining percentage capacity of ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">battery_bar</code></strong></span>
+	<code class="option">(height),(width) (num)</code>
+	</span></dt><dd>
+		Battery percentage remaining of ACPI battery in a bar.  ACPI battery number can be given as argument (default is BAT0).
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">battery_percent</code></strong></span>
+	<code class="option">(num)</code>
+	</span></dt><dd>
+		Battery percentage remaining for ACPI battery.  ACPI battery number can be given as argument (default is BAT0).
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">battery_time</code></strong></span>
+	<code class="option">(num)</code>
+	</span></dt><dd>
+		Battery charge/discharge time remaining of ACPI battery.  ACPI battery number can be given as argument (default is BAT0).
 	<p></p></dd><dt><span class="term">          
                 <span><strong class="command"><code class="option">bmpx_artist</code></strong></span>
         </span></dt><dd>
@@ -355,10 +399,50 @@
 	</span></dt><dd>
 		Change drawing color to color
 	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color0</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color0 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color1</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color1 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color2</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color2 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color3</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color3 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color4</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color4 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color5</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color5 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color6</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color6 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color7</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color7 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color8</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color8 configuration option
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">color9</code></strong></span>
+	</span></dt><dd>
+		Change drawing color to color9 configuration option
+	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">cpu</code></strong></span>
 		<code class="option">(cpuN)</code>
 	</span></dt><dd>
-		CPU usage in percents.  For SMP machines, the CPU number can be provided as an argument.  ${cpu 0} is the total usage, and ${cpu X} (X &gt;= 1) are individual CPUs. 
+		CPU usage in percents.  For SMP machines, the CPU number can be provided as an argument.  ${cpu cpu0} is the total usage, and ${cpu cpuX} (X &gt;= 1) are individual CPUs.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">cpubar</code></strong></span>
 		<code class="option">(cpu number) (height),(width)</code>
@@ -379,6 +463,24 @@
 	</span></dt><dd>
 		Disk IO graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
 		<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">diskio_read</code></strong></span>
+	</span></dt><dd>
+		Displays current disk IO for reads.
+		<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">diskio_readgraph</code></strong></span>
+		<code class="option">(height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
+	</span></dt><dd>
+		Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+		<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">diskio_write</code></strong></span>
+	</span></dt><dd>
+		Displays current disk IO for writes.
+		<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">diskio_writegraph</code></strong></span>
+		<code class="option">(height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
+	</span></dt><dd>
+		Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+		<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">downspeed</code></strong></span>
 	<code class="option">net</code>
 	</span></dt><dd>
@@ -397,6 +499,19 @@
 		<span><strong class="command"><code class="option">else</code></strong></span>
 	</span></dt><dd>
 		Text to show if any of the above are not true
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">entropy_avail</code></strong></span>
+	</span></dt><dd>
+		Current entropy available for crypto freaks
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">entropy_bar</code></strong></span>
+		<code class="option">(height),(width)</code>
+	</span></dt><dd>
+		Normalized bar of available entropy for crypto freaks
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">entropy_poolsize</code></strong></span>
+	</span></dt><dd>
+		Total size of system entropy pool for crypto freaks
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">exec</code></strong></span>
 	<code class="option">command</code>
@@ -501,6 +616,11 @@
 	</span></dt><dd>
 		Horizontal line, height is the height in pixels
 	<p></p></dd><dt><span class="term">
+    <span><strong class="command"><code class="option">hwmon</code></strong></span>
+  <code class="option">(dev) type n</code>
+  </span></dt><dd>
+    Hwmon sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one hwmon device. Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/class/hwmon/ on your local computer.
+  <p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">iconv_start</code></strong></span>
 	<code class="option">codeset_from codeset_to</code>
 	</span></dt><dd>
@@ -514,7 +634,7 @@
 		<span><strong class="command"><code class="option">i2c</code></strong></span>
 	<code class="option">(dev) type n</code>
 	</span></dt><dd>
-		I2C sensor from sysfs (Linux 2.6). dev may be omitted if you have only one I2C device. type is either in (or vol) meaning voltage, fan meaning fan or temp/tempf (first in C, second in F) meaning temperature. n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
+		I2C sensor from sysfs (Linux 2.6).  Parameter dev may be omitted if you have only one I2C device.  Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature.  Parameter n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">i8k_ac_status</code></strong></span>
 	<code class="option"></code>
@@ -539,7 +659,7 @@
 		<span><strong class="command"><code class="option">i8k_cpu_tempf</code></strong></span>
 	<code class="option"></code>
 	</span></dt><dd>
-		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Farenheit, as reported by /proc/i8k.
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Fahrenheit, as reported by /proc/i8k.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">i8k_left_fan_rpm</code></strong></span>
 	<code class="option"></code>
@@ -592,39 +712,39 @@
 		If running the IBM ACPI, displays the brigtness of the
 	laptops's LCD (0-7).
 	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">if_empty</code></strong></span>
+	<code class="option">(var)</code>
+	</span></dt><dd>
+		if conky variable VAR is empty, display everything between $if_empty and the matching $endif
+	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">if_running</code></strong></span>
 	<code class="option">(process)</code>
 	</span></dt><dd>
-		if PROCESS is running, display everything if_running and the matching $endif
+		if PROCESS is running, display everything $if_running and the matching $endif
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">if_existing</code></strong></span>
-	<code class="option">(file)</code>
+	<code class="option">file (string)</code>
 	</span></dt><dd>
-		if FILE exists, display everything between if_existing and the matching $endif
+		if FILE exists, display everything between if_existing and the matching $endif.  The optional second paramater checks for FILE containing the specified string and prints everything between $if_existing and the matching $endif.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">if_mounted</code></strong></span>
 	<code class="option">(mountpoint)</code>
 	</span></dt><dd>
-		if MOUNTPOINT is mounted, display everything between if_mounted and the matching $endif
+		if MOUNTPOINT is mounted, display everything between $if_mounted and the matching $endif
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">imap_messages</code></strong></span>
 	<code class="option">(args)</code>
 	</span></dt><dd>
-		Displays the number of messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+		Displays the number of messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 143, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">imap_unseen</code></strong></span>
 	<code class="option">(args)</code>
 	</span></dt><dd>
-		Displays the number of unseen messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+		Displays the number of unseen messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 143, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">kernel</code></strong></span>
 	</span></dt><dd>
 		Kernel version
-	<p></p></dd><dt><span class="term">
-		<span><strong class="command"><code class="option">linkstatus</code></strong></span>
-	<code class="option">interface</code>
-	</span></dt><dd>
-		Get the link status for wireless connections
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">loadavg</code></strong></span>
 	</span></dt><dd>
@@ -637,6 +757,11 @@
 		<span><strong class="command"><code class="option">mails</code></strong></span>
 	</span></dt><dd>
 		Mail count in mail spool. You can use program like fetchmail to get mails from some server using your favourite protocol. See also new_mails.
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">mboxscan</code></strong></span>
+		<code class="option">(-n number of messages to print) (-fw from width) (-sw subject width) mbox</code>
+	</span></dt><dd>
+		Print a summary of recent messages in an mbox format mailbox.  mbox parameter is the filename of the mailbox (can be encapsulated using '"', ie. ${mboxscan -n 10 "/home/brenden/some box"}
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">mem</code></strong></span>
 	</span></dt><dd>
@@ -677,6 +802,7 @@
 		Playing, stopped, et cetera.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">mpd_title</code></strong></span>
+	<code class="option">(max length)</code>
 	</span></dt><dd>
 		Title of current MPD song
 	<p></p></dd><dt><span class="term">
@@ -755,6 +881,11 @@
                                 absent or if it's present but fully charged
                                 and not discharging.
                         </td></tr></table><p></p></dd><dt><span class="term">
+    <span><strong class="command"><code class="option">platform</code></strong></span>
+  <code class="option">(dev) type n</code>
+  </span></dt><dd>
+    Platform sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one platform device. Platform type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/bus/platform/devices/ on your local computer.
+  <p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">pop3_unseen</code></strong></span>
 	<code class="option">(args)</code>
 	</span></dt><dd>
@@ -844,6 +975,11 @@
 	</span></dt><dd>
 		Move text over by N pixels.  See also $voffset.
 		<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">rss</code></strong></span>
+		<code class="option">url delay_in_minutes action item_num</code>
+	</span></dt><dd>
+		Download and parse RSS feeds. Action may be one of the following: feed_title, item_title (with num par), item_desc (with num par) and item_titles.
+	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">tab</code></strong></span>
 		<code class="option">(width, (start))</code>
 	</span></dt><dd>
@@ -935,8 +1071,121 @@
 		Returns CPU #n's voltage in V. CPUs are
 		counted from 1. If omitted, the parameter
 		defaults to 1.
-		<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id2515361"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%m}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id2515402"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
-	</div><div class="refsect1" lang="en"><a name="id2515415"></a><h2>Bugs</h2><p>	
+		<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">wireless_essid</code></strong></span>
+		<code class="option">net</code>
+	</span></dt><dd>
+		Wireless access point ESSID (Linux only)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">wireless_mode</code></strong></span>
+		<code class="option">net</code>
+	</span></dt><dd>
+		Wireless mode (Managed/Ad-Hoc/Master) (Linux only)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">wireless_bitrate</code></strong></span>
+		<code class="option">net</code>
+	</span></dt><dd>
+		Wireless bitrate (ie 11 Mb/s) (Linux only)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">wireless_ap</code></strong></span>
+		<code class="option">net</code>
+	</span></dt><dd>
+		Wireless access point MAC address (Linux only)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">wireless_link_qual</code></strong></span>
+		<code class="option">net</code>
+	</span></dt><dd>
+		Wireless link quality (Linux only)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">wireless_link_qual_max</code></strong></span>
+		<code class="option">net</code>
+	</span></dt><dd>
+		Wireless link quality maximum value (Linux only)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">wireless_link_qual_perc</code></strong></span>
+		<code class="option">net</code>
+	</span></dt><dd>
+		Wireless link quality in percents (Linux only)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">wireless_link_bar</code></strong></span>
+		<code class="option">(height), (width) net</code>
+	</span></dt><dd>
+		Wireless link quality bar (Linux only)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_artist</code></strong></span>
+	</span></dt><dd>
+		Artist in current XMMS2 song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_album</code></strong></span>
+	</span></dt><dd>
+		Album in current XMMS2 song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_title</code></strong></span>
+	</span></dt><dd>
+		Title in current XMMS2 song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_genre</code></strong></span>
+	</span></dt><dd>
+		Genre in current XMMS2 song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_comment</code></strong></span>
+	</span></dt><dd>
+		Comment in current XMMS2 song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_decoder</code></strong></span>
+	</span></dt><dd>
+		Decoder plugin used
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_transport</code></strong></span>
+	</span></dt><dd>
+		Transport plugin used
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_url</code></strong></span>
+	</span></dt><dd>
+		Full path to current song
+<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_tracknr</code></strong></span>
+	</span></dt><dd>
+		Track number in current XMMS2 song
+<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_bitrate</code></strong></span>
+	</span></dt><dd>
+	Bitrate of current song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_id</code></strong></span>
+	</span></dt><dd>
+		XMMS2 id of current song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_duration</code></strong></span>
+	</span></dt><dd>
+		Duration of current song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_elapsed</code></strong></span>
+	</span></dt><dd>
+		Song's elapsed time
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_size</code></strong></span>
+	</span></dt><dd>
+	Size of current song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_percent</code></strong></span>
+	</span></dt><dd>
+		Percent of song's progress
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_status</code></strong></span>
+	</span></dt><dd>
+		XMMS2 status (Playing, Paused, Stopped, or Disconnected)
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_bar</code></strong></span>
+	<code class="option">(height),(width)</code>
+	</span></dt><dd>
+		Bar of XMMS2's progress
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">xmms2_smart</code></strong></span>
+	</span></dt><dd>
+		Prints the song name in either the form "artist - title" or file name, depending on whats available
+	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id268521"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%m}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id257976"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
+	</div><div class="refsect1" lang="en"><a name="id268749"></a><h2>Bugs</h2><p>	
 		Drawing to root or some other desktop window directly doesn't work with 
 		all window managers. Especially doesn't work well with Gnome and it has 
 		been reported that it doesn't work with KDE either. Nautilus can be 
@@ -945,10 +1194,10 @@
 		to set some specific window id. You might find xwininfo -tree useful to 
 		find the window to draw to. You can also use -o argument which makes
 		Conky to create its own window.
-		</p></div><div class="refsect1" lang="en"><a name="id2515434"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net" target="_top">
+		</p></div><div class="refsect1" lang="en"><a name="id268764"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net" target="_top">
     http://conky.sourceforge.net</a></p><p><a href="http://www.sourceforge.net/projects/conky" target="_top">
     http://www.sourceforge.net/projects/conky</a></p><p>
 			#conky on irc.freenode.net
-		</p></div><div class="refsect1" lang="en"><a name="id2515460"></a><h2>Authors</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id268786"></a><h2>Authors</h2><p>
 			The Conky dev team. What's up now!
 		</p></div></div></body></html>

@@ -1,0 +1,31 @@
+conky (1.4.7-1) unstable; urgency=low
+
+    The previous version of "conky" packaged for Debian was 1.4.4
+    so there have been a number of changes to "conky" and its
+    configuration in the intervening period. Please look at the
+    upstream documentation (Changelog, NEWS, man pages) for further
+    details.
+
+    Some new config parameters have been added but if you have a
+    configuration file for version 1.4.4-1 it should work without any
+    problems with this version. If it does not, please report it as a
+    bug to the Debian BTS.
+
+    Some of the notable additions to "conky" are build-time options
+    that support "audacious", "beep media player", "RSS feeds" and
+    "wireless devices". These are *not* enabled in the current Debian
+    packaging. Users who want these features will have to re-build
+    "conky" with appropriate changes.
+
+    The hard-coded default configuration of "conky" shows the tail of
+    the file /var/log/Xorg.0.log. However, this causes "conky" to
+    exit with an error for those users who do not have such a file or
+    do not have access to it. The Debian version of "conky" disables
+    this portion of the hard-coded configuration.
+
+    One of the significant upstream changes is "Clarifying
+    licensing". This is documented further in the "copyright" file in
+    this directory.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Fri, 21 Sep 2007 06:24:31 +0530
+

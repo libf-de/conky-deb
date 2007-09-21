@@ -1,15 +1,34 @@
 /*
  * Conky, a system monitor, based on torsmo
  *
- * This program is licensed under BSD license, read COPYING
+ * Any original torsmo code is licensed under the BSD license
  *
- *  $Id: conky.h 757 2006-11-12 06:38:21Z mirrorbox $
+ * All code written since the fork of torsmo is licensed under the GPL
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
+ * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *
+ *  $Id: conky.h 935 2007-08-31 02:05:02Z brenden1 $
  */
 
 #ifndef _conky_h_
 #define _conky_h_
 
-#include <pthread.h>
 #if defined(HAS_MCHECK_H)
 #include <mcheck.h>
 #endif /* HAS_MCHECK_H */
@@ -33,6 +52,12 @@
 #include <machine/apm_bios.h>
 #endif /* __FreeBSD__ */
 
+#if defined(__OpenBSD__)
+#include <sys/sysctl.h>
+#include <sys/sensors.h>
+#include <machine/apmvar.h>
+#endif /* __OpenBSD__ */
+
 #ifdef AUDACIOUS
 #include "audacious.h"
 #endif
@@ -41,6 +66,13 @@
 #include <xmmsclient/xmmsclient.h>
 #endif
 
+#ifdef RSS
+#include "prss.h"
+#endif
+
+#include "mboxscan.h"
+#include "timed_thread.h"
+
 #define TOP_CPU 1
 #define TOP_NAME 2
 #define TOP_PID 3
@@ -48,6 +80,10 @@
 
 #define TEXT_BUFFER_SIZE 1280
 #define P_MAX_SIZE ((TEXT_BUFFER_SIZE * 4) - 2) 
+extern unsigned int text_buffer_size;
+
+/* maximum number of special things, e.g. fonts, offsets, aligns, etc. */
+#define MAX_SPECIALS_DEFAULT 512
 
 /* maximum size of config TEXT buffer, i.e. below TEXT line. */
 #define MAX_USER_TEXT_DEFAULT 16384
@@ -83,22 +119,25 @@ struct net_stat {
 	long long recv, trans;
 	double recv_speed, trans_speed;
 	struct sockaddr addr;
-	int linkstatus;
 	double net_rec[15], net_trans[15];
+	// wireless extensions
+	char essid[32];
+	char bitrate[16];
+	char mode[16];
+	char ap[18];
+	int link_qual;
+	int link_qual_max;
 };
 
 unsigned int diskio_value;
+unsigned int diskio_read_value;
+unsigned int diskio_write_value;
 
 struct fs_stat {
 	char *path;
 	long long size;
 	long long avail;
 	long long free;
-};
-
-struct thread_info_s {
-	pthread_t thread;
-	pthread_mutex_t mutex;
 };
 
 struct mail_s {			// for imap and pop3
@@ -114,9 +153,8 @@ struct mail_s {			// for imap and pop3
 	char pass[128];
 	char command[1024];
 	char folder[128];
-	int pos;
-	struct thread_info_s thread_info;
 	char secure;
+	timed_thread *p_timed_thread;
 } mail;
 
 /*struct cpu_stat {
@@ -143,7 +181,9 @@ struct mpd_s {
 	int bitrate;
 	int length;
 	int elapsed;
+	int max_title_len;		/* e.g. ${mpd_title 50} */
 };
+
 #endif
 
 #ifdef XMMS2
@@ -172,11 +212,8 @@ struct xmms2_s {
 #ifdef AUDACIOUS
 struct audacious_s {
 	audacious_t items;              /* e.g. items[AUDACIOUS_STATUS] */
-	int runnable;                   /* used to signal worker thread to stop */
-	pthread_t thread;               /* worker thread */
-	pthread_attr_t thread_attr;     /* thread attributes */
-	pthread_mutex_t item_mutex;     /* mutex for item array */
-	pthread_mutex_t runnable_mutex; /* mutex for runnable flag */
+	int max_title_len;		/* e.g. ${audacious_title 50} */
+	timed_thread *p_timed_thread;
 };
 #endif
 
@@ -192,10 +229,15 @@ struct bmpx_s {
 };
 #endif
 
+void update_entropy();
+struct entropy_s {
+	unsigned int entropy_avail;
+	unsigned int poolsize;
+};
+
 #ifdef TCP_PORT_MONITOR
 #include "libtcp-portmon.h"
-#define MIN_PORT_MONITORS_DEFAULT 16
-#define MIN_PORT_MONITOR_CONNECTIONS_DEFAULT 256
+#define MAX_PORT_MONITOR_CONNECTIONS_DEFAULT 256
 #endif
 
 enum {
@@ -208,7 +250,7 @@ enum {
 	INFO_UPTIME = 6,
 	INFO_BUFFERS = 7,
 	INFO_FS = 8,
-	INFO_I2C = 9,
+	INFO_SYSFS = 9,
 	INFO_MIXER = 10,
 	INFO_LOADAVG = 11,
 	INFO_UNAME = 12,
@@ -221,7 +263,7 @@ enum {
 	INFO_DISKIO = 17,
 	INFO_I8K = 18,
 #ifdef TCP_PORT_MONITOR
-        INFO_TCP_PORT_MONITOR = 19,
+  INFO_TCP_PORT_MONITOR = 19,
 #endif
 #ifdef AUDACIOUS
 	INFO_AUDACIOUS = 20,
@@ -232,12 +274,25 @@ enum {
 #ifdef XMMS2
 	INFO_XMMS2 = 22,
 #endif
+	INFO_ENTROPY = 23,
+#ifdef RSS
+	INFO_RSS = 24,
+#endif
 };
 
+
+/* get_battery_stuff() item selector */
+enum {
+	BATTERY_STATUS,
+	BATTERY_TIME
+};
 
 #ifdef MPD
 #include "libmpdclient.h"
 #endif
+
+/* Update interval */
+double update_interval;
 
 volatile int g_signal_pending;
 
@@ -251,8 +306,8 @@ struct information {
 	double uptime;
 
 	/* memory information in kilobytes */
-	unsigned long mem, memmax, swap, swapmax;
-	unsigned long bufmem, buffers, cached;
+	unsigned long long mem, memmax, swap, swapmax;
+	unsigned long long bufmem, buffers, cached;
 
 	unsigned short procs;
 	unsigned short run_procs;
@@ -291,9 +346,10 @@ struct information {
 	struct process *first_process;
 	unsigned long looped;
 #ifdef TCP_PORT_MONITOR
-        tcp_port_monitor_collection_t * p_tcp_port_monitor_collection;
+  tcp_port_monitor_collection_t * p_tcp_port_monitor_collection;
 #endif
 	short kflags;  /* kernel settings, see enum KFLAG */
+	struct entropy_s entropy;
 };
 
 enum {
@@ -367,7 +423,8 @@ struct conky_window {
 	int width;
 	int height;
 #ifdef OWN_WINDOW
-	char wm_class_name[256];
+	char class_name[256];
+  char title[256];
 	int x;
 	int y;
 	unsigned int type;
@@ -394,8 +451,8 @@ extern int workarea[4];
 extern struct conky_window window;
 
 void init_X11();
-void init_window(int use_own_window, int width, int height, int set_trans, int back_colour, char * nodename,
-		 char **argv, int argc);
+void init_window(int use_own_window, int width, int height, int set_trans, int back_colour, 
+                 char **argv, int argc);
 void create_gc();
 void set_transparent_background(Window win);
 long get_x11_color(const char *);
@@ -418,6 +475,7 @@ void variable_substitute(const char *s, char *dest, unsigned int n);
 void format_seconds(char *buf, unsigned int n, long t);
 void format_seconds_short(char *buf, unsigned int n, long t);
 struct net_stat *get_net_stat(const char *dev);
+void clear_net_stats(void);
 
 void update_stuff();
 
@@ -432,12 +490,12 @@ extern int no_buffers;
 
 /* system dependant (in linux.c) */
 
+int check_mount(char *s);
 void update_diskio(void);
 void prepare_update(void);
 void update_uptime(void);
 void update_meminfo(void);
 void update_net_stats(void);
-void update_wifi_stats(void);
 void update_cpu_usage(void);
 void update_total_processes(void);
 void update_running_processes(void);
@@ -446,9 +504,18 @@ char get_freq( char *, size_t, char *, int, unsigned int );
 void get_freq_dynamic( char *, size_t, char *, int ); 
 char get_voltage(char *, size_t, char *, int, unsigned int ); /* ptarjan */
 void update_load_average();
-int open_i2c_sensor(const char *dev, const char *type, int n, int *div,
-		    char *devtype);
-double get_i2c_info(int *fd, int arg, char *devtype, char *type);
+
+int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n, int *div, char *devtype);
+#define open_i2c_sensor(dev,type,n,div,devtype) \
+    open_sysfs_sensor("/sys/bus/i2c/devices/",dev,type,n,div,devtype)
+
+#define open_platform_sensor(dev,type,n,div,devtype) \
+    open_sysfs_sensor("/sys/bus/platform/devices/",dev,type,n,div,devtype)
+
+#define open_hwmon_sensor(dev,type,n,div,devtype) \
+   open_sysfs_sensor("/sys/class/hwmon/",dev,type,n,div,devtype); \
+
+double get_sysfs_info(int *fd, int arg, char *devtype, char *type);
 
 void get_adt746x_cpu( char *, size_t ); 
 void get_adt746x_fan( char *, size_t ); 
@@ -458,7 +525,9 @@ int open_acpi_temperature(const char *name);
 double get_acpi_temperature(int fd);
 void get_acpi_ac_adapter( char *, size_t ); 
 void get_acpi_fan( char *, size_t ); 
-void get_battery_stuff(char *buf, unsigned int n, const char *bat);
+void get_battery_stuff(char *buf, unsigned int n, const char *bat, int item);
+int get_battery_perct(const char *bat);
+int get_battery_perct_bar(const char *bat);
 void get_ibm_acpi_fan(char *buf, size_t client_buffer_size);
 void get_ibm_acpi_temps(void);
 void get_ibm_acpi_volume(char *buf, size_t client_buffer_size);
@@ -470,6 +539,22 @@ struct ibm_acpi_struct {
 };
 
 struct ibm_acpi_struct ibm_acpi;
+
+#if defined(__OpenBSD__)
+void update_obsd_sensors(void);
+void get_obsd_vendor(char *buf, size_t client_buffer_size);
+void get_obsd_product(char *buf, size_t client_buffer_size);
+
+#define OBSD_MAX_SENSORS 256
+struct obsd_sensors_struct {
+	int device;
+	float temp[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
+	unsigned int fan[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
+	float volt[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
+};
+struct obsd_sensors_struct obsd_sensors;
+#endif /* __OpenBSD__ */
+
 
 enum { PB_BATT_STATUS, PB_BATT_PERCENT, PB_BATT_TIME};
 void get_powerbook_batt_info(char*, size_t, int);
@@ -522,7 +607,10 @@ void update_mail_count();
 kvm_t *kd;
 #endif
 
-#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
+#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
+#ifdef __OpenBSD__
+typedef struct apm_power_info *apm_info_t;
+#endif
 int apm_getinfo(int fd, apm_info_t aip);
 char *get_apm_adapter(void);
 char *get_apm_battery_life(void);
@@ -531,8 +619,10 @@ char *get_apm_battery_time(void);
 
 /* in mpd.c */
 #ifdef MPD
-void update_mpd();
-#endif
+extern void clear_mpd_stats(struct information *current_info);
+void *update_mpd(void);
+extern timed_thread *mpd_timed_thread;
+#endif /* MPD */
 
 /* in xmms2.c */
 #ifdef XMMS2
@@ -544,6 +634,13 @@ void update_xmms2();
 int scan_hddtemp(const char *arg, char **dev, char **addr, int *port);
 char *get_hddtemp_info(char *dev, char *addr, int port, char *unit);
 #endif /* HDDTEMP */
+
+/* in rss.c */
+#ifdef RSS
+PRSS* get_rss_info(char *uri, int delay);
+void init_rss_info();
+void free_rss_info();
+#endif /* RSS */
 
 /* in linux.c */
 

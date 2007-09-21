@@ -1,9 +1,10 @@
 Source: conky
 Section: utils
 Priority: optional
-Maintainer: Bartosz Fenski <fenio@debian.org>
-Build-Depends: debhelper (>= 4.0.0), libx11-dev, libxext-dev, libxft-dev, x-dev, libxt-dev, libxdamage-dev
-Standards-Version: 3.6.2
+Maintainer: Kapil Hari Paranjape <kapil@debian.org>
+Build-Depends: debhelper (>= 4.0.0), quilt, libx11-dev, libxft-dev,
+ libxdamage-dev, libxext-dev, pkg-config (>= 0.19), libglib2.0-dev
+Standards-Version: 3.7.2
 
 Package: conky
 Architecture: any
@@ -16,4 +17,4 @@ Description: highly configurable system monitor for X based on torsmo
  as well as the ability to execute programs and scripts, then display
  the output from stdout. 
  .
- Homepage: http://conky.sf.net
+  Homepage: http://conky.sf.net

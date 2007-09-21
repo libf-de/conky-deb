@@ -1,21 +1,39 @@
 /*
  * Conky, a system monitor, based on torsmo
  *
- * This program is licensed under BSD license, read COPYING
+ * Any original torsmo code is licensed under the BSD license
  *
- *  $Id: conky.c 755 2006-11-12 04:14:29Z pkovacs $
+ * All code written since the fork of torsmo is licensed under the GPL
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
+ * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *
+ *  $Id: conky.c 935 2007-08-31 02:05:02Z brenden1 $
  */
 
 #include "conky.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <time.h>
 #include <locale.h>
 #include <signal.h>
 #include <unistd.h>
-#include <string.h>
 #include <errno.h>
 #include <termios.h>
 #include <string.h>
@@ -26,7 +44,9 @@
 #include <sys/time.h>
 #ifdef X11
 #include <X11/Xutil.h>
+#ifdef HAVE_XDAMAGE
 #include <X11/extensions/Xdamage.h>
+#endif
 #ifdef IMLIB2
 #include <Imlib2.h>
 #endif /* IMLIB2 */
@@ -36,12 +56,15 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-
 #ifdef HAVE_ICONV
 #include <iconv.h>
 #endif
 
 #include "build.h"
+
+#ifndef S_ISSOCK
+#define S_ISSOCK(x)   ((x & S_IFMT) == S_IFSOCK)
+#endif
 
 #define CONFIG_FILE "$HOME/.conkyrc"
 #define MAIL_FILE "$MAIL"
@@ -90,6 +113,12 @@ static void print_version()
 #ifdef TCP_PORT_MONITOR
 	"  * portmon\n"
 #endif /* TCP_PORT_MONITOR */
+#ifdef RSS
+	"  * rss\n"
+#endif /* RSS */
+#ifdef HAVE_IWLIB
+	"  * wireless\n"
+#endif
 	"\n");	
 
 	exit(0);
@@ -269,9 +298,6 @@ static char *current_config;
 /* set to 1 if you want all text to be in uppercase */
 static unsigned int stuff_in_upper_case;
 
-/* Update interval */
-static double update_interval;
-
 /* Run how many times? */
 static unsigned long total_run_times;
 
@@ -308,18 +334,30 @@ static int background_colour = 0;
 static int fixed_size = 0, fixed_pos = 0;
 #endif
 
-/* maximum size of config TEXT buffer, i.e. below TEXT line. */
-static unsigned int max_user_text = MAX_USER_TEXT_DEFAULT;
-
 static int minimum_width, minimum_height;
 static int maximum_width;
 
 #endif /* X11 */
 
+#ifdef __OpenBSD__
+static int sensor_device;
+#endif
+
+static long color0, color1, color2, color3, color4, color5, color6, color7, color8, color9;
+
+/* maximum number of special things, e.g. fonts, offsets, aligns, etc. */
+static unsigned int max_specials = MAX_SPECIALS_DEFAULT;
+
+/* maximum size of config TEXT buffer, i.e. below TEXT line. */
+static unsigned int max_user_text = MAX_USER_TEXT_DEFAULT;
+
+/* maximum size of individual text buffers, ie $exec buffer size */
+unsigned int text_buffer_size = TEXT_BUFFER_SIZE;
+
 #ifdef HAVE_ICONV
 #define CODEPAGE_LENGTH 20
 long iconv_selected;
-long iconv_count;
+long iconv_count = 0;
 char iconv_converting;
 static iconv_t **iconv_cd = 0;
 
@@ -346,8 +384,9 @@ void free_iconv(void)
 {
 	if (iconv_cd) {
 		long i;
-		for (i = iconv_count; i < 0; i++) {
+		for (i = 0; i < iconv_count; i++) {
 			if (iconv_cd[i]) {
+				iconv_close(*iconv_cd[i]);
 				free(iconv_cd[i]);
 			}
 		}
@@ -369,8 +408,7 @@ int no_buffers;
 static int pad_percents = 0;
 
 #ifdef TCP_PORT_MONITOR
-tcp_port_monitor_collection_args_t 	tcp_port_monitor_collection_args;
-tcp_port_monitor_args_t 		tcp_port_monitor_args;
+tcp_port_monitor_args_t 	tcp_port_monitor_args;
 #endif
 
 /* Text that is shown */
@@ -415,36 +453,24 @@ static int blockdepth = 0;
 static int if_jumped = 0;
 static int blockstart[MAX_IF_BLOCK_DEPTH];
 
-int check_mount(char *s)
+int check_contains(char *f, char *s)
 {
-#if defined(__linux__)
 	int ret = 0;
-	FILE *mtab = fopen("/etc/mtab", "r");
-	if (mtab) {
-		char buf1[256], buf2[128];
-		while (fgets(buf1, 256, mtab)) {
-			sscanf(buf1, "%*s %128s", buf2);
-			if (!strcmp(s, buf2)) {
+	FILE *where = fopen(f, "r");
+	if (where) {
+		char buf1[256], buf2[256];
+		while (fgets(buf1, 256, where)) {
+			sscanf(buf1, "%255s", buf2);
+			if (strstr(buf2, s)) {
 				ret = 1;
 				break;
 			}
 		}
-		fclose(mtab);
+		fclose(where);
 	} else {
-		ERR("Could not open mtab");
+		ERR("Could not open the file");
 	}
 	return ret;
-#elif defined(__FreeBSD__)
-	struct statfs *mntbuf;
-	int i, mntsize;
-
-	mntsize = getmntinfo(&mntbuf, MNT_NOWAIT);
-	for (i = mntsize - 1; i >= 0; i--)
-		if (strcmp(mntbuf[i].f_mntonname, s) == 0)
-			return 1;
-
-	return 0;
-#endif
 }
 
 
@@ -494,7 +520,7 @@ enum {
 	TAB,
 };
 
-static struct special_t {
+struct special_t {
 	int type;
 	short height;
 	short width;
@@ -506,18 +532,21 @@ static struct special_t {
 	short font_added;
 	unsigned long first_colour; // for graph gradient
 	unsigned long last_colour;
-} specials[128];
+};
 
-static int special_count;
+/* create specials array on heap instead of stack with introduction of max_specials */
+static struct special_t *specials = NULL;
+
+static unsigned int special_count;
 #ifdef X11
-static int special_index;	/* used when drawing */
+static unsigned int special_index;	/* used when drawing */
 #endif /* X11 */
 
 #define MAX_GRAPH_DEPTH 256	/* why 256? cause an array of more then 256 doubles seems excessive, and who needs that kind of precision anyway? */
 
 static struct special_t *new_special(char *buf, int t)
 {
-	if (special_count >= 512)
+	if (special_count >= max_specials)
 		CRIT_ERR("too many special things in text");
 
 	buf[0] = SPECIAL_CHAR;
@@ -526,53 +555,91 @@ static struct special_t *new_special(char *buf, int t)
 	return &specials[special_count++];
 }
 
-typedef struct tailstring_list {
-	char data[TEXT_BUFFER_SIZE];
-	struct tailstring_list *next;
-	struct tailstring_list *first;
-} tailstring;
-
-void addtail(tailstring ** head, char *data_in)
-{
-	tailstring *tmp;
-	if ((tmp = malloc(sizeof(*tmp))) == NULL) {
-		CRIT_ERR("malloc");
-	}
-	if (*head == NULL) {
-		tmp->first = tmp;
-	} else {
-		tmp->first = (*head)->first;
-	}
-	strncpy(tmp->data, data_in, TEXT_BUFFER_SIZE);
-	tmp->next = *head;
-	*head = tmp;
-}
-
-void freetail(tailstring * head)
-{
-	tailstring *tmp;
-	while (head != NULL) {
-		tmp = head->next;
-		free(head);
-		head = tmp;
-	}
-}
-
-void freelasttail(tailstring * head)
-{
-	tailstring * tmp = head;
-	while(tmp != NULL) {
-		if (tmp->next == head->first) {
-			tmp->next = NULL;
-			break;
+long fwd_fcharfind(FILE* fp, char val, unsigned int step) {
+#define BUFSZ 0x1000
+	long ret = -1;
+	unsigned int count = 0;
+	static char buf[BUFSZ];
+	long orig_pos = ftell(fp);
+	long buf_pos = -1;
+	long buf_size = BUFSZ;
+	char* cur_found = NULL;
+	while(count < step) {
+		if(cur_found == NULL) {
+			buf_size = fread(buf, 1, buf_size, fp);
+			buf_pos = 0;
 		}
-		tmp = tmp->next;
+		cur_found = memchr(buf+buf_pos, val, buf_size-buf_pos);
+		if(cur_found != NULL) {
+			buf_pos = cur_found-buf+1;
+			count++;
+		}
+		else {
+			if(feof(fp))
+				break;
+		}
 	}
-	free(head->first);
-	while(head != NULL && tmp != NULL) {
-		head->first = tmp;
-		head = head->next;
+	if(count == step)
+		ret = ftell(fp) - buf_size + buf_pos - 1;
+	fseek(fp, orig_pos, SEEK_SET);
+	return ret;
+#undef BUFSZ
+}
+
+#ifndef HAVE_MEMRCHR
+void *
+memrchr (const void *buffer, int c, size_t n)
+{
+	const unsigned char *p = buffer;
+
+	for (p += n; n ; n--)
+		if (*--p == c)
+			return (void *)p;
+	return NULL;
+}
+#endif
+long rev_fcharfind(FILE* fp, char val, unsigned int step) {
+#define BUFSZ 0x1000
+	long ret = -1;
+	unsigned int count = 0;
+	static char buf[BUFSZ];
+	long orig_pos = ftell(fp);
+	long buf_pos = -1;
+	long file_pos = orig_pos;
+	long buf_size = BUFSZ;
+	char* cur_found;
+	while(count < step) {
+		if(buf_pos <= 0) {
+			if(file_pos > BUFSZ) {
+				fseek(fp, file_pos-BUFSZ, SEEK_SET);
+			}
+			else {
+				buf_size = file_pos;
+				fseek(fp, 0, SEEK_SET);
+			}
+			file_pos = ftell(fp);
+			buf_pos = fread(buf, 1, buf_size, fp);
+		}
+		cur_found = 
+			memrchr(
+					buf,
+					(int)val,
+					(size_t)buf_pos);
+		if(cur_found != NULL) {
+			buf_pos = cur_found-buf;
+			count++;
+		} else {
+			buf_pos = -1;
+			if(file_pos == 0) {
+				break;
+			}
+		}
 	}
+	fseek(fp, orig_pos, SEEK_SET);
+	if(count == step)
+		ret = file_pos + buf_pos;
+	return ret;
+#undef BUFSZ
 }
 
 static void new_bar(char *buf, int w, int h, int usage)
@@ -600,9 +667,9 @@ static const char *scan_bar(const char *args, int *w, int *h)
 
 static char *scan_font(const char *args)
 {
-	if (args && sizeof(args) < 127) {
+  if (args && *args)
 		return strdup(args);
-	}
+  
 	return NULL;
 }
 
@@ -867,24 +934,42 @@ static void human_readable(long long a, char *buf, int size)
 /* text handling */
 
 enum text_object_type {
+	OBJ_addr,
+#ifndef __OpenBSD__
 	OBJ_acpiacadapter,
 	OBJ_adt746xcpu,
 	OBJ_adt746xfan,
 	OBJ_acpifan,
-	OBJ_addr,
-	OBJ_linkstatus,
 	OBJ_acpitemp,
 	OBJ_acpitempf,
 	OBJ_battery,
+	OBJ_battery_time,
+	OBJ_battery_percent,
+	OBJ_battery_bar,
+#endif /* !__OpenBSD__ */
 	OBJ_buffers,
 	OBJ_cached,
 	OBJ_color,
+	OBJ_color0,
+	OBJ_color1,
+	OBJ_color2,
+	OBJ_color3,
+	OBJ_color4,
+	OBJ_color5,
+	OBJ_color6,
+	OBJ_color7,
+	OBJ_color8,
+	OBJ_color9,
 	OBJ_font,
 	OBJ_cpu,
 	OBJ_cpubar,
 	OBJ_cpugraph,
 	OBJ_diskio,
+	OBJ_diskio_read,
+	OBJ_diskio_write,
 	OBJ_diskiograph,
+	OBJ_diskiograph_read,
+	OBJ_diskiograph_write,
 	OBJ_downspeed,
 	OBJ_downspeedf,
 	OBJ_downspeedgraph,
@@ -917,6 +1002,8 @@ enum text_object_type {
 	OBJ_alignr,
 	OBJ_alignc,
 	OBJ_i2c,
+	OBJ_platform,
+	OBJ_hwmon,
 #if defined(__linux__)
 	OBJ_i8k_version,
 	OBJ_i8k_bios,
@@ -936,7 +1023,16 @@ enum text_object_type {
         OBJ_pb_battery,
 	OBJ_voltage_mv,
 	OBJ_voltage_v,
+	OBJ_wireless_essid,
+	OBJ_wireless_mode,
+	OBJ_wireless_bitrate,
+	OBJ_wireless_ap,
+	OBJ_wireless_link_qual,
+	OBJ_wireless_link_qual_max,
+	OBJ_wireless_link_qual_perc,
+	OBJ_wireless_link_bar,
 #endif /* __linux__ */
+	OBJ_if_empty,
 	OBJ_if_existing,
 	OBJ_if_mounted,
 	OBJ_if_running,
@@ -948,6 +1044,7 @@ enum text_object_type {
 	OBJ_loadavg,
 	OBJ_machine,
 	OBJ_mails,
+	OBJ_mboxscan,
 	OBJ_mem,
 	OBJ_membar,
 	OBJ_memgraph,
@@ -992,11 +1089,18 @@ enum text_object_type {
 	OBJ_pop3,
 	OBJ_pop3_unseen,
 	OBJ_pop3_used,
-#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
+#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
 	OBJ_apm_adapter,
 	OBJ_apm_battery_time,
 	OBJ_apm_battery_life,
-#endif /* __FreeBSD__ */
+#endif /* __FreeBSD__ __OpenBSD__ */
+#ifdef __OpenBSD__
+	OBJ_obsd_sensors_temp,
+	OBJ_obsd_sensors_fan,
+	OBJ_obsd_sensors_volt,
+	OBJ_obsd_vendor,
+	OBJ_obsd_product,
+#endif /* __OpenBSD__ */
 #ifdef MPD
 	OBJ_mpd_title,
 	OBJ_mpd_artist,
@@ -1062,10 +1166,12 @@ enum text_object_type {
 	OBJ_bmpx_uri,
 	OBJ_bmpx_bitrate,
 #endif
+#ifdef RSS
+	OBJ_rss,
+#endif
 #ifdef TCP_PORT_MONITOR
 	OBJ_tcp_portmon,
 #endif
-
 #ifdef HAVE_ICONV
 	OBJ_iconv_start,
 	OBJ_iconv_stop,
@@ -1073,6 +1179,9 @@ enum text_object_type {
 #ifdef HDDTEMP
 	OBJ_hddtemp,
 #endif
+	OBJ_entropy_avail,
+	OBJ_entropy_poolsize,
+	OBJ_entropy_bar
 };
 
 struct text_object {
@@ -1094,6 +1203,11 @@ struct text_object {
 		struct mail_s *mail;
 
 		struct {
+			char *args;
+			char *output;
+		} mboxscan;
+
+		struct {
 			char *tz;    /* timezone variable */
 			char *fmt;   /* time display formatting */
 		} tztime;
@@ -1113,11 +1227,14 @@ struct text_object {
 			int arg;
 			char devtype[256];
 			char type[64];
-		} i2c;		/* 2 */
+		} sysfs;		/* 2 */
+
 		struct {
 			int pos;
 			char *s;
+			char *str;
 		} ifblock;
+
 		struct {
 			int num;
 			int type;
@@ -1138,9 +1255,15 @@ struct text_object {
 			char *cmd;
 			char *buffer;
 			double data;
-			int pos;
-			struct thread_info_s thread_info;
 		} execi;	/* 5 */
+
+		struct {
+			float interval;
+			char *cmd;
+			char *buffer;
+			double data;
+			timed_thread *p_timed_thread;
+		} texeci;
 
 		struct {
 			int a, b;
@@ -1149,7 +1272,7 @@ struct text_object {
 		struct {
 			in_port_t  port_range_begin;  /* starting port to monitor */
 			in_port_t  port_range_end;    /* ending port to monitor */
-			int        item;              /* enum value from libtcp-portmon.h, e.g. COUNT, REMOTEIP, etc. */
+			int        item;              /* enum from libtcp-portmon.h, e.g. COUNT, etc. */
 			int        connection_index;  /* 0 to n-1 connections. */
 		} tcp_port_monitor;
 #endif
@@ -1159,6 +1282,14 @@ struct text_object {
 			int port;
 			char *dev;
 		} hddtemp; /* 2 */
+#endif
+#ifdef RSS
+		struct {
+			char *uri;
+			char *action;
+			int act_par;
+			int delay;
+		} rss;
 #endif
 	} data;
 };
@@ -1171,25 +1302,6 @@ struct text_object_list {
 static unsigned int text_object_count;
 static struct text_object *text_objects;
 static void generate_text_internal(char *p, int p_max_size, struct text_object *objs, unsigned int object_count, struct information *cur);
-
-#define MAX_THREADS 512 // sure whatever
-typedef struct thread_info_s *thread_info;
-static thread_info thread_list[MAX_THREADS];
-static int thread_count = 0;
-static int threads_runnable = 1;
-
-int register_thread(struct thread_info_s *new_thread)
-{
-	if (thread_count >= MAX_THREADS) {
-		CRIT_ERR("Uh oh, tried to register too many threads");
-	} else {
-		thread_list[thread_count] = new_thread;
-		thread_count++;
-		// may as well fix the mutex for them as well
-		pthread_mutex_init(&(new_thread->mutex), NULL);
-	}
-	return thread_count - 1;
-}
 
 #define MAXDATASIZE 1000
 #define POP3 1
@@ -1262,15 +1374,12 @@ struct mail_s* parse_mail_args(char type, const char *arg) {
 	} else {
 		mail->command[0] = '\0';
 	}
-	mail->pos = -1;
+	mail->p_timed_thread = NULL;
 	return mail;
 }
 
 void *imap_thread(struct mail_s* mail)
-{				// pthreads are really beginning to piss me off
-	double update_time;
-	int run_code = threads_runnable;
-	update_time = get_time();
+{
 	int sockfd, numbytes;
 	char recvbuf[MAXDATASIZE];
 	char sendbuf[MAXDATASIZE];
@@ -1278,22 +1387,21 @@ void *imap_thread(struct mail_s* mail)
 	int fail = 0;
 	unsigned int old_unseen = UINT_MAX;
 	unsigned int old_messages = UINT_MAX;
+	struct stat stat_buf;
 	struct hostent *he;
 	struct sockaddr_in their_addr;	// connector's address information
 	if ((he = gethostbyname(mail->host)) == NULL) {	// get the host info 
 		herror("gethostbyname");
 		exit(1);
 	}
-	while (threads_runnable == run_code && fail < 5) {
+	while (fail < 5) {
 		if (fail > 0) {
-			ERR("Trying IMAP connection again for %s@%s (try %i/5)", mail->user, mail->host, fail + 1);
-			sleep((int)mail->interval);
+		    ERR("Trying IMAP connection again for %s@%s (try %i/5)", mail->user, mail->host, fail + 1);
 		}
-		update_time = get_time();
 		if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
 			perror("socket");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 
 		their_addr.sin_family = AF_INET;	// host byte order 
@@ -1306,7 +1414,7 @@ void *imap_thread(struct mail_s* mail)
 		     sizeof(struct sockaddr)) == -1) {
 			perror("connect");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		struct timeval timeout;
 		int res;
@@ -1322,18 +1430,18 @@ void *imap_thread(struct mail_s* mail)
 				  0)) == -1) {
 				perror("recv");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		} else {
 			ERR("IMAP connection failed: timeout");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "* OK") != recvbuf) {
 			ERR("IMAP connection failed, probably not an IMAP server");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		strncpy(sendbuf, "a1 login ", MAXDATASIZE);
 		strncat(sendbuf, mail->user,
@@ -1345,7 +1453,7 @@ void *imap_thread(struct mail_s* mail)
 		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
 			perror("send a1");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		timeout.tv_sec = 60;	// 60 second timeout i guess
 		timeout.tv_usec = 0;
@@ -1358,14 +1466,14 @@ void *imap_thread(struct mail_s* mail)
 				  0)) == -1) {
 				perror("recv a1");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "a1 OK") == NULL) {
 			ERR("IMAP server login failed: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		strncpy(sendbuf, "a2 STATUS ", MAXDATASIZE);
 		strncat(sendbuf, mail->folder,
@@ -1375,7 +1483,7 @@ void *imap_thread(struct mail_s* mail)
 		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
 			perror("send a2");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		timeout.tv_sec = 60;	// 60 second timeout i guess
 		timeout.tv_usec = 0;
@@ -1388,14 +1496,14 @@ void *imap_thread(struct mail_s* mail)
 				  0)) == -1) {
 				perror("recv a2");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "a2 OK") == NULL) {
 			ERR("IMAP status failed: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		// now we get the data
 		reply = strstr(recvbuf, " (MESSAGES ");
@@ -1404,19 +1512,19 @@ void *imap_thread(struct mail_s* mail)
 		if (reply == NULL) {
 			ERR("Error parsing IMAP response: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		} else {
-			pthread_mutex_lock(&(mail->thread_info.mutex));
+			timed_thread_lock (mail->p_timed_thread);
 			sscanf(reply, "MESSAGES %lu UNSEEN %lu",
 			       &mail->messages,
 			       &mail->unseen);
-			pthread_mutex_unlock(&(mail->thread_info.mutex));
+			timed_thread_unlock (mail->p_timed_thread);
 		}
 		strncpy(sendbuf, "a3 logout\n", MAXDATASIZE);
 		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
 			perror("send a3");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		timeout.tv_sec = 60;	// 60 second timeout i guess
 		timeout.tv_usec = 0;
@@ -1429,16 +1537,15 @@ void *imap_thread(struct mail_s* mail)
 				  0)) == -1) {
 				perror("recv a3");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "a3 OK") == NULL) {
 			ERR("IMAP logout failed: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		}
-		close(sockfd);
 		if (strlen(mail->command) > 1 && (mail->unseen > old_unseen || (mail->messages > old_messages && mail->unseen > 0))) {	// new mail goodie
 			if (system(mail->command) == -1) {
 				perror("system()");
@@ -1447,54 +1554,39 @@ void *imap_thread(struct mail_s* mail)
 		fail = 0;
 		old_unseen = mail->unseen;
 		old_messages = mail->messages;
-		mail->last_update = update_time;
-		usleep(100);	// prevent race condition
-		if (get_time() - mail->last_update >
-		    mail->interval) {
-			continue;
-		} else {
-			unsigned int delay =
-			    1000000.0 * (mail->interval -
-					 (get_time() -
-					  mail->last_update));
-			if (delay < update_interval * 500000) {
-				delay = update_interval * 1000000;
-			}
-			usleep(delay);
-		}
+next_iteration:
+		if ((fstat(sockfd, &stat_buf)==0) && S_ISSOCK(stat_buf.st_mode))
+		    /* if a valid socket, close it */
+		    close(sockfd);
+		if (timed_thread_test (mail->p_timed_thread))
+		    timed_thread_exit (mail->p_timed_thread);
 	}
-	ERR("exiting imap thread");
-	pthread_exit(NULL);
 	return 0;
 }
 
 void *pop3_thread(struct mail_s *mail)
-{				// pthreads are really beginning to piss me off
-	double update_time;
-	int run_code = threads_runnable;
-	update_time = get_time();
+{
 	int sockfd, numbytes;
 	char recvbuf[MAXDATASIZE];
 	char sendbuf[MAXDATASIZE];
 	char *reply;
 	int fail = 0;
 	unsigned int old_unseen = UINT_MAX;
+	struct stat stat_buf;
 	struct hostent *he;
 	struct sockaddr_in their_addr;	// connector's address information
 	if ((he = gethostbyname(mail->host)) == NULL) {	// get the host info 
 		herror("gethostbyname");
 		exit(1);
 	}
-	while (threads_runnable == run_code && fail < 5) {
+	while (fail < 5) {
 		if (fail > 0) {
-			ERR("Trying POP3 connection again for %s@%s (try %i/5)", mail->user, mail->host, fail + 1);
-			sleep((int)mail->interval);
+		    ERR("Trying POP3 connection again for %s@%s (try %i/5)", mail->user, mail->host, fail + 1);
 		}
-		update_time = get_time();
 		if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
 			perror("socket");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 
 		their_addr.sin_family = AF_INET;	// host byte order 
@@ -1507,7 +1599,7 @@ void *pop3_thread(struct mail_s *mail)
 		     sizeof(struct sockaddr)) == -1) {
 			perror("connect");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		struct timeval timeout;
 		int res;
@@ -1523,18 +1615,18 @@ void *pop3_thread(struct mail_s *mail)
 				  0)) == -1) {
 				perror("recv");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		} else {
 			ERR("POP3 connection failed: timeout\n");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "+OK ") != recvbuf) {
 			ERR("POP3 connection failed, probably not a POP3 server");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		strncpy(sendbuf, "USER ", MAXDATASIZE);
 		strncat(sendbuf, mail->user,
@@ -1543,7 +1635,7 @@ void *pop3_thread(struct mail_s *mail)
 		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
 			perror("send USER");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		timeout.tv_sec = 60;	// 60 second timeout i guess
 		timeout.tv_usec = 0;
@@ -1556,14 +1648,14 @@ void *pop3_thread(struct mail_s *mail)
 				  0)) == -1) {
 				perror("recv USER");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "+OK ") == NULL) {
 			ERR("POP3 server login failed: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		strncpy(sendbuf, "PASS ", MAXDATASIZE);
 		strncat(sendbuf, mail->pass,
@@ -1572,7 +1664,7 @@ void *pop3_thread(struct mail_s *mail)
 		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
 			perror("send PASS");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		timeout.tv_sec = 60;	// 60 second timeout i guess
 		timeout.tv_usec = 0;
@@ -1585,20 +1677,20 @@ void *pop3_thread(struct mail_s *mail)
 				  0)) == -1) {
 				perror("recv PASS");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "+OK ") == NULL) {
 			ERR("POP3 server login failed: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		strncpy(sendbuf, "STAT\n", MAXDATASIZE);
 		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
 			perror("send STAT");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		timeout.tv_sec = 60;	// 60 second timeout i guess
 		timeout.tv_usec = 0;
@@ -1611,33 +1703,32 @@ void *pop3_thread(struct mail_s *mail)
 				  0)) == -1) {
 				perror("recv STAT");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "+OK ") == NULL) {
 			ERR("POP3 status failed: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		// now we get the data
 		reply = recvbuf + 4;
 		if (reply == NULL) {
 			ERR("Error parsing POP3 response: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		} else {
-			pthread_mutex_lock(&(mail->thread_info.mutex));
+			timed_thread_lock (mail->p_timed_thread);
 			sscanf(reply, "%lu %lu", &mail->unseen,
 			       &mail->used);
-//			sleep(60);
-			pthread_mutex_unlock(&(mail->thread_info.mutex));
+			timed_thread_unlock (mail->p_timed_thread);
 		}
 		strncpy(sendbuf, "QUIT\n", MAXDATASIZE);
 		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
 			perror("send QUIT");
 			fail++;
-			continue;
+			goto next_iteration;
 		}
 		timeout.tv_sec = 60;	// 60 second timeout i guess
 		timeout.tv_usec = 0;
@@ -1650,16 +1741,15 @@ void *pop3_thread(struct mail_s *mail)
 				  0)) == -1) {
 				perror("recv QUIT");
 				fail++;
-				continue;
+				goto next_iteration;
 			}
 		}
 		recvbuf[numbytes] = '\0';
 		if (strstr(recvbuf, "+OK") == NULL) {
 			ERR("POP3 logout failed: %s", recvbuf);
 			fail++;
-			continue;
+			goto next_iteration;
 		}
-		close(sockfd);
 		if (strlen(mail->command) > 1 && mail->unseen > old_unseen) {	// new mail goodie
 			if (system(mail->command) == -1) {
 				perror("system()");
@@ -1667,37 +1757,23 @@ void *pop3_thread(struct mail_s *mail)
 		}
 		fail = 0;
 		old_unseen = mail->unseen;
-		mail->last_update = update_time;
-		usleep(100);	// prevent race condition
-		if (get_time() - mail->last_update >
-		    mail->interval) {
-			continue;
-		} else {
-			unsigned int delay =
-			    1000000.0 * (mail->interval -
-					 (get_time() -
-					  mail->last_update));
-			if (delay < update_interval * 500000) {
-				delay = update_interval * 1000000;
-			}
-			usleep(delay);
-		}
+next_iteration:
+		if ((fstat(sockfd, &stat_buf)==0) && S_ISSOCK(stat_buf.st_mode))  
+		    /* if a valid socket, close it */
+		    close(sockfd);
+		if (timed_thread_test (mail->p_timed_thread))
+		    timed_thread_exit (mail->p_timed_thread);
 	}
-	ERR("exiting pop3 thread");
-	pthread_exit(NULL);
 	return 0;
 }
 
 
-void *threaded_exec(struct text_object *obj) { // pthreads are really beginning to piss me off
-	double update_time;
-	int run_code = threads_runnable;
-	while (threads_runnable == run_code) {
-		update_time = get_time();
-		char *p2 = obj->data.execi.buffer;
-		FILE *fp = popen(obj->data.execi.cmd,"r");
-		pthread_mutex_lock(&(obj->data.execi.thread_info.mutex));
-		int n2 = fread(p2, 1, TEXT_BUFFER_SIZE, fp);
+void *threaded_exec(struct text_object *obj) { 
+	while (1) {
+		char *p2 = obj->data.texeci.buffer;
+		FILE *fp = popen(obj->data.texeci.cmd,"r");
+		timed_thread_lock (obj->data.texeci.p_timed_thread);
+		int n2 = fread(p2, 1, text_buffer_size, fp);
 		(void) pclose(fp);
 		p2[n2] = '\0';
 		if (n2 && p2[n2 - 1] == '\n') {
@@ -1709,21 +1785,10 @@ void *threaded_exec(struct text_object *obj) { // pthreads are really beginning 
 			}
 			p2++;
 		}
-		pthread_mutex_unlock(&(obj->data.execi.thread_info.mutex));
-		obj->data.execi.last_update = update_time;
-		usleep(100); // prevent race condition
-		if (get_time() - obj->data.execi.last_update > obj->data.execi.interval) {
-			continue;
-		} else {
-			unsigned int delay = 1000000.0 * (obj->data.execi.interval -(get_time() - obj->data.execi.last_update));
-			if (delay < update_interval * 500000) {
-				delay = update_interval * 1000000;
-			}
-			usleep(delay);
-		}
+		timed_thread_unlock (obj->data.texeci.p_timed_thread);
+		if (timed_thread_test (obj->data.texeci.p_timed_thread))
+		    timed_thread_exit (obj->data.texeci.p_timed_thread);
 	}
-	ERR("exiting thread");
-	pthread_exit(NULL);
 	return 0;
 }
 
@@ -1739,6 +1804,7 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 	unsigned int i;
 	for (i = 0; i < count; i++) {
 		switch (objs[i].type) {
+#ifndef __OpenBSD__
 			case OBJ_acpitemp:
 				close(objs[i].data.i);
 				break;
@@ -1746,8 +1812,15 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 				close(objs[i].data.i);
 				break;
 			case OBJ_i2c:
-				close(objs[i].data.i2c.fd);
+				close(objs[i].data.sysfs.fd);
 				break;
+      case OBJ_platform:
+        close(objs[i].data.sysfs.fd);
+        break;
+      case OBJ_hwmon:
+        close(objs[i].data.sysfs.fd);
+        break;
+#endif /* !__OpenBSD__ */
 			case OBJ_time:
 				free(objs[i].data.s);
 				break;
@@ -1757,6 +1830,10 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 			case OBJ_tztime:
 				free(objs[i].data.tztime.tz);
 				free(objs[i].data.tztime.fmt);
+				break;
+			case OBJ_mboxscan:
+				free(objs[i].data.mboxscan.args);
+				free(objs[i].data.mboxscan.output);
 				break;
 			case OBJ_imap:
 				free(info.mail);
@@ -1784,16 +1861,19 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 					free(objs[i].data.mail);
 				}
 				break;
+			case OBJ_if_empty:
 			case OBJ_if_existing:
 			case OBJ_if_mounted:
 			case OBJ_if_running:
 				free(objs[i].data.ifblock.s);
+				free(objs[i].data.ifblock.str);
 				break;
 			case OBJ_tail:
 				free(objs[i].data.tail.logfile);
 				free(objs[i].data.tail.buffer);
 				break;
-			case OBJ_text: case OBJ_font:
+			case OBJ_text:
+			case OBJ_font:
 				free(objs[i].data.s);
 				break;
 			case OBJ_image:
@@ -1974,18 +2054,28 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 			case OBJ_bmpx_uri:
 			case OBJ_bmpx_bitrate:
 #endif
+#ifdef RSS
+			case OBJ_rss:
+				free(objs[i].data.rss.uri);
+				free(objs[i].data.rss.action);
+				break;
+#endif
 			case OBJ_pre_exec:
+#ifndef __OpenBSD__
 			case OBJ_battery:
 				free(objs[i].data.s);
 				break;
-
+			case OBJ_battery_time:
+				free(objs[i].data.s);
+				break;
+#endif /* !__OpenBSD__ */
 			case OBJ_execi:
 				free(objs[i].data.execi.cmd);
 				free(objs[i].data.execi.buffer);
 				break;
 			case OBJ_texeci:
-				free(objs[i].data.execi.cmd);
-				free(objs[i].data.execi.buffer);
+				free(objs[i].data.texeci.cmd);
+				free(objs[i].data.texeci.buffer);
 				break;
 			case OBJ_top:
 				if (info.first_process) {
@@ -2005,6 +2095,10 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 				free(objs[i].data.hddtemp.addr);
 				break;
 #endif
+			case OBJ_entropy_avail:
+			case OBJ_entropy_poolsize:
+			case OBJ_entropy_bar:
+				break;
 		}
 	}
 	free(objs);
@@ -2043,11 +2137,16 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		obj->data.l = get_x11_color(s);
 	} else
 #endif /* X11 */
+#ifndef __OpenBSD__
 		OBJ(acpitemp, 0) obj->data.i = open_acpi_temperature(arg);
 	END OBJ(acpitempf, 0) obj->data.i = open_acpi_temperature(arg);
 	END OBJ(acpiacadapter, 0)
-#if defined(__linux__)
-	    END OBJ(freq, 0)
+#endif /* !__OpenBSD__ */
+#ifdef __OpenBSD__
+	OBJ(freq, INFO_FREQ)
+#else
+	END OBJ(freq, INFO_FREQ)
+#endif
 	    get_cpu_count();
 	if (!arg
 	    || !isdigit(arg[0])
@@ -2063,7 +2162,7 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	    obj->data.cpu_index=atoi(&arg[0]);
 	}
 	obj->a = 1;
-	END OBJ(freq_g, 0)
+	END OBJ(freq_g, INFO_FREQ)
 	    get_cpu_count();
 	if (!arg
 	    || !isdigit(arg[0])
@@ -2079,6 +2178,7 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	    obj->data.cpu_index=atoi(&arg[0]);
 	}
 	obj->a = 1;
+#if defined(__linux__)
 	END OBJ(voltage_mv, 0)
 	    get_cpu_count();
 	if (!arg
@@ -2111,12 +2211,55 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	    obj->data.cpu_index=atoi(&arg[0]);
 	}
 	obj->a = 1;
-#else 
-	END OBJ(freq, 0);
-	END OBJ(freq_g, 0);
+
+#ifdef HAVE_IWLIB
+	END OBJ(wireless_essid, INFO_NET)
+	if(arg)
+		obj->data.net = get_net_stat(arg);
+	else
+		CRIT_ERR("wireless_essid: needs an argument");
+	END OBJ(wireless_mode, INFO_NET)
+	if(arg)
+		obj->data.net = get_net_stat(arg);
+	else
+		CRIT_ERR("wireless_mode: needs an argument");
+	END OBJ(wireless_bitrate, INFO_NET)
+	if(arg)
+		obj->data.net = get_net_stat(arg);
+	else
+		CRIT_ERR("wireless_bitrate: needs an argument");
+	END OBJ(wireless_ap, INFO_NET)
+	if(arg)
+		obj->data.net = get_net_stat(arg);
+	else
+		CRIT_ERR("wireless_ap: needs an argument");
+	END OBJ(wireless_link_qual, INFO_NET)
+	if(arg)
+		obj->data.net = get_net_stat(arg);
+	else
+		CRIT_ERR("wireless_link_qual: needs an argument");
+	END OBJ(wireless_link_qual_max, INFO_NET)
+	if(arg)
+		obj->data.net = get_net_stat(arg);
+	else
+		CRIT_ERR("wireless_link_qual_max: needs an argument");
+	END OBJ(wireless_link_qual_perc, INFO_NET)
+	if(arg)
+		obj->data.net = get_net_stat(arg);
+	else
+		CRIT_ERR("wireless_link_qual_perc: needs an argument");
+	END OBJ(wireless_link_bar, INFO_NET)
+	if(arg) {
+		arg = scan_bar(arg, &obj->a, &obj->b);
+		obj->data.net = get_net_stat(arg);
+	} else
+		CRIT_ERR("wireless_link_bar: needs an argument");
+#endif /* HAVE_IWLIB */
+
 #endif /* __linux__ */
 	END OBJ(freq_dyn, 0);
 	END OBJ(freq_dyn_g, 0);
+#ifndef __OpenBSD__
 	END OBJ(acpifan, 0);
 	END OBJ(battery, 0);
 	char bat[64];
@@ -2125,6 +2268,30 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	else
 		strcpy(bat, "BAT0");
 	obj->data.s = strdup(bat);
+	END OBJ(battery_time, 0);
+	char bat[64];
+	if (arg)
+		sscanf(arg, "%63s", bat);
+	else
+		strcpy(bat, "BAT0");
+	obj->data.s = strdup(bat);
+	END OBJ(battery_percent, 0);
+	char bat[64];
+	if (arg)
+		sscanf(arg, "%63s", bat);
+	else
+		strcpy(bat, "BAT0");
+	obj->data.s = strdup(bat);
+	END OBJ(battery_bar, 0);
+	char bat[64];
+	if (arg) {
+		arg = scan_bar(arg, &obj->a, &obj->b);
+		sscanf(arg, "%63s", bat);
+	} else {
+		strcpy(bat, "BAT0");
+	}
+	obj->data.s = strdup(bat);
+#endif /* !__OpenBSD__ */
 #if defined(__linux__)
 	END OBJ(i8k_version, INFO_I8K)
 		END OBJ(i8k_bios, INFO_I8K)
@@ -2166,6 +2333,37 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
                 }
 
 #endif /* __linux__ */
+#if defined(__OpenBSD__)
+	END OBJ(obsd_sensors_temp, 0);
+		if(!arg) {
+			CRIT_ERR("obsd_sensors_temp: needs an argument");
+		}
+		if(!isdigit(arg[0]) || atoi(&arg[0]) < 0 || atoi(&arg[0]) > OBSD_MAX_SENSORS-1) {
+			obj->data.sensor=0;
+			ERR("Invalid temperature sensor number!");
+		}
+			obj->data.sensor = atoi(&arg[0]);
+	END OBJ(obsd_sensors_fan, 0);
+		if(!arg) {
+			CRIT_ERR("obsd_sensors_fan: needs 2 arguments (device and sensor number)");
+		}
+		if(!isdigit(arg[0]) || atoi(&arg[0]) < 0 || atoi(&arg[0]) > OBSD_MAX_SENSORS-1) {
+			obj->data.sensor=0;
+			ERR("Invalid fan sensor number!");
+		}
+			obj->data.sensor = atoi(&arg[0]);
+	END OBJ(obsd_sensors_volt, 0);
+		if(!arg) {
+			CRIT_ERR("obsd_sensors_volt: needs 2 arguments (device and sensor number)");
+		}
+		if(!isdigit(arg[0]) || atoi(&arg[0]) < 0 || atoi(&arg[0]) > OBSD_MAX_SENSORS-1) {
+			obj->data.sensor=0;
+			ERR("Invalid voltage sensor number!");
+		}
+			obj->data.sensor = atoi(&arg[0]);
+	END OBJ(obsd_vendor, 0);
+	END OBJ(obsd_product, 0);
+#endif /* __OpenBSD__ */
 		END OBJ(buffers, INFO_BUFFERS)
 		END OBJ(cached, INFO_BUFFERS)
 		END OBJ(cpu, INFO_CPU)
@@ -2201,16 +2399,38 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 			obj->data.cpu_index = 0;
 		}
 	END OBJ(diskio, INFO_DISKIO)
-		END OBJ(diskiograph, INFO_DISKIO) (void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+	END OBJ(diskio_read, INFO_DISKIO)
+	END OBJ(diskio_write, INFO_DISKIO)
+	END OBJ(diskiograph, INFO_DISKIO) (void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+	END OBJ(diskiograph_read, INFO_DISKIO) (void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+	END OBJ(diskiograph_write, INFO_DISKIO) (void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
 	END OBJ(color, 0) 
 #ifdef X11
 		obj->data.l = arg ? get_x11_color(arg) : default_fg_color;
 #endif /* X11 */
-	END
-		OBJ(font, 0)
+	END OBJ(color0, 0)
+		obj->data.l = color0;
+	END OBJ(color1, 0)
+		obj->data.l = color1;
+	END OBJ(color2, 0)
+		obj->data.l = color2;
+	END OBJ(color3, 0)
+		obj->data.l = color3;
+	END OBJ(color4, 0)
+		obj->data.l = color4;
+	END OBJ(color5, 0)
+		obj->data.l = color5;
+	END OBJ(color6, 0)
+		obj->data.l = color6;
+	END OBJ(color7, 0)
+		obj->data.l = color7;
+	END OBJ(color8, 0)
+		obj->data.l = color8;
+	END OBJ(color9, 0)
+		obj->data.l = color9;
+	END OBJ(font, 0)
 		obj->data.s = scan_font(arg);
-	END
-		OBJ(downspeed, INFO_NET) 
+	END OBJ(downspeed, INFO_NET) 
 		if(arg) {
 			obj->data.net = get_net_stat(arg);
 		}
@@ -2278,9 +2498,7 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		obj->data.execi.cmd = strdup(arg + n);
 	}
 	END OBJ(execi, 0) unsigned int n;
-
-	if (!arg
-			|| sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
+	if (!arg || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
 		char buf[256];
 		ERR("${execi <interval> command}");
 		obj->type = OBJ_text;
@@ -2289,22 +2507,21 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	} else {
 		obj->data.execi.cmd = strdup(arg + n);
 		obj->data.execi.buffer =
-			(char *) calloc(1, TEXT_BUFFER_SIZE);
+			(char *) calloc(1, text_buffer_size);
 	}
 	END OBJ(texeci, 0) unsigned int n;
-
-	if (!arg || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
+	if (!arg || sscanf(arg, "%f %n", &obj->data.texeci.interval, &n) <= 0) {
 		char buf[256];
 		ERR("${texeci <interval> command}");
 		obj->type = OBJ_text;
 		snprintf(buf, 256, "${%s}", s);
 		obj->data.s = strdup(buf);
 	} else {
-		obj->data.execi.cmd = strdup(arg + n);
-		obj->data.execi.buffer =
-			(char *) calloc(1, TEXT_BUFFER_SIZE);
+		obj->data.texeci.cmd = strdup(arg + n);
+		obj->data.texeci.buffer =
+			(char *) calloc(1, text_buffer_size);
 	}
-	obj->data.execi.pos = -1;
+	obj->data.texeci.p_timed_thread = NULL;
 	END OBJ(pre_exec, 0) obj->type = OBJ_text;
 	if (arg) {
 		FILE *fp = popen(arg, "r");
@@ -2382,7 +2599,9 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	obj->data.pair.a = a;
 	obj->data.pair.b = b;
 
-	END OBJ(i2c, INFO_I2C) char buf1[64], buf2[64];
+#ifndef __OpenBSD__
+	END OBJ(i2c, INFO_SYSFS)
+  char buf1[64], buf2[64];
 	int n;
 
 	if (!arg) {
@@ -2393,19 +2612,61 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	}
 
 	if (sscanf(arg, "%63s %63s %d", buf1, buf2, &n) != 3) {
-		/* if scanf couldn't read three values, read type and num and use
-		 * default device */
+		/* if scanf couldn't read three values, read type and num and use default device */
 		sscanf(arg, "%63s %d", buf2, &n);
-		obj->data.i2c.fd =
-			open_i2c_sensor(0, buf2, n, &obj->data.i2c.arg,
-					obj->data.i2c.devtype);
-		strncpy(obj->data.i2c.type, buf2, 63);
+		obj->data.sysfs.fd =
+			open_i2c_sensor(0, buf2, n, &obj->data.sysfs.arg, obj->data.sysfs.devtype);
+		strncpy(obj->data.sysfs.type, buf2, 63);
 	} else {
-		obj->data.i2c.fd =
-			open_i2c_sensor(buf1, buf2, n, &obj->data.i2c.arg,
-					obj->data.i2c.devtype);
-		strncpy(obj->data.i2c.type, buf2, 63);
+		obj->data.sysfs.fd =
+			open_i2c_sensor(buf1, buf2, n, &obj->data.sysfs.arg, obj->data.sysfs.devtype);
+		strncpy(obj->data.sysfs.type, buf2, 63);
 	}
+
+  END OBJ(platform, INFO_SYSFS)
+  char buf1[64], buf2[64];
+  int n;
+
+  if (!arg) {
+    ERR("platform needs arguments");
+    obj->type = OBJ_text;
+    return NULL;
+  }
+
+  if (sscanf(arg, "%63s %63s %d", buf1, buf2, &n) != 3) {
+    /* if scanf couldn't read three values, read type and num and use default device */
+    sscanf(arg, "%63s %d", buf2, &n);
+    obj->data.sysfs.fd =
+      open_platform_sensor(0, buf2, n, &obj->data.sysfs.arg, obj->data.sysfs.devtype);
+    strncpy(obj->data.sysfs.type, buf2, 63);
+  } else {
+    obj->data.sysfs.fd =
+      open_platform_sensor(buf1, buf2, n, &obj->data.sysfs.arg, obj->data.sysfs.devtype);
+    strncpy(obj->data.sysfs.type, buf2, 63);
+  }
+
+  END OBJ(hwmon, INFO_SYSFS)
+  char buf1[64], buf2[64];
+  int n;
+
+  if (!arg) {
+    ERR("hwmon needs argumanets");
+    obj->type = OBJ_text;
+    return NULL;
+  }
+
+  if (sscanf(arg, "%63s %63s %d", buf1, buf2, &n) != 3) {
+    /* if scanf couldn't read three values, read type and num and use default device */
+    sscanf(arg, "%63s %d", buf2, &n);
+    obj->data.sysfs.fd =
+      open_hwmon_sensor(0, buf2, n, &obj->data.sysfs.arg, obj->data.sysfs.devtype);
+    strncpy(obj->data.sysfs.type, buf2, 63);
+  } else {
+    obj->data.sysfs.fd =
+      open_hwmon_sensor(buf1, buf2, n, &obj->data.sysfs.arg, obj->data.sysfs.devtype);
+    strncpy(obj->data.sysfs.type, buf2, 63);
+  }
+#endif /* !__OpenBSD__ */
 
 	END OBJ(top, INFO_TOP)
 		char buf[64];
@@ -2480,13 +2741,6 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		else {
 			CRIT_ERR("addr needs argument");
 		}
-	END OBJ(linkstatus, INFO_WIFI) 
-		if(arg) {
-			obj->data.net = get_net_stat(arg);
-		}
-		else {
-			CRIT_ERR("linkstatus needs argument");
-		}
 	END OBJ(tail, 0)
 		char buf[64];
 	int n1, n2;
@@ -2505,9 +2759,9 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 			fp = fopen(buf, "r");
 			if (fp) {
 				obj->data.tail.logfile =
-					malloc(TEXT_BUFFER_SIZE);
+					malloc(text_buffer_size);
 				strcpy(obj->data.tail.logfile, buf);
-				obj->data.tail.wantedlines = n1 - 1;
+				obj->data.tail.wantedlines = n1;
 				obj->data.tail.interval =
 					update_interval * 2;
 				fclose(fp);
@@ -2530,9 +2784,9 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 			fp = fopen(buf, "r");
 			if (fp != NULL) {
 				obj->data.tail.logfile =
-					malloc(TEXT_BUFFER_SIZE);
+					malloc(text_buffer_size);
 				strcpy(obj->data.tail.logfile, buf);
-				obj->data.tail.wantedlines = n1 - 1;
+				obj->data.tail.wantedlines = n1;
 				obj->data.tail.interval = n2;
 				fclose(fp);
 			} else {
@@ -2546,7 +2800,7 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		ERR("invalid args given for tail");
 		return NULL;
 	}
-	obj->data.tail.buffer = malloc(TEXT_BUFFER_SIZE * 20); /* asumming all else worked */
+	obj->data.tail.buffer = malloc(text_buffer_size * 20); /* asumming all else worked */
 	END OBJ(head, 0)
 		char buf[64];
 	int n1, n2;
@@ -2565,9 +2819,9 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 			fp = fopen(buf, "r");
 			if (fp != NULL) {
 				obj->data.tail.logfile =
-					malloc(TEXT_BUFFER_SIZE);
+					malloc(text_buffer_size);
 				strcpy(obj->data.tail.logfile, buf);
-				obj->data.tail.wantedlines = n1 - 1;
+				obj->data.tail.wantedlines = n1;
 				obj->data.tail.interval =
 					update_interval * 2;
 				fclose(fp);
@@ -2590,9 +2844,9 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 			fp = fopen(buf, "r");
 			if (fp != NULL) {
 				obj->data.tail.logfile =
-					malloc(TEXT_BUFFER_SIZE);
+					malloc(text_buffer_size);
 				strcpy(obj->data.tail.logfile, buf);
-				obj->data.tail.wantedlines = n1 - 1;
+				obj->data.tail.wantedlines = n1;
 				obj->data.tail.interval = n2;
 				fclose(fp);
 			} else {
@@ -2606,7 +2860,7 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		ERR("invalid args given for head");
 		return NULL;
 	}
-	obj->data.tail.buffer = malloc(TEXT_BUFFER_SIZE * 20); /* asumming all else worked */
+	obj->data.tail.buffer = malloc(text_buffer_size * 20); /* asumming all else worked */
 	END OBJ(loadavg, INFO_LOADAVG) int a = 1, b = 2, c = 3, r = 3;
 	if (arg) {
 		r = sscanf(arg, "%d %d %d", &a, &b, &c);
@@ -2620,15 +2874,37 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	obj->data.loadavg[0] = (r >= 1) ? (unsigned char) a : 0;
 	obj->data.loadavg[1] = (r >= 2) ? (unsigned char) b : 0;
 	obj->data.loadavg[2] = (r >= 3) ? (unsigned char) c : 0;
+	END OBJ(if_empty, 0)
+		if (blockdepth >= MAX_IF_BLOCK_DEPTH) {
+			CRIT_ERR("MAX_IF_BLOCK_DEPTH exceeded");
+		}
+	if (!arg) {
+		ERR("if_empty needs an argument");
+		obj->data.ifblock.s = 0;
+	} else
+		obj->data.ifblock.s = strdup(arg);
+	blockstart[blockdepth] = object_count;
+	obj->data.ifblock.pos = object_count + 2;
+	blockdepth++;
 	END OBJ(if_existing, 0)
 		if (blockdepth >= MAX_IF_BLOCK_DEPTH) {
 			CRIT_ERR("MAX_IF_BLOCK_DEPTH exceeded");
 		}
 	if (!arg) {
-		ERR("if_existing needs an argument");
-		obj->data.ifblock.s = 0;
-	} else
-		obj->data.ifblock.s = strdup(arg);
+		ERR("if_existing needs an argument or two");
+		obj->data.ifblock.s = NULL;
+		obj->data.ifblock.str = NULL;	    
+	} else {
+		char buf1[256], buf2[256];
+		int r = sscanf(arg, "%255s %255[^\n]", buf1, buf2);
+		if (r == 1) {
+			obj->data.ifblock.s = strdup(buf1);		
+    			obj->data.ifblock.str = NULL;	    
+		} else {
+	    		obj->data.ifblock.s = strdup(buf1);
+			obj->data.ifblock.str = strdup(buf2);
+		}
+	}		
 	blockstart[blockdepth] = object_count;
 	obj->data.ifblock.pos = object_count + 2;
 	blockdepth++;
@@ -2662,6 +2938,12 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	END OBJ(kernel, 0)
 		END OBJ(machine, 0)
 		END OBJ(mails, INFO_MAIL)
+		END OBJ(mboxscan, 0)
+		obj->data.mboxscan.args = (char*)malloc(TEXT_BUFFER_SIZE);
+		obj->data.mboxscan.output = (char*)malloc(text_buffer_size);
+		/* if '1' (in mboxscan.c) then there was SIGUSR1, hmm */
+		obj->data.mboxscan.output[0] = 1;
+		strncpy(obj->data.mboxscan.args, arg, TEXT_BUFFER_SIZE);
 		END OBJ(mem, INFO_MEM)
 		END OBJ(memmax, INFO_MEM)
 		END OBJ(memperc, INFO_MEM)
@@ -2711,14 +2993,17 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		END OBJ(swapperc, INFO_MEM)
 		END OBJ(swapbar, INFO_MEM)
 		(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
-	END OBJ(sysname, 0) END OBJ(temp1, INFO_I2C) obj->type = OBJ_i2c;
-	obj->data.i2c.fd =
-		open_i2c_sensor(0, "temp", 1, &obj->data.i2c.arg,
-				obj->data.i2c.devtype);
-	END OBJ(temp2, INFO_I2C) obj->type = OBJ_i2c;
-	obj->data.i2c.fd =
-		open_i2c_sensor(0, "temp", 2, &obj->data.i2c.arg,
-				obj->data.i2c.devtype);
+	END OBJ(sysname, 0)
+#ifndef __OpenBSD__
+	END OBJ(temp1, INFO_SYSFS) obj->type = OBJ_i2c;
+	obj->data.sysfs.fd =
+		open_i2c_sensor(0, "temp", 1, &obj->data.sysfs.arg,
+				obj->data.sysfs.devtype);
+	END OBJ(temp2, INFO_SYSFS) obj->type = OBJ_i2c;
+	obj->data.sysfs.fd =
+		open_i2c_sensor(0, "temp", 2, &obj->data.sysfs.arg,
+				obj->data.sysfs.devtype);
+#endif
 	END OBJ(time, 0) obj->data.s = strdup(arg ? arg : "%F %T");
 	END OBJ(utime, 0) obj->data.s = strdup(arg ? arg : "%F %T");
 	END OBJ(tztime, 0)
@@ -2807,8 +3092,10 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		}
 	}
 	END OBJ(uptime_short, INFO_UPTIME) END OBJ(uptime, INFO_UPTIME) END
+#ifndef __OpenBSD__
 		OBJ(adt746xcpu, 0) END OBJ(adt746xfan, 0) END
-#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
+#endif /* !__OpenBSD__ */
+#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
 		OBJ(apm_adapter, 0) END
 		OBJ(apm_battery_life, 0) END
 		OBJ(apm_battery_time, 0) END
@@ -2850,8 +3137,20 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		}
 		END
 #ifdef MPD
-		OBJ(mpd_artist, INFO_MPD)
-		END OBJ(mpd_title, INFO_MPD)
+		OBJ(mpd_artist, INFO_MPD) END
+		OBJ(mpd_title, INFO_MPD)
+		{
+			if (arg) {
+				sscanf (arg, "%d", &info.mpd.max_title_len);
+				if (info.mpd.max_title_len > 0) {
+					info.mpd.max_title_len++;
+				} else {
+					CRIT_ERR ("mpd_title: invalid length argument");
+				}
+			} else {
+				info.mpd.max_title_len = 0;
+			}
+		}
 		END OBJ(mpd_random, INFO_MPD)
 		END OBJ(mpd_repeat, INFO_MPD)
 		END OBJ(mpd_elapsed, INFO_MPD)
@@ -2882,7 +3181,7 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		END OBJ(xmms2_date, INFO_XMMS2)
 		END OBJ(xmms2_id, INFO_XMMS2)
 		END OBJ(xmms2_duration, INFO_XMMS2)
-        END OBJ(xmms2_elapsed, INFO_XMMS2)
+        	END OBJ(xmms2_elapsed, INFO_XMMS2)
 		END OBJ(xmms2_size, INFO_XMMS2)
 		END OBJ(xmms2_status, INFO_XMMS2)
 		END OBJ(xmms2_percent, INFO_XMMS2)
@@ -2893,7 +3192,20 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 #endif
 #ifdef AUDACIOUS
 		OBJ(audacious_status, INFO_AUDACIOUS) END
-		OBJ(audacious_title, INFO_AUDACIOUS) END
+		OBJ(audacious_title, INFO_AUDACIOUS) 
+		{
+			if (arg) {
+				sscanf (arg, "%d", &info.audacious.max_title_len);
+				if (info.audacious.max_title_len > 0) {
+					info.audacious.max_title_len++;
+				} 		    else {
+					CRIT_ERR ("audacious_title: invalid length argument");
+				}
+			} else {
+				info.audacious.max_title_len++;
+			}
+		}
+		END
 		OBJ(audacious_length, INFO_AUDACIOUS) END
 		OBJ(audacious_length_seconds, INFO_AUDACIOUS) END
 		OBJ(audacious_position, INFO_AUDACIOUS) END
@@ -2926,6 +3238,25 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	END
 		OBJ(bmpx_bitrate, INFO_BMPX)
 		memset(&(info.bmpx), 0, sizeof(struct bmpx_s));
+	END
+#endif
+#ifdef RSS
+	OBJ(rss, 0) 
+		if (arg) {
+			int argc, delay, act_par;
+			char *uri = (char *)malloc(128 * sizeof(char));
+			char *action = (char *)malloc(64 * sizeof(char));
+
+			argc = sscanf(arg, "%127s %d %63s %d", uri, &delay, action, &act_par);
+			obj->data.rss.uri = uri;
+			obj->data.rss.delay = delay;
+			obj->data.rss.action = action;
+			obj->data.rss.act_par = act_par;
+
+			init_rss_info();
+		} else
+			CRIT_ERR("rss needs arguments: <uri> <delay in minutes> <action> [act_par]");
+
 	END
 #endif
 #ifdef HDDTEMP
@@ -3002,7 +3333,7 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	if ( !info.p_tcp_port_monitor_collection )
 	{
 		info.p_tcp_port_monitor_collection = 
-			create_tcp_port_monitor_collection( &tcp_port_monitor_collection_args );
+			create_tcp_port_monitor_collection ();
 		if ( !info.p_tcp_port_monitor_collection )
 		{
 			CRIT_ERR("tcp_portmon: unable to create port monitor collection");
@@ -3027,6 +3358,12 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 	}
 	END
 #endif
+	OBJ(entropy_avail, INFO_ENTROPY) END
+	OBJ(entropy_poolsize, INFO_ENTROPY) END
+	OBJ(entropy_bar, INFO_ENTROPY)
+		(void) scan_bar(arg, &obj->a, &obj->b);
+	END
+
 	{
 		char buf[256];
 		ERR("unknown variable %s", s);
@@ -3093,10 +3430,15 @@ static struct text_object_list *extract_variable_text_internal(const char *p)
 
 				/* variable is either $foo or ${foo} */
 				if (*p == '{') {
+					unsigned int brl = 1, brr = 0;
 					p++;
 					s = p;
-					while (*p && *p != '}')
+					while (*p && brl != brr) {
+						if (*p == '{') brl++;
+						if (*p == '}') brr++;
 						p++;
+					}
+					p--;
 				} else {
 					s = p;
 					if (*p == '#')
@@ -3230,6 +3572,7 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					ERR("not implemented obj type %d",
 							obj->type);
 				}
+#ifndef __OpenBSD__
 				OBJ(acpitemp) {
 					/* does anyone have decimals in acpi temperature? */
 					if (!use_spacer)
@@ -3256,6 +3599,7 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 										       data.
 										       i)+ 40) * 9.0 / 5 - 40));
 				}
+#endif /* !__OpenBSD__ */
 				OBJ(freq) {
 					if (obj->a) {
 						obj->a = get_freq(p, p_max_size, "%.0f", 1, obj->data.cpu_index); 
@@ -3277,6 +3621,44 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 						obj->a = get_voltage(p, p_max_size, "%'.3f", 1000, obj->data.cpu_index);
 					}
 				}
+#ifdef HAVE_IWLIB
+				OBJ(wireless_essid) {
+					snprintf(p, p_max_size, "%s", obj->data.net->essid);
+				}
+				OBJ(wireless_mode) {
+					snprintf(p, p_max_size, "%s", obj->data.net->mode);
+				}
+				OBJ(wireless_bitrate) {
+					snprintf(p, p_max_size, "%s", obj->data.net->bitrate);
+				}
+				OBJ(wireless_ap) {
+					snprintf(p, p_max_size, "%s", obj->data.net->ap);
+				}
+				OBJ(wireless_link_qual) {
+					if (!use_spacer)
+						snprintf(p, p_max_size, "%d", obj->data.net->link_qual);
+					else
+						snprintf(p, 4, "%d    ", obj->data.net->link_qual);
+				}
+				OBJ(wireless_link_qual_max) {
+					if (!use_spacer)
+						snprintf(p, p_max_size, "%d", obj->data.net->link_qual_max);
+					else
+						snprintf(p, 4, "%d    ", obj->data.net->link_qual_max);
+				}
+				OBJ(wireless_link_qual_perc) {
+					if(obj->data.net->link_qual_max > 0) {
+						if (!use_spacer)
+							snprintf(p, p_max_size, "%.0f%%", (double)obj->data.net->link_qual / obj->data.net->link_qual_max * 100);
+						else
+							snprintf(p, 5, "%.0f%%     ", (double)obj->data.net->link_qual / obj->data.net->link_qual_max * 100);
+					} else	snprintf(p, p_max_size, "unk");
+				}
+				OBJ(wireless_link_bar) {
+					new_bar(p, obj->a, obj->b, ((double)obj->data.net->link_qual/obj->data.net->link_qual_max)*255.0);
+				}
+#endif /* HAVE_IWLIB */
+
 #endif /* __linux__ */
 
 				OBJ(freq_dyn) {
@@ -3293,6 +3675,7 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 						get_freq_dynamic(p, p_max_size, "%'.2f", 1000); 
 					}
 				}
+#ifndef __OpenBSD__
 				OBJ(adt746xcpu) {
 					get_adt746x_cpu(p, p_max_size); 
 				}
@@ -3306,8 +3689,19 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					get_acpi_ac_adapter(p, p_max_size); 
 				}
 				OBJ(battery) {
-					get_battery_stuff(p, p_max_size, obj->data.s);
+					get_battery_stuff(p, p_max_size, obj->data.s, BATTERY_STATUS);
 				}
+				OBJ(battery_time) {
+					get_battery_stuff(p, p_max_size, obj->data.s, BATTERY_TIME);
+				}
+				OBJ(battery_percent) {
+					snprintf(p, p_max_size, "%d", 
+						get_battery_perct(obj->data.s));
+				}
+				OBJ(battery_bar) {
+					new_bar(p, obj->a, obj->b, get_battery_perct_bar(obj->data.s));
+				}
+#endif /* __OpenBSD__ */
 				OBJ(buffers) {
 					human_readable(cur->buffers * 1024, p, 255);
 				}
@@ -3342,6 +3736,36 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				}
 				OBJ(color) {
 					new_fg(p, obj->data.l);
+				}
+				OBJ(color0) {
+					new_fg(p, color0);
+				}
+				OBJ(color1) {
+					new_fg(p, color1);
+				}
+				OBJ(color2) {
+					new_fg(p, color2);
+				}
+				OBJ(color3) {
+					new_fg(p, color3);
+				}
+				OBJ(color4) {
+					new_fg(p, color4);
+				}
+				OBJ(color5) {
+					new_fg(p, color5);
+				}
+				OBJ(color6) {
+					new_fg(p, color6);
+				}
+				OBJ(color7) {
+					new_fg(p, color7);
+				}
+				OBJ(color8) {
+					new_fg(p, color8);
+				}
+				OBJ(color9) {
+					new_fg(p, color9);
 				}
 #if defined(__linux__)
 				OBJ(i8k_version) {
@@ -3424,12 +3848,44 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
                                 }
 #endif /* __linux__ */
 
-#ifdef X11
-				OBJ(font) {
-					new_font(p, obj->data.s);
+#ifdef __OpenBSD__
+				OBJ(obsd_sensors_temp) {
+					obsd_sensors.device = sensor_device;
+					update_obsd_sensors();
+					snprintf(p, p_max_size, "%.1f",
+						obsd_sensors.temp[obsd_sensors.device][obj->data.sensor]);
 				}
+
+				OBJ(obsd_sensors_fan) {
+					obsd_sensors.device = sensor_device;
+					update_obsd_sensors();
+					snprintf(p, p_max_size, "%d",
+						obsd_sensors.fan[obsd_sensors.device][obj->data.sensor]);
+				}
+
+				OBJ(obsd_sensors_volt) {
+					obsd_sensors.device = sensor_device;
+					update_obsd_sensors();
+					snprintf(p, p_max_size, "%.2f",
+						obsd_sensors.volt[obsd_sensors.device][obj->data.sensor]);
+				}
+
+				OBJ(obsd_vendor) {
+					get_obsd_vendor(p, p_max_size);
+				}
+
+				OBJ(obsd_product) {
+					get_obsd_product(p, p_max_size);
+				}
+#endif /* __OpenBSD__ */
+
+				OBJ(font) {
+#ifdef X11
+					new_font(p, obj->data.s);
 #endif /* X11 */
-				OBJ(diskio) {
+				}
+				void format_diskio(unsigned int diskio_value)
+				{
 					if (!use_spacer) {
 						if (diskio_value > 1024*1024) {
 							snprintf(p, p_max_size, "%.1fGiB",
@@ -3444,24 +3900,42 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 						}
 					} else {
 						if (diskio_value > 1024*1024) {
-							snprintf(p, 6, "%.1fGiB   ",
+							snprintf(p, 12, "%.1fGiB   ",
 									(double)diskio_value/1024/1024);
 						} else if (diskio_value > 1024) {
-							snprintf(p, 6, "%.1fMiB   ",
+							snprintf(p, 12, "%.1fMiB   ",
 									(double)diskio_value/1024);
 						} else if (diskio_value > 0) {
-							snprintf(p, 6, "%dKiB ", diskio_value);
+							snprintf(p, 12, "%dKiB ", diskio_value);
 						} else {
-							snprintf(p, 6, "%dB     ", diskio_value);
+							snprintf(p, 12, "%dB     ", diskio_value);
 						}
 					}
 				}
-				OBJ(diskiograph) {
-					new_graph(p, obj->a,
-							obj->b, obj->c, obj->d,
-							diskio_value, obj->e, 1);
+				OBJ(diskio) {
+					format_diskio(diskio_value);
 				}
-
+				OBJ(diskio_write) {
+					format_diskio(diskio_write_value);
+				}
+ 				OBJ(diskio_read) {
+ 					format_diskio(diskio_read_value);
+  				}
+  				OBJ(diskiograph) {
+  					new_graph(p, obj->a,
+  							obj->b, obj->c, obj->d,
+  							diskio_value, obj->e, 1);
+  				}
+ 				OBJ(diskiograph_read) {
+ 					new_graph(p, obj->a,
+ 							obj->b, obj->c, obj->d,
+ 							diskio_read_value, obj->e, 1);
+ 				}
+ 				OBJ(diskiograph_write) {
+ 					new_graph(p, obj->a,
+ 							obj->b, obj->c, obj->d,
+ 							diskio_write_value, obj->e, 1);
+ 				}
 				OBJ(downspeed) {
 					if (!use_spacer) {
 						snprintf(p, p_max_size, "%d",
@@ -3485,8 +3959,10 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 								recv_speed / 1024.0);
 				}
 				OBJ(downspeedgraph) {
-					if (obj->data.net->recv_speed == 0)	// this is just to make the ugliness at start go away
+          /*
+					if (obj->data.net->recv_speed == 0)	
 						obj->data.net->recv_speed = 0.01;
+            */
 					new_graph(p, obj->a, obj->b, obj->c, obj->d,
 							(obj->data.net->recv_speed /
 							 1024.0), obj->e, 1);
@@ -3513,10 +3989,6 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 							obj->data.net->addr.
 							sa_data[5] & 255);
 
-				}
-				OBJ(linkstatus) {
-					snprintf(p, p_max_size, "%d",
-							obj->data.net->linkstatus);
 				}
 #if defined(IMLIB2) && defined(X11)
 				OBJ(image) {
@@ -3683,8 +4155,8 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					} else {
 						char *output = obj->data.execi.buffer;
 						FILE *fp = popen(obj->data.execi.cmd, "r");
-						//int length = fread(output, 1, TEXT_BUFFER_SIZE, fp);
-						int length = fread(output, 1, TEXT_BUFFER_SIZE, fp);
+						//int length = fread(output, 1, text_buffer_size, fp);
+						int length = fread(output, 1, text_buffer_size, fp);
 						(void) pclose(fp);
 
 						output[length] = '\0';
@@ -3697,42 +4169,52 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					//parse_conky_vars(output, p, cur);
 				}
 				OBJ(texeci) {
-					if (obj->data.execi.pos < 0) {
-						obj->data.execi.last_update = current_update_time;
-						if (pthread_create(&(obj->data.execi.thread_info.thread), NULL, (void*)threaded_exec, (void*) obj)) {
-							ERR("Error starting thread");
-						}
-						obj->data.execi.pos = register_thread(&(obj->data.execi.thread_info));
+					if (!obj->data.texeci.p_timed_thread)
+					{
+					    obj->data.texeci.p_timed_thread=
+					    timed_thread_create ((void*)threaded_exec, (void*) obj, 
+							         obj->data.texeci.interval * 1000000);
+					    if (!obj->data.texeci.p_timed_thread)
+						ERR("Error starting texeci thread");
+					    timed_thread_register (obj->data.texeci.p_timed_thread,
+							    	   &obj->data.texeci.p_timed_thread);
 					}
-					pthread_mutex_lock(&(obj->data.execi.thread_info.mutex));
-					snprintf(p, p_max_size, "%s", obj->data.execi.buffer);
-					pthread_mutex_unlock(&(obj->data.execi.thread_info.mutex));
+					timed_thread_lock (obj->data.texeci.p_timed_thread);
+					snprintf(p, p_max_size, "%s", obj->data.texeci.buffer);
+					timed_thread_unlock (obj->data.texeci.p_timed_thread);
 				}
 #endif /* HAVE_POPEN */
 				OBJ(imap_unseen) {
 					if (obj->global_mode && info.mail) { // this means we use info
-						if (info.mail->pos < 0) {
-							info.mail->last_update = current_update_time;
-							if (pthread_create(&(info.mail->thread_info.thread), NULL, (void*)imap_thread, (void*) info.mail)) {
-								ERR("Error starting thread");
-							}
-							info.mail->pos = register_thread(&(info.mail->thread_info));
+						if (!info.mail->p_timed_thread)
+						{
+						    info.mail->p_timed_thread = 
+						    timed_thread_create ((void*)imap_thread, 
+								         (void*)info.mail,
+								         info.mail->interval * 1000000);
+						    if (!info.mail->p_timed_thread)
+							 ERR("Error starting imap thread");
+						    timed_thread_register (info.mail->p_timed_thread,
+								    	   &info.mail->p_timed_thread);
 						}
-						// get a lock before reading
-						pthread_mutex_lock(&(info.mail->thread_info.mutex));
+						timed_thread_lock (info.mail->p_timed_thread);
 						snprintf(p, p_max_size, "%lu", info.mail->unseen);
-						pthread_mutex_unlock(&(info.mail->thread_info.mutex));
+						timed_thread_unlock (info.mail->p_timed_thread);
 					} else if (obj->data.mail) { // this means we use obj
-						if (obj->data.mail->pos < 0) {
-							obj->data.mail->last_update = current_update_time;
-							if (pthread_create(&(obj->data.mail->thread_info.thread), NULL, (void*)imap_thread, (void*) obj->data.mail)) {
-								ERR("Error starting thread");
-							}
-							obj->data.mail->pos = register_thread(&(obj->data.mail->thread_info));
+						if (!obj->data.mail->p_timed_thread)
+						{
+						    obj->data.mail->p_timed_thread = 
+						    timed_thread_create ((void*)imap_thread, 
+								         (void*)obj->data.mail,
+									 obj->data.mail->interval * 1000000);
+						    if (!obj->data.mail->p_timed_thread)
+							ERR("Error starting imap thread");
+						    timed_thread_register (obj->data.mail->p_timed_thread,
+								           &obj->data.mail->p_timed_thread);
 						}
-						pthread_mutex_lock(&(obj->data.mail->thread_info.mutex));
+						timed_thread_lock (obj->data.mail->p_timed_thread);
 						snprintf(p, p_max_size, "%lu", obj->data.mail->unseen);
-						pthread_mutex_unlock(&(obj->data.mail->thread_info.mutex));
+						timed_thread_unlock (obj->data.mail->p_timed_thread);
 					} else if (!obj->a) { // something is wrong, warn once then stop
 						ERR("Theres a problem with your imap_unseen settings.  Check that the global IMAP settings are defined properly (line %li).", obj->line);
 							obj->a++;
@@ -3740,27 +4222,35 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				}
 				OBJ(imap_messages) {
 					if (obj->global_mode && info.mail) { // this means we use info
-						if (info.mail->pos < 0) {
-							info.mail->last_update = current_update_time;
-							if (pthread_create(&(info.mail->thread_info.thread), NULL, (void*)imap_thread, (void*) info.mail)) {
-								ERR("Error starting thread");
-							}
-							info.mail->pos = register_thread(&(info.mail->thread_info));
+						if (!info.mail->p_timed_thread)
+						{
+						    info.mail->p_timed_thread =
+                                                    timed_thread_create ((void*)imap_thread, 
+								         (void*)info.mail,
+                                                                         info.mail->interval * 1000000);
+                                                    if (!info.mail->p_timed_thread)
+                                                         ERR("Error starting imap thread");
+                                                    timed_thread_register (info.mail->p_timed_thread,
+                                                                           &info.mail->p_timed_thread);
 						}
-						pthread_mutex_lock(&(info.mail->thread_info.mutex));
+						timed_thread_lock (info.mail->p_timed_thread);
 						snprintf(p, p_max_size, "%lu", info.mail->messages);
-						pthread_mutex_unlock(&(info.mail->thread_info.mutex));
+						timed_thread_unlock (info.mail->p_timed_thread);
 					} else if (obj->data.mail) { // this means we use obj
-						if (obj->data.mail->pos < 0) {
-							obj->data.mail->last_update = current_update_time;
-							if (pthread_create(&(obj->data.mail->thread_info.thread), NULL, (void*)imap_thread, (void*) obj->data.mail)) {
-								ERR("Error starting thread");
-							}
-							obj->data.mail->pos = register_thread(&(obj->data.mail->thread_info));
-						}
-						pthread_mutex_lock(&(obj->data.mail->thread_info.mutex));
+						if (!obj->data.mail->p_timed_thread)
+                                                {
+                                                    obj->data.mail->p_timed_thread =
+                                                    timed_thread_create ((void*)imap_thread,
+                                                                         (void*)obj->data.mail,
+                                                                         obj->data.mail->interval * 1000000);
+                                                    if (!obj->data.mail->p_timed_thread)
+                                                        ERR("Error starting imap thread");
+                                                    timed_thread_register (obj->data.mail->p_timed_thread,
+                                                                           &obj->data.mail->p_timed_thread);
+                                                }
+						timed_thread_lock (obj->data.mail->p_timed_thread);
 						snprintf(p, p_max_size, "%lu", obj->data.mail->messages);
-						pthread_mutex_unlock(&(obj->data.mail->thread_info.mutex));
+						timed_thread_lock (obj->data.mail->p_timed_thread);
 					} else if (!obj->a) { // something is wrong, warn once then stop
 						ERR("Theres a problem with your imap_messages settings.  Check that the global IMAP settings are defined properly (line %li).", obj->line);
 							obj->a++;
@@ -3768,27 +4258,35 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				}
 				OBJ(pop3_unseen) {
 					if (obj->global_mode && info.mail) { // this means we use info
-						if (info.mail->pos < 0) {
-							info.mail->last_update = current_update_time;
-							if (pthread_create(&(info.mail->thread_info.thread), NULL, (void*)pop3_thread, (void*) info.mail)) {
-								ERR("Error starting thread");
-							}
-							info.mail->pos = register_thread(&(info.mail->thread_info));
+						if (!info.mail->p_timed_thread)
+						{
+						    info.mail->p_timed_thread = 
+						    timed_thread_create ((void*)pop3_thread,
+								         (void*)info.mail,
+									 info.mail->interval * 1000000);
+						    if (!info.mail->p_timed_thread)
+							ERR("Error starting pop3 thread");
+						    timed_thread_register (info.mail->p_timed_thread,
+								           &info.mail->p_timed_thread);
 						}
-						pthread_mutex_lock(&(info.mail->thread_info.mutex));
+						timed_thread_lock (info.mail->p_timed_thread);
 						snprintf(p, p_max_size, "%lu", info.mail->unseen);
-						pthread_mutex_unlock(&(info.mail->thread_info.mutex));
+						timed_thread_unlock (info.mail->p_timed_thread);
 					} else if (obj->data.mail) { // this means we use obj
-						if (obj->data.mail->pos < 0) {
-							obj->data.mail->last_update = current_update_time;
-							if (pthread_create(&(obj->data.mail->thread_info.thread), NULL, (void*)pop3_thread, (void*) obj->data.mail)) {
-								ERR("Error starting thread");
-							}
-							obj->data.mail->pos = register_thread(&(obj->data.mail->thread_info));
+						if (!obj->data.mail->p_timed_thread)
+						{
+						    obj->data.mail->p_timed_thread = 
+						    timed_thread_create ((void*)pop3_thread,
+								         (void*)obj->data.mail,
+									 obj->data.mail->interval * 1000000);
+						    if (!obj->data.mail->p_timed_thread)
+							ERR("Error starting pop3 thread");
+						    timed_thread_register (obj->data.mail->p_timed_thread,
+								    	   &obj->data.mail->p_timed_thread);
 						}
-						pthread_mutex_lock(&(obj->data.mail->thread_info.mutex));
+						timed_thread_lock (obj->data.mail->p_timed_thread);
 						snprintf(p, p_max_size, "%lu", obj->data.mail->unseen);
-						pthread_mutex_unlock(&(obj->data.mail->thread_info.mutex));
+						timed_thread_unlock (obj->data.mail->p_timed_thread);
 					} else if (!obj->a) { // something is wrong, warn once then stop
 						ERR("Theres a problem with your pop3_unseen settings.  Check that the global POP3 settings are defined properly (line %li).", obj->line);
 							obj->a++;
@@ -3796,27 +4294,35 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				}
 				OBJ(pop3_used) {
 					if (obj->global_mode && info.mail) { // this means we use info
-						if (info.mail->pos < 0) {
-							info.mail->last_update = current_update_time;
-							if (pthread_create(&(info.mail->thread_info.thread), NULL, (void*)pop3_thread, (void*) info.mail)) {
-								ERR("Error starting thread");
-							}
-							info.mail->pos = register_thread(&(info.mail->thread_info));
+						if (!info.mail->p_timed_thread)
+						{
+						    info.mail->p_timed_thread = 
+						    timed_thread_create ((void*)pop3_thread,
+								    	 (void*)info.mail,
+								    	 info.mail->interval * 1000000);
+						    if (!info.mail->p_timed_thread)
+							ERR("Error starting pop3 thread");
+						    timed_thread_register (info.mail->p_timed_thread,
+								    	   &info.mail->p_timed_thread);
 						}
-						pthread_mutex_lock(&(info.mail->thread_info.mutex));
+						timed_thread_lock (info.mail->p_timed_thread);
 						snprintf(p, p_max_size, "%.1f", info.mail->used/1024.0/1024.0);
-						pthread_mutex_unlock(&(info.mail->thread_info.mutex));
+						timed_thread_unlock (info.mail->p_timed_thread);
 					} else if (obj->data.mail) { // this means we use obj
-						if (obj->data.mail->pos < 0) {
-							obj->data.mail->last_update = current_update_time;
-							if (pthread_create(&(obj->data.mail->thread_info.thread), NULL, (void*)pop3_thread, (void*) obj->data.mail)) {
-								ERR("Error starting thread");
-							}
-							obj->data.mail->pos = register_thread(&(obj->data.mail->thread_info));
+						if (!obj->data.mail->p_timed_thread)
+						{
+						    obj->data.mail->p_timed_thread =
+						    timed_thread_create ((void*)pop3_thread,
+								    	 (void*)obj->data.mail,
+									 obj->data.mail->interval * 1000000);
+						    if (!obj->data.mail->p_timed_thread)
+							ERR("Error starting pop3 thread");
+						    timed_thread_register (obj->data.mail->p_timed_thread,
+								    	   &obj->data.mail->p_timed_thread);
 						}
-						pthread_mutex_lock(&(obj->data.mail->thread_info.mutex));
+						timed_thread_lock (obj->data.mail->p_timed_thread);
 						snprintf(p, p_max_size, "%.1f", obj->data.mail->used/1024.0/1024.0);
-						pthread_mutex_unlock(&(obj->data.mail->thread_info.mutex));
+						timed_thread_unlock (obj->data.mail->p_timed_thread);
 					} else if (!obj->a) { // something is wrong, warn once then stop
 						ERR("Theres a problem with your pop3_used settings.  Check that the global POP3 settings are defined properly (line %li).", obj->line);
 							obj->a++;
@@ -3939,6 +4445,56 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 			OBJ(hr) {
 				new_hr(p, obj->data.i);
 			}
+#ifdef RSS
+			OBJ(rss) {
+				PRSS* data = get_rss_info(obj->data.rss.uri, obj->data.rss.delay);
+				char *str;
+				if(data == NULL)
+					snprintf(p, p_max_size, "prss: Error reading RSS data\n");
+				else {
+					if(!strcmp(obj->data.rss.action, "feed_title")) {
+							str = data->title;
+							if(str[strlen(str)-1] == '\n')
+								str[strlen(str)-1] = 0; // remove trailing new line if one exists
+							snprintf(p, p_max_size, "%s", str);
+					} else if(!strcmp(obj->data.rss.action, "item_title")) {
+						if(obj->data.rss.act_par < data->item_count) {
+							str = data->items[obj->data.rss.act_par].title;
+							if(str[strlen(str)-1] == '\n')
+								str[strlen(str)-1] = 0; // remove trailing new line if one exists
+							snprintf(p, p_max_size, "%s", str);
+						}
+					} else if(!strcmp(obj->data.rss.action, "item_desc")) {
+						if(obj->data.rss.act_par < data->item_count) {
+							str = data->items[obj->data.rss.act_par].description;
+							if(str[strlen(str)-1] == '\n')
+								str[strlen(str)-1] = 0; // remove trailing new line if one exists
+							snprintf(p, p_max_size, "%s", str);
+						}
+					} else if(!strcmp(obj->data.rss.action, "item_titles")) {
+						if(data->item_count > 0) {
+							int itmp;
+							p[0] = 0;
+							int show;
+							if(obj->data.rss.act_par > data->item_count)
+								show = data->item_count;
+							else	show = obj->data.rss.act_par;
+							for(itmp = 0; itmp < show; itmp++) {
+								PRSS_Item *item = &data->items[itmp];
+								str = item->title;
+								if(str) {
+									if(itmp>0) // don't add new line before first item
+										strncat(p, "\n", p_max_size);
+									if(str[strlen(str)-1] == '\n')
+										str[strlen(str)-1] = 0; // remove trailing new line if one exists, we have our own
+									strncat(p, str, p_max_size);
+								}
+							}
+						}
+					}
+				}
+			}
+#endif
 #ifdef HDDTEMP
 			OBJ(hddtemp) {
 				char *temp;
@@ -3961,24 +4517,66 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 			OBJ(voffset) {
 				new_voffset(p, obj->data.i);
 			}
+#ifndef __OpenBSD__
 			OBJ(i2c) {
 				double r;
 
-				r = get_i2c_info(&obj->data.i2c.fd,
-						 obj->data.i2c.arg,
-						 obj->data.i2c.devtype,
-						 obj->data.i2c.type);
+				r = get_sysfs_info(&obj->data.sysfs.fd,
+						             obj->data.sysfs.arg,
+						             obj->data.sysfs.devtype,
+						             obj->data.sysfs.type);
 
 				if (r >= 100.0 || r == 0)
 					snprintf(p, p_max_size, "%d", (int) r);
 				else
 					snprintf(p, p_max_size, "%.1f", r);
 			}
+      OBJ(platform) {
+        double r;
+
+        r = get_sysfs_info(&obj->data.sysfs.fd,
+                         obj->data.sysfs.arg,
+                         obj->data.sysfs.devtype,
+                         obj->data.sysfs.type);
+
+        if (r >= 100.0 || r == 0)
+          snprintf(p, p_max_size, "%d", (int) r);
+        else
+          snprintf(p, p_max_size, "%.1f", r);
+      }
+      OBJ(hwmon) {
+        double r;
+
+        r = get_sysfs_info(&obj->data.sysfs.fd,
+                         obj->data.sysfs.arg,
+                         obj->data.sysfs.devtype,
+                         obj->data.sysfs.type);
+
+        if (r >= 100.0 || r == 0)
+           snprintf(p, p_max_size, "%d", (int) r);
+        else
+          snprintf(p, p_max_size, "%.1f", r);
+      }
+#endif /* !__OpenBSD__ */
 			OBJ(alignr) {
 				new_alignr(p, obj->data.i);
 			}
 			OBJ(alignc) {
 				new_alignc(p, obj->data.i);
+			}
+			OBJ(if_empty) {
+				struct information *my_info =
+				    malloc(sizeof(struct information));
+				memcpy(my_info, cur, sizeof(struct information));
+				parse_conky_vars(obj->data.ifblock.s, p, my_info);
+				if (strlen(p) != 0) {
+					i = obj->data.ifblock.pos;
+					if_jumped = 1;
+				} else {
+					if_jumped = 0;
+				}
+				p[0] = '\0';
+				free(my_info);
 			}
 			OBJ(if_existing) {
 				struct stat tmp;
@@ -3988,7 +4586,15 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					i = obj->data.ifblock.pos;
 					if_jumped = 1;
 				} else {
-					if_jumped = 0;
+    					if (obj->data.ifblock.str) {
+						if (!check_contains(obj->data.ifblock.s, 
+					    	        obj->data.ifblock.str)) {
+							i = obj->data.ifblock.pos;
+							if_jumped = 1;
+						} else 
+					    		if_jumped = 0;
+					} else 
+				    		if_jumped = 0;
 				}
 			}
 			OBJ(if_mounted) {
@@ -4026,12 +4632,12 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 			OBJ(memperc) {
 				if (cur->memmax) {
 					if (!use_spacer)
-						snprintf(p, p_max_size, "%*lu",
+						snprintf(p, p_max_size, "%*Lu",
 							 pad_percents,
 							 (cur->mem * 100) /
 							 (cur->memmax));
 					else
-						snprintf(p, 4, "%*lu   ",
+						snprintf(p, 4, "%*Lu   ",
 							 pad_percents,
 							 (cur->mem * 100) /
 							 (cur->memmax));
@@ -4086,6 +4692,10 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 			OBJ(mails) {
 				snprintf(p, p_max_size, "%d", cur->mail_count);
 			}
+			OBJ(mboxscan) {
+                mbox_scan(obj->data.mboxscan.args, obj->data.mboxscan.output, TEXT_BUFFER_SIZE);
+				snprintf(p, p_max_size, "%s", obj->data.mboxscan.output);
+			}
 			OBJ(new_mails) {
 				snprintf(p, p_max_size, "%d", cur->new_mail_count);
 			}
@@ -4134,13 +4744,13 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					strncpy(p, "No swap", 255);
 				} else {
 					if (!use_spacer)
-						snprintf(p, 255, "%*lu",
+						snprintf(p, 255, "%*Lu",
 							 pad_percents,
 							 (cur->swap *
 							  100) /
 							 cur->swapmax);
 					else
-						snprintf(p, 4, "%*lu   ",
+						snprintf(p, 4, "%*Lu   ",
 							 pad_percents,
 							 (cur->swap *
 							  100) /
@@ -4204,7 +4814,7 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 							trans_speed /
 							1024));
 				else
-					snprintf(p, 5, "%d     ",
+					snprintf(p, 6, "%d     ",
 						 (int) (obj->data.net->
 							trans_speed /
 							1024));
@@ -4220,8 +4830,10 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 						 trans_speed / 1024.0);
 			}
 			OBJ(upspeedgraph) {
-				if (obj->data.net->trans_speed == 0)	// this is just to make the ugliness at start go away
+        /*
+				if (obj->data.net->trans_speed == 0)
 					obj->data.net->trans_speed = 0.01;
+          */
 				new_graph(p, obj->a, obj->b, obj->c, obj->d,
 					  (obj->data.net->trans_speed /
 				1024.0), obj->e, 1);
@@ -4234,9 +4846,12 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				format_seconds(p, p_max_size, (int) cur->uptime);
 			}
 
-#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
+#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
 			OBJ(apm_adapter) {
-				snprintf(p, p_max_size, "%s", get_apm_adapter());
+				char	*msg;
+				msg = get_apm_adapter();
+				snprintf(p, p_max_size, "%s", msg);
+				free(msg);
 			}
 			OBJ(apm_battery_life) {
 				char    *msg;
@@ -4250,11 +4865,13 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				snprintf(p, p_max_size, "%s", msg);
 				free(msg);
 			}
-#endif /* __FreeBSD__ */
+#endif /* __FreeBSD__ __OpenBSD__ */
 
 #ifdef MPD
 			OBJ(mpd_title) {
-				snprintf(p, p_max_size, "%s", cur->mpd.title);
+			    snprintf(p, cur->mpd.max_title_len > 0 ?
+					cur->mpd.max_title_len : p_max_size, "%s", 
+				     cur->mpd.title);
 			}
 			OBJ(mpd_artist) {
 				snprintf(p, p_max_size, "%s", cur->mpd.artist);
@@ -4354,7 +4971,7 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					       255.0f));
 			}
 			OBJ(mpd_smart) {
-				if (strlen(cur->mpd.title) < 2 && strlen(cur->mpd.title) < 2) {
+				if (strlen(cur->mpd.title) < 2 && strlen(cur->mpd.artist) < 2) {
 					snprintf(p, p_max_size, "%s", cur->mpd.file);
 				} else {
 					snprintf(p, p_max_size, "%s - %s", cur->mpd.artist, cur->mpd.title);
@@ -4438,7 +5055,9 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 			    snprintf(p, p_max_size, "%s", cur->audacious.items[AUDACIOUS_STATUS]);
 			}
         		OBJ(audacious_title) {
-			    snprintf(p, p_max_size, "%s", cur->audacious.items[AUDACIOUS_TITLE]);
+			    snprintf(p, cur->audacious.max_title_len > 0 ?
+					cur->audacious.max_title_len : p_max_size, "%s", 
+				     cur->audacious.items[AUDACIOUS_TITLE]);
 			}
         		OBJ(audacious_length) {
 			    snprintf(p, p_max_size, "%s", cur->audacious.items[AUDACIOUS_LENGTH]);
@@ -4501,25 +5120,23 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				if (obj->data.top.type == TOP_NAME
 				    && obj->data.top.num >= 0
 				    && obj->data.top.num < 10) {
-					// if we limit the buffer and add a bunch of space after, it stops the thing from
-					// moving other shit around, which is really fucking annoying
-					snprintf(p, 17, "%s                              ", cur->cpu[obj->data.top.num]->name);
+					snprintf(p, 17, "%-17s", cur->cpu[obj->data.top.num]->name);
 				} else if (obj->data.top.type == TOP_CPU
 					   && obj->data.top.num >= 0
 					   && obj->data.top.num < 10) {
-					snprintf(p, 7, "%3.2f      ",
+					snprintf(p, 7, "%7.3f",
 						 cur->cpu[obj->data.top.
 							  num]->amount);
 				} else if (obj->data.top.type == TOP_PID
 					   && obj->data.top.num >= 0
 					   && obj->data.top.num < 10) {
-					snprintf(p, 8, "%i           ",
+					snprintf(p, 8, "%7i",
 						 cur->cpu[obj->data.top.
 							  num]->pid);
 				} else if (obj->data.top.type == TOP_MEM
 					   && obj->data.top.num >= 0
 					   && obj->data.top.num < 10) {
-					snprintf(p, 7, "%3.2f       ",
+					snprintf(p, 7, "%7.3f",
 						 cur->cpu[obj->data.top.
 							  num]->totalmem);
 				}
@@ -4528,28 +5145,25 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				if (obj->data.top.type == TOP_NAME
 				    && obj->data.top.num >= 0
 				    && obj->data.top.num < 10) {
-					// if we limit the buffer and add a bunch of space after, it stops the thing from
-					// moving other shit around, which is really fucking annoying
-					snprintf(p, 17,
-						 "%s                              ",
+					snprintf(p, 17, "%-17s",
 						 cur->memu[obj->data.top.
 							   num]->name);
 				} else if (obj->data.top.type == TOP_CPU
 					   && obj->data.top.num >= 0
 					   && obj->data.top.num < 10) {
-					snprintf(p, 7, "%3.2f      ",
+					snprintf(p, 7, "%7.3f",
 						 cur->memu[obj->data.top.
 							   num]->amount);
 				} else if (obj->data.top.type == TOP_PID
 					   && obj->data.top.num >= 0
 					   && obj->data.top.num < 10) {
-					snprintf(p, 8, "%i           ",
+					snprintf(p, 8, "%7i",
 						 cur->memu[obj->data.top.
 							   num]->pid);
 				} else if (obj->data.top.type == TOP_MEM
 					   && obj->data.top.num >= 0
 					   && obj->data.top.num < 10) {
-					snprintf(p, 7, "%3.2f       ",
+					snprintf(p, 7, "%7.3f",
 						 cur->memu[obj->data.top.
 							   num]->totalmem);
 				}
@@ -4562,108 +5176,112 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				} else {
 					obj->data.tail.last_update = current_update_time;
 					FILE *fp;
-					int i;
-					int added = 0;
-					tailstring *head = NULL;
-					tailstring *headtmp = NULL;
-					tailstring *freetmp = NULL;
+					long nl=0, bsize;
+					int iter;
 					fp = fopen(obj->data.tail.logfile, "rt");
 					if (fp == NULL) {
-						ERR("tail logfile failed to open");
+						/* Send one message, but do not consistently spam on
+						 * missing logfiles. */
+						if(obj->data.tail.readlines != 0) {
+							ERR("tail logfile failed to open");
+							strcpy(obj->data.tail.buffer, "Logfile Missing");
+						}
+						obj->data.tail.readlines = 0;
+						snprintf(p, p_max_size, "Logfile Missing");
 					}
 					else {
 						obj->data.tail.readlines = 0;
-
-						while (fgets(obj->data.tail.buffer, TEXT_BUFFER_SIZE*20, fp) != NULL) {
-							if (added >= 30) {
-								freelasttail(head);
-							}
-							else {
-								added++;
-							}
-							addtail(&head, obj->data.tail.buffer);
-							obj->data.tail.readlines++;
+						/* -1 instead of 0 to avoid counting a trailing newline */
+						fseek(fp, -1, SEEK_END); 
+						bsize = ftell(fp) + 1;
+						for(iter = obj->data.tail.wantedlines; iter > 0; iter--) {
+							nl = rev_fcharfind(fp, '\n', iter);
+							if(nl >= 0)
+								break;
 						}
-
+						obj->data.tail.readlines = iter;
+						if(obj->data.tail.readlines < obj->data.tail.wantedlines) {
+							fseek(fp, 0, SEEK_SET);
+						}
+						else {
+							fseek(fp, nl+1, SEEK_SET);
+							bsize -= ftell(fp);
+						}
+						/* Make sure bsize is at least 1 byte smaller than
+						 * the buffer max size. */
+						if(bsize > (long)((text_buffer_size*20) - 1)) {
+							fseek(fp, bsize - text_buffer_size*20 - 1, SEEK_CUR);
+							bsize = text_buffer_size*20 - 1;
+						}
+						bsize = fread(obj->data.tail.buffer, 1, bsize, fp);
 						fclose(fp);
-						freetmp = head;
-
-						if (obj->data.tail.readlines > 0) {
-							for (i = 0;i < obj->data.tail.wantedlines + 1 && i < obj->data.tail.readlines; i++) {
-								addtail(&headtmp, head->data);
-								head = head->next;
-							}
-							freetail(freetmp);
-							freetmp = headtmp;
-							strcpy(obj->data.tail.buffer, headtmp->data);
-							headtmp = headtmp->next;
-							for (i = 1;i < obj->data.tail.wantedlines + 1 && i < obj->data.tail.readlines; i++) {
-								if (headtmp) {
-									strncat(obj->data.tail.buffer, headtmp->data, (TEXT_BUFFER_SIZE * 20) - strlen(obj->data.tail.buffer)); /* without strlen() at the end this becomes a possible */
-									headtmp = headtmp->next;
-								}
-							}
-
-							/* get rid of any ugly newlines at the end */
-							if (obj->data.tail.buffer[strlen(obj->data.tail.buffer)-1] == '\n') {
-								obj->data.tail.buffer[strlen(obj->data.tail.buffer)-1] = '\0';
-							}
+						if(bsize > 0) {
+							/* Clean up trailing newline, make sure the buffer
+							 * is null terminated. */
+							if(obj->data.tail.buffer[bsize-1] == '\n')
+								obj->data.tail.buffer[bsize-1] = '\0';
+							else
+								obj->data.tail.buffer[bsize] = '\0';
 							snprintf(p, p_max_size, "%s", obj->data.tail.buffer);
-
-							freetail(freetmp);
-						} else {
+						}
+						else {
 							strcpy(obj->data.tail.buffer, "Logfile Empty");
 							snprintf(p, p_max_size, "Logfile Empty");
-						}  /* if readlines */
+						} /* bsize > 0 */
 					} /*  fp == NULL  */
 				} /* if cur_upd_time >= */
-	
+
 				//parse_conky_vars(obj->data.tail.buffer, p, cur);
 
 			}
 			OBJ(head) {
 				if (current_update_time -obj->data.tail.last_update < obj->data.tail.interval) {
-							snprintf(p, p_max_size, "%s", obj->data.tail.buffer);
+					snprintf(p, p_max_size, "%s", obj->data.tail.buffer);
 				} else {
 					obj->data.tail.last_update = current_update_time;
 					FILE *fp;
-					tailstring *head = NULL;
-					tailstring *headtmp = NULL;
-					tailstring *freetmp = NULL;
+					long nl=0;
+					int iter;
 					fp = fopen(obj->data.tail.logfile, "rt");
 					if (fp == NULL) {
-						ERR("head logfile failed to open");
+						/* Send one message, but do not consistently spam on
+						 * missing logfiles. */
+						if(obj->data.tail.readlines != 0) {
+							ERR("head logfile failed to open");
+							strcpy(obj->data.tail.buffer, "Logfile Missing");
+						}
+						obj->data.tail.readlines = 0;
+						snprintf(p, p_max_size, "Logfile Missing");
 					} else {
 						obj->data.tail.readlines = 0;
-						while (fgets(obj->data.tail.buffer, TEXT_BUFFER_SIZE*20, fp) != NULL && obj->data.tail.readlines <= obj->data.tail.wantedlines) {
-							addtail(&head, obj->data.tail.buffer);
-							obj->data.tail.readlines++;
+						for(iter = obj->data.tail.wantedlines; iter > 0; iter--) {
+							nl = fwd_fcharfind(fp, '\n', iter);
+							if(nl >= 0)
+								break;
 						}
+						obj->data.tail.readlines = iter;
+						/* Make sure nl is at least 1 byte smaller than
+						 * the buffer max size. */
+						if(nl > (long)((text_buffer_size*20) - 1)) {
+							nl = text_buffer_size*20 - 1;
+						}
+						nl = fread(obj->data.tail.buffer, 1, nl, fp);
 						fclose(fp);
-						freetmp = head;
-						if (obj->data.tail.readlines > 0) {
-							while (head) {
-								addtail(&headtmp, head->data);
-								head = head->next;
+						if(nl > 0) {
+							/* Clean up trailing newline, make sure the buffer
+							 * is null terminated. */
+							if (obj->data.tail.buffer[nl-1] == '\n') {
+								obj->data.tail.buffer[nl-1] = '\0';
 							}
-							freetail(freetmp);
-							freetmp = headtmp;
-							strcpy(obj->data.tail.buffer, headtmp->data);
-							headtmp = headtmp->next;
-							while (headtmp) {
-								strncat(obj->data.tail.buffer, headtmp->data, (TEXT_BUFFER_SIZE * 20) - strlen(obj->data.tail.buffer)); /* without strlen() at the end this becomes a possible */
-								headtmp = headtmp->next;
-							}
-							freetail(freetmp);
-							/* get rid of any ugly newlines at the end */
-							if (obj->data.tail.buffer[strlen(obj->data.tail.buffer)-1] == '\n') {
-								obj->data.tail.buffer[strlen(obj->data.tail.buffer)-1] = '\0';
+							else {
+								obj->data.tail.buffer[nl] = '\0';
 							}
 							snprintf(p, p_max_size, "%s", obj->data.tail.buffer);
-						} else {
+						} 
+						else {
 							strcpy(obj->data.tail.buffer, "Logfile Empty");
 							snprintf(p, p_max_size, "Logfile Empty");
-						} /* if readlines > 0 */
+						} /* nl > 0 */
 					} /* if fp == null */
 				} /* cur_upd_time >= */
 
@@ -4708,6 +5326,22 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				iconv_selected = 0;
 			}
 #endif
+			OBJ(entropy_avail) 
+			{
+			 	snprintf(p, p_max_size, "%d", cur->entropy.entropy_avail);
+			}
+			OBJ(entropy_poolsize)
+			{
+				snprintf(p, p_max_size, "%d", cur->entropy.poolsize);
+			}
+			OBJ(entropy_bar)
+			{
+				double entropy_perc;
+				entropy_perc = (double)cur->entropy.entropy_avail / 
+					       (double)cur->entropy.poolsize;
+				new_bar(p,obj->a,obj->b,(int)(entropy_perc * 255.0f));
+			}
+
 
 			break;
 		}
@@ -4761,6 +5395,11 @@ static void generate_text()
 	current_update_time = get_time();
 
 	update_stuff(cur);
+	/* fix diskio rates to b/s (use update_interval */
+	diskio_read_value = diskio_read_value / update_interval;
+	diskio_write_value = diskio_write_value / update_interval;
+	diskio_value = diskio_value / update_interval;
+	
 
 	/* add things to the buffer */
 
@@ -5023,7 +5662,6 @@ static void draw_string(const char *s)
 		printf("%s\n", s);
 		fflush(stdout);   /* output immediately, don't buffer */
 	}
-	/* daemon_run(s);  the daemon can be called here, but we need to have a buffer in daemon_run() and we need to tell it when everything is ready to be sent */
 	memset(tmpstring1,0,TEXT_BUFFER_SIZE);
 	memset(tmpstring2,0,TEXT_BUFFER_SIZE);
 	strncpy(tmpstring1, s, TEXT_BUFFER_SIZE-1);
@@ -5839,22 +6477,41 @@ static void main_loop()
 
 			case ButtonPress:
 				if (own_window)
-				{
+        {
+          /* if an ordinary window with decorations */
+          if ((window.type==TYPE_NORMAL) && (!TEST_HINT(window.hints,HINT_UNDECORATED)))
+          {
+            /* allow conky to hold input focus.*/
+            break;
+          }
+          else
+				  {
 				    /* forward the click to the desktop window */
 				    XUngrabPointer(display, ev.xbutton.time);
 				    ev.xbutton.window = window.desktop;
 				    XSendEvent(display, ev.xbutton.window, False, ButtonPressMask, &ev);
-				}
+            XSetInputFocus(display, ev.xbutton.window,RevertToParent,ev.xbutton.time);
+				  }
+        }
 				break;
 
  			case ButtonRelease:
-                                if (own_window)
-                                {
-                                    /* forward the release to the desktop window */
-                                    ev.xbutton.window = window.desktop;
-                                    XSendEvent(display, ev.xbutton.window, False, ButtonReleaseMask, &ev);
-                                }
-                                break;
+        if (own_window)
+        {
+          /* if an ordinary window with decorations */
+          if ((window.type==TYPE_NORMAL) && (!TEST_HINT(window.hints,HINT_UNDECORATED)))
+          {
+            /* allow conky to hold input focus.*/
+            break;
+          }
+          else
+          {
+            /* forward the release to the desktop window */
+            ev.xbutton.window = window.desktop;
+            XSendEvent(display, ev.xbutton.window, False, ButtonReleaseMask, &ev);
+          }
+        }
+        break;
 
 #endif
 
@@ -5959,16 +6616,13 @@ static void load_config_file(const char *);
 /* reload the config file */
 void reload_config(void)
 {
-	//lock_all_threads();
-	threads_runnable++;
+	timed_thread_destroy_registered_threads ();
+
 	if (info.cpu_usage) {
 		free(info.cpu_usage);
 		info.cpu_usage = NULL;
 	}
-#ifdef AUDACIOUS
-        if ( (info.audacious.thread) && (destroy_audacious_thread()!=0) )
-	    ERR("error destroying audacious thread");
-#endif
+
 #ifdef TCP_PORT_MONITOR
 	destroy_tcp_port_monitor_collection( info.p_tcp_port_monitor_collection );
 #endif
@@ -5976,6 +6630,11 @@ void reload_config(void)
 	if (current_config) {
 		clear_fs_stats();
 		load_config_file(current_config);
+
+		/* re-init specials array */
+		if ((specials = realloc ((void *)specials, sizeof(struct special_t)*max_specials)) == 0)
+		    ERR("failed to realloc specials array");
+
 #ifdef X11
 		load_fonts();
 		set_font();
@@ -5986,21 +6645,21 @@ void reload_config(void)
 		info.p_tcp_port_monitor_collection = NULL; 
 #endif
 #ifdef AUDACIOUS
-                if ( (!info.audacious.thread) && (create_audacious_thread() !=0) )
+                if (create_audacious_thread() !=0)
                     CRIT_ERR("unable to create audacious thread!");
+		timed_thread_register (info.audacious.p_timed_thread, &info.audacious.p_timed_thread);
 #endif
 		extract_variable_text(text);
 		free(text);
 		text = NULL;
 		update_text();
 	}
-	thread_count = 0;
 }
 
 void clean_up(void)
 {
-	//lock_all_threads();
-	threads_runnable++;
+	timed_thread_destroy_registered_threads ();
+
 	if (info.cpu_usage) {
 		free(info.cpu_usage);
 		info.cpu_usage = NULL;
@@ -6029,10 +6688,6 @@ void clean_up(void)
 	XFreeGC(display, window.gc);
 #endif /* X11 */
 
-
-	/* it is really pointless to free() memory at the end of program but ak|ra
-	 * wants me to do this */
-
 	free_text_objects(text_object_count, text_objects);
 	text_object_count = 0;
 	text_objects = NULL;
@@ -6042,14 +6697,23 @@ void clean_up(void)
 
 	free(current_config);
 	free(current_mail_spool);
+
 #ifdef TCP_PORT_MONITOR
 	destroy_tcp_port_monitor_collection( info.p_tcp_port_monitor_collection );
 	info.p_tcp_port_monitor_collection = NULL;
 #endif
-#ifdef AUDACIOUS
-        if ( info.audacious.thread && (destroy_audacious_thread()!=0) )
-            ERR("error destroying audacious thread");
+#ifdef RSS
+	free_rss_info();
 #endif
+
+	if (specials) {
+		unsigned int i;
+		for(i=0;i<special_count;i++)
+			if(specials[i].type == GRAPH)
+				free(specials[i].graph);
+		free (specials);
+		specials=NULL;
+	}
 }
 
 static int string_to_bool(const char *s)
@@ -6132,6 +6796,16 @@ static void set_default_configurations(void)
 	default_fg_color = WhitePixel(display, screen);
 	default_bg_color = BlackPixel(display, screen);
 	default_out_color = BlackPixel(display, screen);
+	color0 = default_fg_color;
+	color1 = default_fg_color;
+	color2 = default_fg_color;
+	color3 = default_fg_color;
+	color4 = default_fg_color;
+	color5 = default_fg_color;
+	color6 = default_fg_color;
+	color7 = default_fg_color;
+	color8 = default_fg_color;
+	color9 = default_fg_color;
 	draw_shades = 1;
 	draw_borders = 0;
 	draw_graph_borders = 1;
@@ -6146,7 +6820,9 @@ static void set_default_configurations(void)
 	own_window = 0;
 	window.type=TYPE_NORMAL;
 	window.hints=0;
-     	strcpy(window.wm_class_name, "conky");	
+  strcpy(window.class_name, "Conky");	
+  update_uname();
+  sprintf(window.title,"%s - conky",info.uname_s.nodename);
 #endif
 	stippled_borders = 0;
 	border_margin = 3;
@@ -6167,8 +6843,7 @@ static void set_default_configurations(void)
 	stuff_in_upper_case = 0;
 
 #ifdef TCP_PORT_MONITOR
-	tcp_port_monitor_collection_args.min_port_monitors = MIN_PORT_MONITORS_DEFAULT;
-	tcp_port_monitor_args.min_port_monitor_connections = MIN_PORT_MONITOR_CONNECTIONS_DEFAULT;
+	tcp_port_monitor_args.max_port_monitor_connections = MAX_PORT_MONITOR_CONNECTIONS_DEFAULT;
 #endif
 }
 
@@ -6267,6 +6942,66 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 			else
 				CONF_ERR;
 		}
+		CONF("color0") {
+			if (value)
+				color0 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color1") {
+			if (value)
+				color1 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color2") {
+			if (value)
+				color2 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color3") {
+			if (value)
+				color3 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color4") {
+			if (value)
+				color4 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color5") {
+			if (value)
+				color5 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color6") {
+			if (value)
+				color6 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color7") {
+			if (value)
+				color7 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color8") {
+			if (value)
+				color8 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
+		CONF("color9") {
+			if (value)
+				color9 = get_x11_color(value);
+			else
+				CONF_ERR;
+		}
 		CONF("default_color") {
 			if (value)
 				default_fg_color = get_x11_color(value);
@@ -6318,6 +7053,14 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 		CONF("mpd_password") {
 			if (value)
 				strncpy(info.mpd.password, value, 127);
+			else
+				CONF_ERR;
+		}
+#endif
+#ifdef __OpenBSD__
+		CONF("sensor_device") {
+			if(value)
+				sensor_device = strtol(value, 0, 0);
 			else
 				CONF_ERR;
 		}
@@ -6481,14 +7224,34 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 #ifdef X11
 #ifdef OWN_WINDOW
 		CONF("own_window") {
-			own_window = string_to_bool(value);
+      if (value)
+			  own_window = string_to_bool(value);
+      else
+        CONF_ERR;
 		}
-		CONF("wm_class_name") {
-			memset(window.wm_class_name,0,sizeof(window.wm_class_name));
-			strncpy(window.wm_class_name, value, sizeof(window.wm_class_name)-1);
+		CONF("own_window_class") {
+      if (value)
+      {
+			  memset(window.class_name,0,sizeof(window.class_name));
+			  strncpy(window.class_name, value, sizeof(window.class_name)-1);
+      }
+      else 
+        CONF_ERR;
 		}
+    CONF("own_window_title") {
+      if (value)
+      {
+        memset(window.title,0,sizeof(window.title));
+        strncpy(window.title, value, sizeof(window.title)-1);
+      }
+      else
+        CONF_ERR;
+    }
 		CONF("own_window_transparent") {
-			set_transparent = string_to_bool(value);
+      if (value)
+			  set_transparent = string_to_bool(value);
+      else
+        CONF_ERR;
 		}
 		CONF("own_window_colour") {
 			if (value) {
@@ -6525,6 +7288,8 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 				}
 				while (p_hint!=NULL);
 			}
+      else
+        CONF_ERR;
 		}
 		CONF("own_window_type") {
 			if (value) {
@@ -6535,8 +7300,10 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 				else if (strncmp(value,"override",8)==0)
 					window.type = TYPE_OVERRIDE;
 				else
-				    	CONF_ERR;
+				  CONF_ERR;
 			}
+      else
+        CONF_ERR;
 		}
 #endif
 		CONF("stippled_borders") {
@@ -6567,9 +7334,21 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 		CONF("uppercase") {
 			stuff_in_upper_case = string_to_bool(value);
 		}
+		CONF("max_specials") {
+			if (value)
+				max_specials = atoi(value);
+			else
+				CONF_ERR;
+		}
 		CONF("max_user_text") {
 			if (value)
 				max_user_text = atoi(value);
+			else
+				CONF_ERR;
+		}
+		CONF("text_buffer_size") {
+			if (value)
+				text_buffer_size = atoi(value);
 			else
 				CONF_ERR;
 		}
@@ -6600,41 +7379,27 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 			return;
 		}
 #ifdef TCP_PORT_MONITOR
-		CONF("min_port_monitors") 
+		CONF("max_port_monitor_connections") 
 		{
 			if ( !value || 
-			     (sscanf(value, "%d", &tcp_port_monitor_collection_args.min_port_monitors) != 1) || 
-			     tcp_port_monitor_collection_args.min_port_monitors < 0 )
+			     (sscanf(value, "%d", &tcp_port_monitor_args.max_port_monitor_connections) != 1) 
+			     || tcp_port_monitor_args.max_port_monitor_connections < 0 )
 			{
 				/* an error. use default, warn and continue. */
-				tcp_port_monitor_collection_args.min_port_monitors = MIN_PORT_MONITORS_DEFAULT;
+				tcp_port_monitor_args.max_port_monitor_connections = 
+					MAX_PORT_MONITOR_CONNECTIONS_DEFAULT;
 				CONF_ERR;
 			}
-			else if ( tcp_port_monitor_collection_args.min_port_monitors == 0 )
+			else if ( tcp_port_monitor_args.max_port_monitor_connections == 0 )
 			{
 				/* no error, just use default */
-				tcp_port_monitor_collection_args.min_port_monitors = MIN_PORT_MONITORS_DEFAULT;
+				tcp_port_monitor_args.max_port_monitor_connections = 
+					MAX_PORT_MONITOR_CONNECTIONS_DEFAULT;
 			}
-			/* else tcp_port_monitor_collection_args.min_port_monitors > 0 as per config */
-		}
-		CONF("min_port_monitor_connections") 
-		{
-			if ( !value || 
-			     (sscanf(value, "%d", &tcp_port_monitor_args.min_port_monitor_connections) != 1) 
-			     || tcp_port_monitor_args.min_port_monitor_connections < 0 )
-			{
-				/* an error. use default, warni and continue. */
-				tcp_port_monitor_args.min_port_monitor_connections = MIN_PORT_MONITOR_CONNECTIONS_DEFAULT;
-				CONF_ERR;
-			}
-			else if ( tcp_port_monitor_args.min_port_monitor_connections == 0 )
-			{
-				/* no error, just use default */
-				tcp_port_monitor_args.min_port_monitor_connections = MIN_PORT_MONITOR_CONNECTIONS_DEFAULT;
-			}
-			/* else tcp_port_monitor_args.min_port_monitor_connections > 0 as per config */
+			/* else tcp_port_monitor_args.max_port_monitor_connections > 0 as per config */
 		}
 #endif
+
 		else
 		ERR("%s: %d: no such configuration: '%s'", f, line, name);
 
@@ -6667,11 +7432,10 @@ int main(int argc, char **argv)
 	struct sigaction act, oact;
 
 	g_signal_pending=0;
-	memset(&info, 0, sizeof(info) );
+	memset(&info, 0, sizeof(info));
 
 #ifdef TCP_PORT_MONITOR
-	tcp_port_monitor_collection_args.min_port_monitors = MIN_PORT_MONITORS_DEFAULT;
-	tcp_port_monitor_args.min_port_monitor_connections = MIN_PORT_MONITOR_CONNECTIONS_DEFAULT;
+	tcp_port_monitor_args.max_port_monitor_connections = MAX_PORT_MONITOR_CONNECTIONS_DEFAULT;
 #endif
 
 	/* handle command line parameters that don't change configs */
@@ -6688,6 +7452,7 @@ int main(int argc, char **argv)
 		for (x = 0; x < strlen(s); x++) {
 			temp[x] = tolower(s[x]);
 		}
+		temp[x] = 0;
 		if (strstr(temp, "utf-8") || strstr(temp, "utf8")) {
 			utf8_mode = 1;
 		}
@@ -6780,6 +7545,10 @@ int main(int argc, char **argv)
 	else { 
 		set_default_configurations();
 	}
+
+	/* init specials array */
+	if ((specials = calloc (sizeof(struct special_t), max_specials)) == 0)
+	    ERR("failed to create specials array");
 
 #ifdef MAIL_FILE
 	if (current_mail_spool == NULL) {
@@ -6881,27 +7650,22 @@ int main(int argc, char **argv)
 		int pid = fork();
 		switch (pid) {
 		case -1:
-			ERR("can't fork() to background: %s",
-			    strerror(errno));
+			ERR("Conky: couldn't fork() to background: %s", strerror(errno));
 			break;
 
 		case 0:
 			/* child process */
-			sleep(1);
-			fprintf(stderr,"\n");fflush(stderr);
+			usleep(25000);
+			fprintf(stderr,"\n"); fflush(stderr);
 			break;
 
 		default:
 			/* parent process */
-			fprintf(stderr,"Conky: forked to background, pid is %d\n",pid);
-			fflush(stderr);
+			fprintf(stderr,"Conky: forked to background, pid is %d\n", pid); fflush(stderr);
 			return 0;
 		}
 	}
 
-	update_uname();
-
-	generate_text();
 #ifdef X11
 	selected_font = 0;
 	update_text_area();	/* to get initial size of the window */
@@ -6910,7 +7674,7 @@ int main(int argc, char **argv)
 		(own_window,
 		 text_width + border_margin * 2 + 1,
 		 text_height + border_margin * 2 + 1,
-		 set_transparent, background_colour, info.uname_s.nodename, argv, argc);
+		 set_transparent, background_colour, argv, argc);
 	
 	selected_font = 0;
 	update_text_area();	/* to position text/window on screen */
@@ -6949,18 +7713,18 @@ int main(int argc, char **argv)
 	}
 
 #ifdef AUDACIOUS
-	if ( (create_audacious_thread() !=0) )
-	{
+	if (create_audacious_thread() !=0) 
 	    CRIT_ERR("unable to create audacious thread!");
-	}
+	timed_thread_register (info.audacious.p_timed_thread, &info.audacious.p_timed_thread);
 #endif
 
-	main_loop();
-
-#ifdef AUDACIOUS
-	if ( info.audacious.thread && (destroy_audacious_thread()!=0) )
-            ERR("error destroying audacious thread");
-#endif	
+  /*
+   * ***************
+   * MAIN CONKY LOOP
+   * ***************
+   *
+   */
+  main_loop();
 
 #if defined(__FreeBSD__)
 	kvm_close(kd);

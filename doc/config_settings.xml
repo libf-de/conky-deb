@@ -28,6 +28,76 @@
 </varlistentry>
 
 <varlistentry>
+	<term><command><option>color0</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color1</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color2</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color3</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color4</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color5</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color6</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color7</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color8</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>color9</option></command></term>
+	<listitem>
+		A color variable for use inside TEXT segments
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
 	<term><command><option>cpu_avg_samples</option></command></term>
 	<listitem>
 		The number of samples to average for CPU monitoring
@@ -100,14 +170,16 @@
 <varlistentry>
 	<term><command><option>gap_x</option></command></term>
 	<listitem>
-		Gap between right or left border of screen, same as passing -x at command line
+		Gap, in pixels, between right or left border of screen, same as passing -x at command line,
+		e.g. gap_x 10
 	<para></para></listitem>
 </varlistentry>
 
 <varlistentry>
 	<term><command><option>gap_y</option></command></term>
 	<listitem>
-		Gap between top or bottom border of screen, same as passing -y at command line
+		Gap, in pixels, between top or bottom border of screen, same as passing -y at command line,
+		e.g. gap_y 10.
 	<para></para></listitem>
 </varlistentry>
 
@@ -126,12 +198,35 @@
 </varlistentry>
 
 <varlistentry>
+        <term><command><option>max_port_monitor_connections</option></command></term>
+        <listitem>
+                Allow each port monitor to track at most this many connections (if 0 or not set, default is 256)
+        <para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>max_specials</option></command></term>
+	<listitem>
+		Maximum number of special things, e.g. fonts, offsets, aligns, etc. (default is 512)
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
 	<term><command><option>max_user_text</option></command>
 		<option>bytes</option>
 	</term>
 	<listitem>
 		Maximum size of user text buffer, i.e. layout below TEXT line in config file
 		(default is 16384 bytes)
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>text_buffer_size</option></command>
+		<option>bytes</option>
+	</term>
+	<listitem>
+		Size of the standard text buffer (default is 1280 bytes).
 		<para></para></listitem>
 </varlistentry>
 
@@ -150,20 +245,6 @@
 	</term>
 	<listitem>
 		Minimum size of window
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term><command><option>min_port_monitors</option></command></term>
-	<listitem>
-		Allow for the creation of at least this number of port monitors (if 0 or not set, default is 16) 
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term><command><option>min_port_monitor_connections</option></command></term>
-	<listitem>
-		Allow each port monitor to track at least this many connections (if 0 or not set, default is 256)
 	<para></para></listitem>
 </varlistentry>
 
@@ -217,21 +298,10 @@
 </varlistentry>
 
 <varlistentry>
-	<term><command><option>own_window_transparent</option></command></term>
-	<listitem>
-		Boolean, set pseudo-transparency?
-		<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term><command><option>own_window_type</option></command></term>
-	<listitem>
-		if own_window is yes, you may specify type normal, desktop or override (default: normal).
-		Desktop windows are special windows that have no window decorations; are always visible 
-		on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
-		Override windows are not under the control of the window manager.  Hints are ignored. This type
-		of window can be useful for certain situations.
-		<para></para></listitem>
+        <term><command><option>own_window_class</option></command></term>
+        <listitem>
+                Manually set the WM_CLASS name.  Defaults to "Conky".
+        <para></para></listitem>
 </varlistentry>
 
 <varlistentry>
@@ -255,12 +325,38 @@
 </varlistentry>
 
 <varlistentry>
+        <term><command><option>own_window_title</option></command></term>
+        <listitem>
+                Manually set the window name.  Defaults to "&lt;hostname&gt; - conky".
+        <para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>own_window_transparent</option></command></term>
+	<listitem>
+		Boolean, set pseudo-transparency?
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term><command><option>own_window_type</option></command></term>
+	<listitem>
+		if own_window is yes, you may specify type normal, desktop or override (default: normal).
+		Desktop windows are special windows that have no window decorations; are always visible 
+		on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
+		Override windows are not under the control of the window manager.  Hints are ignored. This type
+		of window can be useful for certain situations.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
 	<term><command><option>out_to_console</option></command>
 	</term>
 	<listitem>
 		Print text to stdout.
 		<para></para></listitem>
 </varlistentry>
+
 <varlistentry>
 	<term><command><option>pad_percents</option></command></term>
 	<listitem>
@@ -314,13 +410,6 @@
 	<term><command><option>use_xft</option></command></term>
 	<listitem>
 		Use Xft (anti-aliased font and stuff)
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term><command><option>wm_class_name</option></command></term>
-	<listitem>
-		Manually set the WM_CLASS name.  Defaults to "conky".
 	<para></para></listitem>
 </varlistentry>
 

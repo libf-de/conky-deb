@@ -1,4 +1,30 @@
-/* NetBSD port */
+/*
+ * Conky, a system monitor, based on torsmo
+ *
+ * Any original torsmo code is licensed under the BSD license
+ *
+ * All code written since the fork of torsmo is licensed under the GPL
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
+ * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *
+ *  $Id: netbsd.c 922 2007-08-13 23:14:01Z pkovacs $
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,6 +136,11 @@ void update_uptime()
 	}
 }
 
+int check_mount(char *s)
+{
+	/* stub */
+	return 0;
+}
 
 void update_meminfo()
 {
@@ -308,7 +339,7 @@ void update_cpu_usage()
 
 }
 
-double get_i2c_info(int *fd, int div, char *devtype)
+double get_sysfs_info(int *fd, int div, char *devtype)
 {
 	return -1;
 }
@@ -328,13 +359,12 @@ double get_acpi_temperature(int fd)
 	return -1;
 }
 
-void get_battery_stuff(char *buf, unsigned int n, const char *bat)
+void get_battery_stuff(char *buf, unsigned int n, const char *bat, int item)
 {
 }
 
 int
-open_i2c_sensor(const char *dev, const char *type, int n, int *div,
-		char *devtype)
+open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n, int *div, char *devtype)
 {
 	return -1;
 }
@@ -365,4 +395,8 @@ void get_acpi_fan( char * p_client_buffer, size_t client_buffer_size )
 	memset(p_client_buffer,0,client_buffer_size);
 
 	return;
+}
+
+void update_entropy (void)
+{
 }

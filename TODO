@@ -1,4 +1,6 @@
-# $Id: TODO 748 2006-11-11 01:17:08Z pkovacs $
+# $Id: TODO 795 2006-11-23 02:28:47Z pkovacs $
+
+1.x   - implement _XROOTPMAP_ID and ESETROOT_PMAP_ID alterative for pseudo-transperency.
 
 2.0.0 - schedule TBD
 	* rewrite core of Conky in C++
