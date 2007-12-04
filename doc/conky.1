@@ -44,7 +44,7 @@ Example to compile and run Conky with all optional components (note that some co
 .TP 
 \fB\*(T<\fBsh autogen.sh\fR\*(T>\fR \*(T<\fB# Only required if building from Svn\fR\*(T> 
 .TP 
-\fB\*(T<\fB\&./configure \fR\*(T>\fR\*(T<\fB\-\-prefix=/usr \-\-mandir=/usr/share/man \-\-infodir=/usr/share/info \-\-datadir=/usr/share \-\-sysconfdir=/etc \-\-localstatedir=/var/lib \-\-disable\-own\-window \-\-enable\-audacious \-\-enable\-bmpx \-\-disable\-hddtemp \-\-disable\-mpd \-\-enable\-xmms2 \-\-disable\-portmon \-\-disable\-network \-\-enable\-debug \-\-disable\-x11 \-\-disable\-double\-buffer \-\-disable\-xdamage \-\-disable\-xft\fR\*(T> 
+\fB\*(T<\fB\&./configure \fR\*(T>\fR\*(T<\fB\-\-prefix=/usr \-\-mandir=/usr/share/man \-\-infodir=/usr/share/info \-\-datadir=/usr/share \-\-sysconfdir=/etc \-\-localstatedir=/var/lib \-\-disable\-own\-window \-\-enable\-audacious[=yes|no|legacy] \-\-enable\-bmpx \-\-disable\-hddtemp \-\-disable\-mpd \-\-enable\-xmms2 \-\-disable\-portmon \-\-disable\-network \-\-enable\-debug \-\-disable\-x11 \-\-disable\-double\-buffer \-\-disable\-xdamage \-\-disable\-xft\fR\*(T> 
 .TP 
 \fB\*(T<\fBmake\fR\*(T>\fR 
 .TP 
@@ -285,6 +285,10 @@ Port of MPD server
 .TP 
 \fB\*(T<\fBmpd_password\fR\*(T>\fR
 MPD server password
+
+.TP 
+\fB\*(T<\fBmusic_player_interval\fR\*(T>\fR
+Music player thread update interval (defaults to Conky's update interval)
 
 .TP 
 \fB\*(T<\fBnet_avg_samples\fR\*(T>\fR
@@ -604,7 +608,7 @@ Disk IO graph, colours defined in hex, minus the #. If scale is non-zero, it bec
 Displays current disk IO for reads.
 
 .TP 
-\fB\*(T<\fBdiskio_readgraph\fR\*(T>\fR \*(T<\fB(height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+\fB\*(T<\fBdiskiograph_read\fR\*(T>\fR \*(T<\fB(height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
 Disk IO graph for reads, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
 
 .TP 
@@ -612,7 +616,7 @@ Disk IO graph for reads, colours defined in hex, minus the #. If scale is non-ze
 Displays current disk IO for writes.
 
 .TP 
-\fB\*(T<\fBdiskio_writegraph\fR\*(T>\fR \*(T<\fB(height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+\fB\*(T<\fBdiskiograph_write\fR\*(T>\fR \*(T<\fB(height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
 Disk IO graph for writes, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
 
 .TP 
@@ -845,8 +849,11 @@ Kernel version
 Machine, i686 for example
 
 .TP 
-\fB\*(T<\fBmails\fR\*(T>\fR 
-Mail count in mail spool. You can use program like fetchmail to get mails from some server using your favourite protocol. See also new_mails.
+\fB\*(T<\fBmails\fR\*(T>\fR \*(T<\fB(mailbox)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Mail count in the specified mailbox or your mail spool if not.
+Both mbox and maildir type mailboxes are supported. You can
+use a program like fetchmail to get mails from some server
+using your favourite protocol. See also new_mails.
 
 .TP 
 \fB\*(T<\fBmboxscan\fR\*(T>\fR \*(T<\fB(\-n number of messages to print) (\-fw from width) (\-sw subject width) mbox\fR\*(T> 
@@ -933,8 +940,9 @@ Prints the file name of the current MPD song
 Prints the song name in either the form "artist - title" or file name, depending on whats available
 
 .TP 
-\fB\*(T<\fBnew_mails\fR\*(T>\fR 
-Unread mail count in mail spool.
+\fB\*(T<\fBnew_mails\fR\*(T>\fR \*(T<\fB(mailbox)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Unread mail count in the specified mailbox or mail spool if
+not. Both mbox and maildir type mailboxes are supported.
 
 .TP 
 \fB\*(T<\fBnodename\fR\*(T>\fR 
@@ -1259,7 +1267,7 @@ Prints the song name in either the form "artist - title" or file name, depending
 
 .SH EXAMPLES
 .TP 
-\*(T<conky \*(T>\*(T<\fB\-t '${time %D %H:%m}' \-o \-u 30\fR\*(T>
+\*(T<conky \*(T>\*(T<\fB\-t '${time %D %H:%M}' \-o \-u 30\fR\*(T>
 Start Conky in its own window with date and clock as text and 30 sec update interval.
 .TP 
 \*(T<conky \*(T>\*(T<\fB\-a top_left \-x 5 \-y 500 \-d\fR\*(T>

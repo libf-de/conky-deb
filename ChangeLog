@@ -1,13 +1,66 @@
-# $Id: ChangeLog 937 2007-08-31 03:44:17Z brenden1 $
+# $Id: ChangeLog 990 2007-11-22 19:38:17Z pkovacs $
+
+2007-11-22
+	* Conky 1.4.9 released.
+
+2007-11-18
+	* Added Gentoo USE flag audacious-legacy for Audacious legacy support.
+
+2007-11-16
+	* Added support for Audacious 1.4.0 and legacy versions via 
+			--enable-audacious=yes|no|legacy.
+
+2007-11-14
+	* Fix compilation error with --disable-x11 (bug #1830373).
+	* Bump doc stylesheet from 4.3 to 4.4.
+
+2007-10-31
+	* Fix mpd_smart bug #1822773.
+
+2007-10-23
+	* Externalize default config file: ${sysconfdir}/conky/conky.conf
+
+2007-10-21
+	* Initialize music_player_interval so built-in .conkyrc actual works.
+	* Lower timed_thread minimum timing interval from 50 usecs to 10 usecs.
+	* Separate timed thread asserts for clarity.
+	* Remove ${tail /var/log/Xorg.0.log} from default text.
+	* Update vim/nano syntax files.
+
+2007-10-18
+	* Conky 1.4.8 released.
+
+2007-10-17
+	* doc/man fixes 1810328 & 1813483.
+	* struct alignment patch 1812924 (sohalt).
+
+2007-10-02
+	* Multiple mailbox patch (thanks Ben Kibbey).
+
+2007-09-28
+	* Small fix for $ibm_volume (thanks Kapil Hari Paranjape).
+	* Patch so $tail can read from a fifo file descriptor (thanks Ben Kibbey).
+
+2007-09-01
+	* Improved performance slightly.
+	* Added 'music_player_interval' config option to specify an update interval for
+	 		music player threads (currently honored by mpd and audacious).
+	* Fixed some minor memory leaks associated with SIGUSR1.
+	* Zero out imap and pop3 stuff when the connection fails.
+
+2007-08-31
+	* _Really_ fix mpd SIGPIPE issues.
+	* Fix timed thread race condition, seen esp. on new kernel scheduler (cfs).
+	* Fix $audacious_title not being displayed when no length argument indicated.
 
 2007-08-30
-	* Conky 1.4.7 released
-	* Check for pkg-config >=0.19
-	* Use timed_thread for mpd
+	* Conky 1.4.7 released.
+	* Check for pkg-config >=0.19.
+	* Use timed_thread for mpd.
 
 2007-08-27
-	* Fixed issue with SIGPIPE and mpd
-	* Updated COPYING (with more clarifications)
+	* Fixed issue with SIGPIPE and mpd.
+	* Updated COPYING (with more clarifications).
 
 2007-08-14
 	* Updated vim/nano syntax files.

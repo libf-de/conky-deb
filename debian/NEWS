@@ -1,3 +1,10 @@
+conky (1.4.9-1) unstable; urgency=low
+
+    Since enabling the wireless support meant adding "only" 62K of
+    library dependency it has been enabled in this build.
+ 
+ -- Kapil Hari Paranjape <kapil@debian.org>  Mon, 03 Dec 2007 09:24:31 +0530
+
 conky (1.4.7-1) unstable; urgency=low
 
     The previous version of "conky" packaged for Debian was 1.4.4

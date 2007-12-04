@@ -1,4 +1,4 @@
-# $Id: AUTHORS 908 2007-08-10 20:49:57Z brenden1 $
+# $Id: AUTHORS 969 2007-10-02 23:57:41Z brenden1 $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -18,6 +18,10 @@ affinity <affy at users dot sourceforge dot net>
 
 akash <akash at users dot sourceforge dot net>
   battery_percent and battery_bar
+
+Ben Kibbey <benkibbey at users dot sourceforge dot net>
+  $tail fifo patch
+  multiple mailbox patch
 
 Blondak <blondak_nesercz at users dot sourceforge dot net>
   diskio read & write patch
@@ -138,6 +142,9 @@ Jørgen P. Tjernø <daxxar at mental dot mine dot nu>
   Restores default settings before loading new config file in SIGHUP
   Some cleaning and commenting apparently :)
   SIGHUP config file reload
+
+Kapil Hari Paranjape
+  ibm_volume patch
 
 killfire
   fs_used_perc and fs_bar_free patch

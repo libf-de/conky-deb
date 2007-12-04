@@ -1,0 +1,13 @@
+Index: conky-1.4.9/src/Makefile.in
+===================================================================
+--- conky-1.4.9.orig/src/Makefile.in	2007-12-04 12:15:33.000000000 +0530
++++ conky-1.4.9/src/Makefile.in	2007-12-04 12:15:53.000000000 +0530
+@@ -302,7 +302,7 @@
+ 	$(x11)                  \
+ 	$(xmms2) 
+ 
+-AM_LDFLAGS = $(PTHREAD_LIBS) -lm
++AM_LDFLAGS = $(PTHREAD_LIBS)
+ EXTRA_DIST = \
+ 	audacious.c		\
+ 	audacious.h		\

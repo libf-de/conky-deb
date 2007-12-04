@@ -389,7 +389,7 @@
 		</td>
 </tr>
 <tr bgcolor="#fffafa">
-<td align="center">diskio_readgraph</td>
+<td align="center">diskiograph_read</td>
 <td align="center">(height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
 <td>
 		Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
@@ -403,7 +403,7 @@
 		</td>
 </tr>
 <tr bgcolor="#fffafa">
-<td align="center">diskio_writegraph</td>
+<td align="center">diskiograph_write</td>
 <td align="center">(height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
 <td>
 		Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
@@ -805,9 +805,12 @@
 </tr>
 <tr bgcolor="#fffafa">
 <td align="center">mails</td>
-<td align="center"></td>
+<td align="center">(mailbox)</td>
 <td>
-		Mail count in mail spool. You can use program like fetchmail to get mails from some server using your favourite protocol. See also new_mails.
+		Mail count in the specified mailbox or your mail spool if not.
+		Both mbox and maildir type mailboxes are supported. You can
+		use a program like fetchmail to get mails from some server
+		using your favourite protocol. See also new_mails.
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -959,9 +962,10 @@
 </tr>
 <tr bgcolor="#fffafa">
 <td align="center">new_mails</td>
-<td align="center"></td>
+<td align="center">(mailbox)</td>
 <td>
-		Unread mail count in mail spool.
+		Unread mail count in the specified mailbox or mail spool if
+		not. Both mbox and maildir type mailboxes are supported.
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">

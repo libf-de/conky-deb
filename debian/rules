@@ -34,11 +34,12 @@ unpatch:
 configure: debian/configure-stamp
 debian/configure-stamp:
 	dh_testdir
-	./configure \
+	XFT_LIBS="-lXft" ./configure \
 	  --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
-	  --prefix=/usr \
+	  --prefix=/usr --sysconfdir=/etc \
 	  --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-	  --enable-debug
+	  --enable-debug \
+	  --enable-wlan
 	
 	touch debian/configure-stamp
 

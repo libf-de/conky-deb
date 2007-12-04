@@ -3,6 +3,9 @@
 /* Define for Audacious support */
 #undef AUDACIOUS
 
+/* Define for Audacious Legacy support */
+#undef AUDACIOUS_LEGACY
+
 /* Define if you want BMPx support */
 #undef BMPX
 
@@ -14,6 +17,15 @@
 
 /* Define to 1 if you have the <assert.h> header file. */
 #undef HAVE_ASSERT_H
+
+/* Define to 1 if you have the <audacious/audctrl.h> header file. */
+#undef HAVE_AUDACIOUS_AUDCTRL_H
+
+/* Define to 1 if you have the <audacious/beepctrl.h> header file. */
+#undef HAVE_AUDACIOUS_BEEPCTRL_H
+
+/* Define to 1 if you have the <audacious/dbus.h> header file. */
+#undef HAVE_AUDACIOUS_DBUS_H
 
 /* Define to 1 if you have the `calloc' function. */
 #undef HAVE_CALLOC
@@ -38,6 +50,12 @@
 
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
+
+/* Define to 1 if you have the <glib.h> header file. */
+#undef HAVE_GLIB_H
+
+/* Define to 1 if you have the <glib-object.h> header file. */
+#undef HAVE_GLIB_OBJECT_H
 
 /* Define if you have the iconv() function. */
 #undef HAVE_ICONV

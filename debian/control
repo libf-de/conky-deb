@@ -3,7 +3,10 @@ Section: utils
 Priority: optional
 Maintainer: Kapil Hari Paranjape <kapil@debian.org>
 Build-Depends: debhelper (>= 4.0.0), quilt, libx11-dev, libxft-dev,
- libxdamage-dev, libxext-dev, pkg-config (>= 0.19), libglib2.0-dev
+ libxdamage-dev, libxext-dev, pkg-config (>= 0.19), libglib2.0-dev,
+ libiw-dev
+Vcs-Svn: svn://svn.debian.org/svn/collab-maint/deb-maint/conky
+Homepage: http://conky.sf.net
 Standards-Version: 3.7.2
 
 Package: conky
@@ -16,5 +19,4 @@ Description: highly configurable system monitor for X based on torsmo
  root desktop or in its own window. Conky has many built-in objects,
  as well as the ability to execute programs and scripts, then display
  the output from stdout. 
- .
-  Homepage: http://conky.sf.net
+

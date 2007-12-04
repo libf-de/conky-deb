@@ -5,7 +5,7 @@
 " Copyright:  Copyright (c) 2005 Ciaran McCreesh
 " Licence:    You may redistribute this under the same terms as Vim itself
 "
-" $Id: conkyrc.vim 923 2007-08-15 00:35:25Z pkovacs $
+" $Id: conkyrc.vim 980 2007-10-21 23:46:38Z pkovacs $
 
 if exists("b:current_syntax")
   finish
@@ -40,6 +40,7 @@ syn keyword ConkyrcSetting
         \ mpd_host
         \ mpd_password
         \ mpd_port
+        \ music_player_interval
         \ net_avg_samples
         \ no_buffers
         \ out_to_console
@@ -133,9 +134,12 @@ syn keyword ConkyrcVarName contained nextgroup=ConkyrcNumber,ConkyrcColour skipw
         \ colour 
         \ cpu 
         \ cpubar 
+        \ cpugraph
         \ diskio 
+        \ diskiograph
         \ downspeed 
         \ downspeedf
+        \ downspeedgraph
         \ else 
         \ entropy_avail
         \ entropy_bar

@@ -1,8 +1,35 @@
-Index: conky-1.4.7/doc/conky.1
+Index: conky-1.4.9/doc/conky.1
 ===================================================================
---- conky-1.4.7.orig/doc/conky.1	2007-09-21 07:31:22.000000000 +0530
-+++ conky-1.4.7/doc/conky.1	2007-09-21 07:32:14.000000000 +0530
-@@ -79,7 +79,7 @@
+--- conky-1.4.9.orig/doc/conky.1	2007-12-04 12:07:13.000000000 +0530
++++ conky-1.4.9/doc/conky.1	2007-12-04 13:40:41.000000000 +0530
+@@ -38,7 +38,7 @@
+ There is also usually an up-to-date ebuild within Conky's package or in Svn.
+ .PP
+ Debian,etc. users -- Conky will be in Debian's repositories soon (by mid-September, hopefully), and then 
+-Ubuntu shortly thereafter. Until then, "dpkg -i" the .deb package to install. 
++Ubuntu shortly thereafter. Until then, "dpkg \-i" the .deb package to install.
+ .PP
+ Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
+ .TP 
+@@ -59,7 +59,7 @@
+ statistics stuff when compiled with icc, I don't know exactly why.
+ .PP
+ You can disable 'drawing to own window' feature in case you don't need it by passing 
+---disable-own-window to configure -script.
++\-\-disable\-own\-window to configure script.
+ .PP
+ .SH "YOU SHOULD KNOW"
+ Conky is generally very good on resources. However, certain objects in
+@@ -69,7 +69,7 @@
+ If you do use them, please do not complain about memory or CPU usage, 
+ unless you think something's seriously wrong (mem leak, etc.).
+ .PP
+-An easy way to force Conky to reload your ~/.conkyrc: "killall -SIGUSR1 conky".
++An easy way to force Conky to reload your ~/.conkyrc: "killall \-SIGUSR1 conky".
+ Saves you the trouble of having to kill and then restart.
+ .PP
+ IMPORTANT: For previous Conky users, Conky 1.3 no longer supports the metar stuff. 
+@@ -110,7 +110,7 @@
  
  .TP 
  \fB\*(T<\fB\-t \fR\*(T>\fR\*(T<\fBTEXT\fR\*(T>
@@ -11,7 +38,7 @@ Index: conky-1.4.7/doc/conky.1
  
  .TP 
  \fB\*(T<\fB\-u \fR\*(T>\fR\*(T<\fBSECONDS\fR\*(T>
-@@ -202,17 +202,17 @@
+@@ -233,17 +233,17 @@
  
  .TP 
  \fB\*(T<\fBgap_x\fR\*(T>\fR
@@ -32,7 +59,7 @@ Index: conky-1.4.7/doc/conky.1
  
  .TP 
  \fB\*(T<\fBmail_spool\fR\*(T>\fR
-@@ -311,7 +311,7 @@
+@@ -346,7 +346,7 @@
  
  .TP 
  \fB\*(T<\fBpop3\fR\*(T>\fR
@@ -41,7 +68,7 @@ Index: conky-1.4.7/doc/conky.1
  
  .TP 
  \fB\*(T<\fBstippled_borders\fR\*(T>\fR
-@@ -795,11 +795,11 @@
+@@ -830,11 +830,11 @@
  
  .TP 
  \fB\*(T<\fBimap_messages\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -55,7 +82,7 @@ Index: conky-1.4.7/doc/conky.1
  
  .TP 
  \fB\*(T<\fBkernel\fR\*(T>\fR 
-@@ -819,7 +819,7 @@
+@@ -857,7 +857,7 @@
  
  .TP 
  \fB\*(T<\fBmboxscan\fR\*(T>\fR \*(T<\fB(\-n number of messages to print) (\-fw from width) (\-sw subject width) mbox\fR\*(T> 
@@ -64,7 +91,7 @@ Index: conky-1.4.7/doc/conky.1
  
  .TP 
  \fB\*(T<\fBmem\fR\*(T>\fR 
-@@ -943,11 +943,11 @@
+@@ -982,11 +982,11 @@
  
  .TP 
  \fB\*(T<\fBpop3_unseen\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -78,7 +105,7 @@ Index: conky-1.4.7/doc/conky.1
  
  .TP 
  \fB\*(T<\fBpre_exec\fR\*(T>\fR \*(T<\fBshell command\fR\*(T> 
-@@ -1011,26 +1011,26 @@
+@@ -1050,26 +1050,26 @@
  .br
  \fBlservice\fR - local service name from /etc/services
  
@@ -112,7 +139,7 @@ Index: conky-1.4.7/doc/conky.1
  displays the local service name of the fifteenth connection in the range of all ports
  
  Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors. 
-@@ -1240,9 +1240,9 @@
+@@ -1279,9 +1279,9 @@
  all window managers. Especially doesn't work well with Gnome and it has 
  been reported that it doesn't work with KDE either. Nautilus can be 
  disabled from drawing to desktop with program gconf-editor. Uncheck 
@@ -125,21 +152,3 @@ Index: conky-1.4.7/doc/conky.1
  Conky to create its own window.
  .SH "SEE ALSO"
  \(lahttp://conky.sourceforge.net\(ra
-@@ -1258,7 +1258,7 @@
- There is also usually an up-to-date ebuild within Conky's package or in Svn.
- .PP
- Debian,etc. users -- Conky will be in Debian's repositories soon (by mid-September, hopefully), and then 
--Ubuntu shortly thereafter. Until then, "dpkg -i" the .deb package to install. 
-+Ubuntu shortly thereafter. Until then, "dpkg \-i" the .deb package to install.
- .PP
- Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
- .TP 
-@@ -1279,7 +1279,7 @@
- statistics stuff when compiled with icc, I don't know exactly why.
- .PP
- You can disable 'drawing to own window' feature in case you don't need it by passing 
----disable-own-window to configure -script.
-+\-\-disable\-own\-window to configure script.
- .PP
- .SH AUTHORS
- The Conky dev team. What's up now!

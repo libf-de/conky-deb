@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  *
- *  $Id: common.c 935 2007-08-31 02:05:02Z brenden1 $
+ *  $Id: common.c 969 2007-10-02 23:57:41Z brenden1 $
  */
 
 #include "conky.h"
@@ -222,9 +222,6 @@ void update_stuff()
 	if (NEED(INFO_DISKIO))
 		update_diskio();
 
-	if (NEED(INFO_MAIL))
-		update_mail_count();
-
 #if defined(__linux__)
 	if (NEED(INFO_I8K))
 		update_i8k();
@@ -233,12 +230,15 @@ void update_stuff()
 #ifdef MPD
 	if (NEED(INFO_MPD)) {
 		if (!mpd_timed_thread) {
-			clear_mpd_stats(&info); 
-			mpd_timed_thread = timed_thread_create((void*)update_mpd, (void*) NULL, update_interval * 1000000);
+			init_mpd_stats(&info);
+			mpd_timed_thread = 
+        timed_thread_create((void*)update_mpd, (void*) NULL, info.music_player_interval * 1000000);
 			if (!mpd_timed_thread) {
-				ERR("Failed to create MPD thread");
+				ERR("Failed to create MPD timed thread");
 			}
 			timed_thread_register(mpd_timed_thread, &mpd_timed_thread);
+      if (timed_thread_run (mpd_timed_thread))
+        ERR("Failed to run MPD timed thread");
 		}
 	}
 #endif

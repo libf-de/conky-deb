@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  *
- *  $Id: conky.h 935 2007-08-31 02:05:02Z brenden1 $
+ *  $Id: conky.h 973 2007-10-17 20:31:27Z pkovacs $
  */
 
 #ifndef _conky_h_
@@ -124,9 +124,9 @@ struct net_stat {
 	char essid[32];
 	char bitrate[16];
 	char mode[16];
-	char ap[18];
 	int link_qual;
 	int link_qual_max;
+	char ap[18];
 };
 
 unsigned int diskio_value;
@@ -153,8 +153,8 @@ struct mail_s {			// for imap and pop3
 	char pass[128];
 	char command[1024];
 	char folder[128];
-	char secure;
 	timed_thread *p_timed_thread;
+	char secure;
 } mail;
 
 /*struct cpu_stat {
@@ -321,7 +321,6 @@ struct information {
 
 	float loadavg[3];
 
-	int new_mail_count, mail_count;
 	struct mail_s* mail;
 	int mail_running;
 #ifdef MPD
@@ -348,8 +347,10 @@ struct information {
 #ifdef TCP_PORT_MONITOR
   tcp_port_monitor_collection_t * p_tcp_port_monitor_collection;
 #endif
-	short kflags;  /* kernel settings, see enum KFLAG */
 	struct entropy_s entropy;
+  double music_player_interval;
+
+	short kflags;  /* kernel settings, see enum KFLAG */
 };
 
 enum {
@@ -579,6 +580,15 @@ struct process {
 	float totalmem;
 };
 
+struct local_mail_s {
+	char *box;
+	int mail_count;
+	int new_mail_count;
+	float interval;
+	time_t last_mtime;
+	double last_update;
+};
+
 void update_top();
 void free_all_processes();
 struct process *get_first_process();
@@ -619,7 +629,7 @@ char *get_apm_battery_time(void);
 
 /* in mpd.c */
 #ifdef MPD
-extern void clear_mpd_stats(struct information *current_info);
+extern void init_mpd_stats(struct information *current_info);
 void *update_mpd(void);
 extern timed_thread *mpd_timed_thread;
 #endif /* MPD */

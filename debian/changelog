@@ -1,3 +1,28 @@
+conky (1.4.9-1) unstable; urgency=low
+
+  * New upstream release. Closes: #453498, #453834.
+    - Fix number of bugs (see upstream changelog).
+    - Externalise default configuration to a file (/etc/conky/conky.conf
+      on Debian).
+    - Improved music player support.
+    - Multiple mailboxes support.
+  * Enabled wireless monitoring. Closes: #445561, #445690.
+    - debian/rules: added "--enable-wlan" to configure rules.
+    - debian/control: additional build-dependency on "libiw-dev".
+    - debian/NEWS.Debian: added comment about this change.
+  * debian/patches:
+    - fix_its_man_page: Corrected possessive "it's" by "its" in man page. Closes: #445918.
+    - dont_tail_xorglog: Removed. Not required as equivalent patch applied upstream.
+    - ibm_acpi_volume: Removed. Not required as equivalent patch applied upstream.
+    - use_clock_gettime_correctly: Fix src/timed_thread.c to use realtime clock correctly.
+    - avoid_linking_with_libm: Fix src/Makefile.in to avoid needless linking with libm.
+  * debian/rules:
+    - Define "XFT_LIBS" environment variable for "configure" to avoid linking with
+      "libfontconfig" from which no symbols are used.
+  * debian/control: Added "Homepage" and "Vc-Svn" fields.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Tue,  4 Dec 2007 14:14:46 +0530
+
 conky (1.4.7-1) unstable; urgency=low
 
   * New upstream release. Closes: #419066. See NEWS.Debian for

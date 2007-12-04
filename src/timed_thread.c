@@ -1,4 +1,4 @@
-/* $Id: timed_thread.c 905 2007-08-10 20:09:43Z pkovacs $ */
+/* $Id: timed_thread.c 977 2007-10-20 23:35:25Z pkovacs $ */
 
 /* 
  * timed_thread.c: Abstraction layer for timed threads
@@ -35,6 +35,8 @@
 
 /* Abstraction layer for timed threads */
 
+static int now (struct timespec *);
+
 /* private */
 struct _timed_thread 
 {
@@ -43,7 +45,9 @@ struct _timed_thread
   pthread_mutex_t cs_mutex;       /* critical section mutex */
   pthread_mutex_t runnable_mutex; /* only for the runnable_cond */
   pthread_cond_t runnable_cond;   /* signalled to stop the thread */
-  unsigned int interval_usecs;    /* timed_thread_test() wait interval in microseconds */
+  void *(*start_routine)(void*);  /* thread function to run */
+  void *arg;                      /* thread function argument */
+  struct timespec interval_time;  /* interval_usecs as a struct timespec */
 };
 
 /* linked list of created threads */
@@ -57,14 +61,34 @@ typedef struct _timed_thread_list
 static timed_thread_list *p_timed_thread_list_head = NULL;
 static timed_thread_list *p_timed_thread_list_tail = NULL;
 
+static int now (struct timespec *abstime)
+{
+  if (!abstime)
+    return (-1);
 
-/* create a timed thread */
+#ifdef HAVE_CLOCK_GETTIME
+  return clock_gettime (CLOCK_REALTIME, &abstime);
+#else
+  /* fallback to gettimeofday () */
+  struct timeval tv;
+  if (gettimeofday (&tv, NULL) != 0)
+    return (-1);
+
+  abstime->tv_sec = tv.tv_sec;
+  abstime->tv_nsec = tv.tv_usec * 1000;
+  return 0;
+#endif
+}
+
+
+/* create a timed thread (object creation only) */
 timed_thread* 
 timed_thread_create (void *(*start_routine)(void*), void *arg, unsigned int interval_usecs)
 {
   timed_thread *p_timed_thread;
 
-  assert ((start_routine != NULL) && (interval_usecs >= MINIMUM_INTERVAL_USECS));
+  assert (start_routine != NULL);
+  assert (interval_usecs >= MINIMUM_INTERVAL_USECS);
 
   if ((p_timed_thread = calloc (sizeof(timed_thread), 1)) == 0)
     return NULL;
@@ -78,19 +102,29 @@ timed_thread_create (void *(*start_routine)(void*), void *arg, unsigned int inte
   /* init cond */
   pthread_cond_init (&p_timed_thread->runnable_cond, NULL);
 
-  p_timed_thread->interval_usecs = interval_usecs;
+  p_timed_thread->start_routine = start_routine;
+  p_timed_thread->arg = arg;
 
-  /* create thread */
-  if (pthread_create (&p_timed_thread->thread, &p_timed_thread->thread_attr, start_routine, arg))
-  {
-    timed_thread_destroy (p_timed_thread, NULL);
-    return NULL;
-  }
+  /* seconds portion of the microseconds interval */
+  p_timed_thread->interval_time.tv_sec = (time_t)(interval_usecs / 1000000);
+  /* remaining microseconds convert to nanoseconds */
+  p_timed_thread->interval_time.tv_nsec = (long)((interval_usecs % 1000000) * 1000);
 
-  /*fprintf (stderr, "created timed thread 0x%08X\n", (unsigned)p_timed_thread);*/
+  /*
+  printf ("interval_time.tv_sec = %li, .tv_nsec = %li\n",
+            p_timed_thread->interval_time.tv_sec,
+            p_timed_thread->interval_time.tv_nsec);
+  */
   return p_timed_thread;
 }
 
+/* run a timed thread (drop the thread and run it) */
+int 
+timed_thread_run (timed_thread* p_timed_thread)
+{
+  return pthread_create (&p_timed_thread->thread, &p_timed_thread->thread_attr,
+                         p_timed_thread->start_routine, p_timed_thread->arg);
+}
 
 /* destroy a timed thread.
  * optional addr_of_p_timed_thread to set callers pointer to NULL as a convenience. */
@@ -106,7 +140,8 @@ timed_thread_destroy (timed_thread* p_timed_thread, timed_thread** addr_of_p_tim
   pthread_mutex_unlock (&p_timed_thread->runnable_mutex);
 
   /* join the terminating thread */
-  pthread_join (p_timed_thread->thread, NULL);
+  if (p_timed_thread->thread)
+    pthread_join (p_timed_thread->thread, NULL);
 
   /* clean up */
   pthread_attr_destroy (&p_timed_thread->thread_attr);
@@ -114,7 +149,6 @@ timed_thread_destroy (timed_thread* p_timed_thread, timed_thread** addr_of_p_tim
   pthread_mutex_destroy (&p_timed_thread->runnable_mutex);
   pthread_cond_destroy (&p_timed_thread->runnable_cond);
 
-  /*fprintf (stderr, "Conky: destroying thread 0x%08X\n", (unsigned)p_timed_thread);*/
   free (p_timed_thread);
   if (addr_of_p_timed_thread)
     *addr_of_p_timed_thread = NULL;
@@ -147,44 +181,38 @@ timed_thread_unlock (timed_thread* p_timed_thread)
 int 
 timed_thread_test (timed_thread* p_timed_thread)
 {
-  struct timespec abstime, reltime;
+  struct timespec wait_time;
   int rc;
 
   assert (p_timed_thread != NULL);
+
+  if (now (&wait_time)) return (-1);
+  /*printf ("PRE:wait_time.tv_secs = %li, .tv_nsecs = %li\n", wait_time.tv_sec, wait_time.tv_nsec);*/
+ 
+  /* add in the wait interval */
+  if (1000000000-wait_time.tv_nsec <= p_timed_thread->interval_time.tv_nsec)
+  {
+    /* perform nsec->sec carry operation */
+    wait_time.tv_sec += p_timed_thread->interval_time.tv_sec + 1;
+    wait_time.tv_nsec -= 1000000000-p_timed_thread->interval_time.tv_nsec;
+    /*printf ("001:wait_time.tv_secs = %li, .tv_nsecs = %li\n", wait_time.tv_sec, wait_time.tv_nsec);*/
+  }
+  else
+  {
+    /* no carry needed, just add respective components */
+    wait_time.tv_sec += p_timed_thread->interval_time.tv_sec;
+    wait_time.tv_nsec += p_timed_thread->interval_time.tv_nsec;
+    /*printf ("002:wait_time.tv_secs = %li, .tv_nsecs = %li\n", wait_time.tv_sec, wait_time.tv_nsec);*/
+  }
 
   /* acquire runnable_cond mutex */
   if (pthread_mutex_lock (&p_timed_thread->runnable_mutex))
     return (-1);  /* could not acquire runnable_cond mutex, so tell caller to exit thread */
 
-  /* get the absolute time in the future we stop waiting for condition to signal */
-#ifdef HAVE_CLOCK_GETTIME
-  clock_gettime (CLOCK_REALTIME, &abstime);
-#else
-  {
-    /* fallback to gettimeofday () */
-    struct timeval tv;
-    if (gettimeofday (&tv, NULL) != 0)
-    {
-      pthread_mutex_unlock (&p_timed_thread->runnable_mutex);
-      return (-1);
-    }
-
-    abstime.tv_sec = tv.tv_sec;
-    abstime.tv_nsec = tv.tv_usec * 1000;
-  }
-#endif
-  /* seconds portion of the microseconds interval */
-  reltime.tv_sec = (time_t)(p_timed_thread->interval_usecs / 1000000);
-  /* remaining microseconds convert to nanoseconds */
-  reltime.tv_nsec = (long)((p_timed_thread->interval_usecs % 1000000) * 1000);
-  /* absolute future time */
-  abstime.tv_sec += reltime.tv_sec;
-  abstime.tv_nsec += reltime.tv_nsec;
-
   /* release mutex and wait until future time for runnable_cond to signal */
   rc = pthread_cond_timedwait (&p_timed_thread->runnable_cond,
                                &p_timed_thread->runnable_mutex,
-                               &abstime);
+                               &wait_time);
   /* mutex re-acquired, so release it */
   pthread_mutex_unlock (&p_timed_thread->runnable_mutex);
 
@@ -212,7 +240,6 @@ timed_thread_register (timed_thread* p_timed_thread, timed_thread** addr_of_p_ti
 {
   timed_thread_node *p_node;
 
-  assert (p_timed_thread != NULL);
   assert ((addr_of_p_timed_thread == NULL) || (*addr_of_p_timed_thread == p_timed_thread));
 
   if ((p_node = calloc (sizeof (timed_thread_node), 1)) == 0)
