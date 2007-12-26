@@ -1,0 +1,141 @@
+Index: conky-1.4.9/configure.ac
+===================================================================
+--- conky-1.4.9.orig/configure.ac	2007-11-23 01:08:31.000000000 +0530
++++ conky-1.4.9/configure.ac	2007-12-23 08:03:05.000000000 +0530
+@@ -51,7 +51,7 @@
+   Linux*)
+     WANT_SYSINFO=yes
+     ;;
+-  FreeBSD*)
++  FreeBSD*|GNU/kFreeBSD*)
+     WANT_KVM=yes
+     WANT_DEVSTAT=yes
+     ;;
+@@ -79,7 +79,7 @@
+ 
+ AM_CONDITIONAL(BUILD_LINUX, test x$uname = xLinux)
+ #AM_CONDITIONAL(BUILD_SOLARIS, test x$uname = xSunOS)
+-AM_CONDITIONAL(BUILD_FREEBSD, test x$uname = xFreeBSD)
++AM_CONDITIONAL(BUILD_FREEBSD, test x$uname = xFreeBSD -o x$uname = xGNU/kFreeBSD)
+ #AM_CONDITIONAL(BUILD_NETBSD, test x$uname = xNetBSD)
+ AM_CONDITIONAL(BUILD_OPENBSD, test x$uname = xOpenBSD)
+ 
+Index: conky-1.4.9/configure.ac.in
+===================================================================
+--- conky-1.4.9.orig/configure.ac.in	2007-11-23 01:08:18.000000000 +0530
++++ conky-1.4.9/configure.ac.in	2007-12-23 08:03:05.000000000 +0530
+@@ -51,7 +51,7 @@
+   Linux*)
+     WANT_SYSINFO=yes
+     ;;
+-  FreeBSD*)
++  FreeBSD*|GNU/kFreeBSD*)
+     WANT_KVM=yes
+     WANT_DEVSTAT=yes
+     ;;
+@@ -79,7 +79,7 @@
+ 
+ AM_CONDITIONAL(BUILD_LINUX, test x$uname = xLinux)
+ #AM_CONDITIONAL(BUILD_SOLARIS, test x$uname = xSunOS)
+-AM_CONDITIONAL(BUILD_FREEBSD, test x$uname = xFreeBSD)
++AM_CONDITIONAL(BUILD_FREEBSD, test x$uname = xFreeBSD -o x$uname = xGNU/kFreeBSD)
+ #AM_CONDITIONAL(BUILD_NETBSD, test x$uname = xNetBSD)
+ AM_CONDITIONAL(BUILD_OPENBSD, test x$uname = xOpenBSD)
+ 
+Index: conky-1.4.9/src/conky.c
+===================================================================
+--- conky-1.4.9.orig/src/conky.c	2007-11-15 03:11:12.000000000 +0530
++++ conky-1.4.9/src/conky.c	2007-12-23 08:03:05.000000000 +0530
+@@ -1058,7 +1058,7 @@
+ 	OBJ_pop3,
+ 	OBJ_pop3_unseen,
+ 	OBJ_pop3_used,
+-#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
++#if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
+ 	OBJ_apm_adapter,
+ 	OBJ_apm_battery_time,
+ 	OBJ_apm_battery_life,
+@@ -3122,7 +3122,7 @@
+ #ifndef __OpenBSD__
+ 		OBJ(adt746xcpu, 0) END OBJ(adt746xfan, 0) END
+ #endif /* !__OpenBSD__ */
+-#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
++#if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
+ 		OBJ(apm_adapter, 0) END
+ 		OBJ(apm_battery_life, 0) END
+ 		OBJ(apm_battery_time, 0) END
+@@ -4966,7 +4966,7 @@
+ 				format_seconds(p, p_max_size, (int) cur->uptime);
+ 			}
+ 
+-#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
++#if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
+ 			OBJ(apm_adapter) {
+ 				char	*msg;
+ 				msg = get_apm_adapter();
+@@ -7773,7 +7773,7 @@
+ 	optind = 0;
+ #endif
+ 
+-#if defined(__FreeBSD__)
++#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+ 	if ((kd = kvm_open("/dev/null", "/dev/null", "/dev/null",
+ 			O_RDONLY, "kvm_open")) == NULL)
+ 		CRIT_ERR( "cannot read kvm");
+@@ -7935,7 +7935,7 @@
+    */
+   main_loop();
+ 
+-#if defined(__FreeBSD__)
++#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+ 	kvm_close(kd);
+ #endif
+ 	
+Index: conky-1.4.9/src/conky.h
+===================================================================
+--- conky-1.4.9.orig/src/conky.h	2007-10-21 23:25:58.000000000 +0530
++++ conky-1.4.9/src/conky.h	2007-12-23 08:03:05.000000000 +0530
+@@ -41,14 +41,14 @@
+ #include <langinfo.h>
+ #include <wchar.h>
+ #include <sys/param.h>
+-#if defined(__FreeBSD__)
++#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+ #include <sys/mount.h>
+ #include <sys/ucred.h>
+ #include <fcntl.h>
+ #include <kvm.h>
+ #endif /* __FreeBSD__ */
+ 
+-#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
++#if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && (defined(i386) || defined(__i386__))
+ #include <machine/apm_bios.h>
+ #endif /* __FreeBSD__ */
+ 
+@@ -613,11 +613,11 @@
+ void update_mail_count();
+ 
+ /* in freebsd.c */
+-#if defined(__FreeBSD__)
++#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+ kvm_t *kd;
+ #endif
+ 
+-#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
++#if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
+ #ifdef __OpenBSD__
+ typedef struct apm_power_info *apm_info_t;
+ #endif
+Index: conky-1.4.9/src/freebsd.c
+===================================================================
+--- conky-1.4.9.orig/src/freebsd.c	2007-08-24 09:32:25.000000000 +0530
++++ conky-1.4.9/src/freebsd.c	2007-12-23 08:03:05.000000000 +0530
+@@ -270,7 +270,7 @@
+ 
+ 	p = kvm_getprocs(kd, KERN_PROC_ALL, 0, &n_processes);
+ 	for (i = 0; i < n_processes; i++) {
+-#if __FreeBSD__ < 5
++#if (__FreeBSD__ < 5) && (__FreeBSD_kernel__ < 5)
+ 		if (p[i].kp_proc.p_stat == SRUN)
+ #else
+ 		if (p[i].ki_stat == SRUN)

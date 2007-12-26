@@ -1,3 +1,31 @@
+conky (1.4.9-2) unstable; urgency=low
+
+  * Added support for non-Linux architectures. Closes: #456931.
+    Thanks to Petr Salinger.
+    - debian/rules: Use DEB_HOST_ARCH_OS to decide whether to add
+      wireless support.
+    - debian/control: Do not depend on "libiw-dev" for kfreebsd-*
+      and hurd-i386
+    - debian/control: Depend on "libkvm-dev" and "libdevstat-dev" for
+      kfreebsd-*.
+    - debian/patches/freebsd_support_upstream: patches to src to recognise
+      kfreebsd-* architecture as similar to freebsd (latter is
+      supported upstream) sent upstream.
+    - debian/patches/freebsd_support: patches incorporating above
+      changes after running GNU autoconf tools.
+  * debian/patches:
+    - ibm_acpi_volume: Re-added. Upstream's correction has a flaw.
+  * debian/control: Standards Version 3.7.3. No changes required.
+  * debian/rules:
+    - Required "configure" rule to depend on patch stamp.
+    - Removed workaround for configure.ac in "clean" rule.
+      Not required.
+  * Fixed lintian bugs. Thanks to lintian.debian.org.
+    - debian/changelog: wrapped entries that were too long.
+    - debian/copyright: used unicode encoding for names.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Wed, 26 Dec 2007 08:41:25 +0530
+
 conky (1.4.9-1) unstable; urgency=low
 
   * New upstream release. Closes: #453498, #453834.
@@ -11,14 +39,19 @@ conky (1.4.9-1) unstable; urgency=low
     - debian/control: additional build-dependency on "libiw-dev".
     - debian/NEWS.Debian: added comment about this change.
   * debian/patches:
-    - fix_its_man_page: Corrected possessive "it's" by "its" in man page. Closes: #445918.
-    - dont_tail_xorglog: Removed. Not required as equivalent patch applied upstream.
-    - ibm_acpi_volume: Removed. Not required as equivalent patch applied upstream.
-    - use_clock_gettime_correctly: Fix src/timed_thread.c to use realtime clock correctly.
-    - avoid_linking_with_libm: Fix src/Makefile.in to avoid needless linking with libm.
+    - fix_its_man_page: Corrected possessive "it's" by "its" in man page.
+      Closes: #445918.
+    - dont_tail_xorglog: Removed. Not required as equivalent patch applied
+      upstream.
+    - ibm_acpi_volume: Removed. Not required as equivalent patch applied
+      upstream.
+    - use_clock_gettime_correctly: Fix src/timed_thread.c to use realtime
+      clock correctly.
+    - avoid_linking_with_libm: Fix src/Makefile.in to avoid needless linking
+      with libm.
   * debian/rules:
-    - Define "XFT_LIBS" environment variable for "configure" to avoid linking with
-      "libfontconfig" from which no symbols are used.
+    - Define "XFT_LIBS" environment variable for "configure" to avoid linking
+      with "libfontconfig" from which no symbols are used.
   * debian/control: Added "Homepage" and "Vc-Svn" fields.
 
  -- Kapil Hari Paranjape <kapil@debian.org>  Tue,  4 Dec 2007 14:14:46 +0530

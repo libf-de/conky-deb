@@ -8,6 +8,7 @@
 # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 
 CFLAGS = -Wall -g
 
@@ -15,6 +16,10 @@ ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
 else
 	CFLAGS += -O2
+endif
+
+ifeq ($(DEB_HOST_ARCH_OS),linux)
+       EXTRA_CONF_ARGS=--enable-wlan
 endif
 
 DEB_QUILT_PATCHES = debian/patches
@@ -32,14 +37,13 @@ unpatch:
 	rm -f debian/patch-stamp
 
 configure: debian/configure-stamp
-debian/configure-stamp:
+debian/configure-stamp: debian/patch-stamp
 	dh_testdir
 	XFT_LIBS="-lXft" ./configure \
 	  --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
 	  --prefix=/usr --sysconfdir=/etc \
 	  --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-	  --enable-debug \
-	  --enable-wlan
+	  --enable-debug $(EXTRA_CONF_ARGS)
 	
 	touch debian/configure-stamp
 
@@ -57,9 +61,9 @@ clean: unpatch
 	rm -f debian/build-stamp debian/configure-stamp
 	[ ! -f Makefile ] || $(MAKE) clean
 	# distclean removes configure.ac
-	-cp -p configure.ac debian/
+	#-cp -p configure.ac debian/
 	[ ! -f Makefile ] || $(MAKE) distclean
-	-mv debian/configure.ac .
+	#-mv debian/configure.ac .
 
 	dh_clean 
 

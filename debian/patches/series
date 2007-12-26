@@ -1,4 +1,6 @@
+freebsd_support
 use_clock_gettime_correctly
+ibm_acpi_volume
 avoid_linking_with_libm
 fix_hyphen_man_page
 fix_its_man_page
