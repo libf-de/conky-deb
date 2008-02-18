@@ -1,3 +1,13 @@
+conky (1.4.9-3) unstable; urgency=low
+
+  * debian/patches/sysfs_battery: Added support for
+    battery info in sysfs. (Closes: #463981, #464703).
+  * debian/patches/fix_mail_spool: Make the value of
+    "mail_spool" over-ride environment variable "$MAIL".
+    (Closes: #454656).
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Mon, 18 Feb 2008 10:20:24 +0530
+
 conky (1.4.9-2) unstable; urgency=low
 
   * Added support for non-Linux architectures. Closes: #456931.

@@ -5,3 +5,5 @@ avoid_linking_with_libm
 fix_hyphen_man_page
 fix_its_man_page
 move_compile_end_man_page
+sysfs_battery
+fix_mail_spool
