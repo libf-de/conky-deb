@@ -39,11 +39,20 @@ unpatch:
 configure: debian/configure-stamp
 debian/configure-stamp: debian/patch-stamp
 	dh_testdir
-	XFT_LIBS="-lXft" ./configure \
+
+	chmod +x ./autogen.sh
+	AUTOMAKE=automake-1.10 ./autogen.sh
+
+	rm -f config.cache config.guess config.sub
+	ln -sf /usr/share/misc/config.sub .
+	ln -sf /usr/share/misc/config.guess .
+
+	# Some problem with pkg-config so we force XFT_LIBS and RSS_LIBS
+	XFT_LIBS="-lXft" RSS_LIBS="-lxml2 -lcurl" ./configure \
 	  --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
 	  --prefix=/usr --sysconfdir=/etc \
 	  --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-	  --enable-debug $(EXTRA_CONF_ARGS)
+	  --enable-debug --enable-rss $(EXTRA_CONF_ARGS)
 	
 	touch debian/configure-stamp
 
@@ -60,10 +69,13 @@ clean: unpatch
 	dh_testroot
 	rm -f debian/build-stamp debian/configure-stamp
 	[ ! -f Makefile ] || $(MAKE) clean
-	# distclean removes configure.ac
-	#-cp -p configure.ac debian/
 	[ ! -f Makefile ] || $(MAKE) distclean
-	#-mv debian/configure.ac .
+	
+	# Remove autoconf generated files
+	rm -f ./config.guess ./config.sub ./data/Makefile.in \
+	./configure ./configure.ac ./doc/Makefile.in \
+	./ltmain.sh ./Makefile.in \
+	./src/config.h.in ./src/Makefile.in ./aclocal.m4
 
 	dh_clean 
 

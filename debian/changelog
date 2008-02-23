@@ -1,3 +1,32 @@
+conky (1.4.9-4) unstable; urgency=low
+
+  * debian/patches/sysfs_battery:
+    - handle systems where the POWER_SUPPLY_CHARGE_* values
+      define battery status. Thanks to Stefan Ebner for
+      help in debugging this.
+      (Closes: #466878)
+    - close battery status info file after each update.
+  * Enable support for RSS feed monitoring.
+    - debian/rules: added "--enable-rss" to configure rules.
+    - debian/control: additional build-dependencies on "libxml2-dev"
+      and "libcurl4-gnutls-dev".
+    - debian/NEWS.Debian: added comment about this change.
+  * Use autotools and libtool during build. (Thanks to tips from
+    Henrique de Moraes Holschuh.)
+    - debian/control: additional build-dependencies on "libtool"
+      and "automake1.10"
+    - debian/rules: added run of "autogen.sh" in "configure-stamp"
+      target.
+    - debian/rules: Define "RSS_LIBS" environment variable for
+      "configure" to over-ride "pkg-config" which adds "libgssapi_krb5"
+      to link libraries.
+    - debian/rules: modified "clean" rule to clean autoconf generated
+      files.
+  * Cleanup souce package of "src/tags" cruft left in by mistake
+    in the previous upload.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Sat, 23 Feb 2008 05:57:23 +0530
+
 conky (1.4.9-3) unstable; urgency=low
 
   * debian/patches/sysfs_battery: Added support for
