@@ -24,7 +24,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: autogen.sh 981 2007-10-23 21:52:11Z pkovacs $
+# $Id: autogen.sh 1007 2008-02-20 20:30:45Z IQgryn $
 #
 # optional $1 = optional directory containing build tree or svn working copy
 
@@ -38,7 +38,7 @@ LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
 if test "$1" != "" && test -d "$1/.svn"; then
     revision=`LC_ALL=C svn info $1 | awk '/^Revision: / {printf "%05d\n", $2}'`;
 elif test -d ".svn"; then
-    revision=`LC_ALL=C svn info | awk '/^Revision: / {printf "%05d\n", $2}'`; 
+    revision=`LC_ALL=C svn info | awk '/^Revision: / {printf "%05d\n", $2}'`;
 else
     revision="NONE"; fi
 

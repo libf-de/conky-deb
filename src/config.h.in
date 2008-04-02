@@ -57,7 +57,7 @@
 /* Define to 1 if you have the <glib-object.h> header file. */
 #undef HAVE_GLIB_OBJECT_H
 
-/* Define if you have the iconv() function. */
+/* Define if you have the iconv() function and it works. */
 #undef HAVE_ICONV
 
 /* Define to 1 if you have the <inttypes.h> header file. */
@@ -119,6 +119,9 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define if struct statfs has the f_fstypename member */
+#undef HAVE_STRUCT_STATFS_F_FSTYPENAME
 
 /* Define to 1 if you have the `sysinfo' function. */
 #undef HAVE_SYSINFO
@@ -189,11 +192,17 @@
 /* Define if you want rss support */
 #undef RSS
 
+/* Define if you want smapi support */
+#undef SMAPI
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Define if you want tcp port monitoring support */
 #undef TCP_PORT_MONITOR
+
+/* Define for testing (enables strict compiler flags) */
+#undef TESTING
 
 /* Version number of package */
 #undef VERSION

@@ -1,4 +1,4 @@
-Notes for conky (1.4.7-1)
+Notes for conky (1.5.1-1)
 =========================
 
 Build-time switches/options
@@ -6,23 +6,17 @@ Build-time switches/options
 
 The Debian package is built using the default values of the
 enable/disable switches for configure. In particular, it does not
-enable "audacious", "bmpx", "wlan" or "rss". Users who want a version
-of conky with these features enabled will have to re-build the
-package after appropriate changes.
+enable "audacious", "bmpx" or "smapi". Users who want a version of
+conky with these features enabled will have to re-build the package
+after appropriate changes.
 
 Runtime configuration
 ---------------------
 
-The default configuration hard-coded into upstream source contains:
-    tail /var/log/Xorg.0.log 3
-This causes "conky" to exit with an error when the user does not have
-read access to that file. In the Debian version this line has been
-commented-out of the hard-corded default configuration.
-
 In any case it is *strongly* recommended that each user of "conky"
 create a configuration file in $HOME/.conkyrc based on the sample in
-/usr/share/doc/conky/examples/conkyrc.sample.gz. This way any
+/usr/share/doc/conky/examples/conky.conf.gz. This way any
 unexpected error messages from conky would be your own fault :-)
 
--- Kapil Hari Paranjape <kapil@debian.org>  Fri, 21 Sep 2007 06:25:40 +0530
+-- Kapil Hari Paranjape <kapil@debian.org>  Wed, 02 Apr 2008 06:46:08 +0530
 

@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: Makefile.am 981 2007-10-23 21:52:11Z pkovacs $
+# $Id: Makefile.am 1010 2008-03-18 00:23:16Z brenden1 $
 
 INCLUDES =			\
 	-DSYSTEM_CONFIG_FILE=\"$(sysconfdir)/conky/conky.conf\"
@@ -46,7 +46,7 @@ xmms2 = xmms2.c
 endif
 
 if BUILD_LINUX
-linux = linux.c top.c
+linux = linux.c top.c diskio.c
 PTHREAD_LIBS =  -lpthread
 endif
 
@@ -55,7 +55,7 @@ endif
 #endif
 
 if BUILD_FREEBSD
-freebsd = freebsd.c
+freebsd = freebsd.c diskio.c
 PTHREAD_LIBS =  -pthread
 endif
 
@@ -84,6 +84,10 @@ if BUILD_RSS
 rss = rss.c prss.c prss.h
 endif
 
+if BUILD_SMAPI
+smapi = smapi.c smapi.h
+endif
+
 conky_SOURCES = 		\
 	$(audacious)            \
 	$(bmpx)                 \
@@ -107,7 +111,9 @@ conky_SOURCES = 		\
 	mboxscan.c		\
 	mboxscan.h		\
 	$(x11)                  \
-	$(xmms2) 
+	$(xmms2)		\
+	$(smapi)		\
+	users.c
 
 AM_LDFLAGS = $(PTHREAD_LIBS) -lm
 
@@ -127,7 +133,10 @@ EXTRA_DIST = 			\
 	openbsd.c		\
 	solaris.c 		\
 	top.h                   \
+	diskio.h                \
 	x11.c                   \
-	xmms2.c
+	xmms2.c                 \
+	smapi.c			\
+	users.c
 
 # vi:set ts=8 sw=8 noet ai nocindent syntax=automake:

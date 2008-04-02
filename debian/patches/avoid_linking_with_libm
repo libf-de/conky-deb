@@ -1,10 +1,10 @@
-Index: conky-1.4.9/src/Makefile.am
+Index: conky-1.5.1/src/Makefile.am
 ===================================================================
---- conky-1.4.9.orig/src/Makefile.am	2008-02-22 09:11:08.000000000 +0000
-+++ conky-1.4.9/src/Makefile.am	2008-02-22 09:11:21.000000000 +0000
-@@ -109,7 +109,7 @@
- 	$(x11)                  \
- 	$(xmms2) 
+--- conky-1.5.1.orig/src/Makefile.am	2008-04-01 11:27:50.000000000 +0000
++++ conky-1.5.1/src/Makefile.am	2008-04-01 11:29:25.000000000 +0000
+@@ -115,7 +115,7 @@
+ 	$(smapi)		\
+ 	users.c
  
 -AM_LDFLAGS = $(PTHREAD_LIBS) -lm
 +AM_LDFLAGS = $(PTHREAD_LIBS)

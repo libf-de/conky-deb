@@ -1,3 +1,37 @@
+conky (1.5.1-1) unstable; urgency=low
+
+  * New upstream release (1.5.1).
+    - incorporates debian patches for
+      + kfreebsd support
+      + use clock gettime
+      + ibm acpi volume
+      + some man page fixes
+      + sysfs battery
+    - numerous other new features. see upstream
+      Changelog.
+  * debian/{NEWS,README.Debian}: Updated for new version.
+  * debian/patches:
+    - cleaned out patches already applied upstream.
+      as mentioned above.
+    - refreshed the patches still required
+      + avoid_linking_with_libm
+      + fix_hyphen_man_page
+      + move_compile_end_man_page
+      + fix_mail_spool
+    - incorporate patches from upstream svn repository.
+      + upstream_fix_usage: Fixes the usage message
+      + upstream_null_text: Handle null "text" entry
+        in configuration.
+  * bumped up "debhelper" compatibility level to 5
+    now that 'sarge' need not be supported. Closes: #466755.
+    - debian/compat: value now 5.
+    - debian/control: debhelper dependency version now 
+      at least 5.0.0.
+  * debian/rules: reflect change of name of sample
+    config file from conkyrc.sample to conky.conf.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Wed, 02 Apr 2008 14:48:32 +0530
+
 conky (1.4.9-4) unstable; urgency=low
 
   * debian/patches/sysfs_battery:

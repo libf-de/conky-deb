@@ -1,4 +1,5 @@
-/* Conky, a system monitor, based on torsmo
+/*
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -6,9 +7,9 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2006 Marco Candrian <mac@calmar.ws>
+ * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
  * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
- *	(see AUTHORS)
+ * (see AUTHORS)
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,11 +24,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: mboxscan.h 1090 2008-03-31 04:56:39Z brenden1 $ */
+ *  $Id: diskio.h 1090 2008-03-31 04:56:39Z brenden1 $
+ */
 
-#ifndef _MBOXSCAN_H_
-#define _MBOXSCAN_H_
+#ifndef DISKIO_H_
+#define DISKIO_H_
 
-void mbox_scan(char *args, char *output, size_t max_len);
+struct diskio_stat {
+	char *dev;
+	unsigned int current, current_read, current_write, last, last_read,
+		last_write;
+};
 
-#endif /* _MBOXSCAN_H_ */
+#define MAX_DISKIO_STATS 64
+
+struct diskio_stat *diskio_stats;
+
+struct diskio_stat *prepare_diskio_stat(const char *s);
+void clear_diskio_stats(void);
+
+#endif /* DISKIO_H_ */

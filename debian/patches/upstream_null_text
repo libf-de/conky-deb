@@ -1,0 +1,31 @@
+--- ./src/conky.c	2008-04-02 12:48:51.000000000 +0530
++++ ../../upstream-vcs/conky/conky1/src/conky.c	2008-04-02 13:27:28.000000000 +0530
+@@ -23,7 +23,7 @@
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  *
+- * $Id: conky.c 1091 2008-03-31 15:33:54Z n0-1 $ */
++ * $Id: conky.c 1098 2008-04-02 02:12:57Z brenden1 $ */
+ 
+ #include "conky.h"
+ #include <stdio.h>
+@@ -8398,6 +8398,9 @@
+ 				}
+ 			}
+ 			fclose(fp);
++			if (strlen(text) < 1) {
++				CRIT_ERR("no text supplied in configuration; exiting");
++			}
+ 			text_lines = line + 1;
+ 			return;
+ 		}
+@@ -8436,6 +8439,9 @@
+ 		// default to update_interval
+ 		info.music_player_interval = update_interval;
+ 	}
++	if (!text) { // didn't supply any text
++		CRIT_ERR("missing text block in configuration; exiting");
++	}
+ }
+ 
+ /* : means that character before that takes an argument */

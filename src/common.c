@@ -1,5 +1,4 @@
-/*
- * Conky, a system monitor, based on torsmo
+/* Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -8,7 +7,8 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ *	(see AUTHORS)
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,10 +21,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  $Id: common.c 969 2007-10-02 23:57:41Z brenden1 $
- */
+ * $Id: common.c 1090 2008-03-31 04:56:39Z brenden1 $ */
 
 #include "conky.h"
 #include <stdio.h>
@@ -35,16 +34,15 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-struct information info;
-
-void update_uname()
+void update_uname(void)
 {
 	uname(&info.uname_s);
 }
 
-double get_time()
+double get_time(void)
 {
 	struct timeval tv;
+
 	gettimeofday(&tv, 0);
 	return tv.tv_sec + (tv.tv_usec / 1000000.0);
 }
@@ -52,11 +50,13 @@ double get_time()
 FILE *open_file(const char *file, int *reported)
 {
 	FILE *fp = fopen(file, "r");
+
 	if (!fp) {
 		if (!reported || *reported == 0) {
 			ERR("can't open %s: %s", file, strerror(errno));
-			if (reported)
+			if (reported) {
 				*reported = 1;
+			}
 		}
 		return 0;
 	}
@@ -78,13 +78,14 @@ void variable_substitute(const char *s, char *dest, unsigned int n)
 				if (*s == '{') {
 					s++;
 					a = s;
-					while (*s && *s != '}')
+					while (*s && *s != '}') {
 						s++;
+					}
 				} else {
 					a = s;
-					while (*s && (isalnum((int) *s)
-						      || *s == '_'))
+					while (*s && (isalnum((int) *s) || *s == '_')) {
 						s++;
+					}
 				}
 
 				/* copy variable to buffer and look it up */
@@ -92,16 +93,18 @@ void variable_substitute(const char *s, char *dest, unsigned int n)
 				strncpy(buf, a, len);
 				buf[len] = '\0';
 
-				if (*s == '}')
+				if (*s == '}') {
 					s++;
+				}
 
 				var = getenv(buf);
 
 				if (var) {
 					/* add var to dest */
 					len = strlen(var);
-					if (len >= n)
+					if (len >= n) {
 						len = n - 1;
+					}
 					strncpy(dest, var, len);
 					dest += len;
 					n -= len;
@@ -125,13 +128,15 @@ struct net_stat *get_net_stat(const char *dev)
 {
 	unsigned int i;
 
-	if (!dev)
+	if (!dev) {
 		return 0;
+	}
 
 	/* find interface stat */
 	for (i = 0; i < 16; i++) {
-		if (netstats[i].dev && strcmp(netstats[i].dev, dev) == 0)
+		if (netstats[i].dev && strcmp(netstats[i].dev, dev) == 0) {
 			return &netstats[i];
+		}
 	}
 
 	/* wasn't found? add it */
@@ -148,51 +153,97 @@ struct net_stat *get_net_stat(const char *dev)
 	return 0;
 }
 
-void clear_net_stats (void)
+void clear_net_stats(void)
 {
-  memset (netstats, 0, sizeof(netstats));
+	memset(netstats, 0, sizeof(netstats));
+}
+
+void free_dns_data(void)
+{
+	int i;
+	struct dns_data *data = &info.nameserver_info;
+	for (i = 0; i < data->nscount; i++)
+		free(data->ns_list[i]);
+	if (data->ns_list)
+		free(data->ns_list);
+	memset(data, 0, sizeof(struct dns_data));
+}
+
+//static double last_dns_update;
+
+void update_dns_data(void)
+{
+	FILE *fp;
+	char line[256];
+	struct dns_data *data = &info.nameserver_info;
+
+	/* maybe updating too often causes higher load because of /etc lying on a real FS
+	if (current_update_time - last_dns_update < 10.0)
+		return;
+	else
+		last_dns_update = current_update_time;
+	*/
+
+	free_dns_data();
+
+	if ((fp = fopen("/etc/resolv.conf", "r")) == NULL)
+		return;
+	while(!feof(fp)) {
+		if (fgets(line, 255, fp) == NULL)
+			goto OUT;
+		if (!strncmp(line, "nameserver ", 11)) {
+			line[strlen(line) - 1] = '\0';	// remove trailing newline
+			data->nscount++;
+			data->ns_list = realloc(data->ns_list, data->nscount * sizeof(char *));
+			data->ns_list[data->nscount - 1] = strdup(line + 11);
+		}
+	}
+OUT:
+	fclose(fp);
 }
 
 void format_seconds(char *buf, unsigned int n, long t)
 {
-	if (t >= 24 * 60 * 60)	/* hours necessary when there are days? */
-		snprintf(buf, n, "%ldd %ldh %ldm", t / 60 / 60 / 24,
-			 (t / 60 / 60) % 24, (t / 60) % 60);
-	else if (t >= 60 * 60)
-		snprintf(buf, n, "%ldh %ldm", (t / 60 / 60) % 24,
-			 (t / 60) % 60);
-	else
+	if (t >= 24 * 60 * 60) {	/* hours necessary when there are days? */
+		snprintf(buf, n, "%ldd %ldh %ldm", t / 60 / 60 / 24, (t / 60 / 60) % 24,
+			(t / 60) % 60);
+	} else if (t >= 60 * 60) {
+		snprintf(buf, n, "%ldh %ldm", (t / 60 / 60) % 24, (t / 60) % 60);
+	} else {
 		snprintf(buf, n, "%ldm %lds", t / 60, t % 60);
+	}
 }
 
 void format_seconds_short(char *buf, unsigned int n, long t)
 {
-	if (t >= 24 * 60 * 60)
-		snprintf(buf, n, "%ldd %ldh", t / 60 / 60 / 24,
-			 (t / 60 / 60) % 24);
-	else if (t >= 60 * 60)
-		snprintf(buf, n, "%ldh %ldm", (t / 60 / 60) % 24,
-			 (t / 60) % 60);
-	else
+	if (t >= 24 * 60 * 60) {
+		snprintf(buf, n, "%ldd %ldh", t / 60 / 60 / 24, (t / 60 / 60) % 24);
+	} else if (t >= 60 * 60) {
+		snprintf(buf, n, "%ldh %ldm", (t / 60 / 60) % 24, (t / 60) % 60);
+	} else {
 		snprintf(buf, n, "%ldm", t / 60);
+	}
 }
 
 static double last_meminfo_update;
 static double last_fs_update;
 
 unsigned long long need_mask;
+
 #define NEED(a) ((need_mask & (1 << a)) && ((info.mask & (1 << a)) == 0))
 
-void update_stuff()
+void update_stuff(void)
 {
 	unsigned int i;
+
 	info.mask = 0;
 
-	if (no_buffers)
+	if (no_buffers) {
 		need_mask |= 1 << INFO_BUFFERS;
+	}
 
 	/* clear speeds and up status in case device was removed and doesn't get
-	   updated */
+	 * updated */
 
 	for (i = 0; i < 16; i++) {
 		if (netstats[i].dev) {
@@ -204,66 +255,77 @@ void update_stuff()
 
 	prepare_update();
 
-	if (NEED(INFO_UPTIME))
+	if (NEED(INFO_UPTIME)) {
 		update_uptime();
+	}
 
-	if (NEED(INFO_PROCS))
+	if (NEED(INFO_PROCS)) {
 		update_total_processes();
+	}
 
-	if (NEED(INFO_RUN_PROCS))
+	if (NEED(INFO_RUN_PROCS)) {
 		update_running_processes();
+	}
 
-	if (NEED(INFO_CPU))
+	if (NEED(INFO_CPU)) {
 		update_cpu_usage();
+	}
 
-	if (NEED(INFO_NET))
+	if (NEED(INFO_NET)) {
 		update_net_stats();
+	}
 
-	if (NEED(INFO_DISKIO))
+	if (NEED(INFO_DISKIO)) {
 		update_diskio();
+	}
 
 #if defined(__linux__)
-	if (NEED(INFO_I8K))
+	if (NEED(INFO_I8K)) {
 		update_i8k();
+	}
 #endif /* __linux__ */
-	
+
 #ifdef MPD
 	if (NEED(INFO_MPD)) {
 		if (!mpd_timed_thread) {
 			init_mpd_stats(&info);
-			mpd_timed_thread = 
-        timed_thread_create((void*)update_mpd, (void*) NULL, info.music_player_interval * 1000000);
+			mpd_timed_thread = timed_thread_create(&update_mpd,
+				(void *) NULL, info.music_player_interval * 1000000);
 			if (!mpd_timed_thread) {
 				ERR("Failed to create MPD timed thread");
 			}
 			timed_thread_register(mpd_timed_thread, &mpd_timed_thread);
-      if (timed_thread_run (mpd_timed_thread))
-        ERR("Failed to run MPD timed thread");
+			if (timed_thread_run(mpd_timed_thread)) {
+				ERR("Failed to run MPD timed thread");
+			}
 		}
 	}
 #endif
 
 #ifdef XMMS2
-	if (NEED(INFO_XMMS2))
+	if (NEED(INFO_XMMS2)) {
 		update_xmms2();
+	}
 #endif
 
 #ifdef AUDACIOUS
-	if (NEED(INFO_AUDACIOUS))
+	if (NEED(INFO_AUDACIOUS)) {
 		update_audacious();
+	}
 #endif
 
 #ifdef BMPX
-	if (NEED(INFO_BMPX))
-                update_bmpx();
+	if (NEED(INFO_BMPX)) {
+		update_bmpx();
+	}
 #endif
 
-	if (NEED(INFO_LOADAVG))
+	if (NEED(INFO_LOADAVG)) {
 		update_load_average();
+	}
 
-
-	if ((NEED(INFO_MEM) || NEED(INFO_BUFFERS) || NEED(INFO_TOP)) &&
-	    current_update_time - last_meminfo_update > 6.9) {
+	if ((NEED(INFO_MEM) || NEED(INFO_BUFFERS) || NEED(INFO_TOP))
+			&& current_update_time - last_meminfo_update > 6.9) {
 		update_meminfo();
 		if (no_buffers) {
 			info.mem -= info.bufmem;
@@ -271,8 +333,9 @@ void update_stuff()
 		last_meminfo_update = current_update_time;
 	}
 
-	if (NEED(INFO_TOP))
+	if (NEED(INFO_TOP)) {
 		update_top();
+	}
 
 	/* update_fs_stat() won't do anything if there aren't fs -things */
 	if (NEED(INFO_FS) && current_update_time - last_fs_update > 12.9) {
@@ -280,20 +343,29 @@ void update_stuff()
 		last_fs_update = current_update_time;
 	}
 #ifdef TCP_PORT_MONITOR
-	if (NEED(INFO_TCP_PORT_MONITOR))
-		update_tcp_port_monitor_collection( info.p_tcp_port_monitor_collection );
+	if (NEED(INFO_TCP_PORT_MONITOR)) {
+		update_tcp_port_monitor_collection(info.p_tcp_port_monitor_collection);
+	}
 #endif
-	if (NEED(INFO_ENTROPY))
+	if (NEED(INFO_ENTROPY)) {
 		update_entropy();
+	}
+	if (NEED(INFO_USERS)) {
+		update_users();
+	}
+	if (NEED(INFO_GW)) {
+		update_gateway_info();
+	}
+	if (NEED(INFO_DNS)) {
+		update_dns_data();
+	}
 }
 
 int round_to_int(float f)
 {
-    int intval = (int)f;
-    double delta = f - intval;
-    if (!(delta < 0.5)) {
-        ++intval;
-    }
-
-    return intval;
+	if (f >= 0.0) {
+		return (int) (f + 0.5);
+	} else {
+		return (int) (f - 0.5);
+	}
 }

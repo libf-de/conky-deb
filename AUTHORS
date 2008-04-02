@@ -1,4 +1,4 @@
-# $Id: AUTHORS 969 2007-10-02 23:57:41Z brenden1 $
+# $Id: AUTHORS 1084 2008-03-30 07:04:25Z brenden1 $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -135,6 +135,10 @@ Johannes Winkelmann <jw at tks6 dot net>
 jolapache <jolapache at free dot fr>
   maildir format
 
+Jonas Koelker <jonaskoelker at users dot sourceforge dot net>
+  reload on SIGHUP patch
+  pad percantages fix patch
+
 Joshua Gerrish <jgerrish at users dot sourceforge dot net>
   mpd password patch
 
@@ -143,14 +147,28 @@ Jørgen P. Tjernø <daxxar at mental dot mine dot nu>
   Some cleaning and commenting apparently :)
   SIGHUP config file reload
 
-Kapil Hari Paranjape
+Kapil Hari Paranjape <kapil@imsc.res.in>
   ibm_volume patch
+  kFreeBSD support patch
+  realtime clock patch
+  sysfs battery patch
+
+Kevin Lyles <kevinlyles at gmail dot com>
+  add long options patch
+  add cpu separate option patch
+  add time to top patch
+  simplify round_to_int patch
+  goto width fix patch
+  offset width fix patch
+  individual diskio patch
+  short_units & human_readable patch
 
 killfire
   fs_used_perc and fs_bar_free patch
 
 Lassi Selander <sleipner at users dot sourceforge dot net>
   XMMS2 patch
+  XMMS2 fixes patch
 
 Lauri Hakkarainen <b10nik at users dot sourceforge dot net>
   Some translating, web and other stuff
@@ -163,8 +181,14 @@ Lucas Brutschy <lbrutschy at users dot sourceforge dot net>
   MLDonkey patch
   if constructs patch
 
+Marcus Huesgen <marcus dot huesgen at googlemail dot com>
+  battery_bar fix
+
 Michal Januszewski <spock at gentoo dot org>
   hddtemp support
+
+Miroslav Lichvar <lichvarm at gmail dot com>
+  move audacious thread init to update_audacious() patch
 
 Moncelier Camille <pixdamix at users dot sourceforge dot net>
   METAR patch
@@ -175,6 +199,9 @@ Nattfodd <Nattfodd@gmail.com>
 nathanj439 <nathanj439 at users dot sourceforge dot net>
   MPD time fix
 
+Nikos Ntarmos <ntarmos at users dot sourceforge dot net>
+  FreeBSD total memory patch
+
 Pascal Eberhard <pascal dor eberhard at gmail dot com>
   graph and bar fix for right alignment
 
@@ -182,18 +209,22 @@ Peter Tarjan <ptarjan at citromail dot hu>
   IBM acpi support patch
   SMP support for freq stuff
   CPU voltage patch
-  
-Petr Holub <hopet@users.sourceforge.net>  
+
+Petr Holub <hopet@users.sourceforge.net>
   fix autotools on FreeBSD in autogen.sh
   Improved battery readout on FreeBSD
 
 Philip Kovacs <pkovacs at users dot sourceforge dot net>
   tcp port monitor with hashing functionality
+  
   Audacious, Xmms, BMP, Infopipe stuff
   Various Xlib changes, e.g. own_window hints, etc.
 
 Phil <n0-1 at users dot sourceforge dot net>
   multiple batteries support
+  tp_smapi support
+  if_up patch
+  fix sysfs crashing patch
 
 Psychon <psychon at users dot sourceforge dot net>
   a bunch of code cleanups
@@ -201,8 +232,15 @@ Psychon <psychon at users dot sourceforge dot net>
 roiban adi <adiroiban at users dot sourceforge dot net>
   hex colour patch
 
+Ryan Tandy <tarpman at users dot sourceforge dot net>
+  fs_type patch
+
 Rui Paulo <rpaulo at netbsd-pt dot org>
   NetBSD support
+
+Roland Shoemaker <rolandshoemaker at users dot sourceforge dot net>
+  user info patch
+  conky version info patch
 
 Roman Bogorodskiy <novel at clublife dot ru>
   FreeBSD support
@@ -243,6 +281,9 @@ Walt Nelson <wnelsonjr at comcast dot net>
 
 Warren Dukes <warren dot dukes at gmail dot com>
   libmpdclient
+
+warudemaru <warudemaru at users dot sourceforge dot net>
+  rss and vsize for top
 
 William DiPlacido <bimbasaari at yahoo dot com>
   Frequency from /proc/cpuinfo

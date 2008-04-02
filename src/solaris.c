@@ -1,5 +1,4 @@
-/*
- * Conky, a system monitor, based on torsmo
+/* Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +6,8 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ *	(see AUTHORS)
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,10 +20,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  $Id: solaris.c 904 2007-08-10 19:53:44Z brenden1 $
- */
+ * $Id: solaris.c 1090 2008-03-31 04:56:39Z brenden1 $ */
 
 /* doesn't work, feel free to finish this */
 #include "conky.h"
@@ -62,12 +61,10 @@ double get_uptime()
 	if (ksp != NULL) {
 		if (kstat_read(kstat, ksp, NULL) >= 0) {
 			kstat_named_t *knp;
-			knp =
-			    (kstat_named_t *) kstat_data_lookup(ksp,
-								"boot_time");
+
+			knp = (kstat_named_t *) kstat_data_lookup(ksp, "boot_time");
 			if (knp != NULL) {
-				return get_time() -
-				    (double) knp->value.ui32;
+				return get_time() - (double) knp->value.ui32;
 			}
 		}
 	}

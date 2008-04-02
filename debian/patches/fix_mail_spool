@@ -1,32 +1,32 @@
-Index: conky-1.4.9/src/conky.c
+Index: conky-1.5.1/src/conky.c
 ===================================================================
---- conky-1.4.9.orig/src/conky.c	2008-02-18 10:17:29.000000000 +0530
-+++ conky-1.4.9/src/conky.c	2008-02-18 10:19:42.000000000 +0530
-@@ -2932,7 +2932,12 @@
+--- conky-1.5.1.orig/src/conky.c	2008-04-01 03:52:20.000000000 +0000
++++ conky-1.5.1/src/conky.c	2008-04-01 16:47:06.000000000 +0000
+@@ -3330,7 +3330,12 @@
  
- 			if (!arg) {
+ 		if (!arg) {
+ 			n1 = 9.5;
+-			strncpy(box, MAIL_FILE, sizeof(box));
++ 			/* Kapil: Changed from MAIL_FILE to
++			current_mail_spool since the latter
++			is a copy of the former if undefined
++			but the latter should take precedence
++			if defined */
++			strncpy(box, current_mail_spool, sizeof(box));
+ 		} else {
+ 			if (sscanf(arg, "%s %f", box, &n1) != 2) {
  				n1 = 9.5;
--				strncpy(box, MAIL_FILE, sizeof(box));
-+				/* Kapil: Changed from MAIL_FILE to
-+				current_mail_spool since the latter
-+				is a copy of the former if undefined
-+				but the latter should take precedence
-+				if defined */
-+				strncpy(box, current_mail_spool, sizeof(box));
- 			}
- 			else {
- 				if (sscanf(arg, "%s %f", box, &n1) != 2) {
-@@ -2978,7 +2983,12 @@
+@@ -3380,7 +3385,12 @@
  
- 			if (!arg) {
+ 		if (!arg) {
+ 			n1 = 9.5;
+-			strncpy(box, MAIL_FILE, sizeof(box));
++			/* Kapil: Changed from MAIL_FILE to
++			current_mail_spool since the latter
++			is a copy of the former if undefined
++			but the latter should take precedence
++			if defined */
++			strncpy(box, current_mail_spool, sizeof(box));
+ 		} else {
+ 			if (sscanf(arg, "%s %f", box, &n1) != 2) {
  				n1 = 9.5;
--				strncpy(box, MAIL_FILE, sizeof(box));
-+				/* Kapil: Changed from MAIL_FILE to
-+				current_mail_spool since the latter
-+				is a copy of the former if undefined
-+				but the latter should take precedence
-+				if defined */
-+				strncpy(box, current_mail_spool, sizeof(box));
- 			}
- 			else {
- 				if (sscanf(arg, "%s %f", box, &n1) != 2) {

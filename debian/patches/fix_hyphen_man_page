@@ -1,44 +1,26 @@
-Index: conky-1.4.9/doc/conky.1
+Index: conky-1.5.1/doc/conky.1
 ===================================================================
---- conky-1.4.9.orig/doc/conky.1	2007-12-04 12:07:13.000000000 +0530
-+++ conky-1.4.9/doc/conky.1	2007-12-04 13:40:41.000000000 +0530
-@@ -38,7 +38,7 @@
- There is also usually an up-to-date ebuild within Conky's package or in Svn.
- .PP
- Debian,etc. users -- Conky will be in Debian's repositories soon (by mid-September, hopefully), and then 
--Ubuntu shortly thereafter. Until then, "dpkg -i" the .deb package to install. 
-+Ubuntu shortly thereafter. Until then, "dpkg \-i" the .deb package to install.
- .PP
- Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
- .TP 
-@@ -59,7 +59,7 @@
- statistics stuff when compiled with icc, I don't know exactly why.
- .PP
- You can disable 'drawing to own window' feature in case you don't need it by passing 
----disable-own-window to configure -script.
-+\-\-disable\-own\-window to configure script.
- .PP
- .SH "YOU SHOULD KNOW"
- Conky is generally very good on resources. However, certain objects in
-@@ -69,7 +69,7 @@
- If you do use them, please do not complain about memory or CPU usage, 
- unless you think something's seriously wrong (mem leak, etc.).
+--- conky-1.5.1.orig/doc/conky.1	2008-04-01 04:06:16.000000000 +0000
++++ conky-1.5.1/doc/conky.1	2008-04-01 11:42:03.000000000 +0000
+@@ -64,7 +64,7 @@
+ Conky is generally very good on resources. That said, the more you try to make Conky
+ do, the more resources it is going to consume.
  .PP
 -An easy way to force Conky to reload your ~/.conkyrc: "killall -SIGUSR1 conky".
 +An easy way to force Conky to reload your ~/.conkyrc: "killall \-SIGUSR1 conky".
- Saves you the trouble of having to kill and then restart.
- .PP
- IMPORTANT: For previous Conky users, Conky 1.3 no longer supports the metar stuff. 
-@@ -110,7 +110,7 @@
+ Saves you the trouble of having to kill and then restart. You can now also do the same with SIGHUP.
+ .SH OPTIONS
+ Command line options override configurations defined in configuration file.
+@@ -102,7 +102,7 @@
  
  .TP 
- \fB\*(T<\fB\-t \fR\*(T>\fR\*(T<\fBTEXT\fR\*(T>
+ \fB\*(T<\fB\-t | \-\-text=\fR\*(T>\fR\*(T<\fBTEXT\fR\*(T>
 -Text to render, remember single quotes, like -t ' $uptime '
 +Text to render, remember single quotes, like \-t ' $uptime '
  
  .TP 
- \fB\*(T<\fB\-u \fR\*(T>\fR\*(T<\fBSECONDS\fR\*(T>
-@@ -233,17 +233,17 @@
+ \fB\*(T<\fB\-u | \-\-interval=\fR\*(T>\fR\*(T<\fBSECONDS\fR\*(T>
+@@ -229,17 +229,17 @@
  
  .TP 
  \fB\*(T<\fBgap_x\fR\*(T>\fR
@@ -59,7 +41,7 @@ Index: conky-1.4.9/doc/conky.1
  
  .TP 
  \fB\*(T<\fBmail_spool\fR\*(T>\fR
-@@ -346,7 +346,7 @@
+@@ -342,7 +342,7 @@
  
  .TP 
  \fB\*(T<\fBpop3\fR\*(T>\fR
@@ -67,8 +49,8 @@ Index: conky-1.4.9/doc/conky.1
 +Default global POP3 server. Arguments are: "host user pass [\-i interval] [\-p port] [\-e command]". Default port is 110, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
  
  .TP 
- \fB\*(T<\fBstippled_borders\fR\*(T>\fR
-@@ -830,11 +830,11 @@
+ \fB\*(T<\fBshort_units\fR\*(T>\fR
+@@ -881,11 +881,11 @@
  
  .TP 
  \fB\*(T<\fBimap_messages\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -81,8 +63,8 @@ Index: conky-1.4.9/doc/conky.1
 +Displays the number of unseen messages in your global IMAP inbox by default. You can define individual IMAP inboxes seperately by passing arguments to this object. Arguments are: "host user pass [\-i interval] [\-p port] [\-e command]". Default port is 143, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
  
  .TP 
- \fB\*(T<\fBkernel\fR\*(T>\fR 
-@@ -857,7 +857,7 @@
+ \fB\*(T<\fBioscheduler\fR\*(T>\fR \*(T<\fBdisk\fR\*(T> 
+@@ -916,7 +916,7 @@
  
  .TP 
  \fB\*(T<\fBmboxscan\fR\*(T>\fR \*(T<\fB(\-n number of messages to print) (\-fw from width) (\-sw subject width) mbox\fR\*(T> 
@@ -91,7 +73,7 @@ Index: conky-1.4.9/doc/conky.1
  
  .TP 
  \fB\*(T<\fBmem\fR\*(T>\fR 
-@@ -982,11 +982,11 @@
+@@ -1045,11 +1045,11 @@
  
  .TP 
  \fB\*(T<\fBpop3_unseen\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -105,7 +87,7 @@ Index: conky-1.4.9/doc/conky.1
  
  .TP 
  \fB\*(T<\fBpre_exec\fR\*(T>\fR \*(T<\fBshell command\fR\*(T> 
-@@ -1050,26 +1050,26 @@
+@@ -1125,26 +1125,26 @@
  .br
  \fBlservice\fR - local service name from /etc/services
  
@@ -138,17 +120,17 @@ Index: conky-1.4.9/doc/conky.1
 +\fB${tcp_portmon 1 65535 lservice 14}\fR \(hy
  displays the local service name of the fifteenth connection in the range of all ports
  
- Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors. 
-@@ -1279,9 +1279,9 @@
- all window managers. Especially doesn't work well with Gnome and it has 
- been reported that it doesn't work with KDE either. Nautilus can be 
- disabled from drawing to desktop with program gconf-editor. Uncheck 
--show_desktop in /apps/nautilus/preferences/. There is -w switch in Conky 
--to set some specific window id. You might find xwininfo -tree useful to 
+ Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors.
+@@ -1370,9 +1370,9 @@
+ all window managers. Especially doesn't work well with Gnome and it has
+ been reported that it doesn't work with KDE either. Nautilus can be
+ disabled from drawing to desktop with program gconf-editor. Uncheck
+-show_desktop in /apps/nautilus/preferences/. There is -w switch in Conky
+-to set some specific window id. You might find xwininfo -tree useful to
 -find the window to draw to. You can also use -o argument which makes
 +show_desktop in /apps/nautilus/preferences/. There is \-w switch in Conky
 +to set some specific window id. You might find xwininfo \-tree useful to
 +find the window to draw to. You can also use \-o argument which makes
- Conky to create its own window.
+ Conky to create its own window. If you do try running Conky in its own
+ window, be sure to read up on the own_window_type settings and experiment.
  .SH "SEE ALSO"
- \(lahttp://conky.sourceforge.net\(ra

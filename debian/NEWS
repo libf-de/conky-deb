@@ -1,6 +1,16 @@
+conky (1.5.1-1) unstable; urgency=low
+
+    The system default config file for conky is an external
+    conffile '/etc/conky/conky.conf' (since upstream version 1.4.9) 
+    a sample version of this file is in the doc/examples directory.
+    A number of features and fixes have been added since the previous
+    release as documented in the man page and the upstream changelog.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Wed, 02 Apr 2008 06:50:26 +0530
+
 conky (1.4.9-4) unstable; urgency=low
 
-    Based up requests from some users and from the Ubuntu team the
+    Based on requests from some users and from the Ubuntu team the
     support for RSS feed monitoring has been enabled in this build.
  
  -- Kapil Hari Paranjape <kapil@debian.org>  Fri, 22 Feb 2008 06:19:29 +0530

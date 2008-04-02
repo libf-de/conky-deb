@@ -1,5 +1,4 @@
-/*
- * Conky, a system monitor, based on torsmo
+/* Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -8,7 +7,8 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ *	(see AUTHORS)
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,19 +21,17 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  $Id: mixer.c 904 2007-08-10 19:53:44Z brenden1 $
- */
+ * $Id: mixer.c 1090 2008-03-31 04:56:39Z brenden1 $ */
 
+#include "conky.h"
 #include <sys/ioctl.h>
-
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "conky.h"
 
 #ifdef HAVE_LINUX_SOUNDCARD_H
 #include <linux/soundcard.h>
@@ -42,8 +40,8 @@
 #include <soundcard.h>
 #else
 #include <sys/soundcard.h>
-#endif				/* __OpenBSD__ */
-#endif				/* HAVE_LINUX_SOUNDCARD_H */
+#endif /* __OpenBSD__ */
+#endif /* HAVE_LINUX_SOUNDCARD_H */
 
 #define MIXER_DEV "/dev/mixer"
 
@@ -54,15 +52,15 @@ int mixer_init(const char *name)
 {
 	unsigned int i;
 
-	if (name == 0 || name[0] == '\0')
+	if (name == 0 || name[0] == '\0') {
 		name = "vol";
+	}
 
 	/* open mixer */
 	if (mixer_fd <= 0) {
 		mixer_fd = open(MIXER_DEV, O_RDONLY);
 		if (mixer_fd == -1) {
-			ERR("can't open %s: %s", MIXER_DEV,
-			    strerror(errno));
+			ERR("can't open %s: %s", MIXER_DEV, strerror(errno));
 			return -1;
 		}
 	}
@@ -82,8 +80,9 @@ static int mixer_get(int i)
 	int val = -1;
 
 	if (ioctl(mixer_fd, MIXER_READ(i), &val) == -1) {
-		if (!rep)
+		if (!rep) {
 			ERR("mixer ioctl: %s", strerror(errno));
+		}
 		rep = 1;
 		return 0;
 	}
@@ -95,6 +94,7 @@ static int mixer_get(int i)
 int mixer_get_avg(int i)
 {
 	int v = mixer_get(i);
+
 	return ((v >> 8) + (v & 0xFF)) / 2;
 }
 
