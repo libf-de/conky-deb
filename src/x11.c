@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: x11.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: x11.c 1223 2008-07-12 10:25:05Z ngarofil $ */
 
 #include "conky.h"
 
@@ -139,7 +139,7 @@ static Window find_desktop_window(Window *p_root, Window *p_desktop)
 			XFree(buf);
 			XFree(children);
 			fprintf(stderr,
-				"Conky: desktop window (%lx) found from __SWM_VROOT property\n",
+				PACKAGE_NAME": desktop window (%lx) found from __SWM_VROOT property\n",
 				win);
 			fflush(stderr);
 			*p_root = win;
@@ -168,10 +168,10 @@ static Window find_desktop_window(Window *p_root, Window *p_desktop)
 
 	if (win != root) {
 		fprintf(stderr,
-			"Conky: desktop window (%lx) is subwindow of root window (%lx)\n",
+			PACKAGE_NAME": desktop window (%lx) is subwindow of root window (%lx)\n",
 			win, root);
 	} else {
-		fprintf(stderr, "Conky: desktop window (%lx) is root window\n", win);
+		fprintf(stderr, PACKAGE_NAME": desktop window (%lx) is root window\n", win);
 	}
 
 	fflush(stderr);
@@ -183,7 +183,7 @@ static Window find_desktop_window(Window *p_root, Window *p_desktop)
 }
 
 /* sets background to ParentRelative for the Window and all parents */
-inline void set_transparent_background(Window win)
+void set_transparent_background(Window win)
 {
 	static int colour_set = -1;
 
@@ -238,7 +238,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 
 			XLowerWindow(display, window.window);
 
-			fprintf(stderr, "Conky: window type - override\n");
+			fprintf(stderr, PACKAGE_NAME": window type - override\n");
 			fflush(stderr);
 		} else { /* window.type != TYPE_OVERRIDE */
 
@@ -279,13 +279,18 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 				switch (window.type) {
 					case TYPE_DESKTOP:
 						prop = ATOM(_NET_WM_WINDOW_TYPE_DESKTOP);
-						fprintf(stderr, "Conky: window type - desktop\n");
+						fprintf(stderr, PACKAGE_NAME": window type - desktop\n");
+						fflush(stderr);
+						break;
+					case TYPE_DOCK:
+						prop = ATOM(_NET_WM_WINDOW_TYPE_DOCK);
+						fprintf(stderr, PACKAGE_NAME": window type - dock\n");
 						fflush(stderr);
 						break;
 					case TYPE_NORMAL:
 					default:
 						prop = ATOM(_NET_WM_WINDOW_TYPE_NORMAL);
-						fprintf(stderr, "Conky: window type - normal\n");
+						fprintf(stderr, PACKAGE_NAME": window type - normal\n");
 						fflush(stderr);
 						break;
 				}
@@ -297,7 +302,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 
 			/* Window decorations */
 			if (TEST_HINT(window.hints, HINT_UNDECORATED)) {
-				/* fprintf(stderr, "Conky: hint - undecorated\n");
+				/* fprintf(stderr, PACKAGE_NAME": hint - undecorated\n");
 				fflush(stderr); */
 
 				xa = ATOM(_MOTIF_WM_HINTS);
@@ -310,7 +315,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 
 			/* Below other windows */
 			if (TEST_HINT(window.hints, HINT_BELOW)) {
-				/* fprintf(stderr, "Conky: hint - below\n");
+				/* fprintf(stderr, PACKAGE_NAME": hint - below\n");
 				fflush(stderr); */
 
 				xa = ATOM(_WIN_LAYER);
@@ -332,7 +337,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 
 			/* Above other windows */
 			if (TEST_HINT(window.hints, HINT_ABOVE)) {
-				/* fprintf(stderr, "Conky: hint - above\n");
+				/* fprintf(stderr, PACKAGE_NAME": hint - above\n");
 				fflush(stderr); */
 
 				xa = ATOM(_WIN_LAYER);
@@ -354,7 +359,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 
 			/* Sticky */
 			if (TEST_HINT(window.hints, HINT_STICKY)) {
-				/* fprintf(stderr, "Conky: hint - sticky\n");
+				/* fprintf(stderr, PACKAGE_NAME": hint - sticky\n");
 				fflush(stderr); */
 
 				xa = ATOM(_NET_WM_DESKTOP);
@@ -376,7 +381,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 
 			/* Skip taskbar */
 			if (TEST_HINT(window.hints, HINT_SKIP_TASKBAR)) {
-				/* fprintf(stderr, "Conky: hint - skip_taskbar\n");
+				/* fprintf(stderr, PACKAGE_NAME": hint - skip_taskbar\n");
 				fflush(stderr); */
 
 				xa = ATOM(_NET_WM_STATE);
@@ -390,7 +395,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 
 			/* Skip pager */
 			if (TEST_HINT(window.hints, HINT_SKIP_PAGER)) {
-				/* fprintf(stderr, "Conky: hint - skip_pager\n");
+				/* fprintf(stderr, PACKAGE_NAME": hint - skip_pager\n");
 				fflush(stderr); */
 
 				xa = ATOM(_NET_WM_STATE);
@@ -403,7 +408,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 			}
 		} /* else { window.type != TYPE_OVERRIDE */
 
-		fprintf(stderr, "Conky: drawing to created window (%lx)\n",
+		fprintf(stderr, PACKAGE_NAME": drawing to created window (0x%lx)\n",
 			window.window);
 		fflush(stderr);
 
@@ -423,7 +428,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 			window.height = attrs.height;
 		}
 
-		fprintf(stderr, "Conky: drawing to desktop window\n");
+		fprintf(stderr, PACKAGE_NAME": drawing to desktop window\n");
 	}
 
 	/* Drawable is same as window. This may be changed by double buffering. */
@@ -440,7 +445,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 				window.window, XdbeBackground);
 			if (window.back_buffer != None) {
 				window.drawable = window.back_buffer;
-				fprintf(stderr, "Conky: drawing to double buffer\n");
+				fprintf(stderr, PACKAGE_NAME": drawing to double buffer\n");
 			} else {
 				use_xdbe = 0;
 			}
@@ -450,7 +455,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 		}
 	}
 	if (!use_xdbe) {
-		fprintf(stderr, "Conky: drawing to single buffer\n");
+		fprintf(stderr, PACKAGE_NAME": drawing to single buffer\n");
 	}
 #endif
 
@@ -517,10 +522,10 @@ long get_x11_color(const char *name)
 	if (!XParseColor(display, DefaultColormap(display, screen), name, &color)) {
 		/* lets check if it's a hex colour with the # missing in front
 		 * if yes, then do something about it */
-		char newname[64];
+		char newname[DEFAULT_TEXT_BUFFER_SIZE];
 
 		newname[0] = '#';
-		strncpy(&newname[1], name, 62);
+		strncpy(&newname[1], name, DEFAULT_TEXT_BUFFER_SIZE - 1);
 		/* now lets try again */
 		if (!XParseColor(display, DefaultColormap(display, screen), &newname[0],
 				&color)) {
@@ -545,4 +550,10 @@ void create_gc(void)
 		GCFunction | GCGraphicsExposures, &values);
 }
 
+void update_x11info(void)
+{
+	struct information *current_info = &info;
+	current_info->x11.monitor.number = XScreenCount(display);
+	current_info->x11.monitor.current = XDefaultScreen(display);
+}
 #endif /* X11 */

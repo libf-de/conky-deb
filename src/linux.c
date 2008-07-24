@@ -24,12 +24,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: linux.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: linux.c 1223 2008-07-12 10:25:05Z ngarofil $ */
 
 #include "conky.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <dirent.h>
 #include <ctype.h>
 #include <errno.h>
@@ -135,7 +132,7 @@ void update_meminfo(void)
 	char buf[256];
 
 	info.mem = info.memmax = info.swap = info.swapmax = info.bufmem =
-		info.buffers = info.cached = 0;
+		info.buffers = info.cached = info.memfree = info.memeasyfree = 0;
 
 	if (!(meminfo_fp = open_file("/proc/meminfo", &rep))) {
 		return;
@@ -149,7 +146,7 @@ void update_meminfo(void)
 		if (strncmp(buf, "MemTotal:", 9) == 0) {
 			sscanf(buf, "%*s %llu", &info.memmax);
 		} else if (strncmp(buf, "MemFree:", 8) == 0) {
-			sscanf(buf, "%*s %llu", &info.mem);
+			sscanf(buf, "%*s %llu", &info.memfree);
 		} else if (strncmp(buf, "SwapTotal:", 10) == 0) {
 			sscanf(buf, "%*s %llu", &info.swapmax);
 		} else if (strncmp(buf, "SwapFree:", 9) == 0) {
@@ -161,7 +158,8 @@ void update_meminfo(void)
 		}
 	}
 
-	info.mem = info.memmax - info.mem;
+	info.mem = info.memmax - info.memfree;
+	info.memeasyfree = info.memfree;
 	info.swap = info.swapmax - info.swap;
 
 	info.bufmem = info.cached + info.buffers;
@@ -192,22 +190,22 @@ char *get_ioscheduler(char *disk)
 	char buf[128];
 
 	if (!disk)
-		return strdup("n/a");
+		return strndup("n/a", text_buffer_size);
 
 	snprintf(buf, 127, "/sys/block/%s/queue/scheduler", disk);
 	if ((fp = fopen(buf, "r")) == NULL) {
-		return strdup("n/a");
+		return strndup("n/a", text_buffer_size);
 	}
 	while (!feof(fp)) {
 		fscanf(fp, "%127s", buf);
 		if (buf[0] == '[') {
 			buf[strlen(buf) - 1] = '\0';
 			fclose(fp);
-			return strdup(buf + 1);
+			return strndup(buf + 1, text_buffer_size);
 		}
 	}
 	fclose(fp);
-	return strdup("n/a");
+	return strndup("n/a", text_buffer_size);
 }
 
 int interface_up(const char *dev)
@@ -215,31 +213,61 @@ int interface_up(const char *dev)
 	int fd;
 	struct ifreq ifr;
 
-	if((fd = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
+	if ((fd = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
 		CRIT_ERR("could not create sockfd");
 		return 0;
 	}
 	strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-	if(ioctl(fd, SIOCGIFFLAGS, &ifr)) {
+	if (ioctl(fd, SIOCGIFFLAGS, &ifr)) {
 		/* if device does not exist, treat like not up */
 		if (errno != ENODEV)
 			perror("SIOCGIFFLAGS");
-	} else {
-		close(fd);
-		return (ifr.ifr_flags & IFF_UP);
+		goto END_FALSE;
 	}
+
+	if (!(ifr.ifr_flags & IFF_UP)) /* iface is not up */
+		goto END_FALSE;
+	if (ifup_strictness == IFUP_UP)
+		goto END_TRUE;
+
+	if (!(ifr.ifr_flags & IFF_RUNNING))
+		goto END_FALSE;
+	if (ifup_strictness == IFUP_LINK)
+		goto END_TRUE;
+
+	if (ioctl(fd, SIOCGIFADDR, &ifr)) {
+		perror("SIOCGIFADDR");
+		goto END_FALSE;
+	}
+	if (((struct sockaddr_in *)&(ifr.ifr_ifru.ifru_addr))->sin_addr.s_addr)
+		goto END_TRUE;
+
+END_FALSE:
 	close(fd);
 	return 0;
+END_TRUE:
+	close(fd);
+	return 1;
 }
 
 #define COND_FREE(x) if(x) free(x); x = 0
 #define SAVE_SET_STRING(x, y) \
 	if (x && strcmp((char *)x, (char *)y)) { \
 		free(x); \
-		x = strdup("multiple"); \
+		x = strndup("multiple", text_buffer_size); \
 	} else if (!x) { \
-		x = strdup(y); \
+		x = strndup(y, text_buffer_size); \
 	}
+
+void update_gateway_info_failure(const char *reason)
+{
+	if(reason != NULL) {
+		perror(reason);
+	}
+	//2 pointers to 1 location causes a crash when we try to free them both
+	info.gw_info.iface = strndup("failed", text_buffer_size);
+	info.gw_info.ip = strndup("failed", text_buffer_size);
+}
 
 void update_gateway_info(void)
 {
@@ -257,38 +285,36 @@ void update_gateway_info(void)
 	gw_info->count = 0;
 
 	if ((fp = fopen("/proc/net/route", "r")) == NULL) {
-		perror("fopen()");
-		goto FAIL;
+		update_gateway_info_failure("fopen()");
+ 		return;
 	}
 	if (fscanf(fp, "%*[^\n]\n") == EOF) {
-		perror("fscanf()");
-		goto CLOSE_FAIL;
+		//NULL because a empty table is not a error
+		update_gateway_info_failure(NULL);
+		fclose(fp);
+		return;
 	}
 	while (!feof(fp)) {
 		// Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT
 		if(fscanf(fp, "%63s %lx %lx %x %hd %hd %hd %lx %hd %hd %hd\n",
-				iface, &dest, &gate, &flags, &ref, &use,
-				&metric, &mask, &mtu, &win, &irtt) != 11) {
-			perror("fscanf()");
-			goto CLOSE_FAIL;
+					iface, &dest, &gate, &flags, &ref, &use,
+					&metric, &mask, &mtu, &win, &irtt) != 11) {
+			update_gateway_info_failure("fscanf()");
+			fclose(fp);
+			return;
 		}
 		if (flags & RTF_GATEWAY && dest == 0 && mask == 0) {
 			gw_info->count++;
 			SAVE_SET_STRING(gw_info->iface, iface)
-			ina.s_addr = gate;
+				ina.s_addr = gate;
 			SAVE_SET_STRING(gw_info->ip, inet_ntoa(ina))
 		}
 	}
 	fclose(fp);
 	return;
-CLOSE_FAIL:
-	fclose(fp);
-FAIL:
-	info.gw_info.iface = info.gw_info.ip = strdup("failed");
-	return;
 }
 
-inline void update_net_stats(void)
+void update_net_stats(void)
 {
 	FILE *net_dev_fp;
 	static int rep = 0;
@@ -863,7 +889,7 @@ int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		CRIT_ERR("can't open '%s': %s\nplease check your device or remove this "
-			"var from Conky", path, strerror(errno));
+			"var from "PACKAGE_NAME, path, strerror(errno));
 	}
 
 	if (strcmp(type, "in") == 0 || strcmp(type, "temp") == 0
@@ -1032,7 +1058,7 @@ void get_adt746x_cpu(char *p_client_buffer, size_t client_buffer_size)
  * Small changes by David Sterba <sterd9am@ss1000.ms.mff.cuni.cz> */
 
 #if  defined(__i386) || defined(__x86_64)
-__inline__ unsigned long long int rdtsc(void)
+unsigned long long int rdtsc(void)
 {
 	unsigned long long int x;
 
@@ -1124,7 +1150,7 @@ char get_freq(char *p_client_buffer, size_t client_buffer_size,
 	// open the CPU information file
 	f = open_file("/proc/cpuinfo", &rep);
 	if (!f) {
-		perror("Conky: Failed to access '/proc/cpuinfo' at get_freq()");
+		perror(PACKAGE_NAME": Failed to access '/proc/cpuinfo' at get_freq()");
 		return 0;
 	}
 
@@ -1214,7 +1240,7 @@ char get_voltage(char *p_client_buffer, size_t client_buffer_size,
 		}
 		fclose(f);
 	} else {
-		fprintf(stderr, "Conky: Failed to access '%s' at ", current_freq_file);
+		fprintf(stderr, PACKAGE_NAME": Failed to access '%s' at ", current_freq_file);
 		perror("get_voltage()");
 		if (f) {
 			fclose(f);
@@ -1242,7 +1268,7 @@ char get_voltage(char *p_client_buffer, size_t client_buffer_size,
 		}
 		fclose(f);
 	} else {
-		fprintf(stderr, "Conky: Failed to access '%s' at ", current_freq_file);
+		fprintf(stderr, PACKAGE_NAME": Failed to access '%s' at ", current_freq_file);
 		perror("get_voltage()");
 		if (f) {
 			fclose(f);
@@ -1288,11 +1314,24 @@ void get_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
 	snprintf(p_client_buffer, client_buffer_size, "%s", buf);
 }
 
+#define SYSFS_AC_ADAPTER_DIR "/sys/class/power_supply/AC"
 #define ACPI_AC_ADAPTER_DIR "/proc/acpi/ac_adapter/"
+/* Linux 2.6.25 onwards ac adapter info is in
+   /sys/class/power_supply/AC/
+   On my system I get the following.
+     /sys/class/power_supply/AC/uevent:
+     PHYSDEVPATH=/devices/LNXSYSTM:00/device:00/PNP0A08:00/device:01/PNP0C09:00/ACPI0003:00
+     PHYSDEVBUS=acpi
+     PHYSDEVDRIVER=ac
+     POWER_SUPPLY_NAME=AC
+     POWER_SUPPLY_TYPE=Mains
+     POWER_SUPPLY_ONLINE=1
+*/
 
 void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size)
 {
 	static int rep = 0;
+
 	char buf[256];
 	char buf2[256];
 	FILE *fp;
@@ -1301,25 +1340,44 @@ void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size)
 		return;
 	}
 
-	/* yeah, slow... :/ */
-	if (!get_first_file_in_a_directory(ACPI_AC_ADAPTER_DIR, buf, &rep)) {
-		snprintf(p_client_buffer, client_buffer_size, "no ac_adapters?");
-		return;
-	}
-
-	snprintf(buf2, sizeof(buf2), "%s%s/state", ACPI_AC_ADAPTER_DIR, buf);
-
+	snprintf(buf2, sizeof(buf2), "%s/uevent", SYSFS_AC_ADAPTER_DIR);
 	fp = open_file(buf2, &rep);
-	if (!fp) {
-		snprintf(p_client_buffer, client_buffer_size,
-			"No ac adapter found.... where is it?");
-		return;
-	}
-	memset(buf, 0, sizeof(buf));
-	fscanf(fp, "%*s %99s", buf);
-	fclose(fp);
+	if (fp) {
+		/* sysfs processing */
+		while (!feof(fp)) {
+			if (fgets(buf, sizeof(buf), fp) == NULL)
+				break;
 
-	snprintf(p_client_buffer, client_buffer_size, "%s", buf);
+			if (strncmp(buf, "POWER_SUPPLY_ONLINE=", 20) == 0) {
+				int online = 0;
+				sscanf(buf, "POWER_SUPPLY_ONLINE=%d", &online);
+				snprintf(p_client_buffer, client_buffer_size,
+					 "%s-line", (online ? "on" : "off"));
+				break;
+			}
+		}
+		fclose(fp);
+	} else {
+		/* yeah, slow... :/ */
+		if (!get_first_file_in_a_directory(ACPI_AC_ADAPTER_DIR, buf, &rep)) {
+			snprintf(p_client_buffer, client_buffer_size, "no ac_adapters?");
+			return;
+		}
+
+		snprintf(buf2, sizeof(buf2), "%s%s/state", ACPI_AC_ADAPTER_DIR, buf);
+
+		fp = open_file(buf2, &rep);
+		if (!fp) {
+			snprintf(p_client_buffer, client_buffer_size,
+				 "No ac adapter found.... where is it?");
+			return;
+		}
+		memset(buf, 0, sizeof(buf));
+		fscanf(fp, "%*s %99s", buf);
+		fclose(fp);
+
+		snprintf(p_client_buffer, client_buffer_size, "%s", buf);
+	}
 }
 
 /*
@@ -1520,6 +1578,8 @@ int get_battery_idx(const char *bat)
 	return idx;
 }
 
+void set_return_value(char *buffer, unsigned int n, int item, int idx);
+
 void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 {
 	static int idx, rep = 0, rep2 = 0;
@@ -1535,7 +1595,8 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 
 	/* don't update battery too often */
 	if (current_update_time - last_battery_time[idx] < 29.5) {
-		goto set_return_value;
+		set_return_value(buffer, n, item, idx);
+		return;
 	}
 
 	last_battery_time[idx] = current_update_time;
@@ -1544,35 +1605,35 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 	memset(last_battery_time_str[idx], 0, sizeof(last_battery_time_str[idx]));
 
  	/* first try SYSFS if that fails try ACPI */
- 
+
  	if (sysfs_bat_fp[idx] == NULL && acpi_bat_fp[idx] == NULL && apm_bat_fp[idx] == NULL) {
  		sysfs_bat_fp[idx] = open_file(sysfs_path, &rep);
 		rep = 0;
 	}
-  
+
  	if (sysfs_bat_fp[idx] == NULL && acpi_bat_fp[idx] == NULL && apm_bat_fp[idx] == NULL) {
   		acpi_bat_fp[idx] = open_file(acpi_path, &rep);
 	}
-  
+
  	if (sysfs_bat_fp[idx] != NULL) {
  		/* SYSFS */
  		int present_rate = -1;
  		int remaining_capacity = -1;
  		char charging_state[64];
  		char present[4];
- 
- 		strcpy(charging_state, "Unknown");
- 
+
+ 		strcpy(charging_state, "unknown");
+
  		while (!feof(sysfs_bat_fp[idx])) {
  			char buf[256];
  			if (fgets(buf, 256, sysfs_bat_fp[idx]) == NULL)
  				break;
- 
+
  			/* let's just hope units are ok */
  			if (strncmp (buf, "POWER_SUPPLY_PRESENT=1", 22) == 0)
- 				strcpy(present, "Yes");
+ 				strcpy(present, "yes");
  			else if (strncmp (buf, "POWER_SUPPLY_PRESENT=0", 22) == 0)
- 				strcpy(present, "No");
+ 				strcpy(present, "no");
  			else if (strncmp (buf, "POWER_SUPPLY_STATUS=", 20) == 0)
  				sscanf(buf, "POWER_SUPPLY_STATUS=%63s", charging_state);
  			/* present_rate is not the same as the
@@ -1590,14 +1651,14 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
  			else if (strncmp(buf, "POWER_SUPPLY_CHARGE_FULL=", 25) == 0)
  				sscanf(buf, "POWER_SUPPLY_CHARGE_FULL=%d", &acpi_last_full[idx]);
  		}
- 
+
  		fclose(sysfs_bat_fp[idx]);
  		sysfs_bat_fp[idx] = NULL;
- 
+
  		/* Hellf[i]re notes that remaining capacity can exceed acpi_last_full */
  		if (remaining_capacity > acpi_last_full[idx])
  			acpi_last_full[idx] = remaining_capacity;  /* normalize to 100% */
- 
+
  		/* not present */
  		if (strcmp(present, "No") == 0) {
  			strncpy(last_battery_str[idx], "not present", 64);
@@ -1617,7 +1678,7 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 				snprintf(last_battery_time_str[idx],
 					sizeof(last_battery_time_str[idx]) - 1, "unknown");
  			} else {
- 				strncpy(last_battery_str[idx], "Charging", sizeof(last_battery_str[idx])-1);
+ 				strncpy(last_battery_str[idx], "charging", sizeof(last_battery_str[idx])-1);
 				snprintf(last_battery_time_str[idx],
 					sizeof(last_battery_time_str[idx]) - 1, "unknown");
  			}
@@ -1630,7 +1691,7 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
  					(int) (((float) remaining_capacity / acpi_last_full[idx]) * 100 ));
  				/* e.g. 1h 12m */
  				format_seconds(last_battery_time_str[idx], sizeof(last_battery_time_str[idx])-1,
- 					      (long) (((float)(acpi_last_full[idx] - remaining_capacity) / present_rate) * 3600));
+ 					      (long) (((float) remaining_capacity / present_rate) * 3600));
  			} else if (present_rate == 0) { /* Thanks to Nexox for this one */
  				snprintf(last_battery_str[idx], sizeof(last_battery_str[idx])-1, "full");
 				snprintf(last_battery_time_str[idx],
@@ -1823,8 +1884,11 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 			apm_bat_fp[idx] = NULL;
 		}
 	}
+	set_return_value(buffer, n, item, idx);
+}
 
-set_return_value:
+void set_return_value(char *buffer, unsigned int n, int item, int idx)
+{
 	switch (item) {
 		case BATTERY_STATUS:
 			snprintf(buffer, n, "%s", last_battery_str[idx]);
@@ -2072,124 +2136,6 @@ void update_top(void)
 	info.first_process = get_first_process();
 }
 
-/* The following ifdefs were adapted from gkrellm */
-#include <linux/major.h>
-
-#if !defined(MD_MAJOR)
-#define MD_MAJOR 9
-#endif
-
-#if !defined(LVM_BLK_MAJOR)
-#define LVM_BLK_MAJOR 58
-#endif
-
-#if !defined(NBD_MAJOR)
-#define NBD_MAJOR 43
-#endif
-
-void update_diskio(void)
-{
-	static unsigned int last = UINT_MAX;
-	static unsigned int last_read = UINT_MAX;
-	static unsigned int last_write = UINT_MAX;
-	FILE *fp;
-	static int rep = 0;
-
-	char buf[512], devbuf[64];
-	int i;
-	unsigned int major, minor;
-	unsigned int current = 0;
-	unsigned int current_read = 0;
-	unsigned int current_write = 0;
-	unsigned int reads, writes = 0;
-	int col_count = 0;
-	int tot, tot_read, tot_write;
-
-	if (!(fp = open_file("/proc/diskstats", &rep))) {
-		diskio_value = 0;
-		return;
-	}
-
-	/* read reads and writes from all disks (minor = 0), including cd-roms
-	 * and floppies, and sum them up */
-	while (!feof(fp)) {
-		fgets(buf, 512, fp);
-		col_count = sscanf(buf, "%u %u %s %*u %*u %u %*u %*u %*u %u", &major,
-			&minor, devbuf, &reads, &writes);
-		/* ignore subdevices (they have only 3 matching entries in their line)
-		 * and virtual devices (LVM, network block devices, RAM disks, Loopback)
-		 *
-		 * XXX: ignore devices which are part of a SW RAID (MD_MAJOR) */
-		if (col_count == 5 && major != LVM_BLK_MAJOR && major != NBD_MAJOR
-				&& major != RAMDISK_MAJOR && major != LOOP_MAJOR) {
-			current += reads + writes;
-			current_read += reads;
-			current_write += writes;
-		} else {
-			col_count = sscanf(buf, "%u %u %s %*u %u %*u %u",
-				&major, &minor, devbuf, &reads, &writes);
-			if (col_count != 5) {
-				continue;
-			}
-		}
-		for (i = 0; i < MAX_DISKIO_STATS; i++) {
-			if (diskio_stats[i].dev &&
-					strncmp(devbuf, diskio_stats[i].dev, text_buffer_size) == 0) {
-				diskio_stats[i].current =
-					(reads + writes - diskio_stats[i].last) / 2;
-				diskio_stats[i].current_read =
-					(reads - diskio_stats[i].last_read) / 2;
-				diskio_stats[i].current_write =
-					(writes - diskio_stats[i].last_write) / 2;
-				if (reads + writes < diskio_stats[i].last) {
-					diskio_stats[i].current = 0;
-				}
-				if (reads < diskio_stats[i].last_read) {
-					diskio_stats[i].current_read = 0;
-					diskio_stats[i].current = diskio_stats[i].current_write;
-				}
-				if (writes < diskio_stats[i].last_write) {
-					diskio_stats[i].current_write = 0;
-					diskio_stats[i].current = diskio_stats[i].current_read;
-				}
-				diskio_stats[i].last = reads + writes;
-				diskio_stats[i].last_read = reads;
-				diskio_stats[i].last_write = writes;
-			}
-		}
-	}
-
-	/* since the values in /proc/diststats are absolute, we have to substract
-	 * our last reading. The numbers stand for "sectors read", and we therefore
-	 * have to divide by two to get KB */
-	tot = ((double) (current - last) / 2);
-	tot_read = ((double) (current_read - last_read) / 2);
-	tot_write = ((double) (current_write - last_write) / 2);
-
-	if (last_read > current_read) {
-		tot_read = 0;
-	}
-	if (last_write > current_write) {
-		tot_write = 0;
-	}
-
-	if (last > current) {
-		/* we hit this either if it's the very first time we run this, or
-		 * when /proc/diskstats overflows; while 0 is not correct, it's at
-		 * least not way off */
-		tot = 0;
-	}
-	last = current;
-	last_read = current_read;
-	last_write = current_write;
-
-	diskio_value = tot;
-	diskio_read_value = tot_read;
-	diskio_write_value = tot_write;
-
-	fclose(fp);
-}
-
 /* Here come the IBM ACPI-specific things. For reference, see
  * http://ibm-acpi.sourceforge.net/README
  * If IBM ACPI is installed, /proc/acpi/ibm contains the following files:
@@ -2247,7 +2193,7 @@ void get_ibm_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
 		}
 	} else {
 		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
-			"ibm* from your Conky config file.", fan, strerror(errno));
+			"ibm* from your "PACKAGE_NAME" config file.", fan, strerror(errno));
 	}
 
 	fclose(fp);
@@ -2311,7 +2257,7 @@ void get_ibm_acpi_temps(void)
 		}
 	} else {
 		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
-			"ibm* from your Conky config file.", thermal, strerror(errno));
+			"ibm* from your "PACKAGE_NAME" config file.", thermal, strerror(errno));
 	}
 
 	fclose(fp);
@@ -2359,7 +2305,7 @@ void get_ibm_acpi_volume(char *p_client_buffer, size_t client_buffer_size)
 		}
 	} else {
 		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
-			"ibm* from your Conky config file.", volume, strerror(errno));
+			"ibm* from your "PACKAGE_NAME" config file.", volume, strerror(errno));
 	}
 
 	fclose(fp);
@@ -2408,7 +2354,7 @@ void get_ibm_acpi_brightness(char *p_client_buffer, size_t client_buffer_size)
 		}
 	} else {
 		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
-			"ibm* from your Conky config file.", filename, strerror(errno));
+			"ibm* from your "PACKAGE_NAME" config file.", filename, strerror(errno));
 	}
 
 	fclose(fp);

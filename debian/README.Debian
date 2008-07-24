@@ -1,13 +1,13 @@
-Notes for conky (1.5.1-1)
+Notes for conky (1.6.0-1)
 =========================
 
 Build-time switches/options
 ---------------------------
 
-The Debian package is built using the default values of the
-enable/disable switches for configure. In particular, it does not
-enable "audacious", "bmpx" or "smapi". Users who want a version of
-conky with these features enabled will have to re-build the package
+The Debian package is built using the default values of the enable/disable
+switches for configure. In particular, it does not enable "audacious",
+"bmpx", "smapi", "nvidia" or "eve-online". Users who want a version
+of conky with these features enabled will have to re-build the package
 after appropriate changes.
 
 Runtime configuration
@@ -18,5 +18,5 @@ create a configuration file in $HOME/.conkyrc based on the sample in
 /usr/share/doc/conky/examples/conky.conf.gz. This way any
 unexpected error messages from conky would be your own fault :-)
 
--- Kapil Hari Paranjape <kapil@debian.org>  Wed, 02 Apr 2008 06:46:08 +0530
+-- Kapil Hari Paranjape <kapil@debian.org>  Wed, 23 Jul 2008 12:22:19 +0000
 

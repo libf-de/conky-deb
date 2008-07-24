@@ -22,10 +22,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: Makefile.am 1010 2008-03-18 00:23:16Z brenden1 $
+# $Id: Makefile.am 1218 2008-07-07 20:09:37Z pkovacs $
 
-INCLUDES =			\
-	-DSYSTEM_CONFIG_FILE=\"$(sysconfdir)/conky/conky.conf\"
+INCLUDES = -DSYSTEM_CONFIG_FILE=\"$(sysconfdir)/conky/conky.conf\"
 
 bin_PROGRAMS = conky
 
@@ -46,7 +45,7 @@ xmms2 = xmms2.c
 endif
 
 if BUILD_LINUX
-linux = linux.c top.c diskio.c
+linux = linux.c top.c diskio.c users.c
 PTHREAD_LIBS =  -lpthread
 endif
 
@@ -55,7 +54,7 @@ endif
 #endif
 
 if BUILD_FREEBSD
-freebsd = freebsd.c diskio.c
+freebsd = freebsd.c
 PTHREAD_LIBS =  -pthread
 endif
 
@@ -80,12 +79,20 @@ if BUILD_HDDTEMP
 hddtemp = hddtemp.c
 endif
 
+if BUILD_EVE
+eve = eve.c eve.h
+endif
+
 if BUILD_RSS
 rss = rss.c prss.c prss.h
 endif
 
 if BUILD_SMAPI
 smapi = smapi.c smapi.h
+endif
+
+if BUILD_NVIDIA
+nvidia = nvidia.c nvidia.h
 endif
 
 conky_SOURCES = 		\
@@ -98,12 +105,14 @@ conky_SOURCES = 		\
 	fs.c 			\
 	$(hddtemp)		\
 	$(linux) 		\
+	$(nvidia)		\
 	mail.c 			\
 	mixer.c 		\
 	$(mpd)                  \
 	$(netbsd)               \
 	$(openbsd)              \
 	$(port_monitors)        \
+	$(eve)			\
 	$(rss)			\
 	$(solaris) 		\
 	timed_thread.c		\
@@ -112,31 +121,44 @@ conky_SOURCES = 		\
 	mboxscan.h		\
 	$(x11)                  \
 	$(xmms2)		\
-	$(smapi)		\
-	users.c
+	$(smapi)
 
-AM_LDFLAGS = $(PTHREAD_LIBS) -lm
+conky_LDFLAGS = 				\
+	$(PTHREAD_LIBS)				\
+	-lm
 
 EXTRA_DIST = 			\
 	audacious.c		\
 	audacious.h		\
 	bmpx.c			\
+	common.h		\
 	freebsd.c		\
+	fs.h			\
 	hddtemp.c		\
+	hddtemp.h		\
 	linux.c			\
+	linux.h			\
 	libmpdclient.c          \
 	libmpdclient.h          \
 	libtcp-portmon.c	\
 	libtcp-portmon.h	\
+	rss.h			\
+	mail.h			\
+	mixer.h			\
 	mpd.c			\
+	mpd.h			\
 	netbsd.c		\
+	nvidia.c		\
+	nvidia.h		\
 	openbsd.c		\
 	solaris.c 		\
 	top.h                   \
 	diskio.h                \
-	x11.c                   \
+	x11.c			\
+	x11.h			\
 	xmms2.c                 \
 	smapi.c			\
 	users.c
+
 
 # vi:set ts=8 sw=8 noet ai nocindent syntax=automake:

@@ -1,21 +1,31 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.70.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id301851"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id267925"></a><h2>Description</h2><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.70.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id250138"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id250769"></a><h2>Description</h2><p>
 			Conky is a system monitor for X originally based on torsmo.
-			Since it's conception, Conky has changed significantly from it's predecessor.
-			Conky can display just about anything, either on your root desktop or in it's own window.
-			Conky has many built-in objects, as well as the ability to execute programs and scripts,
-			then display the output from stdout.
+			Since its inception, Conky has changed significantly from its predecessor, while maintaining
+			simplicity and configurability.  Conky can display just about anything, either
+			on your root desktop or in its own window.  Not only does Conky have many
+			built-in objects, it can also display just about any piece of information by
+			using scripts and other external programs.
 		</p><p>
-			We are always looking for help, and anyone interested in becoming a developer is welcome.
-			Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches.
+			Conky has more than 250 built in objects, including support for
+			a plethora of OS stats (uname, uptime, CPU usage, mem usage, disk
+			usage, "top" like process stats, and network monitoring, just to name a few),
+			built in IMAP and POP3 support, built in support for many popular
+			music players (MPD, XMMS2, BMPx, Audacious), and much much more.
+			Conky can display this info either as text,	or using simple progress
+			bars and graph widgets, with different fonts and colours.
+		</p><p>
+			We are always looking for help, whether its reporting bugs, writing patches, or writing docs.
+			Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches,
+			or stop by #conky on irc.freenode.net if you have questions or want to contribute.
 		</p><p>
 			Thanks for your interest in Conky.
-		</p></div><div class="refsect1" lang="en"><a name="id267946"></a><h2>Compiling</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id250799"></a><h2>Compiling</h2><p>
 			For users compiling from source on a binary distro, make sure you have the X development
-			libraries installed.  This should be a package along the lines of "libx11-dev" or 
+			libraries installed.  This should be a package along the lines of "libx11-dev" or
 			"xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
 			on your configure options).
 		</p><p>
-			Conky has (for some time) been available in the repositories of most popular distributions.  
+			Conky has (for some time) been available in the repositories of most popular distributions.
 			Here are some installation instructions for a few:
 		</p><p>
 			Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
@@ -40,40 +50,44 @@
 			with anything other than gcc, and is not guaranteed to work with other compilers.
 		</p><p>
 
-		</p></div><div class="refsect1" lang="en"><a name="id268298"></a><h2>You Should Know</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id251151"></a><h2>You Should Know</h2><p>
 			Conky is generally very good on resources.  That said, the more you try to make Conky
 			do, the more resources it is going to consume.
 		</p><p>
 			An easy way to force Conky to reload your ~/.conkyrc: "killall -SIGUSR1 conky".
 			Saves you the trouble of having to kill and then restart.  You can now also do the same with SIGHUP.
-		</p></div><div class="refsect1" lang="en"><a name="id268314"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span><strong class="command"><code class="option">-v | -V | --verbose</code></strong></span></span></dt><dd>
-    Prints version and exits
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-a | --alignment=</code></strong></span><code class="option">ALIGNMENT</code></span></dt><dd>
-      Text alignment on screen, {top,bottom}_{left,right} or none
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-b | --double-buffer</code></strong></span></span></dt><dd>
-      Use double buffering (eliminates "flicker")
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-c | --config=</code></strong></span><code class="option">FILE</code></span></dt><dd>
-      Config file to load instead of $HOME/.conkyrc
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-d | --daemonize</code></strong></span></span></dt><dd>
-      Daemonize Conky, aka fork to background
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-f | --font=</code></strong></span><code class="option">FONT</code></span></dt><dd>
-      Font to use
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-h | --help</code></strong></span></span></dt><dd>
-      Prints command line help and exits
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-o | --own-window</code></strong></span></span></dt><dd>
-      Create own window to draw
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-t | --text=</code></strong></span><code class="option">TEXT</code></span></dt><dd>
-      Text to render, remember single quotes, like -t ' $uptime '
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-u | --interval=</code></strong></span><code class="option">SECONDS</code></span></dt><dd>
-      Update interval
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-w | --window-id=</code></strong></span><code class="option">WIN_ID</code></span></dt><dd>
-      Window id to draw
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-x </code></strong></span><code class="option">X_COORDINATE</code></span></dt><dd>
-      X position
-    <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-y </code></strong></span><code class="option">Y_COORDINATE</code></span></dt><dd>
-      Y position
-    <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id267481"></a><h2>Configuration Settings</h2><p>
-			Default configuration file location is $HOME/.conkyrc or 
+		</p></div><div class="refsect1" lang="en"><a name="id251168"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span><strong class="command"><code class="option">-v | -V | --version</code></strong></span></span></dt><dd>
+			Prints version and exits
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-q | --quiet</code></strong></span></span></dt><dd>
+			Run Conky in 'quiet mode' (ie. no output)
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-a | --alignment=</code></strong></span><code class="option">ALIGNMENT</code></span></dt><dd>
+			Text alignment on screen, {top,bottom,middle}_{left,right,middle} or none
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-b | --double-buffer</code></strong></span></span></dt><dd>
+			Use double buffering (eliminates "flicker")
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-c | --config=</code></strong></span><code class="option">FILE</code></span></dt><dd>
+			Config file to load instead of $HOME/.conkyrc
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-d | --daemonize</code></strong></span></span></dt><dd>
+			Daemonize Conky, aka fork to background
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-f | --font=</code></strong></span><code class="option">FONT</code></span></dt><dd>
+			Font to use
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-h | --help</code></strong></span></span></dt><dd>
+			Prints command line help and exits
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-o | --own-window</code></strong></span></span></dt><dd>
+			Create own window to draw
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-t | --text=</code></strong></span><code class="option">TEXT</code></span></dt><dd>
+			Text to render, remember single quotes, like -t ' $uptime '
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-u | --interval=</code></strong></span><code class="option">SECONDS</code></span></dt><dd>
+			Update interval
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-w | --window-id=</code></strong></span><code class="option">WIN_ID</code></span></dt><dd>
+			Window id to draw
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-x </code></strong></span><code class="option">X_COORDINATE</code></span></dt><dd>
+			X position
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-y </code></strong></span><code class="option">Y_COORDINATE</code></span></dt><dd>
+			Y position
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-i </code></strong></span><code class="option">COUNT</code></span></dt><dd>
+			Number of times to update Conky (and quit)
+			<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id250368"></a><h2>Configuration Settings</h2><p>
+			Default configuration file location is $HOME/.conkyrc or
 			${sysconfdir}/conky/conky.conf.  On most systems, sysconfdir is /etc,
 			and you can find the sample config file there (/etc/conky/conky.conf).
 		</p><p>
@@ -87,26 +101,8 @@
 			Border margin in pixels
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">border_width</code></strong></span></span></dt><dd>
 			Border width in pixels
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color0</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color1</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color2</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color3</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color4</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color5</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color6</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color7</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color8</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
-			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">color9</code></strong></span></span></dt><dd>
-			A color variable for use inside TEXT segments
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">colorN</code></strong></span></span></dt><dd>
+			Predefine a color for use inside TEXT segments. Substitute N by a digit between 0 and 9, inclusively. When specifying the color value in hex, omit the leading hash (#).
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">cpu_avg_samples</code></strong></span></span></dt><dd>
 			The number of samples to average for CPU monitoring
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">top_cpu_separate</code></strong></span></span></dt><dd>
@@ -135,6 +131,8 @@
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">gap_y</code></strong></span></span></dt><dd>
 			Gap, in pixels, between top or bottom border of screen, same as passing -y at command line,
 			e.g. gap_y 10.
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">if_up_strictness</code></strong></span></span></dt><dd>
+			How strict should if_up be when testing an interface for being up? The value is one of up, link or address, to check for the interface being solely up, being up and having link or being up, having link and an assigned IP address.
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">imap</code></strong></span></span></dt><dd>
 			Default global IMAP server.  Arguments are: "host user pass [-i interval] [-f folder] [-p port] [-e command]".  Default port is 143, default folder is 'INBOX', default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">mail_spool</code></strong></span></span></dt><dd>
@@ -151,7 +149,7 @@
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">text_buffer_size</code></strong></span>
 			<code class="option">bytes</code>
 		</span></dt><dd>
-			Size of the standard text buffer (default is 128 bytes).  This buffer is used for intermediary text, such as individual lines, output from $exec vars, and various other variables.  Increasing the size of this buffer can drastically reduce Conky's performance, but will allow for more text display per variable.  The size of this buffer cannot be smaller than the default value of 128 bytes.
+			Size of the standard text buffer (default is 256 bytes).  This buffer is used for intermediary text, such as individual lines, output from $exec vars, and various other variables.  Increasing the size of this buffer can drastically reduce Conky's performance, but will allow for more text display per variable.  The size of this buffer cannot be smaller than the default value of 256 bytes.
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">maximum_width</code></strong></span>
 			<code class="option">pixels</code>
 		</span></dt><dd>
@@ -193,7 +191,7 @@
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_transparent</code></strong></span></span></dt><dd>
 			Boolean, set pseudo-transparency?
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_type</code></strong></span></span></dt><dd>
-			if own_window is yes, you may specify type normal, desktop or override (default: normal).
+			if own_window is yes, you may specify type normal, desktop, dock or override (default: normal).
 			Desktop windows are special windows that have no window decorations; are always visible
 			on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
 			Override windows are not under the control of the window manager.  Hints are ignored. This type
@@ -207,6 +205,10 @@
 			Default global POP3 server.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">short_units</code></strong></span></span></dt><dd>
 			Shortens units to a single character (kiB-&gt;k, GiB-&gt;G, etc.).  Default is off.
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">show_graph_scale</code></strong></span></span></dt><dd>
+		        Shows the maximum value in scaled graphs.
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">show_graph_range</code></strong></span></span></dt><dd>
+		        Shows the time range covered by a graph.
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">stippled_borders</code></strong></span></span></dt><dd>
 			Border stippling (dashing) in pixels
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">total_run_times</code></strong></span></span></dt><dd>
@@ -225,7 +227,7 @@
 			Xft font to use.
 			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">TEXT</code></strong></span></span></dt><dd>
 			After this begins text to be formatted on screen
-			<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id313124"></a><h2>Variables</h2><p>
+			<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id296595"></a><h2>Variables</h2><p>
 			Colors are parsed using XParsecolor(), there might be a list of them:
 			/usr/share/X11/rgb.txt. Also, <a href="http://sedition.com/perl/rgb.html" target="_top">
 				http://sedition.com/perl/rgb.html</a>.
@@ -234,7 +236,7 @@
 			<span><strong class="command"><code class="option">addr</code></strong></span>
 			<code class="option">interface</code>
 		</span></dt><dd>
-			IP address for an interface
+			IP address for an interface, or "No Address" if no address is assigned.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">addrs</code></strong></span>
 			<code class="option">interface</code>
@@ -398,46 +400,8 @@
 			<code class="option">(color)</code>
 		</span></dt><dd>
 			Change drawing color to color
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color0</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color0 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color1</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color1 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color2</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color2 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color3</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color3 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color4</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color4 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color5</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color5 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color6</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color6 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color7</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color7 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color8</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color8 configuration option
-			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">color9</code></strong></span>
-		</span></dt><dd>
-			Change drawing color to color9 configuration option
+			<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">colorN</code></strong></span></span></dt><dd>
+			Change drawing color to colorN configuration option, where N is a digit between 0 and 9, inclusively.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">conky_version</code></strong></span>
 		</span></dt><dd>
@@ -462,9 +426,9 @@
 			Bar that shows CPU usage, height is bar's height in pixels.  See $cpu for more info on SMP.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">cpugraph</code></strong></span>
-			<code class="option">(cpu number) (height),(width) (gradient colour 1) (gradient colour 2)</code>
+			<code class="option">normal|log (cpu number) (height),(width) (gradient colour 1) (gradient colour 2)</code>
 		</span></dt><dd>
-			CPU usage graph, with optional colours in hex, minus the #.  See $cpu for more info on SMP.
+			CPU usage graph, with optional colours in hex, minus the #.  See $cpu for more info on SMP. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">diskio</code></strong></span>
 			<code class="option">(device)</code>
@@ -472,9 +436,9 @@
 			Displays current disk IO.  Device is optional, and takes the form of sda for /dev/sda.  Individual partitions are allowed.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">diskiograph</code></strong></span>
-			<code class="option">(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
+			<code class="option">normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
 		</span></dt><dd>
-			Disk IO graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+			Disk IO graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">diskio_read</code></strong></span>
 			<code class="option">(device)</code>
@@ -482,9 +446,9 @@
 			Displays current disk IO for reads.  Device as in diskio.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">diskiograph_read</code></strong></span>
-			<code class="option">(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
+			<code class="option">normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
 		</span></dt><dd>
-			Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio.
+			Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">diskio_write</code></strong></span>
 			<code class="option">(device)</code>
@@ -492,9 +456,9 @@
 			Displays current disk IO for writes.  Device as in diskio.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">diskiograph_write</code></strong></span>
-			<code class="option">(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
+			<code class="option">normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
 		</span></dt><dd>
-			Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio.
+			Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">disk_protect</code></strong></span>
 			<code class="option">device</code>
@@ -504,17 +468,17 @@
 			<span><strong class="command"><code class="option">downspeed</code></strong></span>
 			<code class="option">net</code>
 		</span></dt><dd>
-			Download speed in kilobytes
+			Download speed in KiB
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">downspeedf</code></strong></span>
 			<code class="option">net</code>
 		</span></dt><dd>
-			Download speed in kilobytes with one decimal
+			Download speed in KiB with one decimal
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">downspeedgraph</code></strong></span>
-			<code class="option">net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
+			<code class="option">normal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
 		</span></dt><dd>
-			Download speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+			Download speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">else</code></strong></span>
 		</span></dt><dd>
@@ -544,9 +508,9 @@
 			Same as exec, except if the first value return is a value between 0-100, it will use that number for a bar. The size for the bar is currently fixed, but that may change in the future.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">execgraph</code></strong></span>
-			<code class="option">command</code>
+			<code class="option">(normal|log) command</code>
 		</span></dt><dd>
-			Same as execbar, but graphs values.
+			Same as execbar, but graphs values. Uses a logaritmic scale when the log option is given (to see small numbers). Values still have to be between 0 and 100.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">execi</code></strong></span>
 			<code class="option">interval command</code>
@@ -582,24 +546,22 @@
 			<span><strong class="command"><code class="option">freq</code></strong></span>
 			<code class="option">(n)</code>
 		</span></dt><dd>
-			Returns CPU #n's frequency in MHz. CPUs are
-			counted from 1. If omitted, the parameter
-			defaults to 1.
+			Returns CPU #n's frequency in MHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">freq_g</code></strong></span>
 			<code class="option">(n)</code>
 		</span></dt><dd>
-			Returns CPU #n's frequency in GHz. CPUs are
-			counted from 1. If omitted, the parameter
-			defaults to 1.
+			Returns CPU #n's frequency in GHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">freq_dyn</code></strong></span>
+			<code class="option">(n)</code>
 		</span></dt><dd>
-			Returns CPU frequency in MHz, but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
+			Returns CPU #n's frequency in MHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">freq_dyn_g</code></strong></span>
+			<code class="option">(n)</code>
 		</span></dt><dd>
-			Returns CPU frequency in GHz, but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
+			Returns CPU #n's frequency in GHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">fs_bar</code></strong></span>
 			<code class="option">(height),(width) fs</code>
@@ -817,6 +779,16 @@
 		</span></dt><dd>
 			(1,2,3)&gt; System load average, 1 is for past 1 minute, 2 for past 5 minutes and 3 for past 15 minutes.
 			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">loadgraph</code></strong></span>
+			<code class="option">normal|log (height),(width) (gradient colour 1) (gradient colour 2)</code>
+		</span></dt><dd>
+			Load1 average graph, similar to xload, with optional colours in hex, minus the #. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
+			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">lines</code></strong></span>
+			<code class="option">textfile</code>
+		</span></dt><dd>
+			Displays the number of lines in the given file
+			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">machine</code></strong></span>
 		</span></dt><dd>
 			Machine, i686 for example
@@ -844,6 +816,19 @@
 		</span></dt><dd>
 			Bar that shows amount of memory in use
 			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">memgraph</code></strong></span>
+			<code class="option">normal|log (height),(width) (gradient colour 1) (gradient colour 2)</code>
+		</span></dt><dd>
+			Memory usage graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
+			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">memeasyfree</code></strong></span>
+		</span></dt><dd>
+			Amount of free memory including the memory that is very easily freed (buffers/cache)
+			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">memfree</code></strong></span>
+		</span></dt><dd>
+			Amount of free memory
+			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">memmax</code></strong></span>
 		</span></dt><dd>
 			Total amount of memory
@@ -851,6 +836,14 @@
 			<span><strong class="command"><code class="option">memperc</code></strong></span>
 		</span></dt><dd>
 			Percentage of memory in use
+			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">monitor</code></strong></span>
+		</span></dt><dd>
+			Number of the monitor on which conky is running
+			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">monitor_number</code></strong></span>
+		</span></dt><dd>
+			Number of monitors
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">mpd_artist</code></strong></span>
 		</span></dt><dd>
@@ -934,6 +927,21 @@
 		</span></dt><dd>
 			Hostname
 			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">nvidia</code></strong></span>
+			<code class="option">threshold</code>
+			<code class="option">temp</code>
+			<code class="option">gpufreq</code>
+			<code class="option">memfreq</code>
+			<code class="option">imagequality</code>
+		</span></dt><dd>
+			Nvidia graficcard support for the XNVCtrl library.
+			Each option gives back one integer value:
+			(threshold): the thresholdtemperature at which the gpu slows down
+			(temp): gives the gpu current temperature
+			(gpufreq): gives the current gpu frequency
+			(memfreq): gives the current mem frequency
+			(imagequality): which imagequality should be choosen by OpenGL applications
+			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">outlinecolor</code></strong></span>
 			<code class="option">(color)</code>
 		</span></dt><dd>
@@ -991,6 +999,11 @@
 		</span></dt><dd>
 			Running processes (not sleeping), requires Linux 2.6
 			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">scroll</code></strong></span>
+			<code class="option">length text</code>
+		</span></dt><dd>
+			Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and "    foobar" can both generate "barfoo" but "foobar    " will keep the spaces like this "bar    foo").
+			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">shadecolor</code></strong></span>
 			<code class="option">(color)</code>
 		</span></dt><dd>
@@ -1001,15 +1014,25 @@
 		</span></dt><dd>
 			when using smapi, display contents of the /sys/devices/platform/smapi directory. ARGS are either '(FILENAME)' or 'bat (INDEX) (FILENAME)' to display the corresponding files' content. This is a very raw method of accessing the smapi values. When available, better use one of the smapi_* variables instead.
 			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">smapi_bat_bar</code></strong></span>
+			<code class="option">(INDEX),(height),(width)</code>
+		</span></dt><dd>
+			when using smapi, display the remaining capacity of the battery with index INDEX as a bar.
+			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">smapi_bat_perc</code></strong></span>
 			<code class="option">(INDEX)</code>
 		</span></dt><dd>
 			when using smapi, display the remaining capacity in percent of the battery with index INDEX. This is a separate variable because it supports the 'use_spacer' configuration option.
 			<p></p></dd><dt><span class="term">
-			<span><strong class="command"><code class="option">smapi_bat_bar</code></strong></span>
-			<code class="option">(INDEX),(height),(width)</code>
+			<span><strong class="command"><code class="option">smapi_bat_power</code></strong></span>
+			<code class="option">INDEX</code>
 		</span></dt><dd>
-			when using smapi, display the remaining capacity of the battery with index INDEX as a bar.
+			when using smapi, display the current power of the battery with index INDEX in watt. This is a separate variable because the original read out value is being converted from mW. The sign of the output reflects charging (positive) or discharging (negative) state.
+			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">smapi_bat_temp</code></strong></span>
+			<code class="option">INDEX</code>
+		</span></dt><dd>
+			when using smapi, display the current temperature of the battery with index INDEX in degree Celsius. This is a separate variable because the original read out value is being converted from milli degree Celsius.
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">stippled_hr</code></strong></span>
 			<code class="option">(space)</code>
@@ -1128,17 +1151,17 @@
 			<span><strong class="command"><code class="option">upspeed</code></strong></span>
 			<code class="option">net</code>
 		</span></dt><dd>
-			Upload speed in kilobytes
+			Upload speed in KiB
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">upspeedf</code></strong></span>
 			<code class="option">net</code>
 		</span></dt><dd>
-			Upload speed in kilobytes with one decimal
+			Upload speed in KiB with one decimal
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">upspeedgraph</code></strong></span>
-			<code class="option">net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
+			<code class="option">normal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
 		</span></dt><dd>
-			Upload speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+			Upload speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">uptime</code></strong></span>
 		</span></dt><dd>
@@ -1223,6 +1246,11 @@
 		</span></dt><dd>
 			Wireless link quality bar (Linux only)
 			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">words</code></strong></span>
+			<code class="option">textfile</code>
+		</span></dt><dd>
+			Displays the number of words in the given file
+			<p></p></dd><dt><span class="term">
 			<span><strong class="command"><code class="option">xmms2_artist</code></strong></span>
 		</span></dt><dd>
 			Artist in current XMMS2 song
@@ -1295,8 +1323,13 @@
 			<span><strong class="command"><code class="option">xmms2_smart</code></strong></span>
 		</span></dt><dd>
 			Prints the song name in either the form "artist - title" or file name, depending on whats available
-			<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id322874"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%M}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id322912"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
-	</div><div class="refsect1" lang="en"><a name="id322925"></a><h2>Bugs</h2><p>
+			<p></p></dd><dt><span class="term">
+			<span><strong class="command"><code class="option">eve</code></strong></span>
+			<code class="option">api_userid api_key character_id</code>
+		</span></dt><dd>
+         Fetches your currently training skill from the Eve Online API servers (http://www.eve-online.com/) and displays the skill along with the remaining training time.
+			<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id305841"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%M}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id305877"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
+	</div><div class="refsect1" lang="en"><a name="id305889"></a><h2>Bugs</h2><p>
 			Drawing to root or some other desktop window directly doesn't work with
 			all window managers. Especially doesn't work well with Gnome and it has
 			been reported that it doesn't work with KDE either. Nautilus can be
@@ -1306,14 +1339,14 @@
 			find the window to draw to. You can also use -o argument which makes
 			Conky to create its own window.  If you do try running Conky in its own
 			window, be sure to read up on the own_window_type settings and experiment.
-		</p></div><div class="refsect1" lang="en"><a name="id322940"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net/" target="_top">
+		</p></div><div class="refsect1" lang="en"><a name="id305904"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net/" target="_top">
 				http://conky.sourceforge.net/</a></p><p><a href="http://www.sourceforge.net/projects/conky" target="_top">
 				http://www.sourceforge.net/projects/conky</a></p><p>
 			#conky on irc.freenode.net
-		</p></div><div class="refsect1" lang="en"><a name="id322965"></a><h2>Copying</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id305926"></a><h2>Copying</h2><p>
 			Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
 			Any original torsmo code is licensed under the BSD license (see LICENSE.BSD for a copy).
 			All code written since the fork of torsmo is licensed under the GPL (see LICENSE.GPL for a copy), except where noted differently (such as in portmon code, timed thread code, and audacious code which are LGPL, and prss which is an MIT-style license).
-		</p></div><div class="refsect1" lang="en"><a name="id267107"></a><h2>Authors</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id305939"></a><h2>Authors</h2><p>
 			The Conky dev team (see AUTHORS for a full list of contributors).
 		</p></div></div></body></html>

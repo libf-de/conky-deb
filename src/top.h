@@ -24,7 +24,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: top.h 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: top.h 1154 2008-06-14 18:41:12Z IQgryn $ */
+
+#ifndef _top_h_
+#define _top_h_
 
 /* Ensure there's an operating system defined.
  * compile with gcc -DOS ...
@@ -37,8 +40,6 @@
 
 #include "conky.h"
 #define CPU_THRESHHOLD	0	/* threshhold for the cpu diff to appear */
-#include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
 #include <dirent.h>
 #include <string.h>
@@ -53,7 +54,6 @@
 
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
@@ -73,9 +73,41 @@
 #define PROCFS_CMDLINE_TEMPLATE "/proc/%d/cmdline"
 #define MAX_SP 10	// number of elements to sort
 
+enum top_field {
+	TOP_CPU,
+	TOP_NAME,
+	TOP_PID,
+	TOP_MEM,
+	TOP_TIME,
+	TOP_MEM_RES,
+	TOP_MEM_VSIZE
+};
+
 /******************************************
  * Process class						  *
  ******************************************/
+
+struct process {
+	struct process *next;
+	struct process *previous;
+
+	pid_t pid;
+	char *name;
+	float amount;
+	// User and kernel times are in hundredths of seconds
+	unsigned long user_time;
+	unsigned long total;
+	unsigned long kernel_time;
+	unsigned long previous_user_time;
+	unsigned long previous_kernel_time;
+	unsigned long total_cpu_time;
+	unsigned int vsize;
+	unsigned int rss;
+	unsigned int time_stamp;
+	unsigned int counted;
+	unsigned int changed;
+	float totalmem;
+};
 
 struct sorted_process {
 	struct sorted_process *greater;
@@ -85,3 +117,5 @@ struct sorted_process {
 
 /* Pointer to head of process list */
 void process_find_top(struct process **, struct process **);
+
+#endif /* _top_h_ */

@@ -1,4 +1,4 @@
-/* $Id: libtcp-portmon.h 1007 2008-02-20 20:30:45Z IQgryn $ */
+/* $Id: libtcp-portmon.h 1154 2008-06-14 18:41:12Z IQgryn $ */
 
 /* libtcp-portmon.h:  tcp port monitoring library.
  *
@@ -41,6 +41,7 @@
 #define TCP_CONNECTION_STARTING_AGE 1
 #define TCP_CONNECTION_HASH_KEY_SIZE 28
 #define TCP_PORT_MONITOR_HASH_KEY_SIZE 12
+#define MAX_PORT_MONITOR_CONNECTIONS_DEFAULT 256
 
 /* -------------------------------------------------------------------
  * IMPLEMENTATION INTERFACE

@@ -10,11 +10,11 @@ Build-Depends: debhelper (>= 5.0.0), quilt, libx11-dev, libxft-dev,
  libdevstat-dev [kfreebsd-i386 kfreebsd-amd64]
 Vcs-Svn: svn://svn.debian.org/svn/collab-maint/deb-maint/conky
 Homepage: http://conky.sf.net
-Standards-Version: 3.7.3
+Standards-Version: 3.8.0
 
 Package: conky
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}
 Description: highly configurable system monitor for X based on torsmo
  Conky is a system monitor for X originally based on the torsmo code.
  Since its original conception, Conky has changed a fair bit from its

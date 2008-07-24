@@ -1,8 +1,8 @@
-Index: conky-1.5.1/doc/conky.1
+Index: conky-1.6.0/doc/conky.1
 ===================================================================
---- conky-1.5.1.orig/doc/conky.1	2008-04-01 04:06:16.000000000 +0000
-+++ conky-1.5.1/doc/conky.1	2008-04-01 11:42:03.000000000 +0000
-@@ -64,7 +64,7 @@
+--- conky-1.6.0.orig/doc/conky.1	2008-07-23 14:13:07.000000000 +0000
++++ conky-1.6.0/doc/conky.1	2008-07-23 14:14:27.000000000 +0000
+@@ -44,7 +44,7 @@
  Conky is generally very good on resources. That said, the more you try to make Conky
  do, the more resources it is going to consume.
  .PP
@@ -11,7 +11,7 @@ Index: conky-1.5.1/doc/conky.1
  Saves you the trouble of having to kill and then restart. You can now also do the same with SIGHUP.
  .SH OPTIONS
  Command line options override configurations defined in configuration file.
-@@ -102,7 +102,7 @@
+@@ -86,7 +86,7 @@
  
  .TP 
  \fB\*(T<\fB\-t | \-\-text=\fR\*(T>\fR\*(T<\fBTEXT\fR\*(T>
@@ -20,7 +20,7 @@ Index: conky-1.5.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fB\-u | \-\-interval=\fR\*(T>\fR\*(T<\fBSECONDS\fR\*(T>
-@@ -229,17 +229,17 @@
+@@ -181,12 +181,12 @@
  
  .TP 
  \fB\*(T<\fBgap_x\fR\*(T>\fR
@@ -35,13 +35,16 @@ Index: conky-1.5.1/doc/conky.1
  e.g. gap_y 10.
  
  .TP 
+@@ -195,7 +195,7 @@
+ 
+ .TP 
  \fB\*(T<\fBimap\fR\*(T>\fR
 -Default global IMAP server. Arguments are: "host user pass [-i interval] [-f folder] [-p port] [-e command]". Default port is 143, default folder is 'INBOX', default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 +Default global IMAP server. Arguments are: "host user pass [\-i interval] [\-f folder] [\-p port] [\-e command]". Default port is 143, default folder is 'INBOX', default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
  
  .TP 
  \fB\*(T<\fBmail_spool\fR\*(T>\fR
-@@ -342,7 +342,7 @@
+@@ -298,7 +298,7 @@
  
  .TP 
  \fB\*(T<\fBpop3\fR\*(T>\fR
@@ -50,7 +53,7 @@ Index: conky-1.5.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBshort_units\fR\*(T>\fR
-@@ -881,11 +881,11 @@
+@@ -805,11 +805,11 @@
  
  .TP 
  \fB\*(T<\fBimap_messages\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -64,7 +67,7 @@ Index: conky-1.5.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBioscheduler\fR\*(T>\fR \*(T<\fBdisk\fR\*(T> 
-@@ -916,7 +916,7 @@
+@@ -848,7 +848,7 @@
  
  .TP 
  \fB\*(T<\fBmboxscan\fR\*(T>\fR \*(T<\fB(\-n number of messages to print) (\-fw from width) (\-sw subject width) mbox\fR\*(T> 
@@ -73,7 +76,7 @@ Index: conky-1.5.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBmem\fR\*(T>\fR 
-@@ -1045,11 +1045,11 @@
+@@ -1007,11 +1007,11 @@
  
  .TP 
  \fB\*(T<\fBpop3_unseen\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -87,7 +90,16 @@ Index: conky-1.5.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBpre_exec\fR\*(T>\fR \*(T<\fBshell command\fR\*(T> 
-@@ -1125,26 +1125,26 @@
+@@ -1027,7 +1027,7 @@
+ 
+ .TP 
+ \fB\*(T<\fBscroll\fR\*(T>\fR \*(T<\fBlength text\fR\*(T> 
+-Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
++Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'\(hysign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
+ 
+ .TP 
+ \fB\*(T<\fBshadecolor\fR\*(T>\fR \*(T<\fB(color)\fR\*(T> 
+@@ -1099,26 +1099,26 @@
  .br
  \fBlservice\fR - local service name from /etc/services
  
@@ -121,7 +133,7 @@ Index: conky-1.5.1/doc/conky.1
  displays the local service name of the fifteenth connection in the range of all ports
  
  Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors.
-@@ -1370,9 +1370,9 @@
+@@ -1352,9 +1352,9 @@
  all window managers. Especially doesn't work well with Gnome and it has
  been reported that it doesn't work with KDE either. Nautilus can be
  disabled from drawing to desktop with program gconf-editor. Uncheck
@@ -134,3 +146,12 @@ Index: conky-1.5.1/doc/conky.1
  Conky to create its own window. If you do try running Conky in its own
  window, be sure to read up on the own_window_type settings and experiment.
  .SH "SEE ALSO"
+@@ -1366,7 +1366,7 @@
+ .SH COMPILING
+ For users compiling from source on a binary distro, make sure you have the X development
+ libraries installed. This should be a package along the lines of "libx11-dev" or
+-"xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
++"xorg-x11-dev" for X11 libs, and similar "\(hydev" format for the other libs required (depending
+ on your configure options).
+ .PP
+ Conky has (for some time) been available in the repositories of most popular distributions.

@@ -1,4 +1,4 @@
-/* $Id: timed_thread.h 1076 2008-03-29 11:35:02Z n0-1 $ */
+/* $Id: timed_thread.h 1154 2008-06-14 18:41:12Z IQgryn $ */
 
 /* timed_thread.h: Abstraction layer for timed threads
  *
@@ -21,6 +21,8 @@
 
 #ifndef _TIMED_THREAD_H_
 #define _TIMED_THREAD_H_
+
+#include <stdlib.h>
 
 /* 10000 microseconds = 10 ms =  0.01 sec */
 #define MINIMUM_INTERVAL_USECS 10000

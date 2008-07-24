@@ -1,4 +1,4 @@
-/* $Id: prss.c 1078 2008-03-29 12:44:29Z n0-1 $
+/* $Id: prss.c 1164 2008-06-19 06:17:53Z IQgryn $
  *
  * Copyright (c) 2007 Mikko Sysikaski <mikko.sysikaski@gmail.com>
  *					  Toni Spets <toni.spets@gmail.com>
@@ -15,13 +15,10 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include "config.h"
+#include "conky.h"
 #include "prss.h"
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #ifndef PARSE_OPTIONS
 #define PARSE_OPTIONS 0
@@ -171,7 +168,7 @@ static inline int parse_rss_2_0(PRSS *res, xmlNodePtr root)
 		}
 	}
 
-	res->version = strdup("2.0");
+	res->version = strndup("2.0", text_buffer_size);
 	res->items = malloc(items * sizeof(PRSS_Item));
 	res->item_count = 0;
 
@@ -200,7 +197,7 @@ static inline int parse_rss_1_0(PRSS *res, xmlNodePtr root)
 		}
 	}
 
-	res->version = strdup("1.0");
+	res->version = strndup("1.0", text_buffer_size);
 	res->items = malloc(items * sizeof(PRSS_Item));
 	res->item_count = 0;
 

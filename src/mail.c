@@ -23,15 +23,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: mail.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: mail.c 1154 2008-06-14 18:41:12Z IQgryn $ */
 
 #include <sys/stat.h>
 #include <sys/time.h>
 
 #include <dirent.h>
 #include <errno.h>
-#include <stdio.h>
-#include <string.h>
 
 #include "conky.h"
 

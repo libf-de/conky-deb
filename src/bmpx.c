@@ -22,13 +22,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: bmpx.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: bmpx.c 1154 2008-06-14 18:41:12Z IQgryn $ */
 
 #include <bmp/dbus.hh>
 #include <dbus/dbus-glib.h>
-
-#include <stdio.h>
-#include <string.h>
 
 #include "conky.h"
 
@@ -39,6 +36,8 @@ static DBusGConnection *bus;
 static DBusGProxy *remote_object;
 static int connected = 0;
 static char *unknown = "unknown";
+
+void fail(GError *error);
 
 void update_bmpx()
 {
@@ -54,14 +53,16 @@ void update_bmpx()
 		bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
 		if (bus == NULL) {
 			ERR("BMPx error 1: %s\n", error->message);
-			goto fail;
+			fail(error);
+			return;
 		}
 
 		remote_object = dbus_g_proxy_new_for_name(bus, BMP_DBUS_SERVICE,
-			BMP_DBUS_PATH, BMP_DBUS_INTERFACE);
+				BMP_DBUS_PATH, BMP_DBUS_INTERFACE);
 		if (!remote_object) {
 			ERR("BMPx error 2: %s\n", error->message);
-			goto fail;
+			fail(error);
+			return;
 		}
 
 		connected = 1;
@@ -69,16 +70,17 @@ void update_bmpx()
 
 	if (connected == 1) {
 		if (dbus_g_proxy_call(remote_object, "GetCurrentTrack", &error,
-				G_TYPE_INVALID, G_TYPE_INT, &current_track, G_TYPE_INVALID)) {
+					G_TYPE_INVALID, G_TYPE_INT, &current_track, G_TYPE_INVALID)) {
 		} else {
 			ERR("BMPx error 3: %s\n", error->message);
-			goto fail;
+			fail(error);
+			return;
 		}
 
 		if (dbus_g_proxy_call(remote_object, "GetMetadataForListItem", &error,
-				G_TYPE_INT, current_track, G_TYPE_INVALID,
-				DBUS_TYPE_G_STRING_VALUE_HASHTABLE, &metadata,
-				G_TYPE_INVALID)) {
+					G_TYPE_INT, current_track, G_TYPE_INVALID,
+					DBUS_TYPE_G_STRING_VALUE_HASHTABLE, &metadata,
+					G_TYPE_INVALID)) {
 			if (current_info->bmpx.title) {
 				free(current_info->bmpx.title);
 				current_info->bmpx.title = 0;
@@ -105,31 +107,36 @@ void update_bmpx()
 				g_value_get_string(g_hash_table_lookup(metadata, "location"));
 		} else {
 			ERR("BMPx error 4: %s\n", error->message);
-			goto fail;
+			fail(error);
+			return;
 		}
 
 		g_hash_table_destroy(metadata);
 	} else {
-fail:
-		if (error) {
-			g_error_free(error);
-		}
-		if (current_info->bmpx.title) {
-			g_free(current_info->bmpx.title);
-			current_info->bmpx.title = 0;
-		}
-		if (current_info->bmpx.artist) {
-			g_free(current_info->bmpx.artist);
-			current_info->bmpx.artist = 0;
-		}
-		if (current_info->bmpx.album) {
-			g_free(current_info->bmpx.album);
-			current_info->bmpx.album = 0;
-		}
-		current_info->bmpx.title = unknown;
-		current_info->bmpx.artist = unknown;
-		current_info->bmpx.album = unknown;
-		current_info->bmpx.bitrate = 0;
-		current_info->bmpx.track = 0;
+		fail(error);
 	}
+}
+
+void fail(GError *error)
+{
+	if (error) {
+		g_error_free(error);
+	}
+	if (current_info->bmpx.title) {
+		g_free(current_info->bmpx.title);
+		current_info->bmpx.title = 0;
+	}
+	if (current_info->bmpx.artist) {
+		g_free(current_info->bmpx.artist);
+		current_info->bmpx.artist = 0;
+	}
+	if (current_info->bmpx.album) {
+		g_free(current_info->bmpx.album);
+		current_info->bmpx.album = 0;
+	}
+	current_info->bmpx.title = unknown;
+	current_info->bmpx.artist = unknown;
+	current_info->bmpx.album = unknown;
+	current_info->bmpx.bitrate = 0;
+	current_info->bmpx.track = 0;
 }

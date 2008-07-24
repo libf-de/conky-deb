@@ -33,143 +33,95 @@
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
-<td align="center">color0</td>
+<td align="center">colorN</td>
 <td>
-			A color variable for use inside TEXT segments
+			Predefine a color for use inside TEXT segments. Substitute N by a digit between 0 and 9, inclusively. When specifying the color value in hex, omit the leading hash (#).
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
-<td align="center">color1</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">color2</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">color3</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">color4</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">color5</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">color6</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">color7</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">color8</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">color9</td>
-<td>
-			A color variable for use inside TEXT segments
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
 <td align="center">cpu_avg_samples</td>
 <td>
 			The number of samples to average for CPU monitoring
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">top_cpu_separate</td>
 <td>
 			If true, cpu in top will show usage of one processor's power.  If false, cpu in top will show the usage of all processors' power combined.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">default_color</td>
 <td>
 			Default color and border color
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">default_outline_color</td>
 <td>
 			Default outline color
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">default_shade_color</td>
 <td>
 			Default shading color and border's shading color
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">double_buffer</td>
 <td>
 			Use the Xdbe extension? (eliminates flicker) It is highly recommended to use own window with this one so double buffer won't be so big.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">draw_borders</td>
 <td>
 			Draw borders around text?
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">draw_graph_borders</td>
 <td>
 			Draw borders around graphs?
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">draw_outline</td>
 <td>
 			Draw outlines?
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">draw_shades</td>
 <td>
 			Draw shades?
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">font</td>
 <td>
 			Font name in X, xfontsel can be used to get a nice font
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">gap_x</td>
 <td>
 			Gap, in pixels, between right or left border of screen, same as passing -x at command line,
 			e.g. gap_x 10
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">gap_y</td>
 <td>
 			Gap, in pixels, between top or bottom border of screen, same as passing -y at command line,
 			e.g. gap_y 10.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">if_up_strictness</td>
+<td>
+			How strict should if_up be when testing an interface for being up? The value is one of up, link or address, to check for the interface being solely up, being up and having link or being up, having link and an assigned IP address.
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -206,7 +158,7 @@
 <tr bgcolor="#fffafa">
 <td align="center">text_buffer_size</td>
 <td>
-			Size of the standard text buffer (default is 128 bytes).  This buffer is used for intermediary text, such as individual lines, output from $exec vars, and various other variables.  Increasing the size of this buffer can drastically reduce Conky's performance, but will allow for more text display per variable.  The size of this buffer cannot be smaller than the default value of 128 bytes.
+			Size of the standard text buffer (default is 256 bytes).  This buffer is used for intermediary text, such as individual lines, output from $exec vars, and various other variables.  Increasing the size of this buffer can drastically reduce Conky's performance, but will allow for more text display per variable.  The size of this buffer cannot be smaller than the default value of 256 bytes.
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -304,7 +256,7 @@
 <tr bgcolor="#fffafa">
 <td align="center">own_window_type</td>
 <td>
-			if own_window is yes, you may specify type normal, desktop or override (default: normal).
+			if own_window is yes, you may specify type normal, desktop, dock or override (default: normal).
 			Desktop windows are special windows that have no window decorations; are always visible
 			on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
 			Override windows are not under the control of the window manager.  Hints are ignored. This type
@@ -333,6 +285,18 @@
 <td align="center">short_units</td>
 <td>
 			Shortens units to a single character (kiB-&gt;k, GiB-&gt;G, etc.).  Default is off.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">show_graph_scale</td>
+<td>
+		        Shows the maximum value in scaled graphs.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">show_graph_range</td>
+<td>
+		        Shows the time range covered by a graph.
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">

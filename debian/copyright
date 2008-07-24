@@ -5,7 +5,8 @@ This package was debianized by Jason Tan <jtan325@gmail.com>.
 The Debian package was maintained by Bartosz Fenski <fenio@debian.org>
 from version 1.4.1-1 to 1.4.4-1.
 
-The Debian package is currently maintained by Kapil Hari Paranjape <kapil@debian.org>
+The Debian package is currently maintained by
+Kapil Hari Paranjape <kapil@debian.org>
 
 Some modifications were made by Steve Langasek <vorlon@debian.org>
 and Laszlo Boszormenyi (GCS) <gcs@debian.hu>.
@@ -31,11 +32,13 @@ Each such file should be deemed to carry a notice as follows:
 
 Upstream source:
 ----------------
-The upstream source was downloaded from http://www.sourceforge.net/projects/conky
+The upstream source was downloaded from
+http://www.sourceforge.net/projects/conky
 
 THe upstream source is a fork of the torsmo project.
 
-The current upstream maintainer is Brendan Matthews <brenden1@users.sourceforge.net>.
+The current upstream maintainer is
+Brendan Matthews <brenden1@users.sourceforge.net>.
 The complete list of authors of the upstream code can be found in the
 file AUTHORS which is reproduced below.
 
@@ -47,11 +50,12 @@ states:
 
    All code written since the fork of torsmo is licensed under the GPL
    (see LICENSE.GPL for a copy), except where noted differently (such as
-   in portmon code, timed thread code, and audacious code which are LGPL,
-   and prss which is an MIT-style license).
+   in portmon code, timed thread code, and audacious code which are
+   LGPL, and prss which is an MIT-style license).
 
    Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
-   Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+   Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al.
+   (see AUTHORS)
    All rights reserved.
 
 Full texts of licenses:

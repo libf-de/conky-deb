@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: Makefile.am 981 2007-10-23 21:52:11Z pkovacs $
+# $Id: Makefile.am 1218 2008-07-07 20:09:37Z pkovacs $
 
 SUBDIRS = 					\
 	src 					\
@@ -43,8 +43,7 @@ EXTRA_DIST = 					\
 	extras/vim/ftdetect/conkyrc.vim		\
 	extras/vim/syntax/conkyrc.vim
 
-ACLOCAL_AMFLAGS =				\
-	-I m4
+ACLOCAL_AMFLAGS = -I m4
 
 distclean-local:
 	/bin/rm -rf *.cache *~

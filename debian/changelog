@@ -1,3 +1,34 @@
+conky (1.6.0-1) unstable; urgency=low
+
+  * New upstream release (1.6.0).
+    - incorporates debian patches
+      + for mail spool.
+      + for usage message.
+      + for null text strings.
+    - fix segfault on signal. (Closes: #474732)
+    - uses variable output_methods instead of out_to_console.
+      (Closes: #487184)
+    - has default arguments for 'diskiograph'. (Closes: #487770)
+    - numerous other new features. See upstream Changelog.
+  * debian/patches:
+    - fix_mail_spool, upstream_fix_usage,
+      upstream_null_text: removed these patches as they are no longer
+      required.
+    - avoid_linking_with_libm: removed this patch as conky uses "log"
+      from the C math library.
+    - fix_hyphen_man_page, move_compile_end_man_page: refreshed these
+      patches taking into account new changes to upstream man page.
+    - man_page_typo_first_char: fix un-needed extra first char on the
+      first line of the manpage.
+    - x86_64_rdtsc: patch for 'freq_dyn' on x86_64 from Miroslav Lichvar.
+  * debian/README.Debian: updated remark about features not compiled in.
+  * debian/copyright: wrapped long lines. Thanks "lintian".
+  * debian/control: 
+    - removed 'misc:Depends' entry from Depends.
+    - Standards-Version bumped to 3.8.0. No other changes required.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Thu, 24 Jul 2008 00:55:04 +0000
+
 conky (1.5.1-1) unstable; urgency=low
 
   * New upstream release (1.5.1).
@@ -30,7 +61,7 @@ conky (1.5.1-1) unstable; urgency=low
   * debian/rules: reflect change of name of sample
     config file from conkyrc.sample to conky.conf.
 
- -- Kapil Hari Paranjape <kapil@debian.org>  Wed, 02 Apr 2008 14:48:32 +0530
+ -- Kapil Hari Paranjape <kapil@debian.org>  Wed, 02 Apr 2008 14:56:01 +0530
 
 conky (1.4.9-4) unstable; urgency=low
 

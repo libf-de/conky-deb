@@ -1,6 +1,4 @@
-upstream_fix_usage
-upstream_null_text
-avoid_linking_with_libm
-fix_hyphen_man_page
+x86_64_rdtsc
+man_page_type_first_char
 move_compile_end_man_page
-fix_mail_spool
+fix_hyphen_man_page

@@ -1,4 +1,4 @@
-/* $Id: timed_thread.c 1007 2008-02-20 20:30:45Z IQgryn $ */
+/* $Id: timed_thread.c 1164 2008-06-19 06:17:53Z IQgryn $ */
 
 /* timed_thread.c: Abstraction layer for timed threads
  *
@@ -26,8 +26,6 @@
 #include <pthread.h>
 #include <assert.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
 #ifndef HAVE_CLOCK_GETTIME
 #include <sys/time.h>
@@ -62,6 +60,10 @@ static timed_thread_list *p_timed_thread_list_tail = NULL;
 
 static int now(struct timespec *abstime)
 {
+#ifndef HAVE_CLOCK_GETTIME
+	struct timeval tv;
+#endif
+
 	if (!abstime) {
 		return -1;
 	}
@@ -70,8 +72,6 @@ static int now(struct timespec *abstime)
 	return clock_gettime(CLOCK_REALTIME, abstime);
 #else
 	/* fallback to gettimeofday () */
-	struct timeval tv;
-
 	if (gettimeofday(&tv, NULL) != 0) {
 		return -1;
 	}

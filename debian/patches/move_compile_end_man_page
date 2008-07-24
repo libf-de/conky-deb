@@ -1,18 +1,18 @@
-Index: conky-1.5.1/doc/conky.1
+Index: conky-1.6.0/doc/conky.1
 ===================================================================
---- conky-1.5.1.orig/doc/conky.1	2008-04-02 14:40:50.000000000 +0530
-+++ conky-1.5.1/doc/conky.1	2008-04-02 14:41:15.000000000 +0530
-@@ -30,36 +30,6 @@
- Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches.
+--- conky-1.6.0.orig/doc/conky.1	2008-07-23 11:32:57.000000000 +0000
++++ conky-1.6.0/doc/conky.1	2008-07-23 11:35:17.000000000 +0000
+@@ -40,36 +40,6 @@
+ or stop by #conky on irc.freenode.net if you have questions or want to contribute.
  .PP
  Thanks for your interest in Conky.
 -.SH COMPILING
 -For users compiling from source on a binary distro, make sure you have the X development
--libraries installed. This should be a package along the lines of "libx11-dev" or 
+-libraries installed. This should be a package along the lines of "libx11-dev" or
 -"xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
 -on your configure options).
 -.PP
--Conky has (for some time) been available in the repositories of most popular distributions. 
+-Conky has (for some time) been available in the repositories of most popular distributions.
 -Here are some installation instructions for a few:
 -.PP
 -Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
@@ -39,14 +39,14 @@ Index: conky-1.5.1/doc/conky.1
  .SH "YOU SHOULD KNOW"
  Conky is generally very good on resources. That said, the more you try to make Conky
  do, the more resources it is going to consume.
-@@ -1381,6 +1351,36 @@
+@@ -1393,6 +1363,36 @@
  \(lahttp://www.sourceforge.net/projects/conky\(ra
  .PP
  #conky on irc.freenode.net
 +.SH COMPILING
 +For users compiling from source on a binary distro, make sure you have the X development
 +libraries installed. This should be a package along the lines of "libx11-dev" or
-+"xorg-x11-dev" for X11 libs, and similar "\(hydev" format for the other libs required (depending
++"xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
 +on your configure options).
 +.PP
 +Conky has (for some time) been available in the repositories of most popular distributions.

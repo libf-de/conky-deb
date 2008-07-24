@@ -23,13 +23,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: hddtemp.c 1091 2008-03-31 15:33:54Z n0-1 $ */
+ * $Id: hddtemp.c 1154 2008-06-14 18:41:12Z IQgryn $ */
 
 #include "conky.h"
 #include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -42,7 +39,7 @@
 
 char buf[BUFLEN];
 
-int scan_hddtemp(const char *arg, char **dev, char **addr, int *port)
+int scan_hddtemp(const char *arg, char **dev, char **addr, int *port, char** temp)
 {
 	char buf1[32], buf2[64];
 	int n, ret;
@@ -57,12 +54,12 @@ int scan_hddtemp(const char *arg, char **dev, char **addr, int *port)
 		strncpy(buf1 + 5, buf1, 32 - 5);
 		strncpy(buf1, "/dev/", 5);
 	}
-	*dev = strdup(buf1);
+	*dev = strndup(buf1, text_buffer_size);
 
 	if (ret >= 2) {
-		*addr = strdup(buf2);
+		*addr = strndup(buf2, text_buffer_size);
 	} else {
-		*addr = strdup("127.0.0.1");
+		*addr = strndup("127.0.0.1", text_buffer_size);
 	}
 
 	if (ret == 3) {
@@ -71,13 +68,18 @@ int scan_hddtemp(const char *arg, char **dev, char **addr, int *port)
 		*port = PORT;
 	}
 
+	*temp = malloc(text_buffer_size);
+	memset(*temp, 0, text_buffer_size);
+
 	return 0;
 }
 
 char *get_hddtemp_info(char *dev, char *hostaddr, int port, char *unit)
 {
 	int sockfd = 0;
-	struct hostent *he;
+	struct hostent he, *he_res = 0;
+	int he_errno;
+	char hostbuff[2048];
 	struct sockaddr_in addr;
 	struct timeval tv;
 	fd_set rfds;
@@ -90,102 +92,113 @@ char *get_hddtemp_info(char *dev, char *hostaddr, int port, char *unit)
 		return NULL;
 	}
 
-	he = gethostbyname(hostaddr);
-	if (!he) {
-		perror("gethostbyname");
-		goto out;
-	}
-
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	addr.sin_addr = *((struct in_addr *) he->h_addr);
-	memset(&(addr.sin_zero), 0, 8);
-
-	if (connect(sockfd, (struct sockaddr *) &addr,
-			sizeof(struct sockaddr)) == -1) {
-		perror("connect");
-		goto out;
-	}
-
-	FD_ZERO(&rfds);
-	FD_SET(sockfd, &rfds);
-
-	/* We're going to wait up to a quarter a second to see whether there's
-	 * any data available. Polling with timeout set to 0 doesn't seem to work
-	 * with hddtemp. */
-	tv.tv_sec = 0;
-	tv.tv_usec = 250000;
-
-	i = select(sockfd + 1, &rfds, NULL, NULL, &tv);
-	if (i == -1) {
-		if (errno == EINTR) {	/* silently ignore interrupted system call */
-			goto out;
-		} else {
-			perror("select");
-		}
-	}
-
-	/* No data available */
-	if (i <= 0) {
-		goto out;
-	}
-
-	p = buf;
-	len = 0;
 	do {
-		i = recv(sockfd, p, BUFLEN - (p - buf), 0);
-		if (i < 0) {
-			perror("recv");
-			goto out;
+#ifdef HAVE_GETHOSTBYNAME_R
+		if (gethostbyname_r(hostaddr, &he, hostbuff, sizeof(hostbuff), &he_res, &he_errno)) {	// get the host info
+			ERR("hddtemp gethostbyname_r: %s", hstrerror(h_errno));
+			break;
 		}
-		len += i;
-		p += i;
-	} while (i > 0 && p < buf + BUFLEN - 1);
+#else /* HAVE_GETHOSTBYNAME_R */
+		he_res = gethostbyname(hostaddr);
+		if (!he_res) {
+			perror("gethostbyname");
+			break;
+		}
+#endif /* HAVE_GETHOSTBYNAME_R */
 
-	if (len < 2) {
-		goto out;
-	}
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(port);
+		addr.sin_addr = *((struct in_addr *) he_res->h_addr);
+		memset(&(addr.sin_zero), 0, 8);
 
-	buf[len] = 0;
+		if (connect(sockfd, (struct sockaddr *) &addr,
+					sizeof(struct sockaddr)) == -1) {
+			perror("connect");
+			break;
+		}
 
-	/* The first character read is the separator. */
-	sep = buf[0];
-	p = buf + 1;
+		FD_ZERO(&rfds);
+		FD_SET(sockfd, &rfds);
 
-	while (*p) {
-		if (!strncmp(p, dev, devlen)) {
-			p += devlen + 1;
-			p = strchr(p, sep);
-			if (!p) {
-				goto out;
-			}
-			p++;
-			out = p;
-			p = strchr(p, sep);
-			if (!p) {
-				goto out;
-			}
-			*p = '\0';
-			p++;
-			*unit = *p;
-			if (!strncmp(out, "NA", 2)) {
-				strcpy(buf, "N/A");
-				r = buf;
+		/* We're going to wait up to a quarter a second to see whether there's
+		 * any data available. Polling with timeout set to 0 doesn't seem to work
+		 * with hddtemp. */
+		tv.tv_sec = 0;
+		tv.tv_usec = 250000;
+
+		i = select(sockfd + 1, &rfds, NULL, NULL, &tv);
+		if (i == -1) {
+			if (errno == EINTR) {	/* silently ignore interrupted system call */
+				break;
 			} else {
-				r = out;
+				perror("select");
 			}
-			goto out;
-		} else {
-			for (i = 0; i < 5; i++) {
+		}
+
+		/* No data available */
+		if (i <= 0) {
+			break;
+		}
+
+		p = buf;
+		len = 0;
+		do {
+			i = recv(sockfd, p, BUFLEN - (p - buf), 0);
+			if (i < 0) {
+				perror("recv");
+				break;
+			}
+			len += i;
+			p += i;
+		} while (i > 0 && p < buf + BUFLEN - 1);
+
+		if (len < 2) {
+			break;
+		}
+
+		buf[len] = 0;
+
+		/* The first character read is the separator. */
+		sep = buf[0];
+		p = buf + 1;
+
+		while (*p) {
+			if (!strncmp(p, dev, devlen)) {
+				p += devlen + 1;
 				p = strchr(p, sep);
 				if (!p) {
-					goto out;
+					break;
 				}
 				p++;
+				out = p;
+				p = strchr(p, sep);
+				if (!p) {
+					break;
+				}
+				*p = '\0';
+				p++;
+				*unit = *p;
+				if (!strncmp(out, "NA", 2)) {
+					strncpy(buf, "N/A", BUFLEN);
+					r = buf;
+				} else {
+					r = out;
+				}
+				break;
+			} else {
+				for (i = 0; i < 5; i++) {
+					p = strchr(p, sep);
+					if (!p) {
+						break;
+					}
+					p++;
+				}
+				if (!p && i < 5) {
+					break;
+				}
 			}
 		}
-	}
-out:
+	} while (0);
 	close(sockfd);
 	return r;
 }

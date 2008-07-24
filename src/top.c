@@ -24,7 +24,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: top.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: top.c 1187 2008-06-21 14:18:44Z ngarofil $ */
 
 #include "top.h"
 
@@ -183,7 +183,7 @@ static int process_parse_stat(struct process *process)
 	if (process->name) {
 		free(process->name);
 	}
-	process->name = strdup(deparenthesised_name);
+	process->name = strndup(deparenthesised_name, text_buffer_size);
 	process->rss *= getpagesize();
 
 	if (!cur->memmax) {
@@ -517,7 +517,7 @@ void sp_acopy(struct sorted_process *sp_head, struct process **ar, int max_size)
  * Results are stored in the cpu,mem arrays in decreasing order[0-9]. *
  * ****************************************************************** */
 
-inline void process_find_top(struct process **cpu, struct process **mem)
+void process_find_top(struct process **cpu, struct process **mem)
 {
 	struct sorted_process *spc_head = NULL, *spc_tail = NULL, *spc_cur = NULL;
 	struct sorted_process *spm_head = NULL, *spm_tail = NULL, *spm_cur = NULL;

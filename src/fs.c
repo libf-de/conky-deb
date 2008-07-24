@@ -23,12 +23,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: fs.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: fs.c 1155 2008-06-15 07:08:52Z mirrorbox $ */
 
 #include "conky.h"
 #include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -46,7 +44,7 @@
 #include <sys/mount.h>
 #endif
 
-#ifndef HAVE_STRUCT_STATFS_F_FSTYPENAME
+#if !defined(HAVE_STRUCT_STATFS_F_FSTYPENAME) && !defined(__FreeBSD__)
 #include <mntent.h>
 #endif
 
@@ -126,7 +124,7 @@ static void update_fs_stat(struct fs_stat *fs)
 void get_fs_type(const char *path, char *result)
 {
 
-#ifdef HAVE_STRUCT_STATFS_F_FSTYPENAME
+#if defined(HAVE_STRUCT_STATFS_F_FSTYPENAME) || defined(__FreeBSD__)
 
 	struct statfs s;
 	if (statfs(path, &s) == 0) {

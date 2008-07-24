@@ -1,7 +1,7 @@
 /* smapi.c:  conky support for IBM Thinkpad smapi
  *
  * Copyright (C) 2007 Phil Sutter <Phil@nwl.cc>
- * 
+ *
  * This library is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -17,13 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
  * USA.
  *
- * $Id: smapi.c 1077 2008-03-29 11:49:10Z n0-1 $
+ * $Id: smapi.c 1156 2008-06-15 18:38:33Z IQgryn $
  *
  */
-#include "conky.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
+
+#include "smapi.h"
 
 #define SYS_SMAPI_PATH "/sys/devices/platform/smapi"
 
@@ -50,7 +48,7 @@ char *smapi_read_str(const char *path)
 		fscanf(fp, "%255s\n", str);
 		fclose(fp);
 	}
-	return strdup(str);
+	return strndup(str, text_buffer_size);
 }
 
 int smapi_read_int(const char *path)

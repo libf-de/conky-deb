@@ -1,4 +1,123 @@
-# $Id: ChangeLog 1092 2008-04-01 04:11:14Z brenden1 $
+# $Id: ChangeLog 1228 2008-07-22 01:15:57Z brenden1 $
+
+2008-07-21
+	* Conky 1.6.0 released
+
+2008-07-16
+	* Fixed bug with $if_empty and $mpd_* vars (sf.net #2008752)
+
+2008-07-06
+	* Made log/normal argument for graphs optional
+
+2008-07-03
+	* Solve linking on problems on some systems (like Debian's Lenny)
+
+2008-07-01
+	* Add libgnu convenience lib, modules stdio and getaddrinfo.
+	* Configure option for mathfunctions
+
+2008-06-29
+	* Fixed missing entries in Makefile.am
+	* Get rid of obsolete gethostbyaddr and getservbyport
+
+2008-06-28
+	* Added sysfs AC adapter support patch (thanks Byron)
+	* Added support for EVE-Online skill monitoring (thanks Asbjørn)
+
+2008-06-25
+	* new variables smapi_bat_temp and smapi_bat_power
+	* improved docs for freq_dyn* variables
+
+2008-06-21
+	* Replaced the global text_object array and count with a
+	text_object_list
+	* Renamed various vars
+	* Removed redundancy in various parts
+
+2008-06-20
+	* Use output_methods instead of out_to_console
+	* Made some functions non-inline to compile with gcc 4.2 and higher
+
+2008-06-19
+	* Fixed compilation issues with --enable-testing
+	* Refactored format_seconds and format_seconds_short
+	* Changed addr to print "No Address" when there is no address
+	* Removed redundancy in various parts
+	* Split help output into a separate function
+
+2008-06-17
+	* Made defines of magic numbers
+
+2008-06-16
+	* Moved audacious defs into header
+	* Fixed 3 bufferoverflows in a struct utmp in users.c
+
+2008-06-09
+	* Graphs can now be logarithmic (except execigraph)
+
+2008-06-08
+	* Bugfix, $memgraph wasn't working and needed docs
+	* Code for $lines and $words
+	* Bugfix, $execgraph showed 0-0 instead of 0-100 values
+
+2008-06-07
+	* Case-insensitive values for if_up_strictness 
+	* Fix bug where DEV_NAME can read uninitialised memory
+	* Fix bug where ${if_mounted /}foo$endif prints foo on 1 line for
+	each update instead of just 1 line
+
+2008-06-06
+	* Code for $scroll
+	* Code for $memfree and $memeasyfree
+
+2008-06-05
+	* Fix bug where conky prints everything twice to STDOUT when
+	out_to_console is enabled
+	* Code for show_graph_range
+	* Code for $monitor and $monitor_number
+
+2008-06-04
+	* Fix bug where conky tries to free a already freed pointer when you
+	use gw_iface with a empty routingtable in linux
+	* Fix bug where conky tries to tries to display deleted chars in a
+	string (chars followed by a backspace-char) causing strange output.
+
+2008-06-03
+	* Added NVIDIA Graficcard support patch (thanks meissna)
+	* Added --quiet patch (thanks sceptik)
+
+2008-05-30
+	* Simplified docs for color0-9 config settings and variables.
+	* Improved $if_up for configurable behaviour.
+
+2008-04-29
+	* own_window_type dock patch (thanks Morgan).
+	* Fix for $if_up memleak (thanks Micha¿).
+
+2008-04-12
+	* Added patch for the following (thanks larsko):
+		* New $loadgraph to show a graph of load averages,
+		* add "show_graph_scale" option to turn off/on the showing of the
+		current max value for the graph,
+		* minor code fixes,
+		* update nano and vim syntax highlighting stuff.
+
+2008-04-10
+	* Getting rid of goto usage throughout code.
+	* Fix bug due to usage of gethostbyname() in threads (which is not
+	reentrant) by using gethostbyname_r() when available.
+	* Added patch for battery_time problem on 2.6.24 (thanks wedge).
+	* Added patch to fix broken xmms2 stuff (thanks sleipner).
+	* Added patch to fix SIGHUP/SIGUSR1 segfault (thanks norsetto).
+	* Added patch to improve $if_up (thanks Aseem).
+
+2008-04-02
+	* Added patch to use mail_spool correctly (thanks Kapil)
+	* Replacing strdup() with strndup() throughout
+
+2008-04-01
+	* Fixed segfault when configuration doesn't contain TEXT block (thanks
+	Pippijn).
 
 2008-03-31
 	* Conky 1.5.1 released.

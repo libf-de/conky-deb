@@ -9,8 +9,26 @@
 /* Define if you want BMPx support */
 #undef BMPX
 
+/* Configfile of the user */
+#undef CONFIG_FILE
+
 /* Define for debugging */
 #undef DEBUG
+
+/* Default networkdevice */
+#undef DEFAULTNETDEV
+
+/* Define if you want Eve-Online Skill monitor support */
+#undef EVE
+
+/* Eve skilltree URL */
+#undef EVEURL_SKILLTREE
+
+/* Eve training URL */
+#undef EVEURL_TRAINING
+
+/* Eve output format */
+#undef EVE_OUTPUT_FORMAT
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
@@ -45,8 +63,14 @@
 /* Define to 1 if you have the `free' function. */
 #undef HAVE_FREE
 
+/* Define to 1 if you have the `gethostbyname_r' function. */
+#undef HAVE_GETHOSTBYNAME_R
+
 /* Define to 1 if you have the `getloadavg' function. */
 #undef HAVE_GETLOADAVG
+
+/* Define to 1 if you have the `getnameinfo' function. */
+#undef HAVE_GETNAMEINFO
 
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
@@ -99,6 +123,9 @@
 /* Define to 1 if you have the <netinet/tcp.h> header file. */
 #undef HAVE_NETINET_TCP_H
 
+/* Define to 1 if you have the <NVCtrl/NVCtrl.h> header file. */
+#undef HAVE_NVCTRL_NVCTRL_H
+
 /* Define to 1 if you have the `popen' function. */
 #undef HAVE_POPEN
 
@@ -119,6 +146,9 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strndup' function. */
+#undef HAVE_STRNDUP
 
 /* Define if struct statfs has the f_fstypename member */
 #undef HAVE_STRUCT_STATFS_F_FSTYPENAME
@@ -165,8 +195,17 @@
 /* Define as const if the declaration of iconv() needs const. */
 #undef ICONV_CONST
 
+/* Define if you want math support */
+#undef MATH
+
 /* Define if you want MPD support */
 #undef MPD
+
+/* Textencoding to use */
+#undef MY_ENCODING
+
+/* Define if you want nvidia support */
+#undef NVIDIA
 
 /* Define if you want support for window creating */
 #undef OWN_WINDOW

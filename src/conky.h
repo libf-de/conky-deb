@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: conky.h 1090 2008-03-31 04:56:39Z brenden1 $
+ * $Id: conky.h 1223 2008-07-12 10:25:05Z ngarofil $
  *
  */
 
@@ -34,9 +34,15 @@
 #include <mcheck.h>
 #endif /* HAS_MCHECK_H */
 
+#undef EQUAL
+#undef FALSE
+#undef TRUE
+#define EQUAL 0	//returnvalue of strcmp-variants when strings are equal
+#define FALSE 0
+#define TRUE 1
+
 #include "config.h"
 #include <sys/utsname.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
@@ -49,20 +55,17 @@
 #endif
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-#include <sys/mount.h>
-#include <sys/ucred.h>
-#include <fcntl.h>
-#include <kvm.h>
-#if (defined(i386) || defined(__i386__))
-#include <machine/apm_bios.h>
-#endif /* i386 || __i386__ */
-#endif /* __FreeBSD__ */
+#include "freebsd.h"
+#endif /* __FreeBSD__ || __FreeBSD_kernel__ */
 
 #if defined(__OpenBSD__)
-#include <sys/sysctl.h>
-#include <sys/sensors.h>
-#include <machine/apmvar.h>
+#include "openbsd.h"
 #endif /* __OpenBSD__ */
+
+#ifndef HAVE_STRNDUP
+// use our own strndup() if it's not available
+char *strndup(const char *s, size_t n);
+#endif /* HAVE_STRNDUP */
 
 #ifdef AUDACIOUS
 #include "audacious.h"
@@ -73,27 +76,26 @@
 #endif
 
 #ifdef RSS
-#include "prss.h"
+#include "rss.h"
+#endif
+
+#ifdef EVE
+#include "eve.h"
 #endif
 
 #ifdef SMAPI
 #include "smapi.h"
 #endif
 
+#ifdef NVIDIA
+#include "nvidia.h"
+#endif
+
 #include "mboxscan.h"
 #include "timed_thread.h"
+#include "top.h"
 
-enum {
-	TOP_CPU,
-	TOP_NAME,
-	TOP_PID,
-	TOP_MEM,
-	TOP_TIME,
-	TOP_MEM_RES,
-	TOP_MEM_VSIZE,
-};
-
-#define DEFAULT_TEXT_BUFFER_SIZE 128
+#define DEFAULT_TEXT_BUFFER_SIZE 256
 extern unsigned int text_buffer_size;
 
 /* maximum number of special things, e.g. fonts, offsets, aligns, etc. */
@@ -105,7 +107,7 @@ extern unsigned int text_buffer_size;
 #include <sys/socket.h>
 
 #define ERR(...) { \
-	fprintf(stderr, "Conky: "); \
+	fprintf(stderr, PACKAGE_NAME": "); \
 	fprintf(stderr, __VA_ARGS__); \
 	fprintf(stderr, "\n"); \
 }
@@ -113,21 +115,6 @@ extern unsigned int text_buffer_size;
 /* critical error */
 #define CRIT_ERR(...) \
 	{ ERR(__VA_ARGS__); exit(EXIT_FAILURE); }
-
-struct i8k_struct {
-	char *version;
-	char *bios;
-	char *serial;
-	char *cpu_temp;
-	char *left_fan_status;
-	char *right_fan_status;
-	char *left_fan_rpm;
-	char *right_fan_rpm;
-	char *ac_status;
-	char *buttons_status;
-};
-
-struct i8k_struct i8k;
 
 struct net_stat {
 	const char *dev;
@@ -151,10 +138,6 @@ struct dns_data {
 	int nscount;
 	char **ns_list;
 };
-
-unsigned int diskio_value;
-unsigned int diskio_read_value;
-unsigned int diskio_write_value;
 
 struct fs_stat {
 	char path[DEFAULT_TEXT_BUFFER_SIZE];
@@ -190,70 +173,19 @@ struct mail_s {			// for imap and pop3
 }; */
 
 #ifdef MPD
-struct mpd_s {
-	char *title;
-	char *artist;
-	char *album;
-	char *status;
-	char *random;
-	char *repeat;
-	char *track;
-	char *name;
-	char *file;
-	int volume;
-	unsigned int port;
-	char host[128];
-	char password[128];
-	float progress;
-	int bitrate;
-	int length;
-	int elapsed;
-	int max_title_len;		/* e.g. ${mpd_title 50} */
-};
-
+#include "mpd.h"
 #endif
 
 #ifdef XMMS2
-struct xmms2_s {
-	char *artist;
-	char *album;
-	char *title;
-	char *genre;
-	char *comment;
-	char *url;
-	char *date;
-	char* playlist;
-	int tracknr;
-	int bitrate;
-	unsigned int id;
-	int duration;
-	int elapsed;
-	int timesplayed;
-	float size;
-
-	float progress;
-	char *status;
-};
+#include "xmms2.h"
 #endif
 
 #ifdef AUDACIOUS
-struct audacious_s {
-	audacious_t items;	/* e.g. items[AUDACIOUS_STATUS] */
-	int max_title_len;	/* e.g. ${audacious_title 50} */
-	timed_thread *p_timed_thread;
-};
+#include "audacious.h"
 #endif
 
 #ifdef BMPX
-void update_bmpx(void);
-struct bmpx_s {
-	char *title;
-	char *artist;
-	char *album;
-	char *uri;
-	int bitrate;
-	int track;
-};
+#include "bmpx.h"
 #endif
 
 void update_entropy(void);
@@ -275,9 +207,19 @@ struct gateway_info {
 	int count;
 };
 
+#ifdef X11
+struct monitor_info {
+	int number;
+	int current;
+};
+
+struct x11_info {
+	struct monitor_info monitor;
+};
+#endif
+
 #ifdef TCP_PORT_MONITOR
 #include "libtcp-portmon.h"
-#define MAX_PORT_MONITOR_CONNECTIONS_DEFAULT 256
 #endif
 
 enum {
@@ -323,7 +265,14 @@ enum {
 #endif
 	INFO_USERS = 26,
 	INFO_GW = 27,
-	INFO_DNS = 28
+#ifdef NVIDIA
+	INFO_NVIDIA = 28,
+#endif
+#ifdef X11
+	INFO_X11 = 29,
+#endif
+	INFO_DNS = 30
+
 };
 
 /* get_battery_stuff() item selector */
@@ -332,9 +281,12 @@ enum {
 	BATTERY_TIME
 };
 
-#ifdef MPD
-#include "libmpdclient.h"
-#endif
+/* if_up strictness selector */
+enum {
+	IFUP_UP,
+	IFUP_LINK,
+	IFUP_ADDR
+} ifup_strictness;
 
 /* Update interval */
 double update_interval;
@@ -351,7 +303,7 @@ struct information {
 	double uptime;
 
 	/* memory information in kilobytes */
-	unsigned long long mem, memmax, swap, swapmax;
+	unsigned long long mem, memeasyfree, memfree, memmax, swap, swapmax;
 	unsigned long long bufmem, buffers, cached;
 
 	unsigned short procs;
@@ -370,7 +322,6 @@ struct information {
 	int mail_running;
 #ifdef MPD
 	struct mpd_s mpd;
-	mpd_Connection *conn;
 #endif
 #ifdef XMMS2
 	struct xmms2_s xmms2;
@@ -380,7 +331,7 @@ struct information {
 	xmmsc_connection_t *xmms2_conn;
 #endif
 #ifdef AUDACIOUS
-	struct audacious_s audacious;
+	AUDACIOUS_S audacious;
 #endif
 #ifdef BMPX
 	struct bmpx_s bmpx;
@@ -398,7 +349,15 @@ struct information {
 	struct entropy_s entropy;
 	double music_player_interval;
 
+#ifdef X11
+	struct x11_info x11;
+#endif
+
 	short kflags;	/* kernel settings, see enum KFLAG */
+
+	unsigned int diskio_value;
+	unsigned int diskio_read_value;
+	unsigned int diskio_write_value;
 };
 
 enum {
@@ -416,7 +375,9 @@ enum {
 #define KFLAG_FLIP(a) info.kflags ^= a
 #define KFLAG_ISSET(a) info.kflags & a
 
-int out_to_console;
+#define TO_X 1
+#define TO_STDOUT 2
+int output_methods;
 
 int top_cpu;
 int top_mem;
@@ -429,95 +390,11 @@ char *tmpstring1;
 char *tmpstring2;
 
 #ifdef X11
-/* in x11.c */
-
-#include <X11/Xlib.h>
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-
-#ifdef XFT
-#include <X11/Xft/Xft.h>
-#endif
-
-#ifdef HAVE_XDBE
-#include <X11/extensions/Xdbe.h>
-#endif
-
-#define ATOM(a) XInternAtom(display, #a, False)
-
-#ifdef OWN_WINDOW
-enum _window_type {
-	TYPE_NORMAL = 0,
-	TYPE_DESKTOP,
-	TYPE_OVERRIDE
-};
-
-enum _window_hints {
-	HINT_UNDECORATED = 0,
-	HINT_BELOW,
-	HINT_ABOVE,
-	HINT_STICKY,
-	HINT_SKIP_TASKBAR,
-	HINT_SKIP_PAGER
-};
-
-#define SET_HINT(mask, hint)	(mask |= (1 << hint))
-#define TEST_HINT(mask, hint)	(mask & (1 << hint))
-#endif
-
-struct conky_window {
-	Window root, window, desktop;
-	Drawable drawable;
-	GC gc;
-#ifdef HAVE_XDBE
-	XdbeBackBuffer back_buffer;
-#endif
-#ifdef XFT
-	XftDraw *xftdraw;
-#endif
-
-	int width;
-	int height;
-#ifdef OWN_WINDOW
-	char class_name[256];
-	char title[256];
-	int x;
-	int y;
-	unsigned int type;
-	unsigned long hints;
-#endif
-};
-
-#ifdef HAVE_XDBE
-extern int use_xdbe;
-#endif
-
-#ifdef XFT
-extern int use_xft;
-#endif
-
-extern Display *display;
-extern int display_width;
-extern int display_height;
-extern int screen;
-
-extern int workarea[4];
-
-extern struct conky_window window;
-
-void init_X11(void);
-void init_window(int use_own_window, int width, int height, int set_trans,
-	int back_colour, char **argv, int argc);
-void create_gc(void);
-void set_transparent_background(Window win);
-long get_x11_color(const char *);
-
+#include "x11.h"
 #endif /* X11 */
 
 int cpu_separate;
 int short_units;
-
-/* in common.c */
 
 /* struct that has all info */
 struct information info;
@@ -538,6 +415,10 @@ void free_dns_data(void);
 void update_dns_data(void);
 void update_users(void);
 
+#ifdef X11
+void update_x11info(void);
+#endif
+
 void update_stuff(void);
 
 int round_to_int(float f);
@@ -548,176 +429,31 @@ extern double current_update_time, last_update_time;
 
 extern int no_buffers;
 
-/* system dependant (in linux.c) */
-
-int check_mount(char *s);
-void update_diskio(void);
-void prepare_update(void);
-void update_uptime(void);
-void update_meminfo(void);
-void update_net_stats(void);
-void update_cpu_usage(void);
-void update_total_processes(void);
-void update_running_processes(void);
-void update_i8k(void);
-char get_freq(char *, size_t, const char *, int, unsigned int);
-void get_freq_dynamic(char *, size_t, const char *, int);
-char get_voltage(char *, size_t, const char *, int, unsigned int);	/* ptarjan */
-void update_load_average(void);
-int interface_up(const char *dev);
-char *get_ioscheduler(char *);
-int get_laptop_mode(void);
-void update_gateway_info(void);
-
-int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
-	int *div, char *devtype);
-
-#define open_i2c_sensor(dev, type, n, div, devtype) \
-	open_sysfs_sensor("/sys/bus/i2c/devices/", dev, type, n, div, devtype)
-#define open_platform_sensor(dev, type, n, div, devtype) \
-	open_sysfs_sensor("/sys/bus/platform/devices/", dev, type, n, div, devtype)
-#define open_hwmon_sensor(dev, type, n, div, devtype) \
-	open_sysfs_sensor("/sys/class/hwmon/", dev, type, n, div, devtype)
-
-double get_sysfs_info(int *fd, int arg, char *devtype, char *type);
-
-void get_adt746x_cpu(char *, size_t);
-void get_adt746x_fan(char *, size_t);
-unsigned int get_diskio(void);
-
-int open_acpi_temperature(const char *name);
-double get_acpi_temperature(int fd);
-void get_acpi_ac_adapter(char *, size_t);
-void get_acpi_fan(char *, size_t);
-void get_battery_stuff(char *buf, unsigned int n, const char *bat, int item);
-int get_battery_perct(const char *bat);
-int get_battery_perct_bar(const char *bat);
-void get_ibm_acpi_fan(char *buf, size_t client_buffer_size);
-void get_ibm_acpi_temps(void);
-void get_ibm_acpi_volume(char *buf, size_t client_buffer_size);
-void get_ibm_acpi_brightness(char *buf, size_t client_buffer_size);
-const char *get_disk_protect_queue(const char *);
-void get_cpu_count(void);
-
-struct ibm_acpi_struct {
-	int temps[8];
-};
-
-struct ibm_acpi_struct ibm_acpi;
-
-#if defined(__OpenBSD__)
-void update_obsd_sensors(void);
-void get_obsd_vendor(char *buf, size_t client_buffer_size);
-void get_obsd_product(char *buf, size_t client_buffer_size);
-
-#define OBSD_MAX_SENSORS 256
-struct obsd_sensors_struct {
-	int device;
-	float temp[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
-	unsigned int fan[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
-	float volt[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
-};
-struct obsd_sensors_struct obsd_sensors;
-#endif /* __OpenBSD__ */
-
-enum { PB_BATT_STATUS, PB_BATT_PERCENT, PB_BATT_TIME };
-void get_powerbook_batt_info(char *, size_t, int);
-
-struct process {
-	struct process *next;
-	struct process *previous;
-
-	pid_t pid;
-	char *name;
-	float amount;
-	unsigned long user_time;
-	unsigned long total;
-	unsigned long kernel_time;
-	unsigned long previous_user_time;
-	unsigned long previous_kernel_time;
-	unsigned long total_cpu_time;
-	unsigned int vsize;
-	unsigned int rss;
-	unsigned int time_stamp;
-	unsigned int counted;
-	unsigned int changed;
-	float totalmem;
-};
-
-struct local_mail_s {
-	char *box;
-	int mail_count;
-	int new_mail_count;
-	float interval;
-	time_t last_mtime;
-	double last_update;
-};
-
-void update_top(void);
-void free_all_processes(void);
-struct process *get_first_process(void);
-
-/* fs-stuff is possibly system dependant (in fs.c) */
-
-void update_fs_stats(void);
-struct fs_stat *prepare_fs_stat(const char *path);
-void clear_fs_stats(void);
-
-/* in mixer.c */
-
-int mixer_init(const char *);
-int mixer_get_avg(int);
-int mixer_get_left(int);
-int mixer_get_right(int);
-
-/* in mail.c */
-
-extern char *current_mail_spool;
-
-void update_mail_count(struct local_mail_s *);
-
-/* in freebsd.c */
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-kvm_t *kd;
+#if defined(__linux__)
+#include "linux.h"
 #endif
+
+#include "fs.h"
+#include "mixer.h"
+#include "mail.h"
 
 #if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__) \
 		|| defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
-#ifdef __OpenBSD__
-typedef struct apm_power_info *apm_info_t;
-#endif
 int apm_getinfo(int fd, apm_info_t aip);
 char *get_apm_adapter(void);
 char *get_apm_battery_life(void);
 char *get_apm_battery_time(void);
 #endif
 
-/* in mpd.c */
-#ifdef MPD
-extern void init_mpd_stats(struct information *current_info);
-void *update_mpd(void *) __attribute__((noreturn));
-extern timed_thread *mpd_timed_thread;
-void free_mpd_vars(struct information *current_info);
-#endif /* MPD */
-
-/* in xmms2.c */
-#ifdef XMMS2
-void update_xmms2(void);
-#endif
-
-/* in hddtemp.c */
 #ifdef HDDTEMP
-int scan_hddtemp(const char *arg, char **dev, char **addr, int *port);
-char *get_hddtemp_info(char *dev, char *addr, int port, char *unit);
+#include "hddtemp.h"
 #endif /* HDDTEMP */
 
-/* in rss.c */
-#ifdef RSS
-PRSS *get_rss_info(char *uri, int delay);
-void init_rss_info(void);
-void free_rss_info(void);
-#endif /* RSS */
+/* in nvidia.c */
+#ifdef NVIDIA
 
-/* in linux.c */
+int get_nvidia_value(QUERY_ID qid, Display *dpy, int highorlow);
+
+#endif /* NVIDIA */
 
 #endif

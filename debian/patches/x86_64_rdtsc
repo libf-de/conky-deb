@@ -1,0 +1,38 @@
+Hi,
+
+there is a small bug in rdtsc() function which causes freq_dyn to
+print wrong values. The A contraint doesn't work with rdtsc on x86_64
+as expected, this should fix it:
+
+--- conky-1.6.0/src/linux.c.rdtsc	2008-07-15 03:02:37.000000000 +0200
++++ conky-1.6.0/src/linux.c	2008-07-22 13:56:04.000000000 +0200
+@@ -1061,9 +1061,11 @@ void get_adt746x_cpu(char *p_client_buff
+ unsigned long long int rdtsc(void)
+ {
+ 	unsigned long long int x;
++	unsigned int a, d;
+ 
+-	__asm__ volatile(".byte 0x0f, 0x31":"=A" (x));
+-	return x;
++	__asm__ volatile(".byte 0x0f, 0x31":"=a" (a),"=d" (d));
++	x = d;
++	return x << 32 | a;
+ }
+ #endif
+ 
+
+Thanks,
+
+-- 
+Miroslav Lichvar
+
+-------------------------------------------------------------------------
+This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
+Build the coolest Linux based applications with Moblin SDK & win great prizes
+Grand prize is a trip for two to an Open Source event anywhere in the world
+http://moblin-contest.org/redirect.php?banner_id=100&url=/
+_______________________________________________
+Conky-development mailing list
+Conky-development@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/conky-development
+
