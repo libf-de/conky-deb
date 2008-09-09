@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: conky.h 1223 2008-07-12 10:25:05Z ngarofil $
+ * $Id: conky.h 1234 2008-08-05 18:43:24Z brenden1 $
  *
  */
 
@@ -156,6 +156,7 @@ struct mail_s {			// for imap and pop3
 	unsigned long used;
 	unsigned long quota;
 	unsigned long port;
+	unsigned int retries;
 	float interval;
 	double last_update;
 	char host[128];
@@ -448,12 +449,5 @@ char *get_apm_battery_time(void);
 #ifdef HDDTEMP
 #include "hddtemp.h"
 #endif /* HDDTEMP */
-
-/* in nvidia.c */
-#ifdef NVIDIA
-
-int get_nvidia_value(QUERY_ID qid, Display *dpy, int highorlow);
-
-#endif /* NVIDIA */
 
 #endif

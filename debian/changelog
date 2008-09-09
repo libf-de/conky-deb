@@ -1,21 +1,18 @@
-conky (1.6.0-2+lenny1) oldstable; urgency=low
+conky (1.6.1-1) unstable; urgency=low
 
-  * Patch TEMP-0612033-026F3E: security issue in Conky's "eve" module, which
-    causes Conky to be vulnerable to rewriting any user file.
-
- -- Vincent Cheng <Vincentc1208@gmail.com>  Wed, 27 Jul 2011 18:29:12 -0700
-
-conky (1.6.0-2) testing; urgency=low
-
-  * Backport of fixes from version 1.6.1-1.
-    Target "testing" release.
-  * debian/patches/ifaddr_buffer_overflow: fix buffer
-    overflow in update_net_stats. Thanks to Miroslav Lichvar.
+  * New upstream release (1.6.1).
+  * debian/patches:
+    - man_page_typo_first_char: removed, incorporated upstream.
+    - fix_hyphen_man_page, move_compile_end_man_page: refreshed these
+      patches taking into account new changes to upstream man page.
+    - ifaddr_buffer_overflow: fix buffer overflow in
+      update_net_stats. Thanks to Miroslav Lichvar.
+  * debian/control: added "mpd" to Suggests.
   * debian/NEWS: documented the need to re-examine the conky
     configuration file for the changes since version 1.5.x.
     Closes: #495864.
 
- -- Kapil Hari Paranjape <kapil@debian.org>  Mon, 15 Sep 2008 08:37:26 +0530
+ -- Kapil Hari Paranjape <kapil@debian.org>  Tue, 09 Sep 2008 12:33:28 +0530
 
 conky (1.6.0-1) unstable; urgency=low
 

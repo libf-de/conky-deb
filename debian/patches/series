@@ -1,6 +1,4 @@
 ifaddr_buffer_overflow
 x86_64_rdtsc
-man_page_type_first_char
 move_compile_end_man_page
 fix_hyphen_man_page
-fix-race-condition.patch

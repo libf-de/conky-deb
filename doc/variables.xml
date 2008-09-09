@@ -1079,7 +1079,7 @@
 			<option>(args)</option>
 		</term>
 		<listitem>
-			Displays the number of messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 143, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+			Displays the number of messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command] [-r retries]".  Default port is 143, default interval is 5 minutes, and default number of retries before giving up is 5.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 			<para></para></listitem>
 	</varlistentry>
 
@@ -1089,7 +1089,7 @@
 			<option>(args)</option>
 		</term>
 		<listitem>
-			Displays the number of unseen messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 143, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+			Displays the number of unseen messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command] [-r retries]".  Default port is 143, default interval is 5 minutes, and default number of retries before giving up is 5.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 			<para></para></listitem>
 	</varlistentry>
 
@@ -1454,12 +1454,25 @@
 		</term>
 		<listitem>
 			Nvidia graficcard support for the XNVCtrl library.
-			Each option gives back one integer value:
-			(threshold): the thresholdtemperature at which the gpu slows down
-			(temp): gives the gpu current temperature
-			(gpufreq): gives the current gpu frequency
-			(memfreq): gives the current mem frequency
-			(imagequality): which imagequality should be choosen by OpenGL applications
+			Each option can be shortened to the least significant part.
+			Temperatures are printed as float, all other values as integer.
+			<simplelist>
+				<member><command>threshold</command>:
+					the thresholdtemperature at which the gpu slows down
+				</member>
+				<member><command>temp</command>:
+					gives the gpu current temperature
+				</member>
+				<member><command>gpufreq</command>:
+					gives the current gpu frequency
+				</member>
+				<member><command>memfreq</command>:
+					gives the current mem frequency
+				</member>
+				<member><command>imagequality</command>:
+					which imagequality should be choosen by OpenGL applications
+				</member>
+			</simplelist>
 			<para></para>
 		</listitem>
 	</varlistentry>
@@ -1522,7 +1535,7 @@
 			<option>(args)</option>
 		</term>
 		<listitem>
-			Displays the number of unseen messages in your global POP3 inbox by default.  You can define individual POP3 inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+			Displays the number of unseen messages in your global POP3 inbox by default.  You can define individual POP3 inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command] [-r retries]".  Default port is 110, default interval is 5 minutes, and default number of retries before giving up is 5.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 
 			<para></para></listitem>
 	</varlistentry>
@@ -1533,7 +1546,7 @@
 			<option>(args)</option>
 		</term>
 		<listitem>
-			Displays the amount of space (in MiB, 2^20) used in your global POP3 inbox by default.  You can define individual POP3 inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+			Displays the amount of space (in MiB, 2^20) used in your global POP3 inbox by default.  You can define individual POP3 inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command] [-r retries]".  Default port is 110, default interval is 5 minutes, and default number of retries before giving up is 5.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 
 			<para></para></listitem>
 	</varlistentry>

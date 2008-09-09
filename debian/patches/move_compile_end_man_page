@@ -1,7 +1,7 @@
-Index: conky-1.6.0/doc/conky.1
+Index: conky-1.6.1/doc/conky.1
 ===================================================================
---- conky-1.6.0.orig/doc/conky.1	2008-07-23 11:32:57.000000000 +0000
-+++ conky-1.6.0/doc/conky.1	2008-07-23 11:35:17.000000000 +0000
+--- conky-1.6.1.orig/doc/conky.1	2008-09-08 09:25:08.000000000 +0530
++++ conky-1.6.1/doc/conky.1	2008-09-08 09:25:17.000000000 +0530
 @@ -40,36 +40,6 @@
  or stop by #conky on irc.freenode.net if you have questions or want to contribute.
  .PP
@@ -39,7 +39,7 @@ Index: conky-1.6.0/doc/conky.1
  .SH "YOU SHOULD KNOW"
  Conky is generally very good on resources. That said, the more you try to make Conky
  do, the more resources it is going to consume.
-@@ -1393,6 +1363,36 @@
+@@ -1404,6 +1374,36 @@
  \(lahttp://www.sourceforge.net/projects/conky\(ra
  .PP
  #conky on irc.freenode.net
