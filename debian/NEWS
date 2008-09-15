@@ -1,3 +1,12 @@
+conky (1.6.0-1) unstable; urgency=low
+
+    User's may find that older conky configuration files give
+    unexpected results. This is because some buffer sizes have been
+    "optimized". For the details about these changes please refer
+    to the man page.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Tue, 09 Sep 2008 08:44:42 +0530
+
 conky (1.5.1-1) unstable; urgency=low
 
     The system default config file for conky is an external
