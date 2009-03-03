@@ -1,3 +1,15 @@
+conky (1.6.1-2) unstable; urgency=low
+
+  * debian/patches: Incorporate patches from ubuntu.
+      Thanks to Cesare Tirabassi.
+    - fix_mem_res.patch: correctly display memory
+      usage for mem_res and mem_vsize for ${top_mem}.
+      Closes: #517622.
+    - fix_exec_buffer_size.patch: fix SIGSEGV due to wrong buffer size
+      being used in all exec* calls.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Tue, 03 Mar 2009 11:06:02 +0530
+
 conky (1.6.1-1) unstable; urgency=low
 
   * New upstream release (1.6.1).
