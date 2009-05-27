@@ -7,7 +7,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -23,21 +23,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: common.c 1193 2008-06-21 20:37:58Z ngarofil $ */
+ */
 
+#include "config.h"
 #include "conky.h"
+#include "fs.h"
+#include "logging.h"
 #include <ctype.h>
 #include <errno.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include "diskio.h"
+
+/* check for OS and include appropriate headers */
+#if defined(__linux__)
+#include "linux.h"
+#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#include "freebsd.h"
+#elif defined(__OpenBSD__)
+#include "openbsd.h"
+#endif
+
+/* OS specific prototypes to be implemented by linux.c & Co. */
+void update_entropy(void);
 
 #ifndef HAVE_STRNDUP
 // use our own strndup() if it's not available
 char *strndup(const char *s, size_t n)
 {
-	if (strlen(s) + 1 > n) {
-		char *ret = malloc(n);
+	if (strlen(s) > n) {
+		char *ret = malloc(n + 1);
 		strncpy(ret, s, n);
+		ret[n] = 0;
 		return ret;
 	} else {
 		return strdup(s);
@@ -182,7 +199,7 @@ void free_dns_data(void)
 
 //static double last_dns_update;
 
-void update_dns_data(void)
+static void update_dns_data(void)
 {
 	FILE *fp;
 	char line[256];
@@ -257,6 +274,7 @@ static double last_meminfo_update;
 static double last_fs_update;
 
 unsigned long long need_mask;
+int no_buffers;
 
 #define NEED(a) ((need_mask & (1 << a)) && ((info.mask & (1 << a)) == 0))
 
@@ -315,18 +333,13 @@ void update_stuff(void)
 
 #ifdef MPD
 	if (NEED(INFO_MPD)) {
-		if (!info.mpd.timed_thread) {
-			init_mpd_stats(&info.mpd);
-			info.mpd.timed_thread = timed_thread_create(&update_mpd,
-				(void *) &info.mpd, info.music_player_interval * 1000000);
-			if (!info.mpd.timed_thread) {
-				ERR("Failed to create MPD timed thread");
-			}
-			timed_thread_register(info.mpd.timed_thread, &info.mpd.timed_thread);
-			if (timed_thread_run(info.mpd.timed_thread)) {
-				ERR("Failed to run MPD timed thread");
-			}
-		}
+		update_mpd();
+	}
+#endif
+
+#ifdef MOC
+	if (NEED(INFO_MOC)) {
+		run_moc_thread(info.music_player_interval * 100000);
 	}
 #endif
 
@@ -379,7 +392,7 @@ void update_stuff(void)
 	}
 #ifdef TCP_PORT_MONITOR
 	if (NEED(INFO_TCP_PORT_MONITOR)) {
-		update_tcp_port_monitor_collection(info.p_tcp_port_monitor_collection);
+		tcp_portmon_update();
 	}
 #endif
 	if (NEED(INFO_ENTROPY)) {

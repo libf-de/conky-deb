@@ -1,3 +1,30 @@
+conky (1.7.0-1) unstable; urgency=low
+
+  * New upstream release (1.7.0).
+    - incorporates fixes from debian/patches
+    - new "out_to_*" options for different output requirements.
+      (Closes: #500053)
+    - numerous other changes; see upstream Changelog and NEWS.Debian in
+      documentation directory.
+  * debian/control:
+    - add "Suggests" for hddtemp. Closes: #518651.
+    - Standards Version bumped to 3.8.1
+  * debian/patches:
+    - removed patches fix_exec_buffer_size.patch, fix_mem_res.patch,
+      ifaddr_buffer_overflow, x86_64_rdtsc; all these have been
+      incorporated upstream.
+    - re-ordered the patches fix_hyphen_man_page, move_compile_end_man_page
+      so that the former can be incorporated upstream; refreshed
+      these patches.
+    - fix_hyphen_man_page: some more minus signs escaped.
+    - added comments to surviving patches.
+  * debian/rules: change the "install" rule since "conky.conf" is now
+    in "data/" subdirectory.
+  * debian/NEWS: updated to warn/inform users about changed configuration
+    options.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Wed, 27 May 2009 21:24:27 +0530
+
 conky (1.6.1-2) unstable; urgency=low
 
   * debian/patches: Incorporate patches from ubuntu.

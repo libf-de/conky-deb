@@ -7,7 +7,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2007 Toni Spets
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -23,9 +23,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: rss.c 1164 2008-06-19 06:17:53Z IQgryn $ */
+ */
 
 #include "conky.h"
+#include "logging.h"
 #include "prss.h"
 #include <time.h>
 #include <assert.h>

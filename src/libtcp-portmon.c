@@ -1,5 +1,3 @@
-/* $Id: libtcp-portmon.c 1218 2008-07-07 20:09:37Z pkovacs $ */
-
 /* libtcp-portmon.c:  tcp port monitoring library.
  *
  * Copyright (C) 2005-2007 Philip Kovacs pkovacs@users.sourceforge.net

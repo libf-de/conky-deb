@@ -1,7 +1,7 @@
 /* Conky, a system monitor, based on torsmo
  *
  * Copyright (c) 2008 Asbjørn Zweidorff Kjær
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: eve.h 1222 2008-07-12 01:22:40Z ngarofil $ */
+ */
 
 #define _GNU_SOURCE
 #define MAXCHARS 4

@@ -7,7 +7,7 @@
 # Please see COPYING for details
 #
 # Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
-# Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+# Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
 # All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: Makefile.am 981 2007-10-23 21:52:11Z pkovacs $
 
 configdir = ${sysconfdir}/conky
 dist_config_DATA = conky.conf

@@ -1,6 +1,2 @@
-fix_exec_buffer_size.patch
-ifaddr_buffer_overflow
-x86_64_rdtsc
-move_compile_end_man_page
 fix_hyphen_man_page
-fix_mem_res.patch
+move_compile_end_man_page

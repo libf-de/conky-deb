@@ -1,5 +1,3 @@
-/* $Id: audacious.h 1159 2008-06-16 19:40:28Z pkovacs $ */
-
 /* audacious.h:  conky support for audacious music player
  *
  * Copyright (C) 2005-2007 Philip Kovacs pkovacs@users.sourceforge.net
@@ -37,10 +35,11 @@ enum _audacious_items {
 	AUDACIOUS_FILENAME,
 	AUDACIOUS_PLAYLIST_LENGTH,
 	AUDACIOUS_PLAYLIST_POSITION,
+	AUDACIOUS_MAIN_VOLUME,
 };
 
 /* 12 slots for the audacious values */
-typedef char audacious_t[12][128];
+typedef char audacious_t[13][128];
 
 /* type for data exchange with main thread */
 typedef struct audacious_s {

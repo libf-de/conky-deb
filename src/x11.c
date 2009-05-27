@@ -7,7 +7,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -23,25 +23,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: x11.c 1223 2008-07-12 10:25:05Z ngarofil $ */
+ */
 
+#include "config.h"
 #include "conky.h"
+#include "logging.h"
+#include "common.h"
 
-#ifdef X11
+#include "x11.h"
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xmd.h>
 #include <X11/Xutil.h>
+
 #ifdef XFT
 #include <X11/Xft/Xft.h>
+int use_xft = 0;
 #endif
 
 #ifdef HAVE_XDBE
 int use_xdbe;
-#endif
-
-#ifdef XFT
-int use_xft = 0;
 #endif
 
 /* some basic X11 stuff */
@@ -252,6 +253,9 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 			XWMHints wmHint;
 			Atom xa;
 
+			if (window.type == TYPE_DOCK) {
+				window.x = window.y = 0;
+			}
 			/* Parent is root window so WM can take control */
 			window.window = XCreateWindow(display, window.root, window.x,
 				window.y, w, h, 0, CopyFromParent, InputOutput, CopyFromParent,
@@ -264,7 +268,8 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 			/* allow decorated windows to be given input focus by WM */
 			wmHint.input =
 				TEST_HINT(window.hints, HINT_UNDECORATED) ? False : True;
-			wmHint.initial_state = NormalState;
+			wmHint.initial_state = ((window.type == TYPE_DOCK) ?
+			                        WithdrawnState : NormalState);
 
 			XmbSetWMProperties(display, window.window, window.title, NULL, argv,
 				argc, NULL, &wmHint, &classHint);
@@ -556,4 +561,3 @@ void update_x11info(void)
 	current_info->x11.monitor.number = XScreenCount(display);
 	current_info->x11.monitor.current = XDefaultScreen(display);
 }
-#endif /* X11 */

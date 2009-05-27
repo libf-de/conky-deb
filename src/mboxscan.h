@@ -7,7 +7,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2006 Marco Candrian <mac@calmar.ws>
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: mboxscan.h 1090 2008-03-31 04:56:39Z brenden1 $ */
+ */
 
 #ifndef _MBOXSCAN_H_
 #define _MBOXSCAN_H_

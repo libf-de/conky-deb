@@ -6,7 +6,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -22,12 +22,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: bmpx.c 1154 2008-06-14 18:41:12Z IQgryn $ */
+ */
+
+#include "config.h"
+#include "conky.h"
+#include "logging.h"
 
 #include <bmp/dbus.hh>
 #include <dbus/dbus-glib.h>
-
-#include "conky.h"
 
 #define DBUS_TYPE_G_STRING_VALUE_HASHTABLE \
 	(dbus_g_type_get_map("GHashTable", G_TYPE_STRING, G_TYPE_VALUE))

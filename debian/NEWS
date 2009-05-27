@@ -1,6 +1,26 @@
+conky (1.7.0-1) unstable; urgency=low
+
+    Users may find that older conky configuration files give
+    unexpected results. Specifically,
+
+     - mixer values are percentages
+     - new variables out_to_x, overwrite_file, append_file,
+       out_to_stderr
+     - IBM acpi support is no longer compiled in by default in the
+       Debian package.
+     - changed order of arguments for diskiograph
+     - maximum width for mpd variables
+     - remove freq_dyn and freq_dyn_g
+     - conky in dock mode is a withdrawn window
+
+    See the example "conky.conf" file and the man page for
+    further guidance.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Wed, 27 May 2009 04:46:25 +0530
+
 conky (1.6.0-1) unstable; urgency=low
 
-    User's may find that older conky configuration files give
+    Users may find that older conky configuration files give
     unexpected results. This is because some buffer sizes have been
     "optimized". For the details about these changes please refer
     to the man page.

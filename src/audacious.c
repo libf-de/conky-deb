@@ -1,5 +1,3 @@
-/* $Id: audacious.c 1185 2008-06-21 09:25:37Z IQgryn $ */
-
 /* audacious.c:  conky support for audacious music player
  *
  * Copyright (C) 2005-2007 Philip Kovacs pkovacs@users.sourceforge.net
@@ -19,9 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
  * USA. */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.h"
+#include "conky.h"
+#include "logging.h"
+#include "audacious.h"
 
 #include <glib.h>
 #ifndef AUDACIOUS_LEGACY
@@ -51,9 +50,6 @@
 #define audacious_remote_get_playlist_length(x)		\
 	xmms_remote_get_playlist_length(x)
 #endif
-
-#include "conky.h"
-#include "audacious.h"
 
 /* access to this item array is synchronized */
 static audacious_t audacious_items;
@@ -125,7 +121,7 @@ void *audacious_thread_func(void *pvoid)
 {
 	static audacious_t items;
 	gint playpos, frames, length;
-	gint rate, freq, chans;
+	gint rate, freq, chans, vol;
 	gchar *psong, *pfilename;
 
 #ifndef AUDACIOUS_LEGACY
@@ -233,13 +229,18 @@ void *audacious_thread_func(void *pvoid)
 			/* Playlist position (index of song) */
 			snprintf(items[AUDACIOUS_PLAYLIST_POSITION],
 					sizeof(items[AUDACIOUS_PLAYLIST_POSITION]) - 1, "%d", playpos + 1);
+			/* Main volume */
+			vol = audacious_remote_get_main_volume(session);
+			snprintf(items[AUDACIOUS_MAIN_VOLUME],
+					sizeof(items[AUDACIOUS_MAIN_VOLUME]) - 1, "%d", vol);
+
 		} while (0);
 		/* Deliver the refreshed items array to audacious_items. */
 		timed_thread_lock(info.audacious.p_timed_thread);
 		memcpy(&audacious_items, items, sizeof(items));
 		timed_thread_unlock(info.audacious.p_timed_thread);
 
-		if (timed_thread_test(info.audacious.p_timed_thread)) {
+		if (timed_thread_test(info.audacious.p_timed_thread, 0)) {
 #ifndef AUDACIOUS_LEGACY
 			/* release reference to dbus proxy */
 			g_object_unref(session);

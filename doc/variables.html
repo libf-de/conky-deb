@@ -45,55 +45,48 @@
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
-<td align="center">acpitempf</td>
-<td align="center"></td>
-<td>
-			ACPI temperature in F.
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
 <td align="center">adt746xcpu</td>
 <td align="center"></td>
 <td>
 			CPU temperature from therm_adt746x
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">adt746xfan</td>
 <td align="center"></td>
 <td>
 			Fan speed from therm_adt746x
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">alignr</td>
 <td align="center">(num)</td>
 <td>
 			Right-justify text, with space of N
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">alignc</td>
 <td align="center">(num)</td>
 <td>
 			Align text to centre
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">apm_adapter</td>
 <td align="center"></td>
 <td>
 			Display APM AC adapter status (FreeBSD only)
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">apm_battery_life</td>
 <td align="center"></td>
 <td>
 			Display APM battery life in percent (FreeBSD only)
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">apm_battery_time</td>
 <td align="center"></td>
 <td>
@@ -101,95 +94,102 @@
 			AC adapterstatus is on-line or charging (FreeBSD only)
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">audacious_bar</td>
 <td align="center">(height),(width)</td>
 <td>
 			Progress bar
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">audacious_bitrate</td>
 <td align="center"></td>
 <td>
 			Bitrate of current tune
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">audacious_channels</td>
 <td align="center"></td>
 <td>
 			Number of audio channels of current tune
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">audacious_filename</td>
 <td align="center"></td>
 <td>
 			Full path and filename of current tune
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">audacious_frequency</td>
 <td align="center"></td>
 <td>
 			Sampling frequency of current tune
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">audacious_length</td>
 <td align="center"></td>
 <td>
 			Total length of current tune as MM:SS
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">audacious_length_seconds</td>
 <td align="center"></td>
 <td>
 			Total length of current tune in seconds
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">audacious_playlist_position</td>
 <td align="center"></td>
 <td>
 			Playlist position of current tune
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">audacious_playlist_length</td>
 <td align="center"></td>
 <td>
 			Number of tunes in playlist
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">audacious_position</td>
 <td align="center"></td>
 <td>
 			Position of current tune (MM:SS)
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">audacious_position_seconds</td>
 <td align="center"></td>
 <td>
 			Position of current tune in seconds
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">audacious_status</td>
 <td align="center"></td>
 <td>
 			Player status (Playing/Paused/Stopped/Not running)
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">audacious_title</td>
 <td align="center">(max length)</td>
 <td>
 			Title of current tune with optional maximum length specifier
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">audacious_main_volume</td>
+<td align="center"></td>
+<td>
+			The current volume fetched from Audacious
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
@@ -200,279 +200,287 @@
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">battery_short</td>
+<td align="center">(num)</td>
+<td>
+			Battery status and remaining percentage capacity of ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+			This mode display a short status, which means that C is displayed instead of charging and D is displayed instead of discharging.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">battery_bar</td>
 <td align="center">(height),(width) (num)</td>
 <td>
 			Battery percentage remaining of ACPI battery in a bar.  ACPI battery number can be given as argument (default is BAT0).
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">battery_percent</td>
 <td align="center">(num)</td>
 <td>
 			Battery percentage remaining for ACPI battery.  ACPI battery number can be given as argument (default is BAT0).
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">battery_time</td>
 <td align="center">(num)</td>
 <td>
 			Battery charge/discharge time remaining of ACPI battery.  ACPI battery number can be given as argument (default is BAT0).
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">bmpx_artist</td>
 <td align="center"></td>
 <td>
 			Artist in current BMPx track
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">bmpx_album</td>
 <td align="center"></td>
 <td>
 			Album in current BMPx track
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">bmpx_title</td>
 <td align="center"></td>
 <td>
 			Title of the current BMPx track
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">bmpx_track</td>
 <td align="center"></td>
 <td>
 			Track number of the current BMPx track
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">bmpx_bitrate</td>
 <td align="center"></td>
 <td>
 			Bitrate of the current BMPx track
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">bmpx_uri</td>
 <td align="center"></td>
 <td>
 			URI of the current BMPx track
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">buffers</td>
 <td align="center"></td>
 <td>
 			Amount of memory buffered
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">cached</td>
 <td align="center"></td>
 <td>
 			Amount of memory cached
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">color</td>
 <td align="center">(color)</td>
 <td>
 			Change drawing color to color
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">colorN</td>
 <td align="center"></td>
 <td>
 			Change drawing color to colorN configuration option, where N is a digit between 0 and 9, inclusively.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">conky_version</td>
 <td align="center"></td>
 <td>
 			Conky version
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">conky_build_date</td>
 <td align="center"></td>
 <td>
 			Date Conky was built
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
-<td align="center">conky_bulid_arch</td>
+<tr bgcolor="#b4cdcd">
+<td align="center">conky_build_arch</td>
 <td align="center"></td>
 <td>
 			CPU architecture Conky was built for
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">cpu</td>
 <td align="center">(cpuN)</td>
 <td>
 			CPU usage in percents.  For SMP machines, the CPU number can be provided as an argument.  ${cpu cpu0} is the total usage, and ${cpu cpuX} (X &gt;= 1) are individual CPUs.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">cpubar</td>
-<td align="center">(cpu number) (height),(width)</td>
+<td align="center">(cpuN) (height),(width)</td>
 <td>
 			Bar that shows CPU usage, height is bar's height in pixels.  See $cpu for more info on SMP.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">cpugraph</td>
-<td align="center">normal|log (cpu number) (height),(width) (gradient colour 1) (gradient colour 2)</td>
+<td align="center">(cpuN) ("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
 <td>
 			CPU usage graph, with optional colours in hex, minus the #.  See $cpu for more info on SMP. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">diskio</td>
 <td align="center">(device)</td>
 <td>
 			Displays current disk IO.  Device is optional, and takes the form of sda for /dev/sda.  Individual partitions are allowed.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">diskiograph</td>
-<td align="center">normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
+<td align="center">("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (device)</td>
 <td>
 			Disk IO graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">diskio_read</td>
 <td align="center">(device)</td>
 <td>
 			Displays current disk IO for reads.  Device as in diskio.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">diskiograph_read</td>
-<td align="center">normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
+<td align="center">("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (device)</td>
 <td>
 			Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">diskio_write</td>
 <td align="center">(device)</td>
 <td>
 			Displays current disk IO for writes.  Device as in diskio.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">diskiograph_write</td>
-<td align="center">normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
+<td align="center">("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (device)</td>
 <td>
 			Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">disk_protect</td>
 <td align="center">device</td>
 <td>
 			Disk protection status, if supported (needs kernel-patch). Prints either "frozen" or "free  " (note the padding).
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">downspeed</td>
 <td align="center">net</td>
 <td>
 			Download speed in KiB
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">downspeedf</td>
 <td align="center">net</td>
 <td>
 			Download speed in KiB with one decimal
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">downspeedgraph</td>
-<td align="center">normal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
+<td align="center">("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (net)</td>
 <td>
 			Download speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">else</td>
 <td align="center"></td>
 <td>
 			Text to show if any of the above are not true
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">entropy_avail</td>
 <td align="center"></td>
 <td>
 			Current entropy available for crypto freaks
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">entropy_bar</td>
 <td align="center">(height),(width)</td>
 <td>
 			Normalized bar of available entropy for crypto freaks
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">entropy_poolsize</td>
 <td align="center"></td>
 <td>
 			Total size of system entropy pool for crypto freaks
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">exec</td>
 <td align="center">command</td>
 <td>
 			Executes a shell command and displays the output in conky. warning: this takes a lot more resources than other variables. I'd recommend coding wanted behaviour in C and posting a patch.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">execbar</td>
 <td align="center">command</td>
 <td>
 			Same as exec, except if the first value return is a value between 0-100, it will use that number for a bar. The size for the bar is currently fixed, but that may change in the future.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">execgraph</td>
-<td align="center">(normal|log) command</td>
+<td align="center">("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) command</td>
 <td>
 			Same as execbar, but graphs values. Uses a logaritmic scale when the log option is given (to see small numbers). Values still have to be between 0 and 100.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">execi</td>
 <td align="center">interval command</td>
 <td>
 			Same as exec but with specific interval. Interval can't be less than update_interval in configuration. See also $texeci
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">execibar</td>
 <td align="center">interval command</td>
 <td>
 			Same as execbar, except with an interval
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">execigraph</td>
 <td align="center">interval command</td>
 <td>
 			Same as execgraph, but takes an interval arg graphs values
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">execp</td>
 <td align="center">command</td>
 <td>
@@ -480,53 +488,46 @@
 			Caveats: Conky parses and evaluates the output of $execp every time Conky loops, and then destroys all the objects.  If you try to use anything like $execi within an $execp statement, it will functionally run at the same interval that the $execp statement runs, as it is created and destroyed at every interval.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">execpi</td>
 <td align="center">interval command</td>
 <td>
 			Same as execp but with specific interval. Interval can't be less than update_interval in configuration.  Note that the output from the $execpi command is still parsed and evaluated at every interval.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">font</td>
 <td align="center">(font)</td>
 <td>
 			Specify a different font. This new font will apply to the current line and everything following.  You can use a $font with no arguments to change back to the default font (much like with $color)
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">freq</td>
 <td align="center">(n)</td>
 <td>
 			Returns CPU #n's frequency in MHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">freq_g</td>
 <td align="center">(n)</td>
 <td>
 			Returns CPU #n's frequency in GHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">freq_dyn</td>
-<td align="center">(n)</td>
-<td>
-			Returns CPU #n's frequency in MHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
-			</td>
-</tr>
 <tr bgcolor="#fffafa">
-<td align="center">freq_dyn_g</td>
-<td align="center">(n)</td>
-<td>
-			Returns CPU #n's frequency in GHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
-			</td>
-</tr>
-<tr bgcolor="#b4cdcd">
 <td align="center">fs_bar</td>
 <td align="center">(height),(width) fs</td>
 <td>
 			Bar that shows how much space is used on a file system. height is the height in pixels. fs is any file on that file system.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">fs_bar_free</td>
+<td align="center">(height),(width) fs</td>
+<td>
+			Bar that shows how much space is free on a file system. height is the height in pixels. fs is any file on that file system.
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
@@ -547,45 +548,52 @@
 <td align="center">fs_size</td>
 <td align="center">(fs)</td>
 <td>
-			File system size
+			File system size.
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
 <td align="center">fs_type</td>
 <td align="center">(fs)</td>
 <td>
-			File system type
+			File system type.
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
 <td align="center">fs_used</td>
 <td align="center">(fs)</td>
 <td>
-			File system used space
+			File system used space.
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">fs_used_perc</td>
+<td align="center">(fs)</td>
+<td>
+			Percent of file system used space.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">goto</td>
 <td align="center">x</td>
 <td>
 			The next element will be printed at position 'x'.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">gw_iface</td>
 <td align="center"></td>
 <td>
 			Displays the default route's interface or "multiple"/"none" accordingly.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">gw_ip</td>
 <td align="center"></td>
 <td>
 			Displays the default gateway's IP or "multiple"/"none" accordingly.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">hddtemp</td>
 <td align="center">dev, (host,(port))</td>
 <td>
@@ -593,81 +601,74 @@
 			Default host is 127.0.0.1, default port is 7634.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">head</td>
 <td align="center">logfile lines (interval)</td>
 <td>
 			Displays first N lines of supplied text text file. If interval is not supplied, Conky assumes 2x Conky's interval. Max of 30 lines can be displayed, or until the text buffer is filled.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">hr</td>
 <td align="center">(height)</td>
 <td>
 			Horizontal line, height is the height in pixels
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">hwmon</td>
 <td align="center">(dev) type n</td>
 <td>
-			Hwmon sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one hwmon device. Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/class/hwmon/ on your local computer.
+			Hwmon sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one hwmon device. Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning temperature. Parameter n is number of the sensor. See /sys/class/hwmon/ on your local computer.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">iconv_start</td>
 <td align="center">codeset_from codeset_to</td>
 <td>
 			Convert text from one codeset to another using GNU iconv.  Needs to be stopped with iconv_stop.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">iconv_stop</td>
 <td align="center"></td>
 <td>
 			Stop iconv codeset conversion.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">i2c</td>
 <td align="center">(dev) type n</td>
 <td>
-			I2C sensor from sysfs (Linux 2.6).  Parameter dev may be omitted if you have only one I2C device.  Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature.  Parameter n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
+			I2C sensor from sysfs (Linux 2.6).  Parameter dev may be omitted if you have only one I2C device.  Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning temperature.  Parameter n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">i8k_ac_status</td>
 <td align="center"></td>
 <td>
 			If running the i8k kernel driver for Inspiron laptops, displays whether ac power is on, as listed in /proc/i8k (translated to human-readable). Beware that this is by default not enabled by i8k itself.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">i8k_bios</td>
 <td align="center"></td>
 <td>
 			If running the i8k kernel driver for Inspiron laptops, displays the bios version as listed in /proc/i8k.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">i8k_buttons_status</td>
 <td align="center"></td>
 <td>
 			If running the i8k kernel driver for Inspiron laptops, displays the volume buttons status as listed in /proc/i8k.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">i8k_cpu_temp</td>
 <td align="center"></td>
 <td>
 			If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Celsius, as reported by /proc/i8k.
-			</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">i8k_cpu_tempf</td>
-<td align="center"></td>
-<td>
-			If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Fahrenheit, as reported by /proc/i8k.
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
@@ -748,49 +749,100 @@
 <td align="center">if_empty</td>
 <td align="center">(var)</td>
 <td>
-			if conky variable VAR is empty, display everything between $if_empty and the matching $endif
-			</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">if_gw</td>
-<td align="center"></td>
-<td>
-			if there is at least one default gateway, display everything between $if_gw and the matching $endif
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">if_running</td>
-<td align="center">(process)</td>
-<td>
-			if PROCESS is running, display everything $if_running and the matching $endif
+			if conky variable VAR is empty, display everything
+			between $if_empty and the matching $endif
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
 <td align="center">if_existing</td>
 <td align="center">file (string)</td>
 <td>
-			if FILE exists, display everything between if_existing and the matching $endif.  The optional second paramater checks for FILE containing the specified string and prints everything between $if_existing and the matching $endif.
+			if FILE exists, display everything between if_existing
+			and the matching $endif.  The optional second paramater
+			checks for FILE containing the specified string and
+			prints everything between $if_existing and the matching
+			$endif.
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
-<td align="center">if_mounted</td>
-<td align="center">(mountpoint)</td>
+<td align="center">if_gw</td>
+<td align="center"></td>
 <td>
-			if MOUNTPOINT is mounted, display everything between $if_mounted and the matching $endif
+			if there is at least one default gateway, display
+			everything between $if_gw and the matching $endif
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
-<td align="center">if_smapi_bat_installed</td>
-<td align="center">(INDEX)</td>
+<td align="center">if_match</td>
+<td align="center">expression</td>
 <td>
-			when using smapi, if the battery with index INDEX is installed, display everything between $if_smapi_bat_installed and the matching $endif
+			Evaluates the given boolean expression, printing
+			everything between $if_match and the matching $endif
+			depending on whether the evaluation returns true or not.
+			Valid expressions consist of a left side, an operator
+			and a right side. Left and right sides are being parsed
+			for contained text objects before evaluation. Recognised
+			left and right side types are:
+			
+				double:
+					argument consists of only digits and a
+					single dot.
+				
+				long:
+					argument consists of only digits.
+				
+				string:
+					argument is enclosed in quotation mark
+					or the checks for double and long failed
+					before.
+				
+			
+			Valid operands are:
+			'&gt;', '&lt;', '&gt;=', '&lt;=', '==', '!='.
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">if_running</td>
+<td align="center">(process)</td>
+<td>
+			if PROCESS is running, display everything $if_running
+			and the matching $endif.  This uses the ``pidof'' command, so the
+			-x switch is also supported.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">if_mounted</td>
+<td align="center">(mountpoint)</td>
+<td>
+			if MOUNTPOINT is mounted, display everything between
+			$if_mounted and the matching $endif
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">if_smapi_bat_installed</td>
+<td align="center">(INDEX)</td>
+<td>
+			when using smapi, if the battery with index INDEX is
+			installed, display everything between
+			$if_smapi_bat_installed and the matching $endif
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
 <td align="center">if_up</td>
 <td align="center">(interface)</td>
 <td>
 			if INTERFACE exists and is up, display everything between $if_up and the matching $endif
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">if_updatenr</td>
+<td align="center">(updatenr)</td>
+<td>
+			If it's the UPDATENR-th time that conky updates, 
+			display everything between $if_updatenr and the matching $endif.
+			The counter resets when the highest UPDATENR is reached.
+			Example : "{$if_updatenr 1}foo$endif{$if_updatenr 2}bar$endif{$if_updatenr 4}$endif"
+			shows foo 25% of the time followed by bar 25% of the time followed by nothing the other half of the time.
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -837,7 +889,7 @@
 </tr>
 <tr bgcolor="#b4cdcd">
 <td align="center">loadgraph</td>
-<td align="center">normal|log (height),(width) (gradient colour 1) (gradient colour 2)</td>
+<td align="center">("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
 <td>
 			Load1 average graph, similar to xload, with optional colours in hex, minus the #. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			</td>
@@ -867,59 +919,266 @@
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">new_mails</td>
+<td align="center">(mailbox)</td>
+<td>
+			Unread mail count in the specified mailbox or mail spool if
+			not. Both mbox and maildir type mailboxes are supported.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">seen_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails marked as seen in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">unseen_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of new or unseen mails in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">flagged_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails marked as flagged in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">unflagged_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails not marked as flagged in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">forwarded_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails marked as forwarded in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">unforwarded_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails not marked as forwarded in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">replied_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails marked as replied in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">unreplied_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails not marked as replied in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">draft_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails marked as draft in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">trashed_mails</td>
+<td align="center">(maildir)</td>
+<td>
+			Number of mails marked as trashed in the specified mailbox or mail spool if
+			not. Only maildir type mailboxes are supported, mbox type will return -1.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">mboxscan</td>
 <td align="center">(-n number of messages to print) (-fw from width) (-sw subject width) mbox</td>
 <td>
 			Print a summary of recent messages in an mbox format mailbox.  mbox parameter is the filename of the mailbox (can be encapsulated using '"', ie. ${mboxscan -n 10 "/home/brenden/some box"}
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">mem</td>
 <td align="center"></td>
 <td>
 			Amount of memory in use
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">membar</td>
 <td align="center">(height),(width)</td>
 <td>
 			Bar that shows amount of memory in use
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">memgraph</td>
-<td align="center">normal|log (height),(width) (gradient colour 1) (gradient colour 2)</td>
+<td align="center">("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
 <td>
 			Memory usage graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">memeasyfree</td>
 <td align="center"></td>
 <td>
 			Amount of free memory including the memory that is very easily freed (buffers/cache)
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">memfree</td>
 <td align="center"></td>
 <td>
 			Amount of free memory
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">memmax</td>
 <td align="center"></td>
 <td>
 			Total amount of memory
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">memperc</td>
 <td align="center"></td>
 <td>
 			Percentage of memory in use
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mixer</td>
+<td align="center">(device)</td>
+<td>
+			Prints the mixer value as reported by the OS.  Default mixer is "vol", but you can specify one of the following optional arguments: "vol", "bass", "treble", "synth", "pcm", "speaker", "line", "mic", "cd", "mix", "pcm2", "rec", "igain", "ogain", "line1", "line2", "line3", "dig1", "dig2", "dig3", "phin", "phout", "video", "radio", "monitor".  Refer to the definition of SOUND_DEVICE_NAMES in &lt;linux/soundcard.h&gt; (on Linux), &lt;soundcard.h&gt; (on OpenBSD), or &lt;sys/soundcard.h&gt; to find the exact options available on your system.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mixerbar</td>
+<td align="center">(device)</td>
+<td>
+			Displays mixer value in a bar as reported by the OS.  See docs for $mixer for details on arguments.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mixerr</td>
+<td align="center">(device)</td>
+<td>
+			Prints the right channel mixer value as reported by the OS.  See docs for $mixer for details on arguments.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mixerrbar</td>
+<td align="center">(device)</td>
+<td>
+			Displays the right channel mixer value in a bar as reported by the OS.  See docs for $mixer for details on arguments.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mixerl</td>
+<td align="center">(device)</td>
+<td>
+			Prints the left channel mixer value as reported by the OS.  See docs for $mixer for details on arguments.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mixerlbar</td>
+<td align="center">(device)</td>
+<td>
+			Displays the left channel mixer value in a bar as reported by the OS.  See docs for $mixer for details on arguments.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">moc_state</td>
+<td align="center"></td>
+<td>
+			Current state of MOC; playing, stopped etc.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">moc_file</td>
+<td align="center"></td>
+<td>
+			File name of the current MOC song
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">moc_title</td>
+<td align="center"></td>
+<td>
+			Title of the current MOC song
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">moc_artist</td>
+<td align="center"></td>
+<td>
+			Artist of the current MOC song
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">moc_song</td>
+<td align="center"></td>
+<td>
+			The current song name being played in MOC.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">moc_album</td>
+<td align="center"></td>
+<td>
+			Album of the current MOC song
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">moc_totaltime</td>
+<td align="center"></td>
+<td>
+			Total length of the current MOC song
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">moc_timeleft</td>
+<td align="center"></td>
+<td>
+			Time left in the current MOC song
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">moc_curtime</td>
+<td align="center"></td>
+<td>
+			Current time of the current MOC song
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">moc_bitrate</td>
+<td align="center"></td>
+<td>
+			Bitrate in the current MOC song
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">moc_rate</td>
+<td align="center"></td>
+<td>
+			Rate of the current MOC song
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -1043,24 +1302,23 @@
 </tr>
 <tr bgcolor="#fffafa">
 <td align="center">mpd_smart</td>
-<td align="center"></td>
+<td align="center">(max length)</td>
 <td>
 			Prints the song name in either the form "artist - title" or file name, depending on whats available
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">if_mpd_playing</td>
+<td align="center"></td>
+<td>
+			if mpd is playing or paused, display everything between $if_mpd_playing and the matching $endif
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">nameserver</td>
 <td align="center">(index)</td>
 <td>
 			Print a nameserver from /etc/resolv.conf. Index starts at and defaults to 0.
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">new_mails</td>
-<td align="center">(mailbox)</td>
-<td>
-			Unread mail count in the specified mailbox or mail spool if
-			not. Both mbox and maildir type mailboxes are supported.
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -1083,6 +1341,9 @@
 				
 				temp:
 					gives the gpu current temperature
+				
+				ambient:
+					gives current air temperature near GPU case
 				
 				gpufreq:
 					gives the current gpu frequency
@@ -1137,7 +1398,7 @@
 <td align="center">platform</td>
 <td align="center">(dev) type n</td>
 <td>
-			Platform sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one platform device. Platform type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/bus/platform/devices/ on your local computer.
+			Platform sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one platform device. Platform type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning temperature. Parameter n is number of the sensor. See /sys/bus/platform/devices/ on your local computer.
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
@@ -1179,9 +1440,9 @@
 </tr>
 <tr bgcolor="#b4cdcd">
 <td align="center">scroll</td>
-<td align="center">length text</td>
+<td align="center">length (step) text</td>
 <td>
-			Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and "    foobar" can both generate "barfoo" but "foobar    " will keep the spaces like this "bar    foo").
+			Scroll 'text' by 'step' characters showing 'length' number of characters at the same time. The text may also contain variables. 'step' is optional and defaults to 1 if not set. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and "    foobar" can both generate "barfoo" but "foobar    " will keep the spaces like this "bar    foo").
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
@@ -1335,7 +1596,7 @@
 <td align="center">tab</td>
 <td align="center">(width, (start))</td>
 <td>
-			Puts a tab of the specified width, starting from column 'start'.
+			Puts a tab of the specified width, starting from column 'start'.  The unit is pixels for both arguments.
 			</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -1346,45 +1607,63 @@
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">templateN</td>
+<td align="center">(arg1)</td>
+<td>
+			Evaluate the content of the templateN configuration variable (where N is a value between 0 and 9, inclusively),
+			applying substitutions as described in the documentation of the corresponding configuration variable.
+			The number of arguments is optional, but must match the highest referred index in the template. You can use the
+			same special sequences in each argument as the ones valid for a template definition, e.g. to allow an argument
+			to contain a whitespace. Also simple nesting of templates is possible this way.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
 <td align="center">time</td>
 <td align="center">(format)</td>
 <td>
 			Local time, see man strftime to get more information about format
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">utime</td>
 <td align="center">(format)</td>
 <td>
 			Display time in UTC (universal coordinate time).
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">tztime</td>
 <td align="center">(timezone) (format)</td>
 <td>
 			Local time for specified timezone, see man strftime to get more information about format. The timezone argument is  specified in similar fashion as TZ environment variable. For hints, look in /usr/share/zoneinfo. e.g. US/Pacific, Europe/Zurich, etc.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">totaldown</td>
 <td align="center">net</td>
 <td>
 			Total download, overflows at 4 GB on Linux with 32-bit arch and there doesn't seem to be a way to know how many times it has already done that before conky has started.
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">top</td>
 <td align="center">type, num</td>
 <td>
 			This takes arguments in the form:top (name) (number) Basically, processes are ranked from highest to lowest in terms of cpu usage, which is what (num) represents. The types are: "name", "pid", "cpu", "mem", "mem_res", "mem_vsize", and "time". There can be a max of 10 processes listed.
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">top_mem</td>
 <td align="center">type, num</td>
 <td>
 			Same as top, except sorted by mem usage instead of cpu
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">top_time</td>
+<td align="center">type, num</td>
+<td>
+			Same as top, except sorted by total CPU time instead of current CPU usage
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
@@ -1417,7 +1696,7 @@
 </tr>
 <tr bgcolor="#fffafa">
 <td align="center">upspeedgraph</td>
-<td align="center">normal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
+<td align="center">("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (net)</td>
 <td>
 			Upload speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			</td>
@@ -1588,20 +1867,6 @@
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
-<td align="center">xmms2_decoder</td>
-<td align="center"></td>
-<td>
-			Decoder plugin used
-			</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">xmms2_transport</td>
-<td align="center"></td>
-<td>
-			Transport plugin used
-			</td>
-</tr>
-<tr bgcolor="#fffafa">
 <td align="center">xmms2_url</td>
 <td align="center"></td>
 <td>
@@ -1658,31 +1923,66 @@
 			</td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">xmms2_date</td>
+<td align="center"></td>
+<td>
+			Returns song's date.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">xmms2_playlist</td>
+<td align="center"></td>
+<td>
+			Returns the XMMS2 playlist.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xmms2_timesplayed</td>
+<td align="center"></td>
+<td>
+			Number of times a song was played (presumably).
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_status</td>
 <td align="center"></td>
 <td>
 			XMMS2 status (Playing, Paused, Stopped, or Disconnected)
 			</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_bar</td>
 <td align="center">(height),(width)</td>
 <td>
 			Bar of XMMS2's progress
 			</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_smart</td>
 <td align="center"></td>
 <td>
 			Prints the song name in either the form "artist - title" or file name, depending on whats available
 			</td>
 </tr>
+<tr bgcolor="#fffafa">
+<td align="center">if_xmms2_connected</td>
+<td align="center"></td>
+<td>
+			Display everything between $if_xmms2_connected and the matching $endif if xmms2 is running.
+			</td>
+</tr>
 <tr bgcolor="#b4cdcd">
 <td align="center">eve</td>
 <td align="center">api_userid api_key character_id</td>
 <td>
-         Fetches your currently training skill from the Eve Online API servers (http://www.eve-online.com/) and displays the skill along with the remaining training time.
+			Fetches your currently training skill from the Eve Online API servers (http://www.eve-online.com/) and displays the skill along with the remaining training time.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">endif</td>
+<td align="center"></td>
+<td>
+			Ends an $if block.
 			</td>
 </tr>
 </table></body>

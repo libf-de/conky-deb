@@ -1,8 +1,19 @@
-Index: conky-1.6.1/doc/conky.1
+ Clear up minus and hyphen mixup in man page
+
+Index: conky-1.7.0/doc/conky.1
 ===================================================================
---- conky-1.6.1.orig/doc/conky.1	2008-09-08 09:25:17.000000000 +0530
-+++ conky-1.6.1/doc/conky.1	2008-09-08 09:29:38.000000000 +0530
-@@ -44,7 +44,7 @@
+--- conky-1.7.0.orig/doc/conky.1	2009-05-25 22:18:51.000000000 +0530
++++ conky-1.7.0/doc/conky.1	2009-05-27 03:47:29.000000000 +0530
+@@ -43,7 +43,7 @@
+ .SH COMPILING
+ For users compiling from source on a binary distro, make sure you have the X development
+ libraries installed. This should be a package along the lines of "libx11-dev" or
+-"xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
++"xorg-x11-dev" for X11 libs, and similar "\(hydev" format for the other libs required (depending
+ on your configure options).
+ .PP
+ Conky has (for some time) been available in the repositories of most popular distributions.
+@@ -74,7 +74,7 @@
  Conky is generally very good on resources. That said, the more you try to make Conky
  do, the more resources it is going to consume.
  .PP
@@ -11,7 +22,7 @@ Index: conky-1.6.1/doc/conky.1
  Saves you the trouble of having to kill and then restart. You can now also do the same with SIGHUP.
  .SH OPTIONS
  Command line options override configurations defined in configuration file.
-@@ -86,7 +86,7 @@
+@@ -116,7 +116,7 @@
  
  .TP 
  \fB\*(T<\fB\-t | \-\-text=\fR\*(T>\fR\*(T<\fBTEXT\fR\*(T>
@@ -20,7 +31,7 @@ Index: conky-1.6.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fB\-u | \-\-interval=\fR\*(T>\fR\*(T<\fBSECONDS\fR\*(T>
-@@ -181,12 +181,12 @@
+@@ -215,12 +215,12 @@
  
  .TP 
  \fB\*(T<\fBgap_x\fR\*(T>\fR
@@ -35,7 +46,7 @@ Index: conky-1.6.1/doc/conky.1
  e.g. gap_y 10.
  
  .TP 
-@@ -195,7 +195,7 @@
+@@ -229,7 +229,7 @@
  
  .TP 
  \fB\*(T<\fBimap\fR\*(T>\fR
@@ -44,7 +55,7 @@ Index: conky-1.6.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBmail_spool\fR\*(T>\fR
-@@ -298,7 +298,7 @@
+@@ -350,7 +350,7 @@
  
  .TP 
  \fB\*(T<\fBpop3\fR\*(T>\fR
@@ -53,7 +64,16 @@ Index: conky-1.6.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBshort_units\fR\*(T>\fR
-@@ -805,11 +805,11 @@
+@@ -895,7 +895,7 @@
+ \fB\*(T<\fBif_running\fR\*(T>\fR \*(T<\fB(process)\fR\*(T> 
+ if PROCESS is running, display everything $if_running
+ and the matching $endif. This uses the ``pidof'' command, so the
+--x switch is also supported.
++\-x switch is also supported.
+ 
+ .TP 
+ \fB\*(T<\fBif_mounted\fR\*(T>\fR \*(T<\fB(mountpoint)\fR\*(T> 
+@@ -922,11 +922,11 @@
  
  .TP 
  \fB\*(T<\fBimap_messages\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -67,7 +87,66 @@ Index: conky-1.6.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBioscheduler\fR\*(T>\fR \*(T<\fBdisk\fR\*(T> 
-@@ -848,7 +848,7 @@
+@@ -971,56 +971,56 @@
+ .TP 
+ \fB\*(T<\fBseen_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails marked as seen in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBunseen_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of new or unseen mails in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBflagged_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails marked as flagged in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBunflagged_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails not marked as flagged in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBforwarded_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails marked as forwarded in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBunforwarded_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails not marked as forwarded in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBreplied_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails marked as replied in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBunreplied_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails not marked as replied in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBdraft_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails marked as draft in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
+ 
+ .TP 
+ \fB\*(T<\fBtrashed_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+ Number of mails marked as trashed in the specified mailbox or mail spool if
+-not. Only maildir type mailboxes are supported, mbox type will return -1.
++not. Only maildir type mailboxes are supported, mbox type will return \-1.
  
  .TP 
  \fB\*(T<\fBmboxscan\fR\*(T>\fR \*(T<\fB(\-n number of messages to print) (\-fw from width) (\-sw subject width) mbox\fR\*(T> 
@@ -76,7 +155,7 @@ Index: conky-1.6.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBmem\fR\*(T>\fR 
-@@ -1018,11 +1018,11 @@
+@@ -1260,11 +1260,11 @@
  
  .TP 
  \fB\*(T<\fBpop3_unseen\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -90,16 +169,16 @@ Index: conky-1.6.1/doc/conky.1
  
  .TP 
  \fB\*(T<\fBpre_exec\fR\*(T>\fR \*(T<\fBshell command\fR\*(T> 
-@@ -1038,7 +1038,7 @@
+@@ -1280,7 +1280,7 @@
  
  .TP 
- \fB\*(T<\fBscroll\fR\*(T>\fR \*(T<\fBlength text\fR\*(T> 
--Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
-+Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'\(hysign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
+ \fB\*(T<\fBscroll\fR\*(T>\fR \*(T<\fBlength (step) text\fR\*(T> 
+-Scroll 'text' by 'step' characters showing 'length' number of characters at the same time. The text may also contain variables. 'step' is optional and defaults to 1 if not set. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
++Scroll 'text' by 'step' characters showing 'length' number of characters at the same time. The text may also contain variables. 'step' is optional and defaults to 1 if not set. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'\(hysign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
  
  .TP 
  \fB\*(T<\fBshadecolor\fR\*(T>\fR \*(T<\fB(color)\fR\*(T> 
-@@ -1110,26 +1110,26 @@
+@@ -1352,26 +1352,26 @@
  .br
  \fBlservice\fR - local service name from /etc/services
  
@@ -133,7 +212,7 @@ Index: conky-1.6.1/doc/conky.1
  displays the local service name of the fifteenth connection in the range of all ports
  
  Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors.
-@@ -1363,9 +1363,9 @@
+@@ -1672,9 +1672,9 @@
  all window managers. Especially doesn't work well with Gnome and it has
  been reported that it doesn't work with KDE either. Nautilus can be
  disabled from drawing to desktop with program gconf-editor. Uncheck
@@ -146,12 +225,3 @@ Index: conky-1.6.1/doc/conky.1
  Conky to create its own window. If you do try running Conky in its own
  window, be sure to read up on the own_window_type settings and experiment.
  .SH "SEE ALSO"
-@@ -1377,7 +1377,7 @@
- .SH COMPILING
- For users compiling from source on a binary distro, make sure you have the X development
- libraries installed. This should be a package along the lines of "libx11-dev" or
--"xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
-+"xorg-x11-dev" for X11 libs, and similar "\(hydev" format for the other libs required (depending
- on your configure options).
- .PP
- Conky has (for some time) been available in the repositories of most popular distributions.
