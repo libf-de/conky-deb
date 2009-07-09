@@ -42,6 +42,9 @@
 #endif
 #include <sys/time.h>
 #include <sys/param.h>
+#ifdef HAVE_SYS_INOTIFY_H
+#include <sys/inotify.h>
+#endif /* HAVE_SYS_INOTIFY_H */
 #ifdef X11
 #include "x11.h"
 #include <X11/Xutil.h>
@@ -49,7 +52,7 @@
 #include <X11/extensions/Xdamage.h>
 #endif
 #ifdef IMLIB2
-#include <Imlib2.h>
+#include "imlib2.h"
 #endif /* IMLIB2 */
 #endif /* X11 */
 #include <sys/types.h>
@@ -84,6 +87,10 @@
 #include "freebsd.h"
 #elif defined(__OpenBSD__)
 #include "openbsd.h"
+#endif
+
+#if defined(__FreeBSD_kernel__)
+#include <bsd/bsd.h>
 #endif
 
 /* FIXME: apm_getinfo is unused here. maybe it's meant for common.c */
@@ -131,6 +138,7 @@ enum {
 	RIGHT_SPACER
 } use_spacer;
 int top_cpu, top_mem, top_time;
+static unsigned int top_name_width = 15;
 int output_methods;
 enum x_initialiser_state x_initialised = NO;
 static volatile int g_signal_pending;
@@ -183,6 +191,9 @@ static void print_version(void)
 		   "  * XMMS2\n"
 #endif /* XMMS2 */
 		   "\n General:\n"
+#ifdef HAVE_OPENMP
+		   "  * OpenMP\n"
+#endif /* HAVE_OPENMP */
 #ifdef MATH
 		   "  * math\n"
 #endif /* Math */
@@ -195,6 +206,9 @@ static void print_version(void)
 #ifdef RSS
 		   "  * RSS\n"
 #endif /* RSS */
+#ifdef HAVE_LUA
+		   "  * Lua\n"
+#endif /* HAVE_LUA */
 #ifdef HAVE_IWLIB
 		   "  * wireless\n"
 #endif /* HAVE_IWLIB */
@@ -203,13 +217,22 @@ static void print_version(void)
 #endif /* IBM */
 #ifdef NVIDIA
 		   "  * nvidia\n"
-#endif
+#endif /* NVIDIA */
 #ifdef EVE
 		   "  * eve-online\n"
 #endif /* EVE */
 #ifdef CONFIG_OUTPUT
 		   "  * config-output\n"
 #endif /* CONFIG_OUTPUT */
+#ifdef IMLIB2
+		   "  * Imlib2\n"
+#endif /* IMLIB2 */
+#ifdef MIXER_IS_ALSA
+		   "  * ALSA mixer support\n"
+#endif /* MIXER_IS_ALSA */
+#ifdef APCUPSD
+			"  * apcupsd\n"
+#endif /* APCUPSD */
 	);
 
 	exit(0);
@@ -219,6 +242,19 @@ static const char *suffixes[] = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "" };
 
 
 #ifdef X11
+
+static void X11_destroy_window(void);
+static void X11_create_window(void);
+static void X11_initialisation(void);
+
+struct _x11_stuff_s {
+	Region region;
+#ifdef HAVE_XDAMAGE
+	Damage damage;
+	XserverRegion region2, part;
+	int event_base, error_base;
+#endif
+} x11_stuff;
 
 /* text size */
 
@@ -238,6 +274,9 @@ enum alignment {
 	NONE
 };
 
+/* display to connect to */
+static char *disp = NULL;
+
 #endif /* X11 */
 
 /* struct that has all info to be shared between
@@ -256,7 +295,7 @@ static unsigned long total_run_times;
 /* fork? */
 static int fork_to_background;
 
-static int cpu_avg_samples, net_avg_samples;
+static int cpu_avg_samples, net_avg_samples, diskio_avg_samples;
 
 /* filenames for output */
 char *overwrite_file = NULL; FILE *overwrite_fpointer = NULL;
@@ -374,11 +413,10 @@ int check_contains(char *f, char *s)
 	FILE *where = fopen(f, "r");
 
 	if (where) {
-		char buf1[256], buf2[256];
+		char buf1[256];
 
 		while (fgets(buf1, 256, where)) {
-			sscanf(buf1, "%255s", buf2);
-			if (strstr(buf2, s)) {
+			if (strstr(buf1, s)) {
 				ret = 1;
 				break;
 			}
@@ -551,13 +589,18 @@ static void human_readable(long long num, char *buf, int size)
 	 * so the point of alignment resides between number and unit. The
 	 * upside of this is that there is minimal padding necessary, though
 	 * there should be a way to make alignment take place at the decimal
-	 * dot (then with fixed width decimal part). * */
+	 * dot (then with fixed width decimal part). 
+	 *
+	 * Note the repdigits below: when given a precision value, printf()
+	 * rounds the float to it, not just cuts off the remaining digits. So
+	 * e.g. 99.95 with a precision of 1 gets 100.0, which again should be
+	 * printed with a precision of 0. Yay. */
 
 	precision = 0;		/* print 100-999 without decimal part */
-	if (fnum < 100)
+	if (fnum < 99.95)
 		precision = 1;	/* print 10-99 with one decimal place */
-	if (fnum < 10)
-		precision = 2;	/* print 0-9 with two decimal place */
+	if (fnum < 9.995)
+		precision = 2;	/* print 0-9 with two decimal places */
 
 	spaced_print(buf, size, format, width, precision, fnum, *suffix);
 }
@@ -581,21 +624,24 @@ void *threaded_exec(void *) __attribute__((noreturn));
 
 void *threaded_exec(void *arg)
 {
-	char *p2;
+	char *buff, *p2;
 	struct text_object *obj = (struct text_object *)arg;
 
 	while (1) {
-		p2 = obj->data.texeci.buffer;
-		timed_thread_lock(obj->data.texeci.p_timed_thread);
-		read_exec(obj->data.texeci.cmd, obj->data.texeci.buffer,
+		buff = malloc(text_buffer_size);
+		read_exec(obj->data.texeci.cmd, buff,
 			text_buffer_size);
+		p2 = buff;
 		while (*p2) {
 			if (*p2 == '\001') {
 				*p2 = ' ';
 			}
 			p2++;
 		}
+		timed_thread_lock(obj->data.texeci.p_timed_thread);
+		strncpy(obj->data.texeci.buffer, buff, text_buffer_size);
 		timed_thread_unlock(obj->data.texeci.p_timed_thread);
+		free(buff);
 		if (timed_thread_test(obj->data.texeci.p_timed_thread, 0)) {
 			timed_thread_exit(obj->data.texeci.p_timed_thread);
 		}
@@ -610,8 +656,11 @@ static struct text_object *new_text_object_internal(void)
 	return obj;
 }
 
-/* free the list of text objects root points to */
-static void free_text_objects(struct text_object *root)
+/*
+ * Frees the list of text objects root points to.  When internal = 1, it won't
+ * free global objects.
+ */
+static void free_text_objects(struct text_object *root, int internal)
 {
 	struct text_object *obj;
 
@@ -683,7 +732,7 @@ static void free_text_objects(struct text_object *root)
 				break;
 			case OBJ_if_empty:
 			case OBJ_if_match:
-				free_text_objects(obj->sub);
+				free_text_objects(obj->sub, 1);
 				free(obj->sub);
 				/* fall through */
 			case OBJ_if_existing:
@@ -699,9 +748,13 @@ static void free_text_objects(struct text_object *root)
 			case OBJ_text:
 			case OBJ_font:
 			case OBJ_image:
+			case OBJ_eval:
 			case OBJ_exec:
 			case OBJ_execbar:
+#ifdef X11
+			case OBJ_execgauge:
 			case OBJ_execgraph:
+#endif
 			case OBJ_execp:
 				free(data.s);
 				break;
@@ -713,10 +766,6 @@ static void free_text_objects(struct text_object *root)
 #ifdef __linux__
 			case OBJ_disk_protect:
 				free(data.s);
-				break;
-			case OBJ_if_up:
-				free(data.ifblock.s);
-				free(data.ifblock.str);
 				break;
 			case OBJ_if_gw:
 				free(data.ifblock.s);
@@ -735,6 +784,12 @@ static void free_text_objects(struct text_object *root)
 			case OBJ_ioscheduler:
 				if(data.s)
 					free(data.s);
+				break;
+#endif
+#if (defined(__FreeBSD__) || defined(__linux__))
+			case OBJ_if_up:
+				free(data.ifblock.s);
+				free(data.ifblock.str);
 				break;
 #endif
 #ifdef XMMS2
@@ -826,6 +881,18 @@ static void free_text_objects(struct text_object *root)
 				free(data.rss.action);
 				break;
 #endif
+#ifdef HAVE_LUA
+			case OBJ_lua:
+			case OBJ_lua_parse:
+			case OBJ_lua_read_parse:
+#ifdef X11
+			case OBJ_lua_bar:
+			case OBJ_lua_graph:
+			case OBJ_lua_gauge:
+#endif /* X11 */
+				free(data.s);
+				break;
+#endif /* HAVE_LUA */
 			case OBJ_pre_exec:
 				break;
 #ifndef __OpenBSD__
@@ -841,8 +908,11 @@ static void free_text_objects(struct text_object *root)
 #endif /* !__OpenBSD__ */
 			case OBJ_execpi:
 			case OBJ_execi:
+#ifdef X11
 			case OBJ_execibar:
 			case OBJ_execigraph:
+			case OBJ_execigauge:
+#endif
 				free(data.execi.cmd);
 				free(data.execi.buffer);
 				break;
@@ -856,10 +926,11 @@ static void free_text_objects(struct text_object *root)
 			case OBJ_top:
 			case OBJ_top_mem:
 			case OBJ_top_time:
-				if (info.first_process) {
+				if (info.first_process && !internal) {
 					free_all_processes();
 					info.first_process = NULL;
 				}
+				if (data.top.s) free(data.top.s);
 				break;
 #ifdef HDDTEMP
 			case OBJ_hddtemp:
@@ -871,7 +942,9 @@ static void free_text_objects(struct text_object *root)
 #endif
 			case OBJ_entropy_avail:
 			case OBJ_entropy_poolsize:
+#ifdef X11
 			case OBJ_entropy_bar:
+#endif
 				break;
 			case OBJ_user_names:
 				if (info.users.names) {
@@ -916,7 +989,9 @@ static void free_text_objects(struct text_object *root)
 			case OBJ_mpd_vol:
 			case OBJ_mpd_bitrate:
 			case OBJ_mpd_status:
+#ifdef X11
 			case OBJ_mpd_bar:
+#endif
 			case OBJ_mpd_elapsed:
 			case OBJ_mpd_length:
 			case OBJ_mpd_track:
@@ -945,15 +1020,43 @@ static void free_text_objects(struct text_object *root)
 #endif
 			case OBJ_scroll:
 				free(data.scroll.text);
-				free_text_objects(obj->sub);
+				free_text_objects(obj->sub, 1);
 				free(obj->sub);
 				break;
+			case OBJ_combine:
+				free(data.combine.left);
+				free(data.combine.seperation);
+				free(data.combine.right);
+				free_text_objects(obj->sub, 1);
+				free(obj->sub);
+				break;
+#ifdef APCUPSD
+			case OBJ_apcupsd:
+			case OBJ_apcupsd_name:
+			case OBJ_apcupsd_model:
+			case OBJ_apcupsd_upsmode:
+			case OBJ_apcupsd_cable:
+			case OBJ_apcupsd_status:
+			case OBJ_apcupsd_linev:
+			case OBJ_apcupsd_load:
+#ifdef X11
+			case OBJ_apcupsd_loadbar:
+			case OBJ_apcupsd_loadgraph:
+			case OBJ_apcupsd_loadgauge:
+#endif
+			case OBJ_apcupsd_charge:
+			case OBJ_apcupsd_timeleft:
+			case OBJ_apcupsd_temp:
+			case OBJ_apcupsd_lastxfer:
+				break;
+#endif /* APCUPSD */
 		}
 		free(obj);
 	}
 #undef data
 }
 
+#ifdef X11
 void scan_mixer_bar(const char *arg, int *a, int *w, int *h)
 {
 	char buf1[64];
@@ -967,6 +1070,7 @@ void scan_mixer_bar(const char *arg, int *a, int *w, int *h)
 		scan_bar(arg, w, h);
 	}
 }
+#endif
 
 /* strip a leading /dev/ if any, following symlinks first
  *
@@ -991,6 +1095,74 @@ static const char *dev_name(const char *path)
 #undef DEV_NAME
 }
 
+static int parse_top_args(const char *s, const char *arg, struct text_object *obj)
+{
+	char buf[64];
+	int n;
+
+	if (obj->data.top.was_parsed) {
+		return 1;
+	}
+	obj->data.top.was_parsed = 1;
+
+	if (arg && !obj->data.top.s) {
+		obj->data.top.s = strndup(arg, text_buffer_size);
+	}
+
+	need_mask |= (1 << INFO_TOP);
+
+	if (s[3] == 0) {
+		obj->type = OBJ_top;
+		top_cpu = 1;
+	} else if (strcmp(&s[3], "_mem") == EQUAL) {
+		obj->type = OBJ_top_mem;
+		top_mem = 1;
+	} else if (strcmp(&s[3], "_time") == EQUAL) {
+		obj->type = OBJ_top_time;
+		top_time = 1;
+	} else {
+		ERR("Must be top, top_mem or top_time");
+		return 0;
+	}
+
+	if (!arg) {
+		ERR("top needs arguments");
+		return 0;
+	}
+
+	if (sscanf(arg, "%63s %i", buf, &n) == 2) {
+		if (strcmp(buf, "name") == EQUAL) {
+			obj->data.top.type = TOP_NAME;
+		} else if (strcmp(buf, "cpu") == EQUAL) {
+			obj->data.top.type = TOP_CPU;
+		} else if (strcmp(buf, "pid") == EQUAL) {
+			obj->data.top.type = TOP_PID;
+		} else if (strcmp(buf, "mem") == EQUAL) {
+			obj->data.top.type = TOP_MEM;
+		} else if (strcmp(buf, "time") == EQUAL) {
+			obj->data.top.type = TOP_TIME;
+		} else if (strcmp(buf, "mem_res") == EQUAL) {
+			obj->data.top.type = TOP_MEM_RES;
+		} else if (strcmp(buf, "mem_vsize") == EQUAL) {
+			obj->data.top.type = TOP_MEM_VSIZE;
+		} else {
+			ERR("invalid type arg for top");
+			ERR("must be one of: name, cpu, pid, mem, time, mem_res, mem_vsize");
+			return 0;
+		}
+		if (n < 1 || n > 10) {
+			ERR("invalid num arg for top. Must be between 1 and 10.");
+			return 0;
+		} else {
+			obj->data.top.num = n - 1;
+		}
+	} else {
+		ERR("invalid argument count for top");
+		return 0;
+	}
+	return 1;
+}
+
 /* construct_text_object() creates a new text_object */
 static struct text_object *construct_text_object(const char *s,
 		const char *arg, long line, char allow_threaded, void **ifblock_opaque)
@@ -1001,13 +1173,18 @@ static struct text_object *construct_text_object(const char *s,
 	obj->line = line;
 
 #define OBJ(a, n) if (strcmp(s, #a) == 0) { \
-	obj->type = OBJ_##a; need_mask |= (1 << n); {
+	obj->type = OBJ_##a; need_mask |= (1ULL << n); {
 #define OBJ_IF(a, n) if (strcmp(s, #a) == 0) { \
-	obj->type = OBJ_##a; need_mask |= (1 << n); \
+	obj->type = OBJ_##a; need_mask |= (1ULL << n); \
 	obj_be_ifblock_if(ifblock_opaque, obj); {
 #define OBJ_THREAD(a, n) if (strcmp(s, #a) == 0 && allow_threaded) { \
-	obj->type = OBJ_##a; need_mask |= (1 << n); {
+	obj->type = OBJ_##a; need_mask |= (1ULL << n); {
 #define END } } else
+
+#define SIZE_DEFAULTS(arg) { \
+	obj->a = default_##arg##_width; \
+	obj->b = default_##arg##_height; \
+}
 
 #ifdef X11
 	if (s[0] == '#') {
@@ -1111,13 +1288,16 @@ static struct text_object *construct_text_object(const char *s,
 		} else {
 			CRIT_ERR("wireless_link_qual_perc: needs an argument");
 		}
+#ifdef X11
 	END OBJ(wireless_link_bar, INFO_NET)
+		SIZE_DEFAULTS(bar);
 		if (arg) {
 			arg = scan_bar(arg, &obj->a, &obj->b);
 			obj->data.net = get_net_stat(arg);
 		} else {
 			CRIT_ERR("wireless_link_bar: needs an argument");
 		}
+#endif /* X11 */
 #endif /* HAVE_IWLIB */
 
 #endif /* __linux__ */
@@ -1160,8 +1340,10 @@ static struct text_object *construct_text_object(const char *s,
 			strcpy(bat, "BAT0");
 		}
 		obj->data.s = strndup(bat, text_buffer_size);
+#ifdef X11
 	END OBJ(battery_bar, 0)
 		char bat[64];
+		SIZE_DEFAULTS(bar);
 		obj->b = 6;
 		if (arg) {
 			arg = scan_bar(arg, &obj->a, &obj->b);
@@ -1170,6 +1352,7 @@ static struct text_object *construct_text_object(const char *s,
 			strcpy(bat, "BAT0");
 		}
 		obj->data.s = strndup(bat, text_buffer_size);
+#endif
 #endif /* !__OpenBSD__ */
 
 #if defined(__linux__)
@@ -1203,13 +1386,10 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(ibm_volume, 0)
 	END OBJ(ibm_brightness, 0)
 #endif
-	END OBJ_IF(if_up, 0)
-		if (!arg) {
-			ERR("if_up needs an argument");
-			obj->data.ifblock.s = 0;
-		} else
-			obj->data.ifblock.s = strndup(arg, text_buffer_size);
-	END OBJ_IF(if_gw, 0)
+	/* information from sony_laptop kernel module
+	 * /sys/devices/platform/sony-laptop */
+	END OBJ(sony_fanspeed, 0)
+	END OBJ_IF(if_gw, INFO_GW)
 	END OBJ(ioscheduler, 0)
 		if (!arg) {
 			CRIT_ERR("get_ioscheduler needs an argument (e.g. hda)");
@@ -1231,6 +1411,15 @@ static struct text_object *construct_text_object(const char *s,
 		}
 
 #endif /* __linux__ */
+#if (defined(__FreeBSD__) || defined(__linux__))
+	END OBJ_IF(if_up, 0)
+		if (!arg) {
+			ERR("if_up needs an argument");
+			obj->data.ifblock.s = 0;
+		} else {
+			obj->data.ifblock.s = strndup(arg, text_buffer_size);
+		}
+#endif
 #if defined(__OpenBSD__)
 	END OBJ(obsd_sensors_temp, 0)
 		if (!arg) {
@@ -1270,8 +1459,8 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(buffers, INFO_BUFFERS)
 	END OBJ(cached, INFO_BUFFERS)
 #define SCAN_CPU(__arg, __var) { \
-	int __offset; \
-	if (__arg && sscanf(__arg, " cpu%u %n", &__var, &__offset)) \
+	int __offset = 0; \
+	if (__arg && sscanf(__arg, " cpu%u %n", &__var, &__offset) > 0) \
 		__arg += __offset; \
 	else \
 		__var = 0; \
@@ -1279,17 +1468,27 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(cpu, INFO_CPU)
 		SCAN_CPU(arg, obj->data.cpu_index);
 		DBGP2("Adding $cpu for CPU %d", obj->data.cpu_index);
+#ifdef X11
+	END OBJ(cpugauge, INFO_CPU)
+		SIZE_DEFAULTS(gauge);
+		SCAN_CPU(arg, obj->data.cpu_index);
+		scan_gauge(arg, &obj->a, &obj->b);
+		DBGP2("Adding $cpugauge for CPU %d", obj->data.cpu_index);
 	END OBJ(cpubar, INFO_CPU)
+		SIZE_DEFAULTS(bar);
 		SCAN_CPU(arg, obj->data.cpu_index);
 		scan_bar(arg, &obj->a, &obj->b);
 		DBGP2("Adding $cpubar for CPU %d", obj->data.cpu_index);
 	END OBJ(cpugraph, INFO_CPU)
+		SIZE_DEFAULTS(graph);
 		SCAN_CPU(arg, obj->data.cpu_index);
 		scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
 			&obj->e, &obj->showaslog);
 		DBGP2("Adding $cpugraph for CPU %d", obj->data.cpu_index);
 	END OBJ(loadgraph, INFO_LOADAVG)
-		char *buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
+		char *buf = 0;
+		SIZE_DEFAULTS(graph);
+		buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
 				&obj->e, &obj->showaslog);
 		if (buf) {
 			int a = 1, r = 3;
@@ -1299,33 +1498,42 @@ static struct text_object *construct_text_object(const char *s,
 			obj->data.loadavg[0] = (r >= 1) ? (unsigned char) a : 0;
 			free(buf);
 		}
+#endif
 	END OBJ(diskio, INFO_DISKIO)
 		obj->data.diskio = prepare_diskio_stat(dev_name(arg));
 	END OBJ(diskio_read, INFO_DISKIO)
 		obj->data.diskio = prepare_diskio_stat(dev_name(arg));
 	END OBJ(diskio_write, INFO_DISKIO)
 		obj->data.diskio = prepare_diskio_stat(dev_name(arg));
+#ifdef X11
 	END OBJ(diskiograph, INFO_DISKIO)
-		char *buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
+		char *buf = 0;
+		SIZE_DEFAULTS(graph);
+		buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
 			&obj->e, &obj->showaslog);
 
 		obj->data.diskio = prepare_diskio_stat(dev_name(buf));
 		if (buf)
 			free(buf);
 	END OBJ(diskiograph_read, INFO_DISKIO)
-		char *buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
+		char *buf = 0;
+		SIZE_DEFAULTS(graph);
+		buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
 			&obj->e, &obj->showaslog);
 
 		obj->data.diskio = prepare_diskio_stat(dev_name(buf));
 		if (buf)
 			free(buf);
 	END OBJ(diskiograph_write, INFO_DISKIO)
-		char *buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
+		char *buf = 0;
+		SIZE_DEFAULTS(graph);
+		buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
 			&obj->e, &obj->showaslog);
 
 		obj->data.diskio = prepare_diskio_stat(dev_name(buf));
 		if (buf)
 			free(buf);
+#endif
 	END OBJ(color, 0)
 #ifdef X11
 		if (output_methods & TO_X) {
@@ -1352,8 +1560,10 @@ static struct text_object *construct_text_object(const char *s,
 		obj->data.l = color8;
 	END OBJ(color9, 0)
 		obj->data.l = color9;
+#ifdef X11
 	END OBJ(font, 0)
 		obj->data.s = scan_font(arg);
+#endif
 	END OBJ(conky_version, 0)
 	END OBJ(conky_build_date, 0)
 	END OBJ(conky_build_arch, 0)
@@ -1369,18 +1579,24 @@ static struct text_object *construct_text_object(const char *s,
 		} else {
 			CRIT_ERR("downspeedf needs argument");
 		}
+#ifdef X11
 	END OBJ(downspeedgraph, INFO_NET)
-		char *buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
+		char *buf = 0;
+		SIZE_DEFAULTS(graph);
+		buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
 			&obj->e, &obj->showaslog);
 
 		// default to DEFAULTNETDEV
-		buf = strndup(buf ? buf : "DEFAULTNETDEV", text_buffer_size);
+		buf = strndup(buf ? buf : DEFAULTNETDEV, text_buffer_size);
 		obj->data.net = get_net_stat(buf);
 		free(buf);
+#endif
 	END OBJ(else, 0)
 		obj_be_ifblock_else(ifblock_opaque, obj);
 	END OBJ(endif, 0)
 		obj_be_ifblock_endif(ifblock_opaque, obj);
+	END OBJ(eval, 0)
+		obj->data.s = strndup(arg ? arg : "", text_buffer_size);
 	END OBJ(image, 0)
 		obj->data.s = strndup(arg ? arg : "", text_buffer_size);
 #ifdef HAVE_POPEN
@@ -1389,11 +1605,18 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(execp, 0)
 		obj->data.s = strndup(arg ? arg : "", text_buffer_size);
 	END OBJ(execbar, 0)
+		SIZE_DEFAULTS(bar);
+		obj->data.s = strndup(arg ? arg : "", text_buffer_size);
+#ifdef X11
+	END OBJ(execgauge, 0)
+		SIZE_DEFAULTS(gauge);
 		obj->data.s = strndup(arg ? arg : "", text_buffer_size);
 	END OBJ(execgraph, 0)
+		SIZE_DEFAULTS(graph);
 		obj->data.s = strndup(arg ? arg : "", text_buffer_size);
 	END OBJ(execibar, 0)
 		int n;
+		SIZE_DEFAULTS(bar);
 
 		if (!arg || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
 			char buf[256];
@@ -1407,6 +1630,7 @@ static struct text_object *construct_text_object(const char *s,
 		}
 	END OBJ(execigraph, 0)
 		int n;
+		SIZE_DEFAULTS(graph);
 
 		if (!arg || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
 			char buf[256];
@@ -1418,6 +1642,21 @@ static struct text_object *construct_text_object(const char *s,
 		} else {
 			obj->data.execi.cmd = strndup(arg + n, text_buffer_size);
 		}
+	END OBJ(execigauge, 0)
+		int n;
+		SIZE_DEFAULTS(gauge);
+
+		if (!arg || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
+			char buf[256];
+
+			ERR("${execigauge <interval> command}");
+			obj->type = OBJ_text;
+			snprintf(buf, 256, "${%s}", s);
+			obj->data.s = strndup(buf, text_buffer_size);
+		} else {
+			obj->data.execi.cmd = strndup(arg + n, text_buffer_size);
+		}
+#endif
 	END OBJ(execi, 0)
 		int n;
 
@@ -1472,7 +1711,9 @@ static struct text_object *construct_text_object(const char *s,
 		obj->data.s = strndup("", text_buffer_size);
 	}
 #endif
+#ifdef X11
 	END OBJ(fs_bar, INFO_FS)
+		SIZE_DEFAULTS(bar);
 		arg = scan_bar(arg, &obj->data.fsbar.w, &obj->data.fsbar.h);
 	if (arg) {
 			while (isspace(*arg)) {
@@ -1486,6 +1727,7 @@ static struct text_object *construct_text_object(const char *s,
 		}
 		obj->data.fsbar.fs = prepare_fs_stat(arg);
 	END OBJ(fs_bar_free, INFO_FS)
+		SIZE_DEFAULTS(bar);
 		arg = scan_bar(arg, &obj->data.fsbar.w, &obj->data.fsbar.h);
 		if (arg) {
 			while (isspace(*arg)) {
@@ -1499,6 +1741,7 @@ static struct text_object *construct_text_object(const char *s,
 		}
 
 		obj->data.fsbar.fs = prepare_fs_stat(arg);
+#endif
 	END OBJ(fs_free, INFO_FS)
 		if (!arg) {
 			arg = "/";
@@ -1565,7 +1808,8 @@ static struct text_object *construct_text_object(const char *s,
 #ifdef __linux__
 	END OBJ(i2c, INFO_SYSFS)
 		char buf1[64], buf2[64];
-		int n;
+		float factor, offset;
+		int n, found = 0;
 
 		if (!arg) {
 			ERR("i2c needs arguments");
@@ -1574,22 +1818,32 @@ static struct text_object *construct_text_object(const char *s,
 			return NULL;
 		}
 
-		if (sscanf(arg, "%63s %63s %d", buf1, buf2, &n) != 3) {
-			/* if scanf couldn't read three values, read type and num and use
-			 * default device */
-			sscanf(arg, "%63s %d", buf2, &n);
-			obj->data.sysfs.fd = open_i2c_sensor(0, buf2, n,
-				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
-			strncpy(obj->data.sysfs.type, buf2, 63);
-		} else {
-			obj->data.sysfs.fd = open_i2c_sensor(buf1, buf2, n,
-				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
-			strncpy(obj->data.sysfs.type, buf2, 63);
+#define HWMON_RESET() {\
+		buf1[0] = 0; \
+		factor = 1.0; \
+		offset = 0.0; }
+
+		if (sscanf(arg, "%63s %d %f %f", buf2, &n, &factor, &offset) == 4) found = 1; else HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %63s %d %f %f", buf1, buf2, &n, &factor, &offset) == 5) found = 1; else if (!found) HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %63s %d", buf1, buf2, &n) == 3) found = 1; else if (!found) HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %d", buf2, &n) == 2) found = 1; else if (!found) HWMON_RESET();
+
+		if (!found) {
+			ERR("i2c failed to parse arguments");
+			obj->type = OBJ_text;
+			return NULL;
 		}
+		DBGP("parsed i2c args: '%s' '%s' %d %f %f\n", buf1, buf2, n, factor, offset);
+		obj->data.sysfs.fd = open_i2c_sensor((*buf1) ? buf1 : 0, buf2, n,
+				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
+		strncpy(obj->data.sysfs.type, buf2, 63);
+		obj->data.sysfs.factor = factor;
+		obj->data.sysfs.offset = offset;
 
 	END OBJ(platform, INFO_SYSFS)
 		char buf1[64], buf2[64];
-		int n;
+		float factor, offset;
+		int n, found = 0;
 
 		if (!arg) {
 			ERR("platform needs arguments");
@@ -1597,22 +1851,27 @@ static struct text_object *construct_text_object(const char *s,
 			return NULL;
 		}
 
-		if (sscanf(arg, "%63s %63s %d", buf1, buf2, &n) != 3) {
-			/* if scanf couldn't read three values, read type and num and use
-			 * default device */
-			sscanf(arg, "%63s %d", buf2, &n);
-			obj->data.sysfs.fd = open_platform_sensor(0, buf2, n,
-				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
-			strncpy(obj->data.sysfs.type, buf2, 63);
-		} else {
-			obj->data.sysfs.fd = open_platform_sensor(buf1, buf2, n,
-				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
-			strncpy(obj->data.sysfs.type, buf2, 63);
+		if (sscanf(arg, "%63s %d %f %f", buf2, &n, &factor, &offset) == 4) found = 1; else HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %63s %d %f %f", buf1, buf2, &n, &factor, &offset) == 5) found = 1; else if (!found) HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %63s %d", buf1, buf2, &n) == 3) found = 1; else if (!found) HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %d", buf2, &n) == 2) found = 1; else if (!found) HWMON_RESET();
+
+		if (!found) {
+			ERR("platform failed to parse arguments");
+			obj->type = OBJ_text;
+			return NULL;
 		}
+		DBGP("parsed platform args: '%s' '%s' %d %f %f\n", buf1, buf2, n, factor, offset);
+		obj->data.sysfs.fd = open_platform_sensor((*buf1) ? buf1 : 0, buf2, n,
+				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
+		strncpy(obj->data.sysfs.type, buf2, 63);
+		obj->data.sysfs.factor = factor;
+		obj->data.sysfs.offset = offset;
 
 	END OBJ(hwmon, INFO_SYSFS)
 		char buf1[64], buf2[64];
-		int n;
+		float factor, offset;
+		int n, found = 0;
 
 		if (!arg) {
 			ERR("hwmon needs argumanets");
@@ -1620,18 +1879,25 @@ static struct text_object *construct_text_object(const char *s,
 			return NULL;
 		}
 
-		if (sscanf(arg, "%63s %63s %d", buf1, buf2, &n) != 3) {
-			/* if scanf couldn't read three values, read type and num and use
-			 * default device */
-			sscanf(arg, "%63s %d", buf2, &n);
-			obj->data.sysfs.fd = open_hwmon_sensor(0, buf2, n,
-				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
-			strncpy(obj->data.sysfs.type, buf2, 63);
-		} else {
-			obj->data.sysfs.fd = open_hwmon_sensor(buf1, buf2, n,
-				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
-			strncpy(obj->data.sysfs.type, buf2, 63);
+		if (sscanf(arg, "%63s %d %f %f", buf2, &n, &factor, &offset) == 4) found = 1; else HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %63s %d %f %f", buf1, buf2, &n, &factor, &offset) == 5) found = 1; else if (!found) HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %63s %d", buf1, buf2, &n) == 3) found = 1; else if (!found) HWMON_RESET();
+		if (!found && sscanf(arg, "%63s %d", buf2, &n) == 2) found = 1; else if (!found) HWMON_RESET();
+
+#undef HWMON_RESET
+
+		if (!found) {
+			ERR("hwmon failed to parse arguments");
+			obj->type = OBJ_text;
+			return NULL;
 		}
+		DBGP("parsed hwmon args: '%s' '%s' %d %f %f\n", buf1, buf2, n, factor, offset);
+		obj->data.sysfs.fd = open_hwmon_sensor((*buf1) ? buf1 : 0, buf2, n,
+				&obj->data.sysfs.arg, obj->data.sysfs.devtype);
+		strncpy(obj->data.sysfs.type, buf2, 63);
+		obj->data.sysfs.factor = factor;
+		obj->data.sysfs.offset = offset;
+
 #endif /* !__OpenBSD__ */
 
 	END
@@ -1639,58 +1905,7 @@ static struct text_object *construct_text_object(const char *s,
 	 * avoid having almost-same code three times, we have this special
 	 * handler. */
 	if (strncmp(s, "top", 3) == EQUAL) {
-		char buf[64];
-		int n;
-
-		need_mask |= (1 << INFO_TOP);
-
-		if (s[3] == 0) {
-			obj->type = OBJ_top;
-			top_cpu = 1;
-		} else if (strcmp(&s[3], "_mem") == EQUAL) {
-			obj->type = OBJ_top_mem;
-			top_mem = 1;
-		} else if (strcmp(&s[3], "_time") == EQUAL) {
-			obj->type = OBJ_top_time;
-			top_time = 1;
-		} else {
-			ERR("Must be top, top_mem or top_time");
-			return NULL;
-		}
-
-		if (!arg) {
-			ERR("top needs arguments");
-			return NULL;
-		}
-
-		if (sscanf(arg, "%63s %i", buf, &n) == 2) {
-			if (strcmp(buf, "name") == EQUAL) {
-				obj->data.top.type = TOP_NAME;
-			} else if (strcmp(buf, "cpu") == EQUAL) {
-				obj->data.top.type = TOP_CPU;
-			} else if (strcmp(buf, "pid") == EQUAL) {
-				obj->data.top.type = TOP_PID;
-			} else if (strcmp(buf, "mem") == EQUAL) {
-				obj->data.top.type = TOP_MEM;
-			} else if (strcmp(buf, "time") == EQUAL) {
-				obj->data.top.type = TOP_TIME;
-			} else if (strcmp(buf, "mem_res") == EQUAL) {
-				obj->data.top.type = TOP_MEM_RES;
-			} else if (strcmp(buf, "mem_vsize") == EQUAL) {
-				obj->data.top.type = TOP_MEM_VSIZE;
-			} else {
-				ERR("invalid type arg for top");
-				ERR("must be one of: name, cpu, pid, mem, time, mem_res, mem_vsize");
-				return NULL;
-			}
-			if (n < 1 || n > 10) {
-				ERR("invalid num arg for top. Must be between 1 and 10.");
-				return NULL;
-			} else {
-				obj->data.top.num = n - 1;
-			}
-		} else {
-			ERR("invalid argument count for top");
+		if (!parse_top_args(s, arg, obj)) {
 			return NULL;
 		}
 	} else OBJ(addr, INFO_NET)
@@ -1719,13 +1934,13 @@ static struct text_object *construct_text_object(const char *s,
 		}
 	END OBJ(lines, 0)
 		if (arg) {
-			obj->data.s = strdup(arg);
+			obj->data.s = strndup(arg, text_buffer_size);
 		}else{
 			CRIT_ERR("lines needs a argument");
 		}
 	END OBJ(words, 0)
 		if (arg) {
-			obj->data.s = strdup(arg);
+			obj->data.s = strndup(arg, text_buffer_size);
 		}else{
 			CRIT_ERR("words needs a argument");
 		}
@@ -2024,30 +2239,45 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(memfree, INFO_MEM)
 	END OBJ(memmax, INFO_MEM)
 	END OBJ(memperc, INFO_MEM)
+#ifdef X11
+	END OBJ(memgauge, INFO_MEM)
+		SIZE_DEFAULTS(gauge);
+		scan_gauge(arg, &obj->data.pair.a, &obj->data.pair.b);
 	END OBJ(membar, INFO_MEM)
+		SIZE_DEFAULTS(bar);
 		scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
 	END OBJ(memgraph, INFO_MEM)
-		char *buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
+		char *buf = 0;
+		SIZE_DEFAULTS(graph);
+		buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
 			&obj->e, &obj->showaslog);
 
 		if (buf) {
 			free(buf);
 		}
+#endif
 	END OBJ(mixer, INFO_MIXER)
 		obj->data.l = mixer_init(arg);
 	END OBJ(mixerl, INFO_MIXER)
 		obj->data.l = mixer_init(arg);
 	END OBJ(mixerr, INFO_MIXER)
 		obj->data.l = mixer_init(arg);
+#ifdef X11
 	END OBJ(mixerbar, INFO_MIXER)
+		SIZE_DEFAULTS(bar);
 		scan_mixer_bar(arg, &obj->data.mixerbar.l, &obj->data.mixerbar.w,
 			&obj->data.mixerbar.h);
 	END OBJ(mixerlbar, INFO_MIXER)
+		SIZE_DEFAULTS(bar);
 		scan_mixer_bar(arg, &obj->data.mixerbar.l, &obj->data.mixerbar.w,
 			&obj->data.mixerbar.h);
 	END OBJ(mixerrbar, INFO_MIXER)
+		SIZE_DEFAULTS(bar);
 		scan_mixer_bar(arg, &obj->data.mixerbar.l, &obj->data.mixerbar.w,
 			&obj->data.mixerbar.h);
+#endif
+	END OBJ_IF(if_mixer_mute, INFO_MIXER)
+		obj->data.ifblock.i = mixer_init(arg);
 #ifdef X11
 	END OBJ(monitor, INFO_X11)
 	END OBJ(monitor_number, INFO_X11)
@@ -2081,8 +2311,11 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(swap, INFO_MEM)
 	END OBJ(swapmax, INFO_MEM)
 	END OBJ(swapperc, INFO_MEM)
+#ifdef X11
 	END OBJ(swapbar, INFO_MEM)
+		SIZE_DEFAULTS(bar);
 		scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+#endif
 	END OBJ(sysname, 0)
 	END OBJ(time, 0)
 		obj->data.s = strndup(arg ? arg : "%F %T", text_buffer_size);
@@ -2170,14 +2403,18 @@ static struct text_object *construct_text_object(const char *s,
 			CRIT_ERR("upspeedf needs argument");
 		}
 
+#ifdef X11
 	END OBJ(upspeedgraph, INFO_NET)
-		char *buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
+		char *buf = 0;
+		SIZE_DEFAULTS(graph);
+		buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
 			&obj->e, &obj->showaslog);
 
 		// default to DEFAULTNETDEV
-		buf = strndup(buf ? buf : "DEFAULTNETDEV", text_buffer_size);
+		buf = strndup(buf ? buf : DEFAULTNETDEV, text_buffer_size);
 		obj->data.net = get_net_stat(buf);
 		free(buf);
+#endif
 	END OBJ(uptime_short, INFO_UPTIME)
 	END OBJ(uptime, INFO_UPTIME)
 	END OBJ(user_names, INFO_USERS)
@@ -2187,7 +2424,6 @@ static struct text_object *construct_text_object(const char *s,
 #if defined(__linux__)
 	END OBJ(gw_iface, INFO_GW)
 	END OBJ(gw_ip, INFO_GW)
-	END OBJ(if_gw, INFO_GW)
 #endif /* !__linux__ */
 #ifndef __OpenBSD__
 	END OBJ(adt746xcpu, 0)
@@ -2258,7 +2494,9 @@ static struct text_object *construct_text_object(const char *s,
 			obj->data.s = strndup(arg, text_buffer_size);
 		else
 			ERR("smapi_bat_power needs an argument");
+#ifdef X11
 	END OBJ(smapi_bat_bar, 0)
+		SIZE_DEFAULTS(bar);
 		if(arg) {
 			int cnt;
 			if(sscanf(arg, "%i %n", &obj->data.i, &cnt) <= 0) {
@@ -2270,6 +2508,7 @@ static struct text_object *construct_text_object(const char *s,
 			}
 		} else
 			ERR("smapi_bat_bar needs an argument");
+#endif /* X11 */
 #endif /* IBM */
 #ifdef MPD
 #define mpd_set_maxlen(name) \
@@ -2307,9 +2546,12 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(mpd_vol, INFO_MPD) init_mpd();
 	END OBJ(mpd_bitrate, INFO_MPD) init_mpd();
 	END OBJ(mpd_status, INFO_MPD) init_mpd();
+#ifdef X11
 	END OBJ(mpd_bar, INFO_MPD)
+		SIZE_DEFAULTS(bar);
 		scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
 		init_mpd();
+#endif
 	END OBJ(mpd_smart, INFO_MPD)
 		mpd_set_maxlen(mpd_smart);
 		init_mpd();
@@ -2346,8 +2588,11 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(xmms2_size, INFO_XMMS2)
 	END OBJ(xmms2_status, INFO_XMMS2)
 	END OBJ(xmms2_percent, INFO_XMMS2)
+#ifdef X11
 	END OBJ(xmms2_bar, INFO_XMMS2)
+		SIZE_DEFAULTS(bar);
 		scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+#endif /* X11 */
 	END OBJ(xmms2_smart, INFO_XMMS2)
 	END OBJ(xmms2_playlist, INFO_XMMS2)
 	END OBJ(xmms2_timesplayed, INFO_XMMS2)
@@ -2375,8 +2620,11 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(audacious_playlist_length, INFO_AUDACIOUS)
 	END OBJ(audacious_playlist_position, INFO_AUDACIOUS)
 	END OBJ(audacious_main_volume, INFO_AUDACIOUS)
+#ifdef X11
 	END OBJ(audacious_bar, INFO_AUDACIOUS)
+		SIZE_DEFAULTS(bar);
 		scan_bar(arg, &obj->a, &obj->b);
+#endif /* X11 */
 #endif
 #ifdef BMPX
 	END OBJ(bmpx_title, INFO_BMPX)
@@ -2414,22 +2662,83 @@ static struct text_object *construct_text_object(const char *s,
 	END OBJ(rss, 0)
 		if (arg) {
 			int argc, delay, act_par;
+			unsigned int nrspaces = 0;
 			char *uri = (char *) malloc(128 * sizeof(char));
 			char *action = (char *) malloc(64 * sizeof(char));
 
-			argc = sscanf(arg, "%127s %d %63s %d", uri, &delay, action,
-					&act_par);
+			argc = sscanf(arg, "%127s %d %63s %d %u", uri, &delay, action,
+					&act_par, &nrspaces);
 			obj->data.rss.uri = uri;
 			obj->data.rss.delay = delay;
 			obj->data.rss.action = action;
 			obj->data.rss.act_par = act_par;
+			obj->data.rss.nrspaces = nrspaces;
 
 			init_rss_info();
 		} else {
 			CRIT_ERR("rss needs arguments: <uri> <delay in minutes> <action> "
-					"[act_par]");
+					"[act_par] [spaces in front]");
 		}
 #endif
+#ifdef HAVE_LUA
+	END OBJ(lua, 0)
+		if (arg) {
+			obj->data.s = strndup(arg, text_buffer_size);
+		} else {
+			CRIT_ERR("lua needs arguments: <function name> [function parameters]");
+		}
+	END OBJ(lua_parse, 0)
+		if (arg) {
+			obj->data.s = strndup(arg, text_buffer_size);
+		} else {
+			CRIT_ERR("lua_parse needs arguments: <function name> [function parameters]");
+		}
+	END OBJ(lua_read_parse, 0)
+		if (arg) {
+			obj->data.s = strndup(arg, text_buffer_size);
+		} else {
+			CRIT_ERR("lua_read_parse needs arguments: <function name> <string to pass>");
+		}
+#ifdef X11
+	END OBJ(lua_bar, 0)
+		SIZE_DEFAULTS(bar);
+		if (arg) {
+			arg = scan_bar(arg, &obj->a, &obj->b);
+			if(arg) {
+				obj->data.s = strndup(arg, text_buffer_size);
+			} else {
+				CRIT_ERR("lua_bar needs arguments: <height>,<width> <function name> [function parameters]");
+			}
+		} else {
+			CRIT_ERR("lua_bar needs arguments: <height>,<width> <function name> [function parameters]");
+		}
+	END OBJ(lua_graph, 0)
+		SIZE_DEFAULTS(graph);
+		if (arg) {
+			arg = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d,
+					&obj->e, &obj->showaslog);
+			if (arg) {
+				obj->data.s = strndup(arg, text_buffer_size);
+			} else {
+				CRIT_ERR("lua_graph needs arguments: <\"normal\"|\"log\"> <height>,<width> <gradient colour 1> <gradient colour 2> <scale> <function name> [function parameters]");
+			}
+		} else {
+			CRIT_ERR("lua_graph needs arguments: <\"normal\"|\"log\"> <height>,<width> <gradient colour 1> <gradient colour 2> <scale> <function name> [function parameters]");
+	}
+	END OBJ(lua_gauge, 0)
+		SIZE_DEFAULTS(gauge);
+		if (arg) {
+			arg = scan_gauge(arg, &obj->a, &obj->b);
+			if (arg) {
+				obj->data.s = strndup(arg, text_buffer_size);
+			} else {
+				CRIT_ERR("lua_gauge needs arguments: <height>,<width> <function name> [function parameters]");
+			}
+		} else {
+			CRIT_ERR("lua_gauge needs arguments: <height>,<width> <function name> [function parameters]");
+		}
+#endif /* X11 */
+#endif /* HAVE_LUA */
 #ifdef HDDTEMP
 	END OBJ(hddtemp, 0)
 		if (scan_hddtemp(arg, &obj->data.hddtemp.dev,
@@ -2446,9 +2755,12 @@ static struct text_object *construct_text_object(const char *s,
 		tcp_portmon_init(arg, &obj->data.tcp_port_monitor);
 #endif
 	END OBJ(entropy_avail, INFO_ENTROPY)
-		END OBJ(entropy_poolsize, INFO_ENTROPY)
-		END OBJ(entropy_bar, INFO_ENTROPY)
+	END OBJ(entropy_poolsize, INFO_ENTROPY)
+#ifdef X11
+	END OBJ(entropy_bar, INFO_ENTROPY)
+		SIZE_DEFAULTS(bar);
 		scan_bar(arg, &obj->a, &obj->b);
+#endif
 	END OBJ(scroll, 0)
 		int n1, n2;
 
@@ -2464,6 +2776,55 @@ static struct text_object *construct_text_object(const char *s,
 		} else {
 			CRIT_ERR("scroll needs arguments: <length> [<step>] <text>");
 		}
+	END OBJ(combine, 0)
+		if(arg) {
+			unsigned int i,j;
+			unsigned int indenting = 0;	//vars can be used as args for other vars
+			int startvar[2];
+			int endvar[2];
+			startvar[0] = endvar[0] = startvar[1] = endvar[1] = -1;
+			j=0;
+			for (i=0; arg[i] != 0 && j < 2; i++) {
+				if(startvar[j] == -1) {
+					if(arg[i] == '$') {
+						startvar[j] = i;
+					}
+				}else if(endvar[j] == -1) {
+					if(arg[i] == '{') {
+						indenting++;
+					}else if(arg[i] == '}') {
+						indenting--;
+					}
+					if (indenting == 0 && arg[i+1] < 48) {	//<48 has 0, $, and the most used chars not used in varnames but not { or }
+						endvar[j]=i+1;
+						j++;
+					}
+				}
+			}
+			if(startvar[0] >= 0 && endvar[0] >= 0 && startvar[1] >= 0 && endvar[1] >= 0) {
+				obj->data.combine.left = malloc(endvar[0]-startvar[0] + 1);
+				obj->data.combine.seperation = malloc(startvar[1] - endvar[0] + 1);
+				obj->data.combine.right= malloc(endvar[1]-startvar[1] + 1);
+				
+				strncpy(obj->data.combine.left, arg + startvar[0], endvar[0] - startvar[0]);
+				obj->data.combine.left[endvar[0] - startvar[0]] = 0;
+				
+				strncpy(obj->data.combine.seperation, arg + endvar[0], startvar[1] - endvar[0]);
+				obj->data.combine.seperation[startvar[1] - endvar[0]] = 0;
+				
+				strncpy(obj->data.combine.right, arg + startvar[1], endvar[1] - startvar[1]);
+				obj->data.combine.right[endvar[1] - startvar[1]] = 0;
+
+				obj->sub = malloc(sizeof(struct text_object));
+				extract_variable_text_internal(obj->sub, obj->data.combine.left, 0);
+				obj->sub->sub = malloc(sizeof(struct text_object));
+				extract_variable_text_internal(obj->sub->sub, obj->data.combine.right, 0);
+			} else {
+				CRIT_ERR("combine needs arguments: <text1> <text2>");
+			}
+		} else {
+			CRIT_ERR("combine needs arguments: <text1> <text2>");
+		}
 #ifdef NVIDIA
 	END OBJ(nvidia, 0)
 		if (!arg) {
@@ -2473,6 +2834,46 @@ static struct text_object *construct_text_object(const char *s,
 				 " specified: '%s'\n", arg);
 		}
 #endif /* NVIDIA */
+#ifdef APCUPSD
+		init_apcupsd();
+		END OBJ(apcupsd, INFO_APCUPSD)
+			if (arg) {
+				char host[64];
+				int port;
+				if (sscanf(arg, "%63s %d", host, &port) != 2) {
+					CRIT_ERR("apcupsd needs arguments: <host> <port>");
+				} else {
+					info.apcupsd.port = htons(port);
+					strncpy(info.apcupsd.host, host, sizeof(info.apcupsd.host));
+				}
+			} else {
+				CRIT_ERR("apcupsd needs arguments: <host> <port>");
+			}
+			END OBJ(apcupsd_name, INFO_APCUPSD)
+			END OBJ(apcupsd_model, INFO_APCUPSD)
+			END OBJ(apcupsd_upsmode, INFO_APCUPSD)
+			END OBJ(apcupsd_cable, INFO_APCUPSD)
+			END OBJ(apcupsd_status, INFO_APCUPSD)
+			END OBJ(apcupsd_linev, INFO_APCUPSD)
+			END OBJ(apcupsd_load, INFO_APCUPSD)
+#ifdef X11
+			END OBJ(apcupsd_loadbar, INFO_APCUPSD)
+				SIZE_DEFAULTS(bar);
+				scan_bar(arg, &obj->a, &obj->b);
+			END OBJ(apcupsd_loadgraph, INFO_APCUPSD)
+				char* buf = 0;
+				SIZE_DEFAULTS(graph);
+				buf = scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e, &obj->showaslog);
+				if (buf) free(buf);
+			END OBJ(apcupsd_loadgauge, INFO_APCUPSD)
+				SIZE_DEFAULTS(gauge);
+				scan_gauge(arg, &obj->a, &obj->b);
+#endif
+			END OBJ(apcupsd_charge, INFO_APCUPSD)
+			END OBJ(apcupsd_timeleft, INFO_APCUPSD)
+			END OBJ(apcupsd_temp, INFO_APCUPSD)
+			END OBJ(apcupsd_lastxfer, INFO_APCUPSD)
+#endif /* APCUPSD */
 	END {
 		char buf[256];
 
@@ -2567,7 +2968,8 @@ static char *backslash_escape(const char *src, char **templates, unsigned int te
  */
 static char *handle_template(const char *tmpl, const char *args)
 {
-	char *args_dup, *p, *p_old;
+	char *args_dup = NULL;
+	char *p, *p_old;
 	char **argsp = NULL;
 	unsigned int argcnt = 0, template_idx, i;
 	char *eval_text;
@@ -2576,28 +2978,30 @@ static char *handle_template(const char *tmpl, const char *args)
 	    (template_idx > 9))
 		return NULL;
 
-	args_dup = strdup(args);
-	p = args_dup;
-	while (*p) {
-		while (*p && (*p == ' ' && *(p - 1) != '\\'))
-			p++;
-		if (*(p - 1) == '\\')
-			p--;
-		p_old = p;
-		while (*p && (*p != ' ' || *(p - 1) == '\\'))
-			p++;
-		if (*p) {
-			(*p) = '\0';
-			p++;
+	if(args) {
+		args_dup = strdup(args);
+		p = args_dup;
+		while (*p) {
+			while (*p && (*p == ' ' && (p == args_dup || *(p - 1) != '\\')))
+				p++;
+			if (p > args_dup && *(p - 1) == '\\')
+				p--;
+			p_old = p;
+			while (*p && (*p != ' ' || (p > args_dup && *(p - 1) == '\\')))
+				p++;
+			if (*p) {
+				(*p) = '\0';
+				p++;
+			}
+			argsp = realloc(argsp, ++argcnt * sizeof(char *));
+			argsp[argcnt - 1] = p_old;
 		}
-		argsp = realloc(argsp, ++argcnt * sizeof(char *));
-		argsp[argcnt - 1] = p_old;
-	}
-	for (i = 0; i < argcnt; i++) {
-		char *tmp;
-		tmp = backslash_escape(argsp[i], NULL, 0);
-		DBGP2("%s: substituted arg '%s' to '%s'", tmpl, argsp[i], tmp);
-		argsp[i] = tmp;
+		for (i = 0; i < argcnt; i++) {
+			char *tmp;
+			tmp = backslash_escape(argsp[i], NULL, 0);
+			DBGP2("%s: substituted arg '%s' to '%s'", tmpl, argsp[i], tmp);
+			argsp[i] = tmp;
+		}
 	}
 
 	eval_text = backslash_escape(template[template_idx], argsp, argcnt);
@@ -2632,30 +3036,40 @@ static char *find_and_replace_templates(const char *inbuf)
 		}
 
 		if (*(p + 1) == '{') {
-			templ = p + 2;
-			while (*p != ' ')
+			p += 2;
+			templ = p;
+			while (*p && !isspace(*p) && *p != '{' && *p != '}')
 				p++;
-			*(p++) = '\0';
-			args = p;
+			if (*p == '}')
+				args = NULL;
+			else
+				args = p;
+
 			stack = 1;
-			while (stack > 0) {
-				p++;
+			while (*p && stack > 0) {
 				if (*p == '{')
 					stack++;
 				else if (*p == '}')
 					stack--;
+				p++;
 			}
-			*(p++) = '\0';
+			if (stack == 0) {
+				// stack is empty. that means the previous char was }, so we zero it
+				*(p - 1) = '\0';
+			} else {
+				// we ran into the end of string without finding a closing }, bark
+				CRIT_ERR("cannot find a closing '}' in template expansion");
+			}
 		} else {
 			templ = p + 1;
-			while (*p != ' ')
+			while (*p && !isspace(*p))
 				p++;
-			*(p++) = '\0';
 			args = NULL;
 		}
 		tmpl_out = handle_template(templ, args);
 		if (tmpl_out) {
 			outlen += strlen(tmpl_out);
+			*o = '\0';
 			outbuf = realloc(outbuf, outlen * sizeof(char));
 			strcat (outbuf, tmpl_out);
 			free(tmpl_out);
@@ -2679,6 +3093,45 @@ static int text_contains_templates(const char *text)
 	return 0;
 }
 
+static void strfold(char *start, int count)
+{
+	char *curplace;
+	for (curplace = start + count; *curplace != 0; curplace++) {
+		*(curplace - count) = *curplace;
+	}
+	*(curplace - count) = 0;
+}
+
+/*
+ * - assumes that *string is '#'
+ * - removes the part from '#' to the end of line ('\n' or '\0')
+ * - BUT, it leaves the '\n'
+ */
+static size_t remove_comment(char *string)
+{
+	char *end = string;
+	while(*end != '\0' && *end != '\n')
+		++end;
+	strfold(string, end - string);
+	return end - string;
+}
+
+static size_t remove_comments(char *string)
+{
+	char *curplace;
+	size_t folded = 0;
+	for (curplace = string; *curplace != 0; curplace++) {
+		if (*curplace == '\\' && *(curplace + 1) == '#') {
+			// strcpy can't be used for overlapping strings
+			strfold(curplace, 1);
+			folded += 1;
+		} else if (*curplace == '#') {
+			folded += remove_comment(curplace);
+		}
+	}
+	return folded;
+}
+
 static int extract_variable_text_internal(struct text_object *retval, const char *const_p, char allow_threaded)
 {
 	struct text_object *obj;
@@ -2687,6 +3140,7 @@ static int extract_variable_text_internal(struct text_object *retval, const char
 	void *ifblock_opaque = NULL;
 	char *tmp_p;
 	char *arg = 0;
+	size_t len = 0;
 
 	p = strndup(const_p, max_user_text - 1);
 	while (text_contains_templates(p)) {
@@ -2724,7 +3178,6 @@ static int extract_variable_text_internal(struct text_object *retval, const char
 			if (*p != '$') {
 				char buf[256];
 				const char *var;
-				unsigned int len;
 
 				/* variable is either $foo or ${foo} */
 				if (*p == '{') {
@@ -2811,6 +3264,8 @@ static int extract_variable_text_internal(struct text_object *retval, const char
 					append_object(retval, obj);
 				}
 			}
+		} else if (*p == '#') {
+			remove_comment(p);
 		}
 		p++;
 	}
@@ -2829,7 +3284,7 @@ static int extract_variable_text_internal(struct text_object *retval, const char
 
 static void extract_variable_text(const char *p)
 {
-	free_text_objects(&global_root_object);
+	free_text_objects(&global_root_object, 0);
 	if (tmpstring1) {
 		free(tmpstring1);
 		tmpstring1 = 0;
@@ -2990,12 +3445,12 @@ static inline double get_barnum(char *buf)
 	}
 
 	if (sscanf(buf, "%lf", &barnum) == 0) {
-		ERR("reading execbar value failed (perhaps it's not the "
+		ERR("reading exec value failed (perhaps it's not the "
 				"correct format?)");
 		return -1;
 	}
 	if (barnum > 100.0 || barnum < 0.0) {
-		ERR("your execbar value is not between 0 and 100, "
+		ERR("your exec value is not between 0 and 100, "
 				"therefore it will be ignored");
 		return -1;
 	}
@@ -3006,6 +3461,9 @@ static void generate_text_internal(char *p, int p_max_size,
 		struct text_object root, struct information *cur)
 {
 	struct text_object *obj;
+#ifdef X11
+	int need_to_load_fonts = 0;
+#endif
 
 	/* for the OBJ_top* handler */
 	struct process **needed = 0;
@@ -3017,7 +3475,8 @@ static void generate_text_internal(char *p, int p_max_size,
 #endif
 
 	p[0] = 0;
-	for (obj = root.next; obj && p_max_size > 0; obj = obj->next) {
+	obj = root.next;
+	while (obj && p_max_size > 0) {
 		needed = 0; // reset for top stuff
 
 /* IFBLOCK jumping algorithm
@@ -3116,10 +3575,12 @@ static void generate_text_internal(char *p, int p_max_size,
 					spaced_print(p, p_max_size, "unk", 5);
 				}
 			}
+#ifdef X11
 			OBJ(wireless_link_bar) {
 				new_bar(p, obj->a, obj->b, ((double) obj->data.net->link_qual /
 							obj->data.net->link_qual_max) * 255.0);
 			}
+#endif /* X11 */
 #endif /* HAVE_IWLIB */
 
 #endif /* __linux__ */
@@ -3146,9 +3607,11 @@ static void generate_text_internal(char *p, int p_max_size,
 			OBJ(battery_percent) {
 				percent_print(p, p_max_size, get_battery_perct(obj->data.s));
 			}
+#ifdef X11
 			OBJ(battery_bar) {
 				new_bar(p, obj->a, obj->b, get_battery_perct_bar(obj->data.s));
 			}
+#endif
 			OBJ(battery_short) {
 				get_battery_short_status(p, p_max_size, obj->data.s);
 			}
@@ -3162,19 +3625,23 @@ static void generate_text_internal(char *p, int p_max_size,
 			}
 			OBJ(cpu) {
 				if (obj->data.cpu_index > info.cpu_count) {
-					printf("obj->data.cpu_index %i info.cpu_count %i",
+					ERR("obj->data.cpu_index %i info.cpu_count %i",
 							obj->data.cpu_index, info.cpu_count);
 					CRIT_ERR("attempting to use more CPUs than you have!");
 				}
 				percent_print(p, p_max_size,
 				              round_to_int(cur->cpu_usage[obj->data.cpu_index] * 100.0));
 			}
+#ifdef X11
+			OBJ(cpugauge)
+				new_gauge(p, obj->a, obj->b,
+						round_to_int(cur->cpu_usage[obj->data.cpu_index] * 255.0));
 			OBJ(cpubar) {
 				new_bar(p, obj->a, obj->b,
 						round_to_int(cur->cpu_usage[obj->data.cpu_index] * 255.0));
 			}
 			OBJ(cpugraph) {
-				new_graph(p, obj->a, obj->b, obj->c, obj->d, (unsigned int)
+				new_graph(p, obj->a, obj->b, obj->c, obj->d,
 						round_to_int(cur->cpu_usage[obj->data.cpu_index] * 100),
 						100, 1, obj->showaslog);
 			}
@@ -3215,6 +3682,7 @@ static void generate_text_internal(char *p, int p_max_size,
 			OBJ(color9) {
 				new_fg(p, color9);
 			}
+#endif
 			OBJ(conky_version) {
 				snprintf(p, p_max_size, "%s", VERSION);
 			}
@@ -3311,11 +3779,10 @@ static void generate_text_internal(char *p, int p_max_size,
 				get_ibm_acpi_brightness(p, p_max_size);
 			}
 #endif /* IBM */
-			OBJ(if_up) {
-				if ((obj->data.ifblock.s)
-						&& (!interface_up(obj->data.ifblock.s))) {
-					DO_JUMP;
-				}
+			/* information from sony_laptop kernel module
+			 * /sys/devices/platform/sony-laptop */
+			OBJ(sony_fanspeed) {
+				get_sony_fanspeed(p, p_max_size);
 			}
 			OBJ(if_gw) {
 				if (!cur->gw_info.count) {
@@ -3335,7 +3802,14 @@ static void generate_text_internal(char *p, int p_max_size,
 				get_powerbook_batt_info(p, p_max_size, obj->data.i);
 			}
 #endif /* __linux__ */
-
+#if (defined(__FreeBSD__) || defined(__linux__))
+			OBJ(if_up) {
+				if ((obj->data.ifblock.s)
+						&& (!interface_up(obj->data.ifblock.s))) {
+					DO_JUMP;
+				}
+			}
+#endif
 #ifdef __OpenBSD__
 			OBJ(obsd_sensors_temp) {
 				obsd_sensors.device = sensor_device;
@@ -3363,10 +3837,12 @@ static void generate_text_internal(char *p, int p_max_size,
 				get_obsd_product(p, p_max_size);
 			}
 #endif /* __OpenBSD__ */
-
+#ifdef X11
 			OBJ(font) {
 				new_font(p, obj->data.s);
+				need_to_load_fonts = 1;
 			}
+#endif
 			/* TODO: move this correction from kB to kB/s elsewhere
 			 * (or get rid of it??) */
 			OBJ(diskio) {
@@ -3381,6 +3857,7 @@ static void generate_text_internal(char *p, int p_max_size,
 				human_readable((obj->data.diskio->current_read / update_interval) * 1024LL,
 						p, p_max_size);
 			}
+#ifdef X11
 			OBJ(diskiograph) {
 				new_graph(p, obj->a, obj->b, obj->c, obj->d,
 				          obj->data.diskio->current, obj->e, 1, obj->showaslog);
@@ -3393,6 +3870,7 @@ static void generate_text_internal(char *p, int p_max_size,
 				new_graph(p, obj->a, obj->b, obj->c, obj->d,
 				          obj->data.diskio->current_write, obj->e, 1, obj->showaslog);
 			}
+#endif
 			OBJ(downspeed) {
 				human_readable(obj->data.net->recv_speed, p, 255);
 			}
@@ -3400,10 +3878,12 @@ static void generate_text_internal(char *p, int p_max_size,
 				spaced_print(p, p_max_size, "%.1f", 8,
 						obj->data.net->recv_speed / 1024.0);
 			}
+#ifdef X11
 			OBJ(downspeedgraph) {
-			new_graph(p, obj->a, obj->b, obj->c, obj->d,
-				obj->data.net->recv_speed / 1024.0, obj->e, 1, obj->showaslog);
+				new_graph(p, obj->a, obj->b, obj->c, obj->d,
+					obj->data.net->recv_speed / 1024.0, obj->e, 1, obj->showaslog);
 			}
+#endif
 			OBJ(else) {
 				/* Since we see you, you're if has not jumped.
 				 * Do Ninja jump here: without leaving traces.
@@ -3441,41 +3921,27 @@ static void generate_text_internal(char *p, int p_max_size,
                                         strcpy(p, "0.0.0.0");
            }
 #endif /* __linux__ */
-
 #if defined(IMLIB2) && defined(X11)
 			OBJ(image) {
-				if (obj->a < 1) {
-					obj->a++;
-				} else {
-					Imlib_Image image, buffer;
-
-					image = imlib_load_image(obj->data.s);
-					imlib_context_set_image(image);
-					if (image) {
-						int w, h;
-
-						w = imlib_image_get_width();
-						h = imlib_image_get_height();
-						buffer = imlib_create_image(w, h);
-						imlib_context_set_display(display);
-						imlib_context_set_drawable(window.drawable);
-						imlib_context_set_colormap(DefaultColormap(display,
-							screen));
-						imlib_context_set_visual(DefaultVisual(display,
-							screen));
-						imlib_context_set_image(buffer);
-						imlib_blend_image_onto_image(image, 0, 0, 0, w, h,
-							text_start_x, text_start_y, w, h);
-						imlib_render_image_on_drawable(text_start_x,
-							text_start_y);
-						imlib_free_image();
-						imlib_context_set_image(image);
-						imlib_free_image();
-					}
-				}
+				/* doesn't actually draw anything, just queues it omp.  the
+				 * image will get drawn after the X event loop */
+				cimlib_add_image(obj->data.s);
 			}
 #endif /* IMLIB2 */
+			OBJ(eval) {
+				struct information *tmp_info;
+				struct text_object subroot, subroot2;
 
+				tmp_info = malloc(sizeof(struct information));
+				memcpy(tmp_info, cur, sizeof(struct information));
+				parse_conky_vars(&subroot, obj->data.s, p, tmp_info);
+				DBGP("evaluated '%s' to '%s'", obj->data.s, p);
+				parse_conky_vars(&subroot2, p, p, tmp_info);
+
+				free_text_objects(&subroot, 1);
+				free_text_objects(&subroot2, 1);
+				free(tmp_info);
+			}
 			OBJ(exec) {
 				read_exec(obj->data.s, p, text_buffer_size);
 				remove_deleted_chars(p);
@@ -3490,20 +3956,51 @@ static void generate_text_internal(char *p, int p_max_size,
 				memcpy(tmp_info, cur, sizeof(struct information));
 				parse_conky_vars(&subroot, p, p, tmp_info);
 
-				free_text_objects(&subroot);
+				free_text_objects(&subroot, 1);
 				free(tmp_info);
 			}
+#ifdef X11
+			OBJ(execgauge) {
+				double barnum;
+
+				read_exec(obj->data.s, p, text_buffer_size);
+				barnum = get_barnum(p); /*using the same function*/
+
+				if (barnum >= 0.0) {
+					barnum /= 100;
+					new_gauge(p, obj->a, obj->b, round_to_int(barnum * 255.0));
+				}
+			}
+#endif
 			OBJ(execbar) {
 				double barnum;
+				int i;
 
 				read_exec(obj->data.s, p, text_buffer_size);
 				barnum = get_barnum(p);
 
 				if (barnum >= 0.0) {
-					barnum /= 100;
-					new_bar(p, 0, 6, round_to_int(barnum * 255.0));
+#ifdef X11
+					if(output_methods & TO_X) {
+						barnum /= 100;
+						new_bar(p, obj->a, obj->b, round_to_int(barnum * 255.0));
+					}else{
+#endif
+						if(!obj->a) obj->a = DEFAULT_BAR_WIDTH_NO_X;
+						barnum = round_to_int( ( barnum * obj->a ) / 100);
+						for(i=0; i<barnum; i++) {
+							*(p+i)='#';
+						}
+						for(; i < obj->a; i++) {
+							*(p+i)='_';
+						}
+						*(p+i)=0;
+#ifdef X11
+					}
+#endif
 				}
 			}
+#ifdef X11
 			OBJ(execgraph) {
 				char showaslog = FALSE;
 				double barnum;
@@ -3518,8 +4015,8 @@ static void generate_text_internal(char *p, int p_max_size,
 				}
 				barnum = get_barnum(p);
 
-				if (barnum >= 0.0) {
-					new_graph(p, 0, 25, obj->c, obj->d, round_to_int(barnum),
+				if (barnum >= 0) {
+					new_graph(p, obj->a, obj->b, obj->c, obj->d, round_to_int(barnum),
 						100, 1, showaslog);
 				}
 			}
@@ -3536,7 +4033,7 @@ static void generate_text_internal(char *p, int p_max_size,
 					}
 					obj->data.execi.last_update = current_update_time;
 				}
-				new_bar(p, 0, 6, round_to_int(obj->f));
+				new_bar(p, obj->a, obj->b, round_to_int(obj->f));
 			}
 			OBJ(execigraph) {
 				if (current_update_time - obj->data.execi.last_update
@@ -3551,8 +4048,24 @@ static void generate_text_internal(char *p, int p_max_size,
 					}
 					obj->data.execi.last_update = current_update_time;
 				}
-				new_graph(p, 0, 25, obj->c, obj->d, (int) (obj->f), 100, 1, FALSE);
+				new_graph(p, obj->a, obj->b, obj->c, obj->d, (int) (obj->f), 100, 1, FALSE);
 			}
+			OBJ(execigauge) {
+				if (current_update_time - obj->data.execi.last_update
+						>= obj->data.execi.interval) {
+					double barnum;
+
+					read_exec(obj->data.execi.cmd, p, text_buffer_size);
+					barnum = get_barnum(p);
+
+					if (barnum >= 0.0) {
+						obj->f = 255 * barnum / 100.0;
+					}
+					obj->data.execi.last_update = current_update_time;
+				}
+				new_gauge(p, obj->a, obj->b, round_to_int(obj->f));
+			}
+#endif
 			OBJ(execi) {
 				if (current_update_time - obj->data.execi.last_update
 						>= obj->data.execi.interval
@@ -3588,7 +4101,7 @@ static void generate_text_internal(char *p, int p_max_size,
 					parse_conky_vars(&subroot, obj->data.execi.buffer, p, tmp_info);
 					obj->data.execi.last_update = current_update_time;
 				}
-				free_text_objects(&subroot);
+				free_text_objects(&subroot, 1);
 				free(tmp_info);
 			}
 			OBJ(texeci) {
@@ -3604,10 +4117,11 @@ static void generate_text_internal(char *p, int p_max_size,
 					if (timed_thread_run(obj->data.texeci.p_timed_thread)) {
 						ERR("Error running texeci timed thread");
 					}
+				} else {
+					timed_thread_lock(obj->data.texeci.p_timed_thread);
+					snprintf(p, text_buffer_size, "%s", obj->data.texeci.buffer);
+					timed_thread_unlock(obj->data.texeci.p_timed_thread);
 				}
-				timed_thread_lock(obj->data.texeci.p_timed_thread);
-				snprintf(p, text_buffer_size, "%s", obj->data.texeci.buffer);
-				timed_thread_unlock(obj->data.texeci.p_timed_thread);
 			}
 #endif /* HAVE_POPEN */
 			OBJ(imap_unseen) {
@@ -3647,6 +4161,7 @@ static void generate_text_internal(char *p, int p_max_size,
 					timed_thread_unlock(mail->p_timed_thread);
 				}
 			}
+#ifdef X11
 			OBJ(fs_bar) {
 				if (obj->data.fs != NULL) {
 					if (obj->data.fs->size == 0) {
@@ -3658,6 +4173,7 @@ static void generate_text_internal(char *p, int p_max_size,
 					}
 				}
 			}
+#endif
 			OBJ(fs_free) {
 				if (obj->data.fs != NULL) {
 					human_readable( (obj->data.fs->free ? obj->data.fs->free :
@@ -3692,6 +4208,7 @@ static void generate_text_internal(char *p, int p_max_size,
 						? obj->data.fs->free : obj->data.fs->avail), p, 255);
 				}
 			}
+#ifdef X11
 			OBJ(fs_bar_free) {
 				if (obj->data.fs != NULL) {
 					if (obj->data.fs->size == 0) {
@@ -3703,6 +4220,7 @@ static void generate_text_internal(char *p, int p_max_size,
 					}
 				}
 			}
+#endif
 			OBJ(fs_used_perc) {
 				if (obj->data.fs != NULL) {
 					int val = 0;
@@ -3739,9 +4257,11 @@ static void generate_text_internal(char *p, int p_max_size,
 			OBJ(tab) {
 				new_tab(p, obj->data.pair.a, obj->data.pair.b);
 			}
+#ifdef X11
 			OBJ(hr) {
 				new_hr(p, obj->data.i);
 			}
+#endif
 			OBJ(nameserver) {
 				if (cur->nameserver_info.nscount > obj->data.i)
 					snprintf(p, p_max_size, "%s",
@@ -3792,6 +4312,10 @@ static void generate_text_internal(char *p, int p_max_size,
 						if (data->item_count > 0) {
 							int itmp;
 							int show;
+							//'tmpspaces' is a string with spaces too be placed in front of each title
+							char *tmpspaces = malloc(obj->data.rss.nrspaces + 1);
+							memset(tmpspaces, ' ', obj->data.rss.nrspaces);
+							tmpspaces[obj->data.rss.nrspaces]=0;
 
 							p[0] = 0;
 
@@ -3814,14 +4338,85 @@ static void generate_text_internal(char *p, int p_max_size,
 									if (str[strlen(str) - 1] == '\n') {
 										str[strlen(str) - 1] = 0;
 									}
+									strncat(p, tmpspaces, p_max_size);
 									strncat(p, str, p_max_size);
 								}
 							}
+							free(tmpspaces);
 						}
 					}
 				}
 			}
 #endif
+#ifdef HAVE_LUA
+			OBJ(lua) {
+				char *str = llua_getstring(obj->data.s);
+				if (str) {
+					snprintf(p, p_max_size, "%s", str);
+					free(str);
+				}
+			}
+			OBJ(lua_parse) {
+				char *str = llua_getstring(obj->data.s);
+				if (str) {
+					struct information *tmp_info;
+					struct text_object subroot;
+
+					tmp_info = malloc(sizeof(struct information));
+					memcpy(tmp_info, cur, sizeof(struct information));
+					parse_conky_vars(&subroot, str, p, tmp_info);
+
+					free_text_objects(&subroot, 1);
+					free(tmp_info);
+					free(str);
+				}
+			}
+			OBJ(lua_read_parse) {
+				struct information *tmp_info;
+				struct text_object subroot, subroot2;
+				char func[64];
+				char *text, *str;
+				sscanf(obj->data.s, "%64s", func);
+				text = obj->data.s + strlen(func) + 1;
+
+				tmp_info = malloc(sizeof(struct information));
+				memcpy(tmp_info, cur, sizeof(struct information));
+				parse_conky_vars(&subroot, text, p, tmp_info);
+				DBGP("evaluated '%s' to '%s'", text, p);
+
+				str = llua_getstring_read(func, p);
+				if (str) {
+					parse_conky_vars(&subroot2, str, p, tmp_info);
+					DBGP("evaluated '%s' to '%s'", str, p);
+
+					free(str);
+					free_text_objects(&subroot2, 1);
+				}
+				free_text_objects(&subroot, 1);
+				free(tmp_info);
+			}
+#ifdef X11
+			OBJ(lua_bar) {
+				double per;
+				if (llua_getnumber(obj->data.s, &per)) {
+					new_bar(p, obj->a, obj->b, (per/100.0 * 255));
+				}
+			}
+			OBJ(lua_graph) {
+				double per;
+				if (llua_getnumber(obj->data.s, &per)) {
+					new_graph(p, obj->a, obj->b, obj->c, obj->d,
+							per, obj->e, 1, obj->showaslog);
+				}
+			}
+			OBJ(lua_gauge) {
+				double per;
+				if (llua_getnumber(obj->data.s, &per)) {
+					new_gauge(p, obj->a, obj->b, (per/100.0 * 255));
+				}
+			}
+#endif /* X11 */
+#endif /* HAVE_LUA */
 #ifdef HDDTEMP
 			OBJ(hddtemp) {
 				char *endptr, unit;
@@ -3863,6 +4458,8 @@ static void generate_text_internal(char *p, int p_max_size,
 				r = get_sysfs_info(&obj->data.sysfs.fd, obj->data.sysfs.arg,
 					obj->data.sysfs.devtype, obj->data.sysfs.type);
 
+				r = r * obj->data.sysfs.factor + obj->data.sysfs.offset;
+
 				if (!strncmp(obj->data.sysfs.type, "temp", 4)) {
 					temp_print(p, p_max_size, r, TEMP_CELSIUS);
 				} else if (r >= 100.0 || r == 0) {
@@ -3877,6 +4474,8 @@ static void generate_text_internal(char *p, int p_max_size,
 				r = get_sysfs_info(&obj->data.sysfs.fd, obj->data.sysfs.arg,
 					obj->data.sysfs.devtype, obj->data.sysfs.type);
 
+				r = r * obj->data.sysfs.factor + obj->data.sysfs.offset;
+
 				if (!strncmp(obj->data.sysfs.type, "temp", 4)) {
 					temp_print(p, p_max_size, r, TEMP_CELSIUS);
 				} else if (r >= 100.0 || r == 0) {
@@ -3890,6 +4489,8 @@ static void generate_text_internal(char *p, int p_max_size,
 
 				r = get_sysfs_info(&obj->data.sysfs.fd, obj->data.sysfs.arg,
 					obj->data.sysfs.devtype, obj->data.sysfs.type);
+
+				r = r * obj->data.sysfs.factor + obj->data.sysfs.offset;
 
 				if (!strncmp(obj->data.sysfs.type, "temp", 4)) {
 					temp_print(p, p_max_size, r, TEMP_CELSIUS);
@@ -3989,6 +4590,11 @@ static void generate_text_internal(char *p, int p_max_size,
 				if (cur->memmax)
 					percent_print(p, p_max_size, cur->mem * 100 / cur->memmax);
 			}
+#ifdef X11
+			OBJ(memgauge){
+				new_gauge(p, obj->data.pair.a, obj->data.pair.b,
+					cur->memmax ? (cur->mem * 255) / (cur->memmax) : 0);
+			}
 			OBJ(membar) {
 				new_bar(p, obj->data.pair.a, obj->data.pair.b,
 					cur->memmax ? (cur->mem * 255) / (cur->memmax) : 0);
@@ -3998,7 +4604,7 @@ static void generate_text_internal(char *p, int p_max_size,
 					cur->memmax ? (cur->mem * 100.0) / (cur->memmax) : 0.0,
 					100, 1, obj->showaslog);
 			}
-
+#endif
 			/* mixer stuff */
 			OBJ(mixer) {
 				percent_print(p, p_max_size, mixer_get_avg(obj->data.l));
@@ -4009,17 +4615,24 @@ static void generate_text_internal(char *p, int p_max_size,
 			OBJ(mixerr) {
 				percent_print(p, p_max_size, mixer_get_right(obj->data.l));
 			}
+#ifdef X11
 			OBJ(mixerbar) {
 				new_bar(p, obj->data.mixerbar.w, obj->data.mixerbar.h,
-					mixer_get_avg(obj->data.mixerbar.l) * 255 / 100);
+					mixer_to_255(obj->data.mixerbar.l,mixer_get_avg(obj->data.mixerbar.l)));
 			}
 			OBJ(mixerlbar) {
 				new_bar(p, obj->data.mixerbar.w, obj->data.mixerbar.h,
-					mixer_get_left(obj->data.mixerbar.l) * 255 / 100);
+					mixer_to_255(obj->data.mixerbar.l,mixer_get_left(obj->data.mixerbar.l)));
 			}
 			OBJ(mixerrbar) {
 				new_bar(p, obj->data.mixerbar.w, obj->data.mixerbar.h,
-					mixer_get_right(obj->data.mixerbar.l) * 255 / 100);
+					mixer_to_255(obj->data.mixerbar.l,mixer_get_right(obj->data.mixerbar.l)));
+			}
+#endif
+			OBJ(if_mixer_mute) {
+				if (!mixer_is_mute(obj->data.ifblock.i)) {
+					DO_JUMP;
+				}
 			}
 #ifdef X11
 			OBJ(monitor) {
@@ -4110,12 +4723,14 @@ static void generate_text_internal(char *p, int p_max_size,
 			OBJ(text) {
 				snprintf(p, p_max_size, "%s", obj->data.s);
 			}
+#ifdef X11
 			OBJ(shadecolor) {
 				new_bg(p, obj->data.l);
 			}
 			OBJ(stippled_hr) {
 				new_stippled_hr(p, obj->data.pair.a, obj->data.pair.b);
 			}
+#endif
 			OBJ(swap) {
 				human_readable(cur->swap * 1024, p, 255);
 			}
@@ -4129,10 +4744,12 @@ static void generate_text_internal(char *p, int p_max_size,
 					percent_print(p, p_max_size, cur->swap * 100 / cur->swapmax);
 				}
 			}
+#ifdef X11
 			OBJ(swapbar) {
 				new_bar(p, obj->data.pair.a, obj->data.pair.b,
 					cur->swapmax ? (cur->swap * 255) / (cur->swapmax) : 0);
 			}
+#endif
 			OBJ(sysname) {
 				snprintf(p, p_max_size, "%s", cur->uname_s.sysname);
 			}
@@ -4193,10 +4810,12 @@ static void generate_text_internal(char *p, int p_max_size,
 				spaced_print(p, p_max_size, "%.1f", 8,
 					obj->data.net->trans_speed / 1024.0);
 			}
+#ifdef X11
 			OBJ(upspeedgraph) {
 				new_graph(p, obj->a, obj->b, obj->c, obj->d,
 					obj->data.net->trans_speed / 1024.0, obj->e, 1, obj->showaslog);
 			}
+#endif
 			OBJ(uptime_short) {
 				format_seconds_short(p, p_max_size, (int) cur->uptime);
 			}
@@ -4280,10 +4899,12 @@ static void generate_text_internal(char *p, int p_max_size,
 			OBJ(mpd_percent) {
 				percent_print(p, p_max_size, (int)(mpd_get_info()->progress * 100));
 			}
+#ifdef X11
 			OBJ(mpd_bar) {
 				new_bar(p, obj->data.pair.a, obj->data.pair.b,
 					(int) (mpd_get_info()->progress * 255.0f));
 			}
+#endif
 			OBJ(mpd_smart) {
 				struct mpd_s *mpd = mpd_get_info();
 				int len = obj->data.i;
@@ -4407,10 +5028,12 @@ static void generate_text_internal(char *p, int p_max_size,
 			OBJ(xmms2_percent) {
 				snprintf(p, p_max_size, "%2.0f", cur->xmms2.progress * 100);
 			}
+#ifdef X11
 			OBJ(xmms2_bar) {
 				new_bar(p, obj->data.pair.a, obj->data.pair.b,
 					(int) (cur->xmms2.progress * 255.0f));
 			}
+#endif /* X11 */
 			OBJ(xmms2_playlist) {
 				snprintf(p, p_max_size, "%s", cur->xmms2.playlist);
 			}
@@ -4486,6 +5109,7 @@ static void generate_text_internal(char *p, int p_max_size,
 				snprintf(p, p_max_size, "%s",
 					cur->audacious.items[AUDACIOUS_MAIN_VOLUME]);
 			}
+#ifdef X11
 			OBJ(audacious_bar) {
 				double progress;
 
@@ -4494,6 +5118,7 @@ static void generate_text_internal(char *p, int p_max_size,
 					atof(cur->audacious.items[AUDACIOUS_LENGTH_SECONDS]);
 				new_bar(p, obj->a, obj->b, (int) (progress * 255.0f));
 			}
+#endif /* X11 */
 #endif
 
 #ifdef BMPX
@@ -4521,35 +5146,38 @@ static void generate_text_internal(char *p, int p_max_size,
 			 * times, we have this special handler. */
 			break;
 			case OBJ_top:
+				parse_top_args("top", obj->data.top.s, obj);
 				if (!needed) needed = cur->cpu;
 			case OBJ_top_mem:
+				parse_top_args("top_mem", obj->data.top.s, obj);
 				if (!needed) needed = cur->memu;
 			case OBJ_top_time:
+				parse_top_args("top_time", obj->data.top.s, obj);
 				if (!needed) needed = cur->time;
 
-				{
+				if (needed[obj->data.top.num]) {
 					char *timeval;
 
 					switch (obj->data.top.type) {
 						case TOP_NAME:
-							snprintf(p, 16, "%-15s",
-								needed[obj->data.top.num]->name);
+							snprintf(p, top_name_width + 1, "%-*s", top_name_width,
+									needed[obj->data.top.num]->name);
 							break;
 						case TOP_CPU:
 							snprintf(p, 7, "%6.2f",
-								needed[obj->data.top.num]->amount);
+									needed[obj->data.top.num]->amount);
 							break;
 						case TOP_PID:
 							snprintf(p, 6, "%5i",
-								needed[obj->data.top.num]->pid);
+									needed[obj->data.top.num]->pid);
 							break;
 						case TOP_MEM:
 							snprintf(p, 7, "%6.2f",
-								needed[obj->data.top.num]->totalmem);
+									needed[obj->data.top.num]->totalmem);
 							break;
 						case TOP_TIME:
 							timeval = format_time(
-								needed[obj->data.top.num]->total_cpu_time, 9);
+									needed[obj->data.top.num]->total_cpu_time, 9);
 							snprintf(p, 10, "%9s", timeval);
 							free(timeval);
 							break;
@@ -4642,6 +5270,7 @@ static void generate_text_internal(char *p, int p_max_size,
 			OBJ(entropy_poolsize) {
 				snprintf(p, p_max_size, "%d", cur->entropy.poolsize);
 			}
+#ifdef X11
 			OBJ(entropy_bar) {
 				double entropy_perc;
 
@@ -4649,6 +5278,7 @@ static void generate_text_internal(char *p, int p_max_size,
 					(double) cur->entropy.poolsize;
 				new_bar(p, obj->a, obj->b, (int) (entropy_perc * 255.0f));
 			}
+#endif
 #ifdef IBM
 			OBJ(smapi) {
 				char *s;
@@ -4696,6 +5326,7 @@ static void generate_text_internal(char *p, int p_max_size,
 				} else
 					ERR("argument to smapi_bat_power must be an integer");
 			}
+#ifdef X11
 			OBJ(smapi_bat_bar) {
 				if(obj->data.i >= 0 && smapi_bat_installed(obj->data.i))
 					new_bar(p, obj->a, obj->b, (int)
@@ -4703,6 +5334,7 @@ static void generate_text_internal(char *p, int p_max_size,
 				else
 					new_bar(p, obj->a, obj->b, 0);
 			}
+#endif /* X11 */
 #endif /* IBM */
 			OBJ(scroll) {
 				unsigned int j;
@@ -4742,6 +5374,69 @@ static void generate_text_internal(char *p, int p_max_size,
 				}
 				snprintf(p, p_max_size, "%s", buf);
 			}
+			OBJ(combine) {
+				char buf[2][max_user_text];
+				unsigned int i, j;
+				unsigned int longest=0;
+				unsigned int nextstart;
+				unsigned int nr_rows[2];
+				struct llrows {
+					char* row;
+					struct llrows* next;
+				};
+				struct llrows *ll_rows[2], *current[2];
+				struct text_object * objsub = obj->sub;
+
+				p[0]=0;
+				for(i=0; i<2; i++) {
+					nr_rows[i] = 1;
+					nextstart = 0;
+					ll_rows[i] = malloc(sizeof(struct llrows));
+					current[i] = ll_rows[i];
+					for(j=0; j<i; j++) objsub = objsub->sub;
+					generate_text_internal(buf[i], max_user_text, *objsub, cur);
+					for(j=0; buf[i][j] != 0; j++) {
+						if(buf[i][j] == '\t') buf[i][j] = ' ';
+						if(buf[i][j] == '\n') {
+							buf[i][j] = 0;
+							current[i]->row = strdup(buf[i]+nextstart);
+							if(i==0 && strlen(current[i]->row) > longest) longest = strlen(current[i]->row);
+							current[i]->next = malloc(sizeof(struct llrows));
+							current[i] = current[i]->next;
+							nextstart = j + 1;
+							nr_rows[i]++;
+						}
+					}
+					current[i]->row = strdup(buf[i]+nextstart);
+					if(i==0 && strlen(current[i]->row) > longest) longest = strlen(current[i]->row);
+					current[i]->next = NULL;
+					current[i] = ll_rows[i];
+				}
+				for(j=0; j < (nr_rows[0] > nr_rows[1] ? nr_rows[0] : nr_rows[1] ); j++) {
+					if(current[0]) {
+						strcat(p, current[0]->row);
+						i=strlen(current[0]->row);
+					}else i = 0;
+					while(i < longest) {
+						strcat(p, " ");
+						i++;
+					}
+					if(current[1]) {
+						strcat(p, obj->data.combine.seperation);
+						strcat(p, current[1]->row);
+					}
+					strcat(p, "\n");
+					for(i=0; i<2; i++) if(current[i]) current[i]=current[i]->next;
+				}
+				for(i=0; i<2; i++) {
+					while(ll_rows[i] != NULL) {
+						current[i]=ll_rows[i];
+						free(current[i]->row);
+						ll_rows[i]=current[i]->next;
+						free(current[i]);
+					}
+				}
+			}
 #ifdef NVIDIA
 			OBJ(nvidia) {
 				int value = get_nvidia_value(obj->data.nvidia.type, display);
@@ -4756,7 +5451,74 @@ static void generate_text_internal(char *p, int p_max_size,
 					snprintf(p, p_max_size, "%d", value);
 			}
 #endif /* NVIDIA */
-
+#ifdef APCUPSD
+			OBJ(apcupsd) {
+				/* This is just a meta-object to set host:port */
+			}
+			OBJ(apcupsd_name) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_NAME]);
+			}
+			OBJ(apcupsd_model) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_MODEL]);
+			}
+			OBJ(apcupsd_upsmode) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_UPSMODE]);
+			}
+			OBJ(apcupsd_cable) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_CABLE]);
+			}
+			OBJ(apcupsd_status) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_STATUS]);
+			}
+			OBJ(apcupsd_linev) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_LINEV]);
+			}
+			OBJ(apcupsd_load) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_LOAD]);
+			}
+#ifdef X11
+			OBJ(apcupsd_loadbar) {
+				double progress;
+				progress =	atof(cur->apcupsd.items[APCUPSD_LOAD]) / 100.0 * 255.0;
+				new_bar(p, obj->a, obj->b, (int)progress);
+			}
+			OBJ(apcupsd_loadgraph) {
+				double progress;
+				progress =	atof(cur->apcupsd.items[APCUPSD_LOAD]);
+				new_graph(p, obj->a, obj->b, obj->c, obj->d,
+						  (int)progress, 100, 1, obj->showaslog);
+			}
+			OBJ(apcupsd_loadgauge) {
+				double progress;
+				progress =	atof(cur->apcupsd.items[APCUPSD_LOAD]) / 100.0 * 255.0;
+				new_gauge(p, obj->a, obj->b,
+						  (int)progress);
+			}
+#endif
+			OBJ(apcupsd_charge) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_CHARGE]);
+			}
+			OBJ(apcupsd_timeleft) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_TIMELEFT]);
+			}
+			OBJ(apcupsd_temp) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_TEMP]);
+			}
+			OBJ(apcupsd_lastxfer) {
+				snprintf(p, p_max_size, "%s",
+						 cur->apcupsd.items[APCUPSD_LASTXFER]);
+			}
+#endif /* APCUPSD */
 			break;
 		}
 #undef DO_JUMP
@@ -4795,7 +5557,14 @@ static void generate_text_internal(char *p, int p_max_size,
 			p += a;
 			p_max_size -= a;
 		}
+		obj = obj->next;
 	}
+#ifdef X11
+	/* load any new fonts we may have had */
+	if (need_to_load_fonts) {
+		load_fonts();
+	}
+#endif /* X11 */
 }
 
 double current_update_time, next_update_time, last_update_time;
@@ -4858,7 +5627,7 @@ static inline int get_string_width_special(char *s)
 	char *p, *final;
 	int idx = 1;
 	int width = 0;
-	unsigned int i;
+	long i;
 
 	if ((output_methods & TO_X) == 0) {
 #endif
@@ -4877,10 +5646,11 @@ static inline int get_string_width_special(char *s)
 		if (*p == SPECIAL_CHAR) {
 			/* shift everything over by 1 so that the special char
 			 * doesn't mess up the size calculation */
-			for (i = 0; i < strlen(p); i++) {
+			for (i = 0; i < (long)strlen(p); i++) {
 				*(p + i) = *(p + i + 1);
 			}
 			if (specials[special_index + idx].type == GRAPH
+					|| specials[special_index + idx].type == GAUGE
 					|| specials[special_index + idx].type == BAR) {
 				width += specials[special_index + idx].width;
 			}
@@ -4903,7 +5673,7 @@ static void text_size_updater(char *s);
 int last_font_height;
 static void update_text_area(void)
 {
-	int x, y;
+	int x = 0, y = 0;
 
 	if ((output_methods & TO_X) == 0)
 		return;
@@ -5029,11 +5799,12 @@ static void text_size_updater(char *s)
 			*p = SPECIAL_CHAR;
 
 			if (specials[special_index].type == BAR
+					|| specials[special_index].type == GAUGE
 					|| specials[special_index].type == GRAPH) {
 				w += specials[special_index].width;
 				if (specials[special_index].height > last_font_height) {
 					last_font_height = specials[special_index].height;
-					last_font_height += font_ascent();
+					last_font_height += font_height();
 				}
 			} else if (specials[special_index].type == OFFSET) {
 				if (specials[special_index].arg > 0) {
@@ -5192,15 +5963,15 @@ static void draw_line(char *s)
 #ifdef X11
 	char *p;
 	int cur_y_add = 0;
-	short font_h;
+	int font_h;
 	char *tmp_str;
-#endif /* X11 */
 
 	if ((output_methods & TO_X) == 0) {
+#endif /* X11 */
 		draw_string(s);
 		return;
-	}
 #ifdef X11
+	}
 	cur_x = text_start_x;
 	cur_y += font_ascent();
 	font_h = font_height();
@@ -5260,7 +6031,7 @@ static void draw_line(char *s)
 					bar_usage = specials[special_index].arg;
 					by = cur_y - (font_ascent() / 2) - 1;
 
-					if (h < font_height()) {
+					if (h < font_h) {
 						by -= h / 2 - 1;
 					}
 					w = specials[special_index].width;
@@ -5278,11 +6049,64 @@ static void draw_line(char *s)
 						by, w, h);
 					XFillRectangle(display, window.drawable, window.gc, cur_x,
 						by, w * bar_usage / 255, h);
-					if (specials[special_index].height > cur_y_add
-							&& specials[special_index].height > font_h) {
-						cur_y_add = specials[special_index].height;
+					if (h > cur_y_add
+							&& h > font_h) {
+						cur_y_add = h;
 					}
 					break;
+				}
+
+				case GAUGE: /* new GAUGE  */
+				{
+					int h, by = 0;
+					unsigned long last_colour = current_color;
+					float angle, px, py;
+					int usage;
+
+					if (cur_x - text_start_x > maximum_width
+							&& maximum_width > 0) {
+						break;
+					}
+
+					h = specials[special_index].height;
+					by = cur_y - (font_ascent() / 2) - 1;
+
+					if (h < font_h) {
+						by -= h / 2 - 1;
+					}
+					w = specials[special_index].width;
+					if (w == 0) {
+						w = text_start_x + text_width - cur_x - 1;
+					}
+					if (w < 0) {
+						w = 0;
+					}
+
+					XSetLineAttributes(display, window.gc, 1, LineSolid,
+							CapButt, JoinMiter);
+
+					XDrawArc(display, window.drawable, window.gc,
+							cur_x, by, w, h * 2, 0, 180*64);
+
+#ifdef MATH
+					usage = specials[special_index].arg;
+					angle = (M_PI)*(float)(usage)/255.;
+					px = (float)(cur_x+(w/2.))-(float)(w/2.)*cos(angle);
+					py = (float)(by+(h))-(float)(h)*sin(angle);
+
+					XDrawLine(display, window.drawable, window.gc,
+							cur_x + (w/2.), by+(h), (int)(px), (int)(py));
+#endif /* MATH */
+
+					if (h > cur_y_add
+							&& h > font_h) {
+						cur_y_add = h;
+					}
+
+					set_foreground_color(last_colour);
+
+					break;
+
 				}
 
 				case GRAPH:
@@ -5300,7 +6124,7 @@ static void draw_line(char *s)
 					h = specials[special_index].height;
 					by = cur_y - (font_ascent() / 2) - 1;
 
-					if (h < font_height()) {
+					if (h < font_h) {
 						by -= h / 2 - 1;
 					}
 					w = specials[special_index].width;
@@ -5349,9 +6173,9 @@ static void draw_line(char *s)
 							by + h - specials[special_index].graph[j] *
 							(h - 1) / specials[special_index].graph_scale);
 					}
-					if (specials[special_index].height > cur_y_add
-							&& specials[special_index].height > font_h) {
-						cur_y_add = specials[special_index].height;
+					if (h > cur_y_add
+							&& h > font_h) {
+						cur_y_add = h;
 					}
 					/* if (draw_mode == BG) {
 						set_foreground_color(default_bg_color);
@@ -5369,37 +6193,37 @@ static void draw_line(char *s)
 						char *tmp_min_str;
 						char *tmp_sec_str;
 						unsigned short int timeunits;
-						if(seconds!=0){
+						if (seconds != 0) {
 							timeunits = seconds / 86400; seconds %= 86400;
-							if( timeunits > 0 ) {
+							if (timeunits > 0) {
 								asprintf(&tmp_day_str, "%dd", timeunits);
-							}else{
+							} else {
 								tmp_day_str = strdup("");
 							}
 							timeunits = seconds / 3600; seconds %= 3600;
-							if( timeunits > 0 ) {
+							if (timeunits > 0) {
 								asprintf(&tmp_hour_str, "%dh", timeunits);
-							}else{
+							} else {
 								tmp_hour_str = strdup("");
 							}
 							timeunits = seconds / 60; seconds %= 60;
-							if(timeunits > 0) {
+							if (timeunits > 0) {
 								asprintf(&tmp_min_str, "%dm", timeunits);
-							}else{
+							} else {
 								tmp_min_str = strdup("");
 							}
-							if(seconds > 0) {
+							if (seconds > 0) {
 								asprintf(&tmp_sec_str, "%ds", seconds);
-							}else{
+							} else {
 								tmp_sec_str = strdup("");
 							}
 							asprintf(&tmp_str, "%s%s%s%s", tmp_day_str, tmp_hour_str, tmp_min_str, tmp_sec_str);
 							free(tmp_day_str); free(tmp_hour_str); free(tmp_min_str); free(tmp_sec_str);
-						}else{
-							asprintf(&tmp_str, "Range not possible"); //should never happen, but better safe then sorry
+						} else {
+							asprintf(&tmp_str, "Range not possible"); // should never happen, but better safe then sorry
 						}
 						cur_x += (w / 2) - (font_ascent() * (strlen(tmp_str) / 2));
-						cur_y += font_height() / 2;
+						cur_y += font_h / 2;
 						draw_string(tmp_str);
 						free(tmp_str);
 						cur_x = tmp_x;
@@ -5410,7 +6234,7 @@ static void draw_line(char *s)
 						int tmp_x = cur_x;
 						int tmp_y = cur_y;
 						cur_x += font_ascent() / 2;
-						cur_y += font_height() / 2;
+						cur_y += font_h / 2;
 						tmp_str = (char *)
 							calloc(log10(floor(specials[special_index].graph_scale)) + 4,
 									sizeof(char));
@@ -5436,7 +6260,7 @@ static void draw_line(char *s)
 					} else {
 						cur_y += font_ascent();
 					}
-					set_font();
+					font_h = font_height();
 					break;
 				}
 				case FG:
@@ -5529,14 +6353,13 @@ static void draw_line(char *s)
 
 		p++;
 	}
+
 	if (cur_y_add > 0) {
 		cur_y += cur_y_add;
-		cur_y -= font_descent();
 	}
-
 	draw_string(s);
-
 	cur_y += font_descent();
+
 #endif /* X11 */
 }
 
@@ -5569,6 +6392,7 @@ static void draw_text(void)
 		/* draw text */
 		special_index = 0;
 	}
+	setup_fonts();
 #endif /* X11 */
 	for_each_line(text_buffer, draw_line);
 }
@@ -5655,7 +6479,7 @@ static void clear_text(int exposures)
 		return;
 	} else
 #endif
-	{
+	if (display && window.window) { // make sure these are !null
 		/* there is some extra space for borders and outlines */
 		XClearArea(display, window.window, text_start_x - border_margin - 1,
 			text_start_y - border_margin - 1,
@@ -5670,6 +6494,9 @@ static int need_to_update;
 /* update_text() generates new text and clears old text area */
 static void update_text(void)
 {
+#ifdef IMLIB2
+	cimlib_cleanup();
+#endif /* IMLIB2 */
 	generate_text();
 #ifdef X11
 	if (output_methods & TO_X)
@@ -5678,31 +6505,24 @@ static void update_text(void)
 	need_to_update = 1;
 }
 
+#ifdef HAVE_SYS_INOTIFY_H
+int inotify_fd;
+#endif
+
 static void main_loop(void)
 {
+	int terminate = 0;
 #ifdef SIGNAL_BLOCKING
 	sigset_t newmask, oldmask;
 #endif
 	double t;
-#ifdef X11
-	Region region;
-#ifdef HAVE_XDAMAGE
-	Damage damage;
-	XserverRegion region2, part;
-	int event_base, error_base;
-#endif
-	if (output_methods & TO_X) {
-		region = XCreateRegion();
-#ifdef HAVE_XDAMAGE
-		if (!XDamageQueryExtension(display, &event_base, &error_base)) {
-			ERR("Xdamage extension unavailable");
-		}
-		damage = XDamageCreate(display, window.window, XDamageReportNonEmpty);
-		region2 = XFixesCreateRegionFromWindow(display, window.window, 0);
-		part = XFixesCreateRegionFromWindow(display, window.window, 0);
-#endif /* HAVE_XDAMAGE */
-	}
-#endif /* X11 */
+#ifdef HAVE_SYS_INOTIFY_H
+	int inotify_config_wd = 0;
+#define INOTIFY_EVENT_SIZE  (sizeof(struct inotify_event))
+#define INOTIFY_BUF_LEN     (20 * (INOTIFY_EVENT_SIZE + 16))
+	char inotify_buff[INOTIFY_BUF_LEN];
+#endif /* HAVE_SYS_INOTIFY_H */
+
 
 #ifdef SIGNAL_BLOCKING
 	sigemptyset(&newmask);
@@ -5711,9 +6531,10 @@ static void main_loop(void)
 	sigaddset(&newmask, SIGUSR1);
 #endif
 
-	next_update_time = last_update_time = get_time();
+	last_update_time = 0.0;
+	next_update_time = get_time();
 	info.looped = 0;
-	while (total_run_times == 0 || info.looped < total_run_times) {
+	while (terminate == 0 && (total_run_times == 0 || info.looped < total_run_times)) {
 		info.looped++;
 
 #ifdef SIGNAL_BLOCKING
@@ -5799,7 +6620,7 @@ static void main_loop(void)
 					r.y = text_start_y - border_margin;
 					r.width = text_width + border_margin * 2;
 					r.height = text_height + border_margin * 2;
-					XUnionRectWithRegion(&r, region, region);
+					XUnionRectWithRegion(&r, x11_stuff.region, x11_stuff.region);
 				}
 #endif
 			}
@@ -5813,12 +6634,11 @@ static void main_loop(void)
 					case Expose:
 					{
 						XRectangle r;
-
 						r.x = ev.xexpose.x;
 						r.y = ev.xexpose.y;
 						r.width = ev.xexpose.width;
 						r.height = ev.xexpose.height;
-						XUnionRectWithRegion(&r, region, region);
+						XUnionRectWithRegion(&r, x11_stuff.region, x11_stuff.region);
 						break;
 					}
 
@@ -5845,7 +6665,6 @@ static void main_loop(void)
 
 								{
 									XWindowAttributes attrs;
-
 									if (XGetWindowAttributes(display,
 											window.window, &attrs)) {
 										window.width = attrs.width;
@@ -5872,7 +6691,6 @@ static void main_loop(void)
 									|| ev.xconfigure.y != 0)) {
 								fixed_pos = 1;
 							} */
-							set_font();
 						}
 						break;
 
@@ -5888,6 +6706,8 @@ static void main_loop(void)
 								/* forward the click to the desktop window */
 								XUngrabPointer(display, ev.xbutton.time);
 								ev.xbutton.window = window.desktop;
+								ev.xbutton.x = ev.xbutton.x_root;
+								ev.xbutton.y = ev.xbutton.y_root;
 								XSendEvent(display, ev.xbutton.window, False,
 									ButtonPressMask, &ev);
 								XSetInputFocus(display, ev.xbutton.window,
@@ -5907,6 +6727,8 @@ static void main_loop(void)
 							} else {
 								/* forward the release to the desktop window */
 								ev.xbutton.window = window.desktop;
+								ev.xbutton.x = ev.xbutton.x_root;
+								ev.xbutton.y = ev.xbutton.y_root;
 								XSendEvent(display, ev.xbutton.window, False,
 									ButtonReleaseMask, &ev);
 							}
@@ -5917,11 +6739,11 @@ static void main_loop(void)
 
 					default:
 #ifdef HAVE_XDAMAGE
-						if (ev.type == event_base + XDamageNotify) {
+						if (ev.type == x11_stuff.event_base + XDamageNotify) {
 							XDamageNotifyEvent *dev = (XDamageNotifyEvent *) &ev;
 
-							XFixesSetRegion(display, part, &dev->area, 1);
-							XFixesUnionRegion(display, region2, region2, part);
+							XFixesSetRegion(display, x11_stuff.part, &dev->area, 1);
+							XFixesUnionRegion(display, x11_stuff.region2, x11_stuff.region2, x11_stuff.part);
 						}
 #endif /* HAVE_XDAMAGE */
 						break;
@@ -5929,8 +6751,8 @@ static void main_loop(void)
 			}
 
 #ifdef HAVE_XDAMAGE
-			XDamageSubtract(display, damage, region2, None);
-			XFixesSetRegion(display, region2, 0, 0);
+			XDamageSubtract(display, x11_stuff.damage, x11_stuff.region2, None);
+			XFixesSetRegion(display, x11_stuff.region2, 0, 0);
 #endif /* HAVE_XDAMAGE */
 
 			/* XDBE doesn't seem to provide a way to clear the back buffer without
@@ -5940,7 +6762,7 @@ static void main_loop(void)
 			 * if we're not going to call draw_stuff at all, then no swap happens
 			 * and we can safely do nothing. */
 
-			if (!XEmptyRegion(region)) {
+			if (!XEmptyRegion(x11_stuff.region)) {
 #ifdef HAVE_XDBE
 				if (use_xdbe) {
 					XRectangle r;
@@ -5949,18 +6771,21 @@ static void main_loop(void)
 					r.y = text_start_y - border_margin;
 					r.width = text_width + border_margin * 2;
 					r.height = text_height + border_margin * 2;
-					XUnionRectWithRegion(&r, region, region);
+					XUnionRectWithRegion(&r, x11_stuff.region, x11_stuff.region);
 				}
 #endif
-				XSetRegion(display, window.gc, region);
+				XSetRegion(display, window.gc, x11_stuff.region);
 #ifdef XFT
 				if (use_xft) {
-					XftDrawSetClip(window.xftdraw, region);
+					XftDrawSetClip(window.xftdraw, x11_stuff.region);
 				}
 #endif
+#ifdef IMLIB2
+				cimlib_render(text_start_x, text_start_y, window.width, window.height);
+#endif /* IMLIB2 */
 				draw_stuff();
-				XDestroyRegion(region);
-				region = XCreateRegion();
+				XDestroyRegion(x11_stuff.region);
+				x11_stuff.region = XCreateRegion();
 			}
 		} else {
 #endif /* X11 */
@@ -5988,16 +6813,20 @@ static void main_loop(void)
 			case SIGINT:
 			case SIGTERM:
 				ERR("received SIGINT or SIGTERM to terminate. bye!");
+				terminate = 1;
 				clean_up();
 #ifdef X11
 				if (output_methods & TO_X) {
-					XDestroyRegion(region);
-					region = NULL;
+					XDestroyRegion(x11_stuff.region);
+					x11_stuff.region = NULL;
 #ifdef HAVE_XDAMAGE
-					XDamageDestroy(display, damage);
-					XFixesDestroyRegion(display, region2);
-					XFixesDestroyRegion(display, part);
+					XDamageDestroy(display, x11_stuff.damage);
+					XFixesDestroyRegion(display, x11_stuff.region2);
+					XFixesDestroyRegion(display, x11_stuff.part);
 #endif /* HAVE_XDAMAGE */
+					if (disp) {
+						free(disp);
+					}
 				}
 #endif /* X11 */
 				if(overwrite_file) {
@@ -6008,8 +6837,7 @@ static void main_loop(void)
 					free(append_file);
 					append_file = 0;
 				}
-				return;	/* return from main_loop */
-				/* break; */
+				break;
 			default:
 				/* Reaching here means someone set a signal
 				 * (SIGXXXX, signal_handler), but didn't write any code
@@ -6021,23 +6849,71 @@ static void main_loop(void)
 				}
 				break;
 		}
+#ifdef HAVE_SYS_INOTIFY_H
+		if (inotify_fd && !inotify_config_wd) {
+			inotify_config_wd = inotify_add_watch(inotify_fd,
+					current_config,
+					IN_MODIFY);
+		}
+		if (inotify_fd && inotify_config_wd) {
+			int len = 0, idx = 0;
+			fd_set descriptors;
+			struct timeval time_to_wait;
+
+			FD_ZERO (&descriptors);
+			FD_SET(inotify_fd, &descriptors);
+
+			time_to_wait.tv_sec = time_to_wait.tv_usec = 0;
+
+			select(inotify_fd + 1, &descriptors, NULL, NULL, &time_to_wait);
+			if (FD_ISSET(inotify_fd, &descriptors)) {
+				/* process inotify events */
+				len = read(inotify_fd, inotify_buff, INOTIFY_BUF_LEN);
+				while (len > 0 && idx < len) {
+					struct inotify_event *ev = (struct inotify_event *) &inotify_buff[idx];
+					if (ev->wd == inotify_config_wd && (ev->mask & IN_MODIFY || ev->mask & IN_IGNORED)) {
+						/* current_config should be reloaded */
+						ERR("'%s' modified, reloading...", current_config);
+						reload_config();
+						if (ev->mask & IN_IGNORED) {
+							/* for some reason we get IN_IGNORED here
+							 * sometimes, so we need to re-add the watch */
+							inotify_config_wd = inotify_add_watch(inotify_fd,
+									current_config,
+									IN_MODIFY);
+						}
+					}
+#ifdef HAVE_LUA
+					else {
+						llua_inotify_query(ev->wd, ev->mask);
+					}
+#endif /* HAVE_LUA */
+					idx += INOTIFY_EVENT_SIZE + ev->len;
+				}
+			}
+		}
+#endif /* HAVE_SYS_INOTIFY_H */
+
 		g_signal_pending = 0;
 	}
 
-#if defined(X11) && defined(HAVE_XDAMAGE)
-	if (output_methods & TO_X) {
-		XDamageDestroy(display, damage);
-		XFixesDestroyRegion(display, region2);
-		XFixesDestroyRegion(display, part);
-		XDestroyRegion(region);
-		region = NULL;
+#ifdef HAVE_SYS_INOTIFY_H
+	if (inotify_fd) {
+		inotify_rm_watch(inotify_fd, inotify_config_wd);
+		close(inotify_fd);
+		inotify_fd = inotify_config_wd = 0;
 	}
-#endif /* X11 && HAVE_XDAMAGE */
+#endif /* HAVE_SYS_INOTIFY_H */
+
+#ifdef X11
+	X11_destroy_window();
+#endif /* X11 */
 }
 
 static void load_config_file(const char *);
+static void load_config_file_x11(const char *);
 
-/* reload the config file */
+	/* reload the config file */
 static void reload_config(void)
 {
 	timed_thread_destroy_registered_threads();
@@ -6059,9 +6935,18 @@ static void reload_config(void)
 	tcp_portmon_clear();
 #endif
 
+#ifdef HAVE_LUA
+	llua_close();
+#endif /* HAVE_LUA */
+
+#ifdef X11
+	X11_destroy_window();
+#endif /* X11 */
+
 	if (current_config) {
 		clear_fs_stats();
 		load_config_file(current_config);
+		load_config_file_x11(current_config);
 
 		/* re-init specials array */
 		if ((specials = realloc((void *) specials,
@@ -6070,12 +6955,9 @@ static void reload_config(void)
 		}
 
 #ifdef X11
-		load_fonts();
-		set_font();
-		// clear the window first
-		XClearWindow(display, RootWindow(display, screen));
-		x_initialised = NO;
-
+		if (output_methods & TO_X) {
+			X11_initialisation();
+		}
 #endif /* X11 */
 		extract_variable_text(global_text);
 		free(global_text);
@@ -6095,12 +6977,16 @@ static void reload_config(void)
 		}
 		text_buffer = malloc(max_user_text);
 		memset(text_buffer, 0, max_user_text);
+#ifdef X11
+		X11_create_window();
+#endif /* X11 */
 		update_text();
 	}
 }
 
 static void clean_up(void)
 {
+	int i;
 	timed_thread_destroy_registered_threads();
 
 	if (info.cpu_usage) {
@@ -6130,9 +7016,17 @@ static void clean_up(void)
 		XFreeGC(display, window.gc);
 		free_fonts();
 	}
+
 #endif /* X11 */
 
-	free_text_objects(&global_root_object);
+	for (i = 0; i < 10; i ++) {
+		if (template[i]) {
+			free(template[i]);
+			template[i] = NULL;
+		}
+	}
+
+	free_text_objects(&global_root_object, 0);
 	if (tmpstring1) {
 		free(tmpstring1);
 		tmpstring1 = 0;
@@ -6159,10 +7053,11 @@ static void clean_up(void)
 #ifdef RSS
 	free_rss_info();
 #endif
+#ifdef HAVE_LUA
+	llua_close();
+#endif /* HAVE_LUA */
 
 	if (specials) {
-		unsigned int i;
-
 		for (i = 0; i < special_count; i++) {
 			if (specials[i].type == GRAPH) {
 				free(specials[i].graph);
@@ -6253,10 +7148,12 @@ static void set_default_configurations_for_x(void)
 
 static void set_default_configurations(void)
 {
+	update_uname();
 	fork_to_background = 0;
 	total_run_times = 0;
 	info.cpu_avg_samples = 2;
 	info.net_avg_samples = 2;
+	info.diskio_avg_samples = 2;
 	info.memmax = 0;
 	top_cpu = 0;
 	cpu_separate = 0;
@@ -6286,16 +7183,6 @@ static void set_default_configurations(void)
 #ifdef X11
 	show_graph_scale = 0;
 	show_graph_range = 0;
-	template[0] = strdup("");
-	template[1] = strdup("");
-	template[2] = strdup("");
-	template[3] = strdup("");
-	template[4] = strdup("");
-	template[5] = strdup("");
-	template[6] = strdup("");
-	template[7] = strdup("");
-	template[8] = strdup("");
-	template[9] = strdup("");
 	draw_shades = 1;
 	draw_borders = 0;
 	draw_graph_borders = 1;
@@ -6311,7 +7198,6 @@ static void set_default_configurations(void)
 	window.type = TYPE_NORMAL;
 	window.hints = 0;
 	strcpy(window.class_name, PACKAGE_NAME);
-	update_uname();
 	sprintf(window.title, PACKAGE_NAME" (%s)", info.uname_s.nodename);
 #endif
 	stippled_borders = 0;
@@ -6321,6 +7207,17 @@ static void set_default_configurations(void)
 	info.x11.monitor.number = 1;
 	info.x11.monitor.current = 0;
 #endif /* X11 */
+
+	template[0] = strdup("");
+	template[1] = strdup("");
+	template[2] = strdup("");
+	template[3] = strdup("");
+	template[4] = strdup("");
+	template[5] = strdup("");
+	template[6] = strdup("");
+	template[7] = strdup("");
+	template[8] = strdup("");
+	template[9] = strdup("");
 
 	free(current_mail_spool);
 	{
@@ -6367,94 +7264,210 @@ static _Bool append_works(const char *path)
 }
 
 #ifdef X11
+#ifdef DEBUG
+/* WARNING, this type not in Xlib spec */
+int x11_error_handler(Display *d, XErrorEvent *err)
+	__attribute__((noreturn));
+int x11_error_handler(Display *d, XErrorEvent *err)
+{
+	ERR("X Error: type %i Display %lx XID %li serial %lu error_code %i request_code %i minor_code %i other Display: %lx\n",
+			err->type,
+			(long unsigned)err->display,
+			(long)err->resourceid,
+			err->serial,
+			err->error_code,
+			err->request_code,
+			err->minor_code,
+			(long unsigned)d
+			);
+	abort();
+}
+
+int x11_ioerror_handler(Display *d)
+	__attribute__((noreturn));
+int x11_ioerror_handler(Display *d)
+{
+	ERR("X Error: Display %lx\n",
+			(long unsigned)d
+			);
+	abort();
+}
+#endif /* DEBUG */
+
 static void X11_initialisation(void)
 {
 	if (x_initialised == YES) return;
 	output_methods |= TO_X;
-	init_X11();
+	init_X11(disp);
 	set_default_configurations_for_x();
 	x_initialised = YES;
+#ifdef DEBUG
+	_Xdebug = 1;
+	/* WARNING, this type not in Xlib spec */
+	XSetErrorHandler(&x11_error_handler);
+	XSetIOErrorHandler(&x11_ioerror_handler);
+#endif /* DEBUG */
+}
+
+static void X11_destroy_window(void)
+{
+	/* this function only exists for the sake of consistency */
+	if (output_methods & TO_X) {
+#ifdef HAVE_XDAMAGE
+		XDamageDestroy(display, x11_stuff.damage);
+		XFixesDestroyRegion(display, x11_stuff.region2);
+		XFixesDestroyRegion(display, x11_stuff.part);
+		if (x11_stuff.region) {
+			XDestroyRegion(x11_stuff.region);
+		}
+		x11_stuff.region = NULL;
+#endif /* HAVE_XDAMAGE */
+		destroy_window();
+	}
+	x_initialised = NO;
+}
+
+static char **xargv = 0;
+static int xargc = 0;
+
+static void X11_create_window(void)
+{
+	if (output_methods & TO_X) {
+#ifdef OWN_WINDOW
+		init_window(own_window, text_width + border_margin * 2 + 1,
+				text_height + border_margin * 2 + 1, set_transparent, background_colour,
+				xargv, xargc);
+#else /* OWN_WINDOW */
+		init_window(0, text_width + border_margin * 2 + 1,
+				text_height + border_margin * 2 + 1, set_transparent, 0,
+				xargv, xargc);
+#endif /* OWN_WINDOW */
+
+		setup_fonts();
+		load_fonts();
+		update_text_area();	/* to position text/window on screen */
+
+#ifdef OWN_WINDOW
+		if (own_window && !fixed_pos) {
+			XMoveWindow(display, window.window, window.x, window.y);
+		}
+		if (own_window) {
+			set_transparent_background(window.window);
+		}
+#endif
+
+		create_gc();
+
+		draw_stuff();
+
+		x11_stuff.region = XCreateRegion();
+#ifdef HAVE_XDAMAGE
+		if (!XDamageQueryExtension(display, &x11_stuff.event_base, &x11_stuff.error_base)) {
+			ERR("Xdamage extension unavailable");
+		}
+		x11_stuff.damage = XDamageCreate(display, window.window, XDamageReportNonEmpty);
+		x11_stuff.region2 = XFixesCreateRegionFromWindow(display, window.window, 0);
+		x11_stuff.part = XFixesCreateRegionFromWindow(display, window.window, 0);
+#endif /* HAVE_XDAMAGE */
+
+		selected_font = 0;
+		update_text_area();	/* to get initial size of the window */
+	}
 }
 #endif /* X11 */
 
+#define CONF_ERR ERR("%s: %d: config file error", f, line)
+#define CONF_ERR2(a) ERR("%s: %d: config file error: %s", f, line, a)
+#define CONF2(a) if (strcasecmp(name, a) == 0)
+#define CONF(a) else CONF2(a)
+#define CONF3(a, b) else if (strcasecmp(name, a) == 0 \
+		|| strcasecmp(name, b) == 0)
+#define CONF_CONTINUE 1
+#define CONF_BREAK 2
+#define CONF_BUFF_SIZE 512
+
+static FILE *open_config_file(const char *f)
+{
+#ifdef CONFIG_OUTPUT
+	if (!strcmp(f, "==builtin==")) {
+#ifdef HAVE_FOPENCOOKIE
+		return fopencookie(NULL, "r", conf_cookie);
+#endif /* HAVE_FOPENCOOKIE */
+	} else
+#endif /* CONFIG_OUTPUT */
+		return fopen(f, "r");
+}
+
+static int do_config_step(int *line, FILE *fp, char *buf, char **name, char **value)
+{
+	char *p, *p2;
+	(*line)++;
+	if (fgets(buf, CONF_BUFF_SIZE, fp) == NULL) {
+		return CONF_BREAK;
+	}
+	remove_comments(buf);
+
+	p = buf;
+
+	/* skip spaces */
+	while (*p && isspace((int) *p)) {
+		p++;
+	}
+	if (*p == '\0') {
+		return CONF_CONTINUE;	/* empty line */
+	}
+
+	*name = p;
+
+	/* skip name */
+	p2 = p;
+	while (*p2 && !isspace((int) *p2)) {
+		p2++;
+	}
+	if (*p2 != '\0') {
+		*p2 = '\0';	/* break at name's end */
+		p2++;
+	}
+
+	/* get value */
+	if (*p2) {
+		p = p2;
+		while (*p && isspace((int) *p)) {
+			p++;
+		}
+
+		*value = p;
+
+		p2 = *value + strlen(*value);
+		while (isspace((int) *(p2 - 1))) {
+			*--p2 = '\0';
+		}
+	} else {
+		*value = 0;
+	}
+	return 0;
+}
+
 static void load_config_file(const char *f)
 {
-#define CONF_ERR ERR("%s: %d: config file error", f, line)
 	int line = 0;
 	FILE *fp;
 
 	set_default_configurations();
-#ifdef CONFIG_OUTPUT
-	if (!strcmp(f, "==builtin==")) {
-#ifdef HAVE_FOPENCOOKIE
-		fp = fopencookie(NULL, "r", conf_cookie);
-#endif
-	} else
-#endif /* CONFIG_OUTPUT */
-		fp = fopen(f, "r");
-
+	fp = open_config_file(f);
 	if (!fp) {
 		return;
 	}
 	DBGP("reading contents from config file '%s'", f);
 
 	while (!feof(fp)) {
-		char buf[256], *p, *p2, *name, *value;
-
-		line++;
-		if (fgets(buf, 256, fp) == NULL) {
+		char buff[CONF_BUFF_SIZE], *name, *value;
+		int ret = do_config_step(&line, fp, buff, &name, &value);
+		if (ret == CONF_BREAK) {
 			break;
+		} else if (ret == CONF_CONTINUE) {
+			continue;
 		}
-
-		p = buf;
-
-		/* break at comment */
-		p2 = strchr(p, '#');
-		if (p2) {
-			*p2 = '\0';
-		}
-
-		/* skip spaces */
-		while (*p && isspace((int) *p)) {
-			p++;
-		}
-		if (*p == '\0') {
-			continue;	/* empty line */
-		}
-
-		name = p;
-
-		/* skip name */
-		p2 = p;
-		while (*p2 && !isspace((int) *p2)) {
-			p2++;
-		}
-		if (*p2 != '\0') {
-			*p2 = '\0';	/* break at name's end */
-			p2++;
-		}
-
-		/* get value */
-		if (*p2) {
-			p = p2;
-			while (*p && isspace((int) *p)) {
-				p++;
-			}
-
-			value = p;
-
-			p2 = value + strlen(value);
-			while (isspace((int) *(p2 - 1))) {
-				*--p2 = '\0';
-			}
-		} else {
-			value = 0;
-		}
-
-#define CONF2(a) if (strcasecmp(name, a) == 0)
-#define CONF(a) else CONF2(a)
-#define CONF3(a, b) else if (strcasecmp(name, a) == 0 \
-		|| strcasecmp(name, b) == 0)
 
 #ifdef X11
 		CONF2("out_to_x") {
@@ -6467,6 +7480,15 @@ static void load_config_file(const char *f)
 					output_methods &= ~TO_X;
 					x_initialised = NEVER;
 				}
+			}
+		}
+		CONF("display") {
+			if (!value || x_initialised == YES) {
+				CONF_ERR;
+			} else {
+				if (disp)
+					free(disp);
+				disp = strdup(value);
 			}
 		}
 		CONF("alignment") {
@@ -6513,7 +7535,666 @@ static void load_config_file(const char *f)
 				CONF_ERR;
 			}
 		}
-		CONF("color0") {
+#endif /* X11 */
+#define TEMPLATE_CONF(n) \
+		CONF("template"#n) { \
+			if (value) { \
+				free(template[n]); \
+				template[n] = strdup(value); \
+			} else { \
+				CONF_ERR; \
+			} \
+		}
+		TEMPLATE_CONF(0)
+		TEMPLATE_CONF(1)
+		TEMPLATE_CONF(2)
+		TEMPLATE_CONF(3)
+		TEMPLATE_CONF(4)
+		TEMPLATE_CONF(5)
+		TEMPLATE_CONF(6)
+		TEMPLATE_CONF(7)
+		TEMPLATE_CONF(8)
+		TEMPLATE_CONF(9)
+		CONF("imap") {
+			if (value) {
+				info.mail = parse_mail_args(IMAP_TYPE, value);
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("pop3") {
+			if (value) {
+				info.mail = parse_mail_args(POP3_TYPE, value);
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("default_bar_size") {
+			char err = 0;
+			if (value) {
+				if (sscanf(value, "%d %d", &default_bar_width, &default_bar_height) != 2) {
+					err = 1;
+				}
+			} else {
+				err = 1;
+			}
+			if (err) {
+				CONF_ERR2("default_bar_size takes 2 integer arguments (ie. 'default_bar_size 0 6')")
+			}
+		}
+#ifdef X11
+		CONF("default_graph_size") {
+			char err = 0;
+			if (value) {
+				if (sscanf(value, "%d %d", &default_graph_width, &default_graph_height) != 2) {
+					err = 1;
+				}
+			} else {
+				err = 1;
+			}
+			if (err) {
+				CONF_ERR2("default_graph_size takes 2 integer arguments (ie. 'default_graph_size 0 6')")
+			}
+		}
+		CONF("default_gauge_size") {
+			char err = 0;
+			if (value) {
+				if (sscanf(value, "%d %d", &default_gauge_width, &default_gauge_height) != 2) {
+					err = 1;
+				}
+			} else {
+				err = 1;
+			}
+			if (err) {
+				CONF_ERR2("default_gauge_size takes 2 integer arguments (ie. 'default_gauge_size 0 6')")
+			}
+		}
+#endif
+#ifdef MPD
+		CONF("mpd_host") {
+			if (value) {
+				mpd_set_host(value);
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("mpd_port") {
+			if (value && mpd_set_port(value)) {
+				CONF_ERR;
+			}
+		}
+		CONF("mpd_password") {
+			if (value) {
+				mpd_set_password(value);
+			} else {
+				CONF_ERR;
+			}
+		}
+#endif
+		CONF("music_player_interval") {
+			if (value) {
+				info.music_player_interval = strtod(value, 0);
+			} else {
+				CONF_ERR;
+			}
+		}
+#ifdef __OpenBSD__
+		CONF("sensor_device") {
+			if (value) {
+				sensor_device = strtol(value, 0, 0);
+			} else {
+				CONF_ERR;
+			}
+		}
+#endif
+		CONF("cpu_avg_samples") {
+			if (value) {
+				cpu_avg_samples = strtol(value, 0, 0);
+				if (cpu_avg_samples < 1 || cpu_avg_samples > 14) {
+					CONF_ERR;
+				} else {
+					info.cpu_avg_samples = cpu_avg_samples;
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("net_avg_samples") {
+			if (value) {
+				net_avg_samples = strtol(value, 0, 0);
+				if (net_avg_samples < 1 || net_avg_samples > 14) {
+					CONF_ERR;
+				} else {
+					info.net_avg_samples = net_avg_samples;
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("diskio_avg_samples") {
+			if (value) {
+				diskio_avg_samples = strtol(value, 0, 0);
+				if (diskio_avg_samples < 1 || diskio_avg_samples > 14) {
+					CONF_ERR;
+				} else {
+					info.diskio_avg_samples = diskio_avg_samples;
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+
+#ifdef HAVE_XDBE
+		CONF("double_buffer") {
+			use_xdbe = string_to_bool(value);
+		}
+#endif
+#ifdef X11
+		CONF("override_utf8_locale") {
+			utf8_mode = string_to_bool(value);
+		}
+		CONF("draw_borders") {
+			draw_borders = string_to_bool(value);
+		}
+		CONF("draw_graph_borders") {
+			draw_graph_borders = string_to_bool(value);
+		}
+		CONF("draw_shades") {
+			draw_shades = string_to_bool(value);
+		}
+		CONF("draw_outline") {
+			draw_outline = string_to_bool(value);
+		}
+#endif /* X11 */
+		CONF("out_to_console") {
+			if(string_to_bool(value))
+				output_methods |= TO_STDOUT;
+		}
+		CONF("out_to_stderr") {
+			if(string_to_bool(value))
+				output_methods |= TO_STDERR;
+		}
+		CONF("overwrite_file") {
+			if(overwrite_file) {
+				free(overwrite_file);
+				overwrite_file = 0;
+			}
+			if(overwrite_works(value)) {
+				overwrite_file = strdup(value);
+				output_methods |= OVERWRITE_FILE;
+			} else
+				ERR("overwrite_file won't be able to create/overwrite '%s'", value);
+		}
+		CONF("append_file") {
+			if(append_file) {
+				free(append_file);
+				append_file = 0;
+			}
+			if(append_works(value)) {
+				append_file = strdup(value);
+				output_methods |= APPEND_FILE;
+			} else
+				ERR("append_file won't be able to create/append '%s'", value);
+		}
+		CONF("use_spacer") {
+			if (value) {
+				if (strcasecmp(value, "left") == EQUAL) {
+					use_spacer = LEFT_SPACER;
+				} else if (strcasecmp(value, "right") == EQUAL) {
+					use_spacer = RIGHT_SPACER;
+				} else if (strcasecmp(value, "none") == EQUAL) {
+					use_spacer = NO_SPACER;
+				} else {
+					use_spacer = string_to_bool(value);
+					ERR("use_spacer should have an argument of left, right, or"
+						" none.  '%s' seems to be some form of '%s', so"
+						" defaulting to %s.", value,
+						use_spacer ? "true" : "false",
+						use_spacer ? "right" : "none");
+					if (use_spacer) {
+						use_spacer = RIGHT_SPACER;
+					} else {
+						use_spacer = NO_SPACER;
+					}
+				}
+			} else {
+				ERR("use_spacer should have an argument. Defaulting to right.");
+				use_spacer = RIGHT_SPACER;
+			}
+		}
+#ifdef X11
+#ifdef XFT
+		CONF("use_xft") {
+			use_xft = string_to_bool(value);
+		}
+		CONF("font") {
+			if (value) {
+				set_first_font(value);
+			}
+		}
+		CONF("xftalpha") {
+			if (value && font_count >= 0) {
+				fonts[0].font_alpha = atof(value) * 65535.0;
+			}
+		}
+		CONF("xftfont") {
+			if (use_xft) {
+#else
+		CONF("use_xft") {
+			if (string_to_bool(value)) {
+				ERR("Xft not enabled at compile time");
+			}
+		}
+		CONF("xftfont") {
+			/* xftfont silently ignored when no Xft */
+		}
+		CONF("xftalpha") {
+			/* xftalpha is silently ignored when no Xft */
+		}
+		CONF("font") {
+#endif
+			if (value) {
+				set_first_font(value);
+			}
+#ifdef XFT
+			}
+#endif
+		}
+		CONF("gap_x") {
+			if (value) {
+				gap_x = atoi(value);
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("gap_y") {
+			if (value) {
+				gap_y = atoi(value);
+			} else {
+				CONF_ERR;
+			}
+		}
+#endif /* X11 */
+		CONF("mail_spool") {
+			if (value) {
+				char buffer[256];
+
+				variable_substitute(value, buffer, 256);
+
+				if (buffer[0] != '\0') {
+					if (current_mail_spool) {
+						free(current_mail_spool);
+					}
+					current_mail_spool = strndup(buffer, text_buffer_size);
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+#ifdef X11
+		CONF("minimum_size") {
+			if (value) {
+				if (sscanf(value, "%d %d", &minimum_width, &minimum_height)
+						!= 2) {
+					if (sscanf(value, "%d", &minimum_width) != 1) {
+						CONF_ERR;
+					}
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("maximum_width") {
+			if (value) {
+				if (sscanf(value, "%d", &maximum_width) != 1) {
+					CONF_ERR;
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+#endif /* X11 */
+		CONF("no_buffers") {
+			no_buffers = string_to_bool(value);
+		}
+		CONF("top_name_width") {
+			if (value) {
+				if (sscanf(value, "%u", &top_name_width) != 1) {
+					CONF_ERR;
+				}
+			} else {
+				CONF_ERR;
+			}
+			if (top_name_width >= max_user_text) {
+				top_name_width = max_user_text - 1;
+			}
+		}
+		CONF("top_cpu_separate") {
+			cpu_separate = string_to_bool(value);
+		}
+		CONF("short_units") {
+			short_units = string_to_bool(value);
+		}
+		CONF("pad_percents") {
+			pad_percents = atoi(value);
+		}
+#ifdef X11
+#ifdef OWN_WINDOW
+		CONF("own_window") {
+			if (value) {
+				own_window = string_to_bool(value);
+			}
+		}
+		CONF("own_window_class") {
+			if (value) {
+				memset(window.class_name, 0, sizeof(window.class_name));
+				strncpy(window.class_name, value,
+						sizeof(window.class_name) - 1);
+			}
+		}
+		CONF("own_window_title") {
+			if (value) {
+				memset(window.title, 0, sizeof(window.title));
+				strncpy(window.title, value, sizeof(window.title) - 1);
+			}
+		}
+		CONF("own_window_transparent") {
+			if (value) {
+				set_transparent = string_to_bool(value);
+			}
+		}
+		CONF("own_window_hints") {
+			if (value) {
+				char *p_hint, *p_save;
+				char delim[] = ", ";
+
+				/* tokenize the value into individual hints */
+				if ((p_hint = strtok_r(value, delim, &p_save)) != NULL) {
+					do {
+						/* fprintf(stderr, "hint [%s] parsed\n", p_hint); */
+						if (strncmp(p_hint, "undecorate", 10) == EQUAL) {
+							SET_HINT(window.hints, HINT_UNDECORATED);
+						} else if (strncmp(p_hint, "below", 5) == EQUAL) {
+							SET_HINT(window.hints, HINT_BELOW);
+						} else if (strncmp(p_hint, "above", 5) == EQUAL) {
+							SET_HINT(window.hints, HINT_ABOVE);
+						} else if (strncmp(p_hint, "sticky", 6) == EQUAL) {
+							SET_HINT(window.hints, HINT_STICKY);
+						} else if (strncmp(p_hint, "skip_taskbar", 12) == EQUAL) {
+							SET_HINT(window.hints, HINT_SKIP_TASKBAR);
+						} else if (strncmp(p_hint, "skip_pager", 10) == EQUAL) {
+							SET_HINT(window.hints, HINT_SKIP_PAGER);
+						} else {
+							CONF_ERR;
+						}
+
+						p_hint = strtok_r(NULL, delim, &p_save);
+					} while (p_hint != NULL);
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("own_window_type") {
+			if (value) {
+				if (strncmp(value, "normal", 6) == EQUAL) {
+					window.type = TYPE_NORMAL;
+				} else if (strncmp(value, "desktop", 7) == EQUAL) {
+					window.type = TYPE_DESKTOP;
+				} else if (strncmp(value, "dock", 7) == EQUAL) {
+					window.type = TYPE_DOCK;
+					text_alignment = TOP_LEFT;
+				} else if (strncmp(value, "override", 8) == EQUAL) {
+					window.type = TYPE_OVERRIDE;
+				} else {
+					CONF_ERR;
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+#endif
+		CONF("stippled_borders") {
+			if (value) {
+				stippled_borders = strtol(value, 0, 0);
+			} else {
+				stippled_borders = 4;
+			}
+		}
+#ifdef IMLIB2
+		CONF("imlib_cache_size") {
+			if (value) {
+				cimlib_set_cache_size(atoi(value));
+			}
+		}
+#endif /* IMLIB2 */
+#endif /* X11 */
+		CONF("update_interval") {
+			if (value) {
+				update_interval = strtod(value, 0);
+			} else {
+				CONF_ERR;
+			}
+			if (info.music_player_interval == 0) {
+				// default to update_interval
+				info.music_player_interval = update_interval;
+			}
+		}
+		CONF("total_run_times") {
+			if (value) {
+				total_run_times = strtod(value, 0);
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("uppercase") {
+			stuff_in_upper_case = string_to_bool(value);
+		}
+		CONF("max_specials") {
+			if (value) {
+				max_specials = atoi(value);
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("max_user_text") {
+			if (value) {
+				max_user_text = atoi(value);
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("text_buffer_size") {
+			if (value) {
+				text_buffer_size = atoi(value);
+				if (text_buffer_size < DEFAULT_TEXT_BUFFER_SIZE) {
+					ERR("text_buffer_size must be >=%i bytes", DEFAULT_TEXT_BUFFER_SIZE);
+					text_buffer_size = DEFAULT_TEXT_BUFFER_SIZE;
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("text") {
+#ifdef X11
+			if (output_methods & TO_X) {
+				X11_initialisation();
+			}
+#endif
+
+			if (global_text) {
+				free(global_text);
+				global_text = 0;
+			}
+
+			global_text = (char *) malloc(1);
+			global_text[0] = '\0';
+
+			while (!feof(fp)) {
+				unsigned int l = strlen(global_text);
+				unsigned int bl;
+				char buf[CONF_BUFF_SIZE];
+
+				if (fgets(buf, CONF_BUFF_SIZE, fp) == NULL) {
+					break;
+				}
+
+				/* Remove \\-\n. */
+				bl = strlen(buf);
+				if (bl >= 2 && buf[bl-2] == '\\' && buf[bl-1] == '\n') {
+					buf[bl-2] = '\0';
+					bl -= 2;
+					if (bl == 0) {
+						continue;
+					}
+				}
+
+				/* Check for continuation of \\-\n. */
+				if (l > 0 && buf[0] == '\n' && global_text[l-1] == '\\') {
+					global_text[l-1] = '\0';
+					continue;
+				}
+
+				global_text = (char *) realloc(global_text, l + bl + 1);
+				strcat(global_text, buf);
+
+				if (strlen(global_text) > max_user_text) {
+					break;
+				}
+			}
+			fclose(fp);
+			if (strlen(global_text) < 1) {
+				CRIT_ERR("no text supplied in configuration; exiting");
+			}
+			global_text_lines = line + 1;
+			return;
+		}
+#ifdef TCP_PORT_MONITOR
+		CONF("max_port_monitor_connections") {
+			int max;
+			if (!value || (sscanf(value, "%d", &max) != 1)) {
+				/* an error. use default, warn and continue. */
+				tcp_portmon_set_max_connections(0);
+				CONF_ERR;
+			} else if (tcp_portmon_set_max_connections(max)) {
+				/* max is < 0, default has been set*/
+				CONF_ERR;
+			}
+		}
+#endif
+		CONF("if_up_strictness") {
+			if (!value) {
+				ERR("incorrect if_up_strictness value, defaulting to 'up'");
+				ifup_strictness = IFUP_UP;
+			} else if (strcasecmp(value, "up") == EQUAL) {
+				ifup_strictness = IFUP_UP;
+			} else if (strcasecmp(value, "link") == EQUAL) {
+				ifup_strictness = IFUP_LINK;
+			} else if (strcasecmp(value, "address") == EQUAL) {
+				ifup_strictness = IFUP_ADDR;
+			} else {
+				ERR("incorrect if_up_strictness value, defaulting to 'up'");
+				ifup_strictness = IFUP_UP;
+			}
+		}
+
+		CONF("temperature_unit") {
+			if (!value) {
+				ERR("config option 'temperature_unit' needs an argument, either 'celsius' or 'fahrenheit'");
+			} else if (set_temp_output_unit(value)) {
+				ERR("temperature_unit: incorrect argument");
+			}
+		}
+
+		CONF("alias") {
+			if (value) {
+				size_t maxlength = strlen(value);	//+1 for terminating 0 not needed, 'cause of the space in the middle of value
+				char *skey = malloc(maxlength);
+				char *svalue = malloc(maxlength);
+				char *oldvalue;
+				if (sscanf(value, "%[0-9a-zA-Z_] %[^\n]", skey, svalue) == 2) {
+					oldvalue = getenv(skey);
+					if (oldvalue == NULL) {
+						setenv(skey, svalue, 0);
+					}
+					//PS: Don't free oldvalue, it's the real envvar, not a copy
+				} else {
+					CONF_ERR;
+				}
+				free(skey);
+				free(svalue);
+			} else {
+				CONF_ERR;
+			}
+		}
+#ifdef HAVE_LUA
+		CONF("lua_load") {
+			llua_init();
+			if(value) {
+				char *ptr = strtok(value, " ");
+				while(ptr) {
+					llua_load(ptr);
+					ptr = strtok(NULL, " ");
+				}
+			} else {
+				CONF_ERR;
+			}
+		}
+#endif /* HAVE_LUA */
+
+		CONF("color0"){}
+		CONF("color1"){}
+		CONF("color2"){}
+		CONF("color3"){}
+		CONF("color4"){}
+		CONF("color5"){}
+		CONF("color6"){}
+		CONF("color7"){}
+		CONF("color8"){}
+		CONF("color9"){}
+		CONF("default_color"){}
+		CONF3("default_shade_color", "default_shadecolor"){}
+		CONF3("default_outline_color", "default_outlinecolor") {}
+		CONF("own_window_colour") {}
+
+		else {
+			ERR("%s: %d: no such configuration: '%s'", f, line, name);
+		}
+	}
+
+	fclose(fp);
+
+	if (info.music_player_interval == 0) {
+		// default to update_interval
+		info.music_player_interval = update_interval;
+	}
+	if (!global_text) { // didn't supply any text
+		CRIT_ERR("missing text block in configuration; exiting");
+	}
+}
+
+static void load_config_file_x11(const char *f)
+{
+	int line = 0;
+	FILE *fp;
+
+	fp = open_config_file(f);
+	if (!fp) {
+		return;
+	}
+	DBGP("reading contents from config file '%s'", f);
+
+	while (!feof(fp)) {
+		char buff[CONF_BUFF_SIZE], *name, *value;
+		int ret = do_config_step(&line, fp, buff, &name, &value);
+		if (ret == CONF_BREAK) {
+			break;
+		} else if (ret == CONF_CONTINUE) {
+			continue;
+		}
+
+#ifdef X11
+		CONF2("color0") {
 			X11_initialisation();
 			if (x_initialised == YES) {
 				if (value) {
@@ -6613,25 +8294,6 @@ static void load_config_file(const char *f)
 				}
 			}
 		}
-#define TEMPLATE_CONF(n) \
-		CONF("template"#n) { \
-			if (value) { \
-				free(template[n]); \
-				template[n] = strdup(value); \
-			} else { \
-				CONF_ERR; \
-			} \
-		}
-		TEMPLATE_CONF(0)
-		TEMPLATE_CONF(1)
-		TEMPLATE_CONF(2)
-		TEMPLATE_CONF(3)
-		TEMPLATE_CONF(4)
-		TEMPLATE_CONF(5)
-		TEMPLATE_CONF(6)
-		TEMPLATE_CONF(7)
-		TEMPLATE_CONF(8)
-		TEMPLATE_CONF(9)
 		CONF("default_color") {
 			X11_initialisation();
 			if (x_initialised == YES) {
@@ -6662,325 +8324,7 @@ static void load_config_file(const char *f)
 				}
 			}
 		}
-#endif /* X11 */
-		CONF("imap") {
-			if (value) {
-				info.mail = parse_mail_args(IMAP_TYPE, value);
-			} else {
-				CONF_ERR;
-			}
-		}
-		CONF("pop3") {
-			if (value) {
-				info.mail = parse_mail_args(POP3_TYPE, value);
-			} else {
-				CONF_ERR;
-			}
-		}
-#ifdef MPD
-		CONF("mpd_host") {
-			if (value) {
-				mpd_set_host(value);
-			} else {
-				CONF_ERR;
-			}
-		}
-		CONF("mpd_port") {
-			if (value && mpd_set_port(value)) {
-				CONF_ERR;
-			}
-		}
-		CONF("mpd_password") {
-			if (value) {
-				mpd_set_password(value);
-			} else {
-				CONF_ERR;
-			}
-		}
-#endif
-		CONF("music_player_interval") {
-			if (value) {
-				info.music_player_interval = strtod(value, 0);
-			} else {
-				CONF_ERR;
-			}
-		}
-#ifdef __OpenBSD__
-		CONF("sensor_device") {
-			if (value) {
-				sensor_device = strtol(value, 0, 0);
-			} else {
-				CONF_ERR;
-			}
-		}
-#endif
-		CONF("cpu_avg_samples") {
-			if (value) {
-				cpu_avg_samples = strtol(value, 0, 0);
-				if (cpu_avg_samples < 1 || cpu_avg_samples > 14) {
-					CONF_ERR;
-				} else {
-					info.cpu_avg_samples = cpu_avg_samples;
-				}
-			} else {
-				CONF_ERR;
-			}
-		}
-		CONF("net_avg_samples") {
-			if (value) {
-				net_avg_samples = strtol(value, 0, 0);
-				if (net_avg_samples < 1 || net_avg_samples > 14) {
-					CONF_ERR;
-				} else {
-					info.net_avg_samples = net_avg_samples;
-				}
-			} else {
-				CONF_ERR;
-			}
-		}
-
-#ifdef HAVE_XDBE
-		CONF("double_buffer") {
-			use_xdbe = string_to_bool(value);
-		}
-#endif
-#ifdef X11
-		CONF("override_utf8_locale") {
-			utf8_mode = string_to_bool(value);
-		}
-		CONF("draw_borders") {
-			draw_borders = string_to_bool(value);
-		}
-		CONF("draw_graph_borders") {
-			draw_graph_borders = string_to_bool(value);
-		}
-		CONF("draw_shades") {
-			draw_shades = string_to_bool(value);
-		}
-		CONF("draw_outline") {
-			draw_outline = string_to_bool(value);
-		}
-#endif /* X11 */
-		CONF("out_to_console") {
-			if(string_to_bool(value))
-				output_methods |= TO_STDOUT;
-		}
-		CONF("out_to_stderr") {
-			if(string_to_bool(value))
-				output_methods |= TO_STDERR;
-		}
-		CONF("overwrite_file") {
-			if(overwrite_file) {
-				free(overwrite_file);
-				overwrite_file = 0;
-			}
-			if(overwrite_works(value)) {
-				overwrite_file = strdup(value);
-				output_methods |= OVERWRITE_FILE;
-			} else
-				ERR("overwrite_file won't be able to create/overwrite '%s'", value);
-		}
-		CONF("append_file") {
-			if(append_file) {
-				free(append_file);
-				append_file = 0;
-			}
-			if(append_works(value)) {
-				append_file = strdup(value);
-				output_methods |= APPEND_FILE;
-			} else
-				ERR("append_file won't be able to create/append '%s'", value);
-		}
-		CONF("use_spacer") {
-			if (value) {
-				if (strcasecmp(value, "left") == EQUAL) {
-					use_spacer = LEFT_SPACER;
-				} else if (strcasecmp(value, "right") == EQUAL) {
-					use_spacer = RIGHT_SPACER;
-				} else if (strcasecmp(value, "none") == EQUAL) {
-					use_spacer = NO_SPACER;
-				} else {
-					use_spacer = string_to_bool(value);
-					ERR("use_spacer should have an argument of left, right, or"
-						" none.  '%s' seems to be some form of '%s', so"
-						" defaulting to %s.", value,
-						use_spacer ? "true" : "false",
-						use_spacer ? "right" : "none");
-					if (use_spacer) {
-						use_spacer = RIGHT_SPACER;
-					} else {
-						use_spacer = NO_SPACER;
-					}
-				}
-			} else {
-				ERR("use_spacer should have an argument. Defaulting to right.");
-				use_spacer = RIGHT_SPACER;
-			}
-		}
-#ifdef X11
-#ifdef XFT
-		CONF("use_xft") {
-			use_xft = string_to_bool(value);
-		}
-		CONF("font") {
-			X11_initialisation();
-			if (x_initialised == YES) {
-				if (value) {
-					set_first_font(value);
-				} else {
-					CONF_ERR;
-				}
-			}
-		}
-		CONF("xftalpha") {
-			X11_initialisation();
-			if (x_initialised == YES) {
-				if (value && font_count >= 0) {
-					fonts[0].font_alpha = atof(value) * 65535.0;
-				} else {
-					CONF_ERR;
-				}
-			}
-		}
-		CONF("xftfont") {
-			X11_initialisation();
-			if (use_xft) {
-#else
-		CONF("use_xft") {
-			if (string_to_bool(value)) {
-				ERR("Xft not enabled");
-			}
-		}
-		CONF("xftfont") {
-			/* xftfont silently ignored when no Xft */
-		}
-		CONF("xftalpha") {
-			/* xftalpha is silently ignored when no Xft */
-		}
-		CONF("font") {
-#endif
-				if(x_initialised == YES) {
-					if (value) {
-						set_first_font(value);
-					} else {
-						CONF_ERR;
-					}
-				}
-#ifdef XFT
-			}
-#endif
-		}
-		CONF("gap_x") {
-			if (value) {
-				gap_x = atoi(value);
-			} else {
-				CONF_ERR;
-			}
-		}
-		CONF("gap_y") {
-			if (value) {
-				gap_y = atoi(value);
-			} else {
-				CONF_ERR;
-			}
-		}
-#endif /* X11 */
-		CONF("mail_spool") {
-			if (value) {
-				char buffer[256];
-
-				variable_substitute(value, buffer, 256);
-
-				if (buffer[0] != '\0') {
-					if (current_mail_spool) {
-						free(current_mail_spool);
-					}
-					current_mail_spool = strndup(buffer, text_buffer_size);
-				}
-			} else {
-				CONF_ERR;
-			}
-		}
-#ifdef X11
-		CONF("minimum_size") {
-			if (value) {
-				if (sscanf(value, "%d %d", &minimum_width, &minimum_height)
-						!= 2) {
-					if (sscanf(value, "%d", &minimum_width) != 1) {
-						CONF_ERR;
-					}
-				}
-			} else {
-				CONF_ERR;
-			}
-		}
-		CONF("maximum_width") {
-			if (value) {
-				if (sscanf(value, "%d", &maximum_width) != 1) {
-					CONF_ERR;
-				}
-			} else {
-				CONF_ERR;
-			}
-		}
-#endif /* X11 */
-		CONF("no_buffers") {
-			no_buffers = string_to_bool(value);
-		}
-		CONF("top_cpu_separate") {
-			cpu_separate = string_to_bool(value);
-		}
-		CONF("short_units") {
-			short_units = string_to_bool(value);
-		}
-		CONF("pad_percents") {
-			pad_percents = atoi(value);
-		}
-#ifdef X11
 #ifdef OWN_WINDOW
-		CONF("own_window") {
-			X11_initialisation();
-			if (x_initialised == YES) {
-				if (value) {
-					own_window = string_to_bool(value);
-				} else {
-					CONF_ERR;
-				}
-			}
-		}
-		CONF("own_window_class") {
-			X11_initialisation();
-			if (x_initialised == YES) {
-				if (value) {
-					memset(window.class_name, 0, sizeof(window.class_name));
-					strncpy(window.class_name, value,
-						sizeof(window.class_name) - 1);
-				} else {
-					CONF_ERR;
-				}
-			}
-		}
-		CONF("own_window_title") {
-			X11_initialisation();
-			if (x_initialised == YES) {
-				if (value) {
-					memset(window.title, 0, sizeof(window.title));
-					strncpy(window.title, value, sizeof(window.title) - 1);
-				} else {
-					CONF_ERR;
-				}
-			}
-		}
-		CONF("own_window_transparent") {
-			X11_initialisation();
-			if (x_initialised == YES) {
-				if (value) {
-					set_transparent = string_to_bool(value);
-				} else {
-					CONF_ERR;
-				}
-			}
-		}
 		CONF("own_window_colour") {
 			X11_initialisation();
 			if (x_initialised == YES) {
@@ -6992,256 +8336,26 @@ static void load_config_file(const char *f)
 				}
 			}
 		}
-		CONF("own_window_hints") {
-			X11_initialisation();
-			if (x_initialised == YES) {
-				if (value) {
-					char *p_hint, *p_save;
-					char delim[] = ", ";
-
-					/* tokenize the value into individual hints */
-					if ((p_hint = strtok_r(value, delim, &p_save)) != NULL) {
-						do {
-							/* fprintf(stderr, "hint [%s] parsed\n", p_hint); */
-							if (strncmp(p_hint, "undecorate", 10) == EQUAL) {
-								SET_HINT(window.hints, HINT_UNDECORATED);
-							} else if (strncmp(p_hint, "below", 5) == EQUAL) {
-								SET_HINT(window.hints, HINT_BELOW);
-							} else if (strncmp(p_hint, "above", 5) == EQUAL) {
-								SET_HINT(window.hints, HINT_ABOVE);
-							} else if (strncmp(p_hint, "sticky", 6) == EQUAL) {
-								SET_HINT(window.hints, HINT_STICKY);
-							} else if (strncmp(p_hint, "skip_taskbar", 12) == EQUAL) {
-								SET_HINT(window.hints, HINT_SKIP_TASKBAR);
-							} else if (strncmp(p_hint, "skip_pager", 10) == EQUAL) {
-								SET_HINT(window.hints, HINT_SKIP_PAGER);
-							} else {
-								CONF_ERR;
-							}
-	
-							p_hint = strtok_r(NULL, delim, &p_save);
-						} while (p_hint != NULL);
-					}
-				} else {
-					CONF_ERR;
-				}
-			}
-		}
-		CONF("own_window_type") {
-			X11_initialisation();
-			if (x_initialised == YES) {
-				if (value) {
-					if (strncmp(value, "normal", 6) == EQUAL) {
-						window.type = TYPE_NORMAL;
-					} else if (strncmp(value, "desktop", 7) == EQUAL) {
-						window.type = TYPE_DESKTOP;
-					} else if (strncmp(value, "dock", 7) == EQUAL) {
-						window.type = TYPE_DOCK;
-						text_alignment = TOP_LEFT;
-					} else if (strncmp(value, "override", 8) == EQUAL) {
-						window.type = TYPE_OVERRIDE;
-					} else {
-						CONF_ERR;
-					}
-				} else {
-					CONF_ERR;
-				}
-			}
-		}
 #endif
-		CONF("stippled_borders") {
-			if (value) {
-				stippled_borders = strtol(value, 0, 0);
-			} else {
-				stippled_borders = 4;
-			}
-		}
-#endif /* X11 */
-		CONF("temp1") {
-			ERR("temp1 configuration is obsolete, use ${i2c <i2c device here> "
-				"temp 1}");
-		}
-		CONF("temp2") {
-			ERR("temp2 configuration is obsolete, use ${i2c <i2c device here> "
-				"temp 2}");
-		}
-		CONF("update_interval") {
-			if (value) {
-				update_interval = strtod(value, 0);
-			} else {
-				CONF_ERR;
-			}
-			if (info.music_player_interval == 0) {
-				// default to update_interval
-				info.music_player_interval = update_interval;
-			}
-		}
-		CONF("total_run_times") {
-			if (value) {
-				total_run_times = strtod(value, 0);
-			} else {
-				CONF_ERR;
-			}
-		}
-		CONF("uppercase") {
-			stuff_in_upper_case = string_to_bool(value);
-		}
-		CONF("max_specials") {
-			if (value) {
-				max_specials = atoi(value);
-			} else {
-				CONF_ERR;
-			}
-		}
-		CONF("max_user_text") {
-			if (value) {
-				max_user_text = atoi(value);
-			} else {
-				CONF_ERR;
-			}
-		}
-		CONF("text_buffer_size") {
-			if (value) {
-				text_buffer_size = atoi(value);
-				if (text_buffer_size < DEFAULT_TEXT_BUFFER_SIZE) {
-					ERR("text_buffer_size must be >=%i bytes", DEFAULT_TEXT_BUFFER_SIZE);
-					text_buffer_size = DEFAULT_TEXT_BUFFER_SIZE;
-				}
-			} else {
-				CONF_ERR;
-			}
-		}
 		CONF("text") {
-#ifdef X11
 			//initialize X11 if nothing X11-related is mentioned before TEXT (and if X11 is the default outputmethod)
 			if(output_methods & TO_X) {
 				X11_initialisation();
 			}
-#endif
-			if (global_text) {
-				free(global_text);
-				global_text = 0;
-			}
-
-			global_text = (char *) malloc(1);
-			global_text[0] = '\0';
-
-			while (!feof(fp)) {
-				unsigned int l = strlen(global_text);
-				unsigned int bl;
-
-				if (fgets(buf, 256, fp) == NULL) {
-					break;
-				}
-
-				/* Remove \\-\n. */
-				bl = strlen(buf);
-				if (bl >= 2 && buf[bl-2] == '\\' && buf[bl-1] == '\n') {
-					buf[bl-2] = '\0';
-					bl -= 2;
-					if (bl == 0) {
-						continue;
-					}
-				}
-
-				/* Check for continuation of \\-\n. */
-				if (l > 0 && buf[0] == '\n' && global_text[l-1] == '\\') {
-					global_text[l-1] = '\0';
-					continue;
-				}
-
-				global_text = (char *) realloc(global_text, l + bl + 1);
-				strcat(global_text, buf);
-
-				if (strlen(global_text) > max_user_text) {
-					break;
-				}
-			}
-			fclose(fp);
-			if (strlen(global_text) < 1) {
-				CRIT_ERR("no text supplied in configuration; exiting");
-			}
-			global_text_lines = line + 1;
-			return;
 		}
-#ifdef TCP_PORT_MONITOR
-		CONF("max_port_monitor_connections") {
-			int max;
-			if (!value || (sscanf(value, "%d", &max) != 1)) {
-				/* an error. use default, warn and continue. */
-				tcp_portmon_set_max_connections(0);
-				CONF_ERR;
-			} else if (tcp_portmon_set_max_connections(max)) {
-				/* max is < 0, default has been set*/
-				CONF_ERR;
-			}
-		}
-#endif
-		CONF("if_up_strictness") {
-			if (!value) {
-				ERR("incorrect if_up_strictness value, defaulting to 'up'");
-				ifup_strictness = IFUP_UP;
-			} else if (strcasecmp(value, "up") == EQUAL) {
-				ifup_strictness = IFUP_UP;
-			} else if (strcasecmp(value, "link") == EQUAL) {
-				ifup_strictness = IFUP_LINK;
-			} else if (strcasecmp(value, "address") == EQUAL) {
-				ifup_strictness = IFUP_ADDR;
-			} else {
-				ERR("incorrect if_up_strictness value, defaulting to 'up'");
-				ifup_strictness = IFUP_UP;
-			}
-		}
-
-		CONF("temperature_unit") {
-			if (!value) {
-				ERR("config option 'temperature_unit' needs an argument, either 'celsius' or 'fahrenheit'");
-			} else if (set_temp_output_unit(value)) {
-				ERR("temperature_unit: incorrect argument");
-			}
-		}
-
-		CONF("alias") {
-			if (value) {
-				size_t maxlength = strlen(value);	//+1 for terminating 0 not needed, 'cause of the space in the middle of value
-				char *skey = malloc(maxlength);
-				char *svalue = malloc(maxlength);
-				char *oldvalue;
-				if (sscanf(value, "%[0-9a-zA-Z_] %[^\n]", skey, svalue) == 2) {
-					oldvalue = getenv(skey);
-					if (oldvalue == NULL) {
-						setenv(skey, svalue, 0);
-					}
-					//PS: Don't free oldvalue, it's the real envvar, not a copy
-				} else {
-					CONF_ERR;
-				}
-				free(skey);
-				free(svalue);
-			} else {
-				CONF_ERR;
-			}
-		}
-
-		else {
-			ERR("%s: %d: no such configuration: '%s'", f, line, name);
-		}
-
+#endif /* X11 */
 #undef CONF
 #undef CONF2
+#undef CONF3
+#undef CONF_ERR
+#undef CONF_ERR2
+#undef CONF_BREAK
+#undef CONF_CONTINUE
+#undef CONF_BUFF_SIZE
 	}
 
 	fclose(fp);
 
-#undef CONF_ERR
-
-	if (info.music_player_interval == 0) {
-		// default to update_interval
-		info.music_player_interval = update_interval;
-	}
-	if (!global_text) { // didn't supply any text
-		CRIT_ERR("missing text block in configuration; exiting");
-	}
 }
 
 static void print_help(const char *prog_name) {
@@ -7251,7 +8365,7 @@ static void print_help(const char *prog_name) {
 			"file.\n"
 			"   -v, --version             version\n"
 			"   -q, --quiet               quiet mode\n"
-			"   -D, --debug               increase debugging output\n"
+			"   -D, --debug               increase debugging output, ie. -DD for more debugging\n"
 			"   -c, --config=FILE         config file to load\n"
 #ifdef CONFIG_OUTPUT
 			"   -C, --print-config        print the builtin default config to stdout\n"
@@ -7262,6 +8376,7 @@ static void print_help(const char *prog_name) {
 #ifdef X11
 			"   -a, --alignment=ALIGNMENT text alignment on screen, {top,bottom,middle}_{left,right,middle}\n"
 			"   -f, --font=FONT           font to use\n"
+			"   -X, --display=DISPLAY     X11 display to use\n"
 #ifdef OWN_WINDOW
 			"   -o, --own-window          create own window to draw\n"
 #endif
@@ -7282,7 +8397,7 @@ static void print_help(const char *prog_name) {
 /* : means that character before that takes an argument */
 static const char *getopt_string = "vVqdDt:u:i:hc:"
 #ifdef X11
-	"x:y:w:a:f:"
+	"x:y:w:a:f:X:"
 #ifdef OWN_WINDOW
 	"o"
 #endif
@@ -7307,6 +8422,7 @@ static const struct option longopts[] = {
 #ifdef X11
 	{ "alignment", 1, NULL, 'a' },
 	{ "font", 1, NULL, 'f' },
+	{ "display", 1, NULL, 'X' },
 #ifdef OWN_WINDOW
 	{ "own-window", 0, NULL, 'o' },
 #endif
@@ -7440,6 +8556,9 @@ int main(int argc, char **argv)
 #endif /* ! CONF_OUTPUT */
 		}
 	}
+#ifdef HAVE_SYS_INOTIFY_H
+	inotify_fd = inotify_init();
+#endif /* HAVE_SYS_INOTIFY_H */
 
 	load_config_file(current_config);
 
@@ -7497,6 +8616,11 @@ int main(int argc, char **argv)
 			case 'a':
 				text_alignment = string_to_alignment(optarg);
 				break;
+			case 'X':
+				if (disp)
+					free(disp);
+				disp = strdup(optarg);
+				break;
 
 #ifdef OWN_WINDOW
 			case 'o':
@@ -7546,8 +8670,9 @@ int main(int argc, char **argv)
 
 #ifdef X11
 	/* load font */
-	if (output_methods & TO_X)
-		load_fonts();
+	if (output_methods & TO_X) {
+		load_config_file_x11(current_config);
+	}
 #endif /* X11 */
 
 	/* generate text and get initial size */
@@ -7591,37 +8716,9 @@ int main(int argc, char **argv)
 	memset(tmpstring2, 0, text_buffer_size);
 
 #ifdef X11
-	if (output_methods & TO_X) {
-		selected_font = 0;
-		update_text_area();	/* to get initial size of the window */
-
-#ifdef OWN_WINDOW
-		init_window(own_window, text_width + border_margin * 2 + 1,
-			text_height + border_margin * 2 + 1, set_transparent, background_colour,
-			argv, argc);
-#else /* OWN_WINDOW */
-		init_window(0, text_width + border_margin * 2 + 1,
-			text_height + border_margin * 2 + 1, set_transparent, 0,
-			argv, argc);
-#endif /* OWN_WINDOW */
-
-		selected_font = 0;
-		update_text_area();	/* to position text/window on screen */
-
-#ifdef OWN_WINDOW
-		if (own_window && !fixed_pos) {
-			XMoveWindow(display, window.window, window.x, window.y);
-		}
-		if (own_window) {
-			set_transparent_background(window.window);
-		}
-#endif
-
-		create_gc();
-
-		set_font();
-		draw_stuff();
-	}
+	xargc = argc;
+	xargv = argv;
+	X11_create_window();
 #endif /* X11 */
 
 	/* Set signal handlers */

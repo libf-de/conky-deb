@@ -62,10 +62,11 @@ subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/build.h.in $(srcdir)/config.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
-	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
-	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/m4/pkg.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_openmp.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/pkg.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -76,43 +77,49 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__conky_SOURCES_DIST = defconfig.h conf_cookie.c conf_cookie.h \
 	audacious.c audacious.h bmpx.c colours.c colours.h common.c \
-	conky.c conky.h freebsd.c fs.c hddtemp.c linux.c top.c \
-	diskio.c users.c logging.h nvidia.c nvidia.h mail.c mixer.c \
-	mpd.c libmpdclient.c moc.c openbsd.c libtcp-portmon.h \
-	libtcp-portmon.c tcp-portmon.h tcp-portmon.c eve.c eve.h rss.c \
-	prss.c prss.h timed_thread.c timed_thread.h mboxscan.c \
-	mboxscan.h x11.c fonts.c xmms2.c ibm.c ibm.h smapi.c smapi.h \
-	specials.c specials.h tailhead.c tailhead.h temphelper.c \
-	temphelper.h text_object.h text_object.c algebra.h algebra.c
+	conky.c conky.h freebsd.c diskio.c fs.c hddtemp.c apcupsd.c \
+	apcupsd.h linux.c top.c users.c sony.c logging.h nvidia.c \
+	nvidia.h mail.c mixer.c mpd.c libmpdclient.c moc.c openbsd.c \
+	libtcp-portmon.h libtcp-portmon.c tcp-portmon.h tcp-portmon.c \
+	eve.c eve.h rss.c prss.c prss.h llua.c llua.h timed_thread.c \
+	timed_thread.h mboxscan.c mboxscan.h x11.c fonts.c xmms2.c \
+	ibm.c ibm.h smapi.c smapi.h specials.c specials.h tailhead.c \
+	tailhead.h temphelper.c temphelper.h text_object.h \
+	text_object.c algebra.h algebra.c imlib2.c imlib2.h
 am__objects_1 =
 @BUILD_CONFIG_OUTPUT_TRUE@@BUILD_FOR_FOPENCOOKIE_TRUE@am__objects_2 = conf_cookie.$(OBJEXT)
 @BUILD_AUDACIOUS_TRUE@am__objects_3 = audacious.$(OBJEXT)
 @BUILD_BMPX_TRUE@am__objects_4 = bmpx.$(OBJEXT)
-@BUILD_FREEBSD_TRUE@am__objects_5 = freebsd.$(OBJEXT)
+@BUILD_FREEBSD_TRUE@am__objects_5 = freebsd.$(OBJEXT) diskio.$(OBJEXT)
 @BUILD_HDDTEMP_TRUE@am__objects_6 = hddtemp.$(OBJEXT)
-@BUILD_LINUX_TRUE@am__objects_7 = linux.$(OBJEXT) top.$(OBJEXT) \
-@BUILD_LINUX_TRUE@	diskio.$(OBJEXT) users.$(OBJEXT)
-@BUILD_NVIDIA_TRUE@am__objects_8 = nvidia.$(OBJEXT)
-@BUILD_MPD_TRUE@am__objects_9 = mpd.$(OBJEXT) libmpdclient.$(OBJEXT)
-@BUILD_MOC_TRUE@am__objects_10 = moc.$(OBJEXT)
-@BUILD_OPENBSD_TRUE@am__objects_11 = openbsd.$(OBJEXT)
-@BUILD_PORT_MONITORS_TRUE@am__objects_12 = libtcp-portmon.$(OBJEXT) \
+@BUILD_APCUPSD_TRUE@am__objects_7 = apcupsd.$(OBJEXT)
+@BUILD_LINUX_TRUE@am__objects_8 = linux.$(OBJEXT) top.$(OBJEXT) \
+@BUILD_LINUX_TRUE@	diskio.$(OBJEXT) users.$(OBJEXT) \
+@BUILD_LINUX_TRUE@	sony.$(OBJEXT)
+@BUILD_NVIDIA_TRUE@am__objects_9 = nvidia.$(OBJEXT)
+@BUILD_MPD_TRUE@am__objects_10 = mpd.$(OBJEXT) libmpdclient.$(OBJEXT)
+@BUILD_MOC_TRUE@am__objects_11 = moc.$(OBJEXT)
+@BUILD_OPENBSD_TRUE@am__objects_12 = openbsd.$(OBJEXT)
+@BUILD_PORT_MONITORS_TRUE@am__objects_13 = libtcp-portmon.$(OBJEXT) \
 @BUILD_PORT_MONITORS_TRUE@	tcp-portmon.$(OBJEXT)
-@BUILD_EVE_TRUE@am__objects_13 = eve.$(OBJEXT)
-@BUILD_RSS_TRUE@am__objects_14 = rss.$(OBJEXT) prss.$(OBJEXT)
-@BUILD_X11_TRUE@am__objects_15 = x11.$(OBJEXT) fonts.$(OBJEXT)
-@BUILD_XMMS2_TRUE@am__objects_16 = xmms2.$(OBJEXT)
-@BUILD_IBM_TRUE@am__objects_17 = ibm.$(OBJEXT) smapi.$(OBJEXT)
+@BUILD_EVE_TRUE@am__objects_14 = eve.$(OBJEXT)
+@BUILD_RSS_TRUE@am__objects_15 = rss.$(OBJEXT) prss.$(OBJEXT)
+@BUILD_LUA_TRUE@am__objects_16 = llua.$(OBJEXT)
+@BUILD_X11_TRUE@am__objects_17 = x11.$(OBJEXT) fonts.$(OBJEXT)
+@BUILD_XMMS2_TRUE@am__objects_18 = xmms2.$(OBJEXT)
+@BUILD_IBM_TRUE@am__objects_19 = ibm.$(OBJEXT) smapi.$(OBJEXT)
+@BUILD_IMLIB2_TRUE@am__objects_20 = imlib2.$(OBJEXT)
 am_conky_OBJECTS = $(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(am__objects_4) colours.$(OBJEXT) common.$(OBJEXT) \
 	conky.$(OBJEXT) $(am__objects_5) fs.$(OBJEXT) $(am__objects_6) \
-	$(am__objects_7) $(am__objects_8) mail.$(OBJEXT) \
-	mixer.$(OBJEXT) $(am__objects_9) $(am__objects_10) \
+	$(am__objects_7) $(am__objects_8) $(am__objects_9) \
+	mail.$(OBJEXT) mixer.$(OBJEXT) $(am__objects_10) \
 	$(am__objects_11) $(am__objects_12) $(am__objects_13) \
-	$(am__objects_14) timed_thread.$(OBJEXT) mboxscan.$(OBJEXT) \
-	$(am__objects_15) $(am__objects_16) $(am__objects_17) \
-	specials.$(OBJEXT) tailhead.$(OBJEXT) temphelper.$(OBJEXT) \
-	text_object.$(OBJEXT) algebra.$(OBJEXT)
+	$(am__objects_14) $(am__objects_15) $(am__objects_16) \
+	timed_thread.$(OBJEXT) mboxscan.$(OBJEXT) $(am__objects_17) \
+	$(am__objects_18) $(am__objects_19) specials.$(OBJEXT) \
+	tailhead.$(OBJEXT) temphelper.$(OBJEXT) text_object.$(OBJEXT) \
+	algebra.$(OBJEXT) $(am__objects_20)
 conky_OBJECTS = $(am_conky_OBJECTS)
 conky_LDADD = $(LDADD)
 conky_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -173,6 +180,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+Imlib2_CFLAGS = @Imlib2_CFLAGS@
+Imlib2_LIBS = @Imlib2_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBICONV = @LIBICONV@
@@ -183,6 +192,10 @@ LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBICONV = @LTLIBICONV@
 LTLIBOBJS = @LTLIBOBJS@
+LUA51_CFLAGS = @LUA51_CFLAGS@
+LUA51_LIBS = @LUA51_LIBS@
+LUA_CFLAGS = @LUA_CFLAGS@
+LUA_LIBS = @LUA_LIBS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
@@ -291,7 +304,7 @@ INCLUDES = -DSYSTEM_CONFIG_FILE=\"$(sysconfdir)/conky/conky.conf\"
 @BUILD_MPD_TRUE@mpd = mpd.c libmpdclient.c
 @BUILD_MOC_TRUE@moc = moc.c
 @BUILD_XMMS2_TRUE@xmms2 = xmms2.c
-@BUILD_LINUX_TRUE@linux = linux.c top.c diskio.c users.c
+@BUILD_LINUX_TRUE@linux = linux.c top.c diskio.c users.c sony.c
 @BUILD_FREEBSD_TRUE@PTHREAD_LIBS = -pthread
 @BUILD_LINUX_TRUE@PTHREAD_LIBS = -lpthread
 @BUILD_OPENBSD_TRUE@PTHREAD_LIBS = -pthread
@@ -299,7 +312,7 @@ INCLUDES = -DSYSTEM_CONFIG_FILE=\"$(sysconfdir)/conky/conky.conf\"
 #if BUILD_SOLARIS
 #solaris = solaris.c
 #endif
-@BUILD_FREEBSD_TRUE@freebsd = freebsd.c
+@BUILD_FREEBSD_TRUE@freebsd = freebsd.c diskio.c
 
 #if BUILD_NETBSD
 #netbsd = netbsd.c
@@ -312,7 +325,10 @@ INCLUDES = -DSYSTEM_CONFIG_FILE=\"$(sysconfdir)/conky/conky.conf\"
 @BUILD_HDDTEMP_TRUE@hddtemp = hddtemp.c
 @BUILD_EVE_TRUE@eve = eve.c eve.h
 @BUILD_RSS_TRUE@rss = rss.c prss.c prss.h
+@BUILD_LUA_TRUE@lua = llua.c llua.h
 @BUILD_NVIDIA_TRUE@nvidia = nvidia.c nvidia.h
+@BUILD_IMLIB2_TRUE@imlib2 = imlib2.c imlib2.h
+@BUILD_APCUPSD_TRUE@apcupsd = apcupsd.c apcupsd.h
 conky_SOURCES = \
 	$(config_output)        \
 	$(config_cookie)        \
@@ -326,6 +342,7 @@ conky_SOURCES = \
 	$(freebsd)              \
 	fs.c                    \
 	$(hddtemp)              \
+	$(apcupsd)              \
 	$(linux)                \
 	logging.h               \
 	$(nvidia)               \
@@ -338,6 +355,7 @@ conky_SOURCES = \
 	$(port_monitors)        \
 	$(eve)                  \
 	$(rss)                  \
+	$(lua)			\
 	$(solaris)              \
 	timed_thread.c          \
 	timed_thread.h          \
@@ -355,7 +373,8 @@ conky_SOURCES = \
 	text_object.h           \
 	text_object.c           \
 	algebra.h               \
-	algebra.c
+	algebra.c		\
+	$(imlib2)
 
 conky_LDFLAGS = \
 	$(PTHREAD_LIBS) \
@@ -377,6 +396,8 @@ EXTRA_DIST = \
 	fs.h                    \
 	hddtemp.c               \
 	hddtemp.h               \
+	apcupsd.c               \
+	apcupsd.h               \
 	linux.c                 \
 	linux.h                 \
 	libmpdclient.c          \
@@ -384,6 +405,7 @@ EXTRA_DIST = \
 	libtcp-portmon.c        \
 	libtcp-portmon.h        \
 	rss.h                   \
+	llua.h			\
 	mail.h                  \
 	mixer.h                 \
 	moc.h                   \
@@ -410,7 +432,10 @@ EXTRA_DIST = \
 	smapi.h                 \
 	ibm.c                   \
 	ibm.h                   \
-	users.c
+	sony.h                  \
+	users.c			\
+	imlib2.c		\
+	imlib2.h
 
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -504,6 +529,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/algebra.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apcupsd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/audacious.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bmpx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/colours.Po@am__quote@
@@ -517,9 +543,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hddtemp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ibm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imlib2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmpdclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtcp-portmon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/llua.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mail.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mboxscan.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mixer.Po@am__quote@
@@ -530,6 +558,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/prss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smapi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sony.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/specials.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tailhead.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcp-portmon.Po@am__quote@
@@ -750,7 +779,8 @@ uninstall-am: uninstall-binPROGRAMS
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-binPROGRAMS
 
-@BUILD_CONFIG_OUTPUT_TRUE@$(config_output): ../data/conky.conf
+@BUILD_CONFIG_OUTPUT_TRUE@@BUILD_X11_TRUE@$(config_output): ../data/conky.conf
+@BUILD_CONFIG_OUTPUT_TRUE@@BUILD_X11_FALSE@$(config_output): ../data/conky_no_x11.conf
 @BUILD_CONFIG_OUTPUT_TRUE@	sh ../text2c.sh $< $@ defconfig
 
 # vi:set ts=8 sw=8 noet ai nocindent syntax=automake:

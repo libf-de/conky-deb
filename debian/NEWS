@@ -1,3 +1,17 @@
+conky (1.7.1.1-1) unstable; urgency=low
+
+    Re-introduced IBM acpi support (for Lenovo laptops) at the
+    request of users since this does not entail additional library
+    dependencies.
+
+    Upstream has aadded support for ALSA. This has been enabled by
+    adding a build dependency on libasound2-dev.
+
+    Upstream has a new configuration interface based on Lua. This is
+    currently disabled.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Thu, 09 Jul 2009 09:41:59 +0530
+
 conky (1.7.0-1) unstable; urgency=low
 
     Users may find that older conky configuration files give

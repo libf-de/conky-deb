@@ -4,13 +4,14 @@ Priority: optional
 Maintainer: Kapil Hari Paranjape <kapil@debian.org>
 Build-Depends: debhelper (>= 5.0.0), quilt, libx11-dev, libxft-dev,
  libxdamage-dev, libxext-dev, pkg-config (>= 0.19), libglib2.0-dev,
- libxml2-dev, libcurl4-gnutls-dev, libtool, automake1.10,
+ libxml2-dev, libcurl4-gnutls-dev, libasound2-dev,
+ libtool, automake1.10,
  libiw-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
  libkvm-dev [kfreebsd-i386 kfreebsd-amd64],
  libdevstat-dev [kfreebsd-i386 kfreebsd-amd64]
 Vcs-Svn: svn://svn.debian.org/svn/collab-maint/deb-maint/conky
 Homepage: http://conky.sf.net
-Standards-Version: 3.8.1
+Standards-Version: 3.8.2
 
 Package: conky
 Architecture: any

@@ -34,23 +34,51 @@
 #include <math.h>
 
 /* maximum number of special things, e.g. fonts, offsets, aligns, etc. */
-unsigned int max_specials = MAX_SPECIALS_DEFAULT;
+int max_specials = MAX_SPECIALS_DEFAULT;
 
 /* create specials array on heap instead of stack with introduction of
  * max_specials */
 struct special_t *specials = NULL;
 
-unsigned int special_count;
+int special_count;
+
+int default_bar_width = 0, default_bar_height = 6;
+#ifdef X11
+int default_graph_width = 0, default_graph_height = 25;
+int default_gauge_width = 40, default_gauge_height = 25;
+#endif
 
 /*
  * Scanning arguments to various special text objects
  */
 
+#ifdef X11
+const char *scan_gauge(const char *args, int *w, int *h)
+{
+	/*width and height*/
+	*w = default_gauge_width;
+	*h = default_gauge_height;
+
+	/* gauge's argument is either height or height,width */
+	if (args) {
+		int n = 0;
+
+		if (sscanf(args, "%d,%d %n", h, w, &n) <= 1) {
+			if (sscanf(args, "%d %n", h, &n) == 2) {
+				*w = *h; /*square gauge*/
+			}
+		}
+		args += n;
+	}
+
+	return args;
+}
+
 const char *scan_bar(const char *args, int *w, int *h)
 {
 	/* zero width means all space that is available */
-	*w = 0;
-	*h = 6;
+	*w = default_bar_width;
+	*h = default_bar_height;
 	/* bar's argument is either height or height,width */
 	if (args) {
 		int n = 0;
@@ -82,8 +110,8 @@ char *scan_graph(const char *args, int *w, int *h,
 	buf[0] = 0;
 
 	/* zero width means all space that is available */
-	*w = 0;
-	*h = 25;
+	*w = default_graph_width;
+	*h = default_graph_height;
 	*first_colour = 0;
 	*last_colour = 0;
 	*scale = 0;
@@ -163,6 +191,7 @@ char *scan_graph(const char *args, int *w, int *h,
 		return strndup(buf, text_buffer_size);
 	}
 }
+#endif
 
 /*
  * Printing various special text objects
@@ -180,9 +209,28 @@ static struct special_t *new_special(char *buf, enum special_types t)
 	return &specials[special_count++];
 }
 
+#ifdef X11
+void new_gauge(char *buf, int w, int h, int usage)
+{
+	struct special_t *s = 0;
+	if ((output_methods & TO_X) == 0)
+		return;
+
+	s = new_special(buf, GAUGE);
+
+	s->arg = (usage > 255) ? 255 : ((usage < 0) ? 0 : usage);
+	s->width = w;
+	s->height = h;
+}
+
 void new_bar(char *buf, int w, int h, int usage)
 {
-	struct special_t *s = new_special(buf, BAR);
+	struct special_t *s = 0;
+
+	if ((output_methods & TO_X) == 0)
+		return;
+
+	s = new_special(buf, BAR);
 
 	s->arg = (usage > 255) ? 255 : ((usage < 0) ? 0 : usage);
 	s->width = w;
@@ -193,15 +241,14 @@ void new_font(char *buf, char *args)
 {
 	if ((output_methods & TO_X) == 0)
 		return;
-#ifdef X11
+
 	if (args) {
 		struct special_t *s = new_special(buf, FONT);
 
 		if (s->font_added > font_count || !s->font_added || (strncmp(args, fonts[s->font_added].name, DEFAULT_TEXT_BUFFER_SIZE) != EQUAL) ) {
 			int tmp = selected_font;
 
-			selected_font = s->font_added = addfont(args);
-			load_fonts();
+			selected_font = s->font_added = add_font(args);
 			selected_font = tmp;
 		}
 	} else {
@@ -211,11 +258,6 @@ void new_font(char *buf, char *args)
 		selected_font = s->font_added = 0;
 		selected_font = tmp;
 	}
-#else
-	(void)buf;
-	(void)args;
-	return;
-#endif
 }
 
 static void graph_append(struct special_t *graph, double f, char showaslog)
@@ -251,7 +293,12 @@ static void graph_append(struct special_t *graph, double f, char showaslog)
 void new_graph(char *buf, int w, int h, unsigned int first_colour,
 		unsigned int second_colour, double i, int scale, int append, char showaslog)
 {
-	struct special_t *s = new_special(buf, GRAPH);
+	struct special_t *s = 0;
+
+	if ((output_methods & TO_X) == 0)
+		return;
+
+	s = new_special(buf, GRAPH);
 
 	s->width = w;
 	if (s->graph == NULL) {
@@ -292,12 +339,20 @@ void new_graph(char *buf, int w, int h, unsigned int first_colour,
 
 void new_hr(char *buf, int a)
 {
+	if ((output_methods & TO_X) == 0)
+		return;
+
 	new_special(buf, HORIZONTAL_LINE)->height = a;
 }
 
 void new_stippled_hr(char *buf, int a, int b)
 {
-	struct special_t *s = new_special(buf, STIPPLED_HR);
+	struct special_t *s = 0;
+
+	if ((output_methods & TO_X) == 0)
+		return;
+
+	s = new_special(buf, STIPPLED_HR);
 
 	s->height = b;
 	s->arg = a;
@@ -305,13 +360,20 @@ void new_stippled_hr(char *buf, int a, int b)
 
 void new_fg(char *buf, long c)
 {
+	if ((output_methods & TO_X) == 0)
+		return;
+
 	new_special(buf, FG)->arg = c;
 }
 
 void new_bg(char *buf, long c)
 {
+	if ((output_methods & TO_X) == 0)
+		return;
+
 	new_special(buf, BG)->arg = c;
 }
+#endif
 
 void new_outline(char *buf, long c)
 {

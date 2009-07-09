@@ -24,6 +24,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifdef X11
 #ifndef _FONTS_H
 #define _FONTS_H
 
@@ -69,10 +70,11 @@ extern struct font_list *fonts;
 extern int selected_font;
 extern int font_count;
 
-void set_font(void);
-int addfont(const char *);
+void setup_fonts(void);
+int add_font(const char *);
 void set_first_font(const char *);
 void free_fonts(void);
 void load_fonts(void);
 
 #endif /* _FONTS_H */
+#endif /* X11 */

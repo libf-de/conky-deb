@@ -35,7 +35,11 @@ endif
 conky_DEPENDENCIES = $(config_output)
 BUILT_SOURCES = $(config_output)
 CLEANFILES = $(config_output)
+if BUILD_X11
 $(config_output): ../data/conky.conf
+else
+$(config_output): ../data/conky_no_x11.conf
+endif
 	sh ../text2c.sh $< $@ defconfig
 endif
 
@@ -64,7 +68,7 @@ xmms2 = xmms2.c
 endif
 
 if BUILD_LINUX
-linux = linux.c top.c diskio.c users.c
+linux = linux.c top.c diskio.c users.c sony.c
 PTHREAD_LIBS =  -lpthread
 endif
 
@@ -73,7 +77,7 @@ endif
 #endif
 
 if BUILD_FREEBSD
-freebsd = freebsd.c
+freebsd = freebsd.c diskio.c
 PTHREAD_LIBS =  -pthread
 endif
 
@@ -107,8 +111,20 @@ if BUILD_RSS
 rss = rss.c prss.c prss.h
 endif
 
+if BUILD_LUA
+lua = llua.c llua.h
+endif
+
 if BUILD_NVIDIA
 nvidia = nvidia.c nvidia.h
+endif
+
+if BUILD_IMLIB2
+imlib2 = imlib2.c imlib2.h
+endif
+
+if BUILD_APCUPSD
+apcupsd = apcupsd.c apcupsd.h
 endif
 
 conky_SOURCES = \
@@ -124,6 +140,7 @@ conky_SOURCES = \
 	$(freebsd)              \
 	fs.c                    \
 	$(hddtemp)              \
+	$(apcupsd)              \
 	$(linux)                \
 	logging.h               \
 	$(nvidia)               \
@@ -136,6 +153,7 @@ conky_SOURCES = \
 	$(port_monitors)        \
 	$(eve)                  \
 	$(rss)                  \
+	$(lua)			\
 	$(solaris)              \
 	timed_thread.c          \
 	timed_thread.h          \
@@ -153,7 +171,8 @@ conky_SOURCES = \
 	text_object.h           \
 	text_object.c           \
 	algebra.h               \
-	algebra.c
+	algebra.c		\
+	$(imlib2)
 
 conky_LDFLAGS = \
 	$(PTHREAD_LIBS) \
@@ -175,6 +194,8 @@ EXTRA_DIST = \
 	fs.h                    \
 	hddtemp.c               \
 	hddtemp.h               \
+	apcupsd.c               \
+	apcupsd.h               \
 	linux.c                 \
 	linux.h                 \
 	libmpdclient.c          \
@@ -182,6 +203,7 @@ EXTRA_DIST = \
 	libtcp-portmon.c        \
 	libtcp-portmon.h        \
 	rss.h                   \
+	llua.h			\
 	mail.h                  \
 	mixer.h                 \
 	moc.h                   \
@@ -208,7 +230,10 @@ EXTRA_DIST = \
 	smapi.h                 \
 	ibm.c                   \
 	ibm.h                   \
-	users.c
+	sony.h                  \
+	users.c			\
+	imlib2.c		\
+	imlib2.h
 
 
 # vi:set ts=8 sw=8 noet ai nocindent syntax=automake:

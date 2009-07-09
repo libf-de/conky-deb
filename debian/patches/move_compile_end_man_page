@@ -2,11 +2,11 @@
  a particularly important section for the pre-package debian
  binary package.
 
-Index: conky-1.7.0/doc/conky.1
+Index: conky/doc/conky.1
 ===================================================================
---- conky-1.7.0.orig/doc/conky.1	2009-05-25 22:14:41.000000000 +0530
-+++ conky-1.7.0/doc/conky.1	2009-05-25 22:17:56.000000000 +0530
-@@ -40,36 +40,6 @@
+--- conky.orig/doc/conky.1	2009-07-08 06:10:34.000000000 +0530
++++ conky/doc/conky.1	2009-07-08 06:13:13.000000000 +0530
+@@ -40,35 +40,6 @@
  or stop by #conky on irc.freenode.net if you have questions or want to contribute.
  .PP
  Thanks for your interest in Conky.
@@ -20,7 +20,6 @@ Index: conky-1.7.0/doc/conky.1
 -Here are some installation instructions for a few:
 -.PP
 -Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
--There is also usually an up-to-date ebuild within Conky's package or in the git repo.
 -.PP
 -Debian, etc. users -- Conky should be in your repositories, and can be installed by doing
 -"aptitude install conky".
@@ -43,7 +42,7 @@ Index: conky-1.7.0/doc/conky.1
  .SH "YOU SHOULD KNOW"
  Conky is generally very good on resources. That said, the more you try to make Conky
  do, the more resources it is going to consume.
-@@ -1683,6 +1653,36 @@
+@@ -2304,6 +2275,35 @@
  \(lahttp://www.sourceforge.net/projects/conky\(ra
  .PP
  #conky on irc.freenode.net
@@ -57,7 +56,6 @@ Index: conky-1.7.0/doc/conky.1
 +Here are some installation instructions for a few:
 +.PP
 +Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
-+There is also usually an up-to-date ebuild within Conky's package or in the git repo.
 +.PP
 +Debian, etc. users -- Conky should be in your repositories, and can be installed by doing
 +"aptitude install conky".

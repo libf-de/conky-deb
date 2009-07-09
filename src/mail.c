@@ -74,7 +74,7 @@ void update_mail_count(struct local_mail_s *mail)
 	}
 
 	if (stat(mail->box, &st)) {
-		static int rep;
+		static int rep = 0;
 
 		if (!rep) {
 			ERR("can't stat %s: %s", mail->box, strerror(errno));
@@ -210,6 +210,7 @@ void update_mail_count(struct local_mail_s *mail)
 
 		while (!feof(fp)) {
 			char buf[128];
+			int was_new = 0;
 
 			if (fgets(buf, 128, fp) == NULL) {
 				break;
@@ -219,28 +220,53 @@ void update_mail_count(struct local_mail_s *mail)
 				/* ignore MAILER-DAEMON */
 				if (strncmp(buf + 5, "MAILER-DAEMON ", 14) != 0) {
 					mail->mail_count++;
+					was_new = 0;
 
-					if (reading_status) {
+					if (reading_status == 1) {
 						mail->new_mail_count++;
 					} else {
 						reading_status = 1;
 					}
 				}
 			} else {
-				if (reading_status
+				if (reading_status == 1
 						&& strncmp(buf, "X-Mozilla-Status:", 17) == 0) {
+					int xms = strtol(buf + 17, NULL, 16);
+					/* check that mail isn't marked for deletion */
+					if (xms & 0x0008) {
+						mail->trashed_mail_count++;
+						reading_status = 0;
+						/* Don't check whether the trashed email is unread */
+						continue;
+					}
 					/* check that mail isn't already read */
-					if (strchr(buf + 21, '0')) {
+					if (!(xms & 0x0001)) {
 						mail->new_mail_count++;
+						was_new = 1;
 					}
 
-					reading_status = 0;
+					/* check for an additional X-Status header */
+					reading_status = 2;
 					continue;
 				}
-				if (reading_status && strncmp(buf, "Status:", 7) == 0) {
+				if (reading_status == 1 && strncmp(buf, "Status:", 7) == 0) {
 					/* check that mail isn't already read */
 					if (strchr(buf + 7, 'R') == NULL) {
 						mail->new_mail_count++;
+						was_new = 1;
+					}
+
+					reading_status = 2;
+					continue;
+				}
+				if (reading_status >= 1 && strncmp(buf, "X-Status:", 9) == 0) {
+					/* check that mail isn't marked for deletion */
+					if (strchr(buf + 9, 'D') != NULL) {
+						mail->trashed_mail_count++;
+						/* If the mail was previously detected as new,
+						   subtract it from the new mail count */
+						if (was_new)
+							mail->new_mail_count--;
 					}
 
 					reading_status = 0;
@@ -277,9 +303,9 @@ struct mail_s *parse_mail_args(char type, const char *arg)
 	if (sscanf(arg, "%128s %128s %128s", mail->host, mail->user, mail->pass)
 			!= 3) {
 		if (type == POP3_TYPE) {
-			ERR("Scanning IMAP args failed");
-		} else if (type == IMAP_TYPE) {
 			ERR("Scanning POP3 args failed");
+		} else if (type == IMAP_TYPE) {
+			ERR("Scanning IMAP args failed");
 		}
 		return 0;
 	}
@@ -566,6 +592,7 @@ void *imap_thread(void *arg)
 							break;
 						}
 					} else {
+						fail++;
 						break;
 					}
 					recvbuf[numbytes] = '\0';
@@ -643,12 +670,16 @@ void *imap_thread(void *arg)
 							// need to re-connect
 							break;
 						}
+					} else {
+						fail++;
+						break;
 					}
 					imap_unseen_command(mail, old_unseen, old_messages);
 					fail = 0;
 					old_unseen = mail->unseen;
 					old_messages = mail->messages;
 				}
+				if (fail) break;
 			} else {
 				strncpy(sendbuf, "a3 logout\r\n", MAXDATASIZE);
 				if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {

@@ -32,7 +32,11 @@
 #include <ctype.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <netinet/in.h>
 #include <pthread.h>
+#include <unistd.h>
 #include "diskio.h"
 
 /* check for OS and include appropriate headers */
@@ -168,12 +172,10 @@ struct net_stat *get_net_stat(const char *dev)
 	}
 
 	/* wasn't found? add it */
-	if (i == 16) {
-		for (i = 0; i < 16; i++) {
-			if (netstats[i].dev == 0) {
-				netstats[i].dev = strndup(dev, text_buffer_size);
-				return &netstats[i];
-			}
+	for (i = 0; i < 16; i++) {
+		if (netstats[i].dev == 0) {
+			netstats[i].dev = strndup(dev, text_buffer_size);
+			return &netstats[i];
 		}
 	}
 
@@ -183,7 +185,56 @@ struct net_stat *get_net_stat(const char *dev)
 
 void clear_net_stats(void)
 {
+	int i;
+	for (i = 0; i < 16; i++) {
+		if (netstats[i].dev) {
+			free(netstats[i].dev);
+		}
+	}
 	memset(netstats, 0, sizeof(netstats));
+}
+
+/* We should check if this is ok with OpenBSD and NetBSD as well. */
+int interface_up(const char *dev)
+{
+	int fd;
+	struct ifreq ifr;
+
+	if ((fd = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
+		CRIT_ERR("could not create sockfd");
+		return 0;
+	}
+	strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+	if (ioctl(fd, SIOCGIFFLAGS, &ifr)) {
+		/* if device does not exist, treat like not up */
+		if (errno != ENODEV && errno != ENXIO)
+			perror("SIOCGIFFLAGS");
+		goto END_FALSE;
+	}
+
+	if (!(ifr.ifr_flags & IFF_UP)) /* iface is not up */
+		goto END_FALSE;
+	if (ifup_strictness == IFUP_UP)
+		goto END_TRUE;
+
+	if (!(ifr.ifr_flags & IFF_RUNNING))
+		goto END_FALSE;
+	if (ifup_strictness == IFUP_LINK)
+		goto END_TRUE;
+
+	if (ioctl(fd, SIOCGIFADDR, &ifr)) {
+		perror("SIOCGIFADDR");
+		goto END_FALSE;
+	}
+	if (((struct sockaddr_in *)&(ifr.ifr_ifru.ifru_addr))->sin_addr.s_addr)
+		goto END_TRUE;
+
+END_FALSE:
+	close(fd);
+	return 0;
+END_TRUE:
+	close(fd);
+	return 1;
 }
 
 void free_dns_data(void)
@@ -276,7 +327,7 @@ static double last_fs_update;
 unsigned long long need_mask;
 int no_buffers;
 
-#define NEED(a) ((need_mask & (1 << a)) && ((info.mask & (1 << a)) == 0))
+#define NEED(a) ((need_mask & (1ULL << a)) && ((info.mask & (1ULL << a)) == 0))
 
 void update_stuff(void)
 {
@@ -409,13 +460,29 @@ void update_stuff(void)
 	if (NEED(INFO_DNS)) {
 		update_dns_data();
 	}
+#ifdef APCUPSD
+	if (NEED(INFO_APCUPSD)) {
+		update_apcupsd();
+	}
+#endif
 }
 
-int round_to_int(float f)
+/* Ohkie to return negative values for temperatures */
+int round_to_int_temp(float f)
 {
 	if (f >= 0.0) {
 		return (int) (f + 0.5);
 	} else {
 		return (int) (f - 0.5);
+	}
+}
+/* Don't return negative values for cpugraph, bar, gauge, percentage.
+ * Causes unreasonable numbers to show */
+unsigned int round_to_int(float f)
+{
+	if (f >= 0.0) {
+		return (int) (f + 0.5);
+	} else {
+		return 0;
 	}
 }

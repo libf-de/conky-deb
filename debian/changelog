@@ -1,3 +1,24 @@
+conky (1.7.1.1-1) unstable; urgency=low
+
+  * New upstream release (1.7.1.1).
+    - now supports the use of Lua for extending/configuring conky.
+      (Feature disabled in this package).
+    - now supports alsa for mixer settings.
+    - see upstream Changelog and NEWS.Debian for more info.
+  * debian/patches/{fix_hyphen_man_page,move_compile_end_man_page}:
+    refreshed patches after upstream reformatted the paragraphs.
+  * debian/rules: re-introduce IBM acpi support and disable
+    Lua support.
+  * debian/patches/kfreebsd_optreset_ifdef_notreqd: incorporate fix
+    for FTBFS due to incorrect #ifdef. Thanks to Petr Salinger.
+    Closes: #533224.
+  * debian/control:
+    - added "libasound2-dev" to Build-Depends to enable alsa mixer
+      support.
+    - Standards Version 3.8.2. No other changes required.
+
+ -- Kapil Hari Paranjape <kapil@debian.org>  Thu, 09 Jul 2009 09:30:26 +0530
+
 conky (1.7.0-1) unstable; urgency=low
 
   * New upstream release (1.7.0).

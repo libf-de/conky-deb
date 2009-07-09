@@ -16,7 +16,7 @@
 			<firstname>Brenden</firstname>
 			<surname>Matthews</surname>
 		</author>
-		<date>2009-05-01</date>
+		<date>2009-06-06</date>
 	</refentryinfo>
 
 	<refmeta>
@@ -79,7 +79,6 @@
 		</para>
 		<para>
 			Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
-			There is also usually an up-to-date ebuild within Conky's package or in	the git repo.
 		</para>
 		<para>
 			Debian, etc. users -- Conky should be in your repositories, and can be installed by doing
@@ -190,12 +189,26 @@
 				<listitem>Start Conky to background at coordinates (5, 500).</listitem>
 			</varlistentry>
 
+			<varlistentry>
+				<term><varname>conky </varname><option>-C > ~/.conkyrc</option></term>
+				<listitem>Do not start Conky, but have it output the builtin default config file to ~/.conkyrc for later customising.</listitem>
+			</varlistentry>
+
 		</variablelist>
 	</refsect1>
 
 	<refsect1>
 		<title>Files</title>
-		<filename>~/.conkyrc</filename> default configuration file
+		<variablelist>
+			<varlistentry>
+				<term><filename>${sysconfdir}/conky/conky.conf</filename></term>
+				<listitem>Default system-wide configuration file. The value of ${sysconfdir} depends on the compile-time options (most likely /etc).</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><filename>~/.conkyrc</filename></term>
+				<listitem>Default personal configuration file.</listitem>
+			</varlistentry>
+		</variablelist>
 	</refsect1>
 
 	<refsect1>

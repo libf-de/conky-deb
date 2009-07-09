@@ -37,7 +37,9 @@ void format_seconds_short(char *buf, unsigned int n, long t);
 void update_x11info(void);
 #endif
 
-int round_to_int(float);
+int round_to_int_temp(float);
+
+unsigned int round_to_int(float);
 
 extern unsigned long long need_mask;
 extern int no_buffers;
@@ -49,7 +51,7 @@ struct dns_data {
 void free_dns_data(void);
 
 struct net_stat {
-        const char *dev;
+        char *dev;
         int up;
         long long last_read_recv, last_read_trans;
         long long recv, trans;
@@ -69,6 +71,7 @@ struct net_stat {
 };
 void clear_net_stats(void);
 struct net_stat *get_net_stat(const char *);
+int interface_up(const char *dev);
 
 void get_adt746x_cpu(char *, size_t);
 void get_adt746x_fan(char *, size_t);

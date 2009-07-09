@@ -1,0 +1,32 @@
+Package: conky
+Severity: important
+Version: 1.7.0-1
+Tags: patch
+User: glibc-bsd-devel@lists.alioth.debian.org
+Usertags: kfreebsd
+
+Hi,
+
+the current version fails to build on GNU/kFreeBSD.
+
+It needs a small fix as the "optreset" variable is related to user space, 
+not kernel space, so please just drop "|| defined(__FreeBSD_kernel__)"
+at shown bellow. That is all.
+
+Petr
+
+only in patch2:
+unchanged:
+Index: conky/src/conky.c
+===================================================================
+--- conky.orig/src/conky.c	2009-06-10 22:14:37.000000000 +0530
++++ conky/src/conky.c	2009-07-08 07:31:53.000000000 +0530
+@@ -8581,7 +8581,7 @@
+ 
+ 	/* handle other command line arguments */
+ 
+-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__OpenBSD__) \
++#if defined(__FreeBSD__) || defined(__OpenBSD__) \
+ 		|| defined(__NetBSD__)
+ 	optind = optreset = 1;
+ #else

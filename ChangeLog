@@ -1,3 +1,95 @@
+2009-06-09
+	* Fixed a regression which causes fonts to not be rendered properly with
+	certain types of windows
+	* Fix bug in comments within TEXT (where the line contains just '#')
+	(sf.net #2803586), thanks Pavelo
+	* Fix bug in $mails (sf.net #2802529, thanks Nikos)
+
+2009-06-07
+	* Conky 1.7.1 released
+
+2009-05-31
+	* Fix hostname resolution for mpd_host
+	* Made sure that no X11 stuff is in the binary with --disable-X11
+
+2009-05-19
+	* Added inotify support to reload the config when modified automatically
+	on systems that support it
+	* Added inotify support for reloading Lua scripts automagically
+
+2009-05-17
+	* Added support for the Lua programming language
+	* Added support for rending images by way of Imlib2
+	* Patch to fix rounding error with CPU values (thanks Filipe)
+	* Added support for execbar without X
+
+2009-05-16
+	* Added another builtin config that is used when compiled with --disable-X11
+
+2009-05-13
+	* Fix segfault when there is no config available
+
+2009-05-12
+	* Make sure if_gw isn't checked twice
+
+2009-05-11
+	* Added arguments to hwmon for value precalculation
+
+2009-05-10
+	* Added support for APC UPS daemon monitoring
+	* Fixed hwmon for kernel 2.6.29
+	* Fixed removing comments
+
+2009-05-09
+	* Allow the use of '#' for comments within text area (can be escaped with
+	'\#')
+
+2009-05-08
+	* Only include disp when needed
+	* Made sure update_uname works without X11
+
+2009-05-07
+	* Fix occasional cpubar segfaults
+	* Added top_name_width config option
+
+2009-05-05
+	* Added some completely pointless OpenMP optimizations(?)
+
+2009-05-03
+	* Added Sony VAIO fanspeed info (thanks Yeon-Hyeong)
+
+2009-05-01
+	* Added diskio_avg_samples patch (thanks Yeon-Hyeong)
+	* Fixed $texeci regression
+
+2009-04-30
+	* Added $combine, a var that places 2 other vars next to each other, even if they
+	have a output of multiple lines. This also makes the moving of RSS-itemes with
+	$goto (see change from 2009-04-19) no longer necessary.
+
+2009-04-28
+	* Various XMMS2 updates (thanks Lassi)
+	* Make ALSA mixers available on Linux, and added $if_mixer_mute (thanks
+
+2009-04-19
+	* Make it possible to place spaces in front of RSS-items as a workaround
+	for the problem that $goto only moves the first RSS-item. This is only a
+	workaround and should be replaced by a permanent fix that makes $goto move
+	all RSS-items !
+
+2009-04-13
+	* Fix broken compilation without X11
+
+2009-04-09
+	* Added default_bar/graph/gauge_size config options (thanks wire64 for the
+	idea)
+
+2009-03-24
+	* Added eval text object to realise double parsing
+
+2009-03-15
+	* Added gauge widget patch, sf.net id #2676128 (thanks Aner)
+
 2009-05-01
 	* Conky 1.7.0 "Hungry Hobo" released!
 
@@ -18,6 +110,7 @@
 2009-03-15
 	* Added extra newline patch, sf.net id #2638601 (thanks Ali)
 	* Disk i/o support on FreeBSD patch, sf.net id #2657227 (thanks Nikos)
+	* Added gauge widget patch, sf.net id #2676128 (thanks Aner)
 
 2009-03-07
 	* Added alias patch ( sf.net id #2663691 ) changed it to prevent it from

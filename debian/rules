@@ -19,7 +19,7 @@ else
 endif
 
 ifeq ($(DEB_HOST_ARCH_OS),linux)
-       EXTRA_CONF_ARGS=--enable-wlan
+       EXTRA_CONF_ARGS=--enable-wlan --enable-ibm --disable-lua
 endif
 
 DEB_QUILT_PATCHES = debian/patches
