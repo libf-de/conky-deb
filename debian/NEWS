@@ -1,45 +1,99 @@
-conky (1.7.1.1-1) unstable; urgency=low
+conky (1.8.0-1) unstable; urgency=low
 
-    Re-introduced IBM acpi support (for Lenovo laptops) at the
-    request of users since this does not entail additional library
-    dependencies.
+    Package maintenance moved back to Debian.
+    Debian users, please be aware that 3 binary packages are now created:
+    conky-cli, conky-std and conky-all.
 
-    Upstream has aadded support for ALSA. This has been enabled by
-    adding a build dependency on libasound2-dev.
+    conky-cli is a basic package that can be useful in servers or piped
+    with dzen2.
+    It includes the following support:
 
-    Upstream has a new configuration interface based on Lua. This is
-    currently disabled.
+    MPD, MOC, math, apcupsd, ncurses and I/O stats
 
- -- Kapil Hari Paranjape <kapil@debian.org>  Thu, 09 Jul 2009 09:41:59 +0530
+    conky-std should be a good compromise for most users that do not
+    need special features.
+    It includes the following support:
 
-conky (1.7.0-1) unstable; urgency=low
+    X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
+    wireless, ALSA mixer, apcupsd, I/O stats and lua
 
-    Users may find that older conky configuration files give
-    unexpected results. Specifically,
+    conky-all includes almost all of the available support:
 
-     - mixer values are percentages
-     - new variables out_to_x, overwrite_file, append_file,
-       out_to_stderr
-     - IBM acpi support is no longer compiled in by default in the
-       Debian package.
-     - changed order of arguments for diskiograph
-     - maximum width for mpd variables
-     - remove freq_dyn and freq_dyn_g
-     - conky in dock mode is a withdrawn window
+    X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS, curl,
+    Weather (METAR and XOAP), wireless, IBM, nvidia, eve-online, Imlib2,
+    ALSA mixer, apcupsd, I/O stats, Lua and Lua bindings for the cairo
+    and imlib2 libraries.
 
-    See the example "conky.conf" file and the man page for
-    further guidance.
+    Note that some features might not be available for non-linux kernels
+    or non i386, amd64 CPUs.
 
- -- Kapil Hari Paranjape <kapil@debian.org>  Wed, 27 May 2009 04:46:25 +0530
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Fri, 12 Mar 2010 21:07:21 +0100
 
-conky (1.6.0-1) unstable; urgency=low
+conky (1.8.0-0ubuntu1) lucid; urgency=low
 
-    Users may find that older conky configuration files give
-    unexpected results. This is because some buffer sizes have been
-    "optimized". For the details about these changes please refer
-    to the man page.
+    ncurses support has been enabled for the conky-cli package.
 
- -- Kapil Hari Paranjape <kapil@debian.org>  Tue, 09 Sep 2008 08:44:42 +0530
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Sun, 24 Jan 2010 21:10:43 +0100
+
+conky (1.7.2-0ubuntu2) karmic; urgency=low
+
+    3 binary packages are now created: conky-cli, conky-std and conky-all.
+
+    conky-cli is a basic package that can be useful in servers or piped
+    with dzen2.
+    It includes the following support:
+
+    MPD, MOC, math, apcupsd and I/O stats
+
+    conky-std should be a good compromise for most users that do not
+    need special features.
+    It includes the following support:
+
+    X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
+    wireless, ALSA mixer, apcupsd, I/O stats and lua
+
+    conky-all includes almost all of the available support:
+
+    X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS, curl,
+    Weather (METAR and XOAP), wireless, IBM, nvidia, eve-online, Imlib2,
+    ALSA mixer, apcupsd, I/O stats, Lua and Lua bindings for the cairo
+    and imlib2 libraries.
+
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Thu, 03 Sep 2009 17:47:02 +0200
+
+conky (1.7.2-0ubuntu1) karmic; urgency=low
+
+    3 binary packages are now created: conky-cli, conky and conky-all.
+
+    conky-cli is a basic package that can be useful in servers or piped
+    with dzen2.
+    It includes the following support:
+
+    MPD, MOC, math, apcupsd and I/O stats
+
+    conky should be a good compromise for most users that do not
+    need special features.
+    It includes the following support:
+
+    X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
+    wireless, ALSA mixer, apcupsd, I/O stats and lua
+
+    conky-all includes almost all of the available support:
+
+    X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS, curl,
+    Weather (METAR and XOAP), wireless, IBM, nvidia, eve-online, Imlib2,
+    ALSA mixer, apcupsd, I/O stats, Lua and Lua bindings for the cairo
+    and imlib2 libraries.
+
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Fri, 24 Jul 2009 10:38:14 +0200
+
+conky (1.7.0-0ubuntu1) karmic; urgency=low
+
+    The sample version of the config file is not distributed anymore.
+    A number of features and fixes have been added since the previous
+    release as documented in the man page and the upstream changelog.
+
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Sat, 16 May 2009 12:04:10 +0200
 
 conky (1.5.1-1) unstable; urgency=low
 

@@ -9,8 +9,10 @@
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+DEB_HOST_ARCH_CPU   ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 
 CFLAGS = -Wall -g
+LDFLAGS = -Wl,--as-needed
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
@@ -19,63 +21,83 @@ else
 endif
 
 ifeq ($(DEB_HOST_ARCH_OS),linux)
-       EXTRA_CONF_ARGS=--enable-wlan --enable-ibm --disable-lua
+       LINUX_CONF_ARGS_STD=--enable-wlan
+       LINUX_CONF_ARGS_ALL=--enable-wlan --enable-ibm
 endif
 
-DEB_QUILT_PATCHES = debian/patches
+ifeq ($(DEB_HOST_ARCH_CPU),i386)
+       ENABLE_NVIDIA=--enable-nvidia
+endif
 
-patch: debian/patch-stamp
-debian/patch-stamp:
-	QUILT_PATCHES=$(DEB_QUILT_PATCHES) quilt push -a || test $$? = 2
+ifeq ($(DEB_HOST_ARCH_CPU),amd64)
+       ENABLE_NVIDIA=--enable-nvidia
+endif
 
-	touch debian/patch-stamp
+COMMON_CONFIGURE_FLAGS = --host=$(DEB_HOST_GNU_TYPE) \
+			 --build=$(DEB_BUILD_GNU_TYPE) \
+		         --prefix=/usr --sysconfdir=/etc \
+	                 --mandir=\$${prefix}/share/man \
+			 --infodir=\$${prefix}/share/info \
+			 --srcdir=..
 
-unpatch: 
-	QUILT_PATCHES=$(DEB_QUILT_PATCHES) quilt pop -a -R || test $$? = 2 
+configure: config-stamp
 
-	rm -rf ./.pc
-	rm -f debian/patch-stamp
-
-configure: debian/configure-stamp
-debian/configure-stamp: debian/patch-stamp
+config-stamp:
 	dh_testdir
 
 	chmod +x ./autogen.sh
-	AUTOMAKE=automake-1.10 ./autogen.sh
+	AUTOMAKE=automake-1.11 ./autogen.sh
 
-	rm -f config.cache config.guess config.sub
 	ln -sf /usr/share/misc/config.sub .
 	ln -sf /usr/share/misc/config.guess .
 
-	# Some problem with pkg-config so we force XFT_LIBS and RSS_LIBS
-	XFT_LIBS="-lXft" RSS_LIBS="-lxml2 -lcurl" ./configure \
-	  --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
-	  --prefix=/usr --sysconfdir=/etc \
-	  --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-	  --enable-debug --enable-rss $(EXTRA_CONF_ARGS)
-	
-	touch debian/configure-stamp
+	mkdir build-std build-cli build-all
 
-build: debian/build-stamp
-debian/build-stamp: debian/configure-stamp debian/patch-stamp
+	cd build-std && CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	../configure $(COMMON_CONFIGURE_FLAGS) $(LINUX_CONF_ARGS_STD)
+
+	cd build-cli &&	CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	../configure $(COMMON_CONFIGURE_FLAGS) \
+	--disable-lua --disable-double-buffer --disable-x11 \
+	--disable-xdamage --disable-own-window --disable-xft \
+	--disable-hddtemp --disable-alsa --disable-portmon \
+	--enable-ncurses
+
+	cd build-all && CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	../configure $(COMMON_CONFIGURE_FLAGS) \
+        --enable-imlib2 --enable-rss --enable-weather-xoap \
+	--enable-eve --enable-lua-cairo --enable-lua-imlib2 \
+	--disable-static --enable-argb \
+	$(LINUX_CONF_ARGS_ALL) $(ENABLE_NVIDIA)
+
+	touch $@
+
+build: build-stamp
+
+build-stamp: config-stamp
 	dh_testdir
 
-	$(MAKE)
+	cd build-std && $(MAKE)
+	cd build-cli && $(MAKE)
+	cd build-all && $(MAKE)
 
-	touch debian/build-stamp
+	touch $@
 
-clean: unpatch
+clean:
 	dh_testdir
 	dh_testroot
-	rm -f debian/build-stamp debian/configure-stamp
-	[ ! -f Makefile ] || $(MAKE) clean
-	[ ! -f Makefile ] || $(MAKE) distclean
-	
-	# Remove autoconf generated files
-	rm -f ./config.guess ./config.sub ./data/Makefile.in \
-	./configure ./configure.ac ./doc/Makefile.in \
-	./ltmain.sh ./Makefile.in \
-	./src/config.h.in ./src/Makefile.in ./aclocal.m4
+
+	rm -f  build-stamp config-stamp
+
+	rm  -f configure.ac configure config.h.in src/config.h.in \
+	       src/defconfig.h compile install-sh missing ltmain.sh depcomp \
+	       Makefile.in doc/Makefile.in src/Makefile.in \
+	       data/Makefile.in lua/Makefile.in \
+	       aclocal.m4 m4/libtool.m4 m4/ltversion.m4 \
+	       m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4
+
+	rm -rf build-std build-cli build-all
+	rm -f config.guess config.sub
 
 	dh_clean 
 
@@ -83,9 +105,15 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k 
-	dh_installdirs
-	# perl -pi -e 'BEGIN{undef $$/;} s/\.SH COMPILING.*?(\.SH.*)/$$1/sg' doc/conky.1
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/conky
+
+	cd build-std && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-std
+	cd build-cli && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-cli
+	cd build-all && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-all
+
+	# Clean up cruft left upstream
+	rm -rf debian/conky-std/usr/lib debian/conky-cli/usr/lib \
+	       debian/conky-all/usr/lib/conky/*.la \
+	       debian/conky-all/usr/lib/conky/*.so.?
 
 binary-indep: build install
 
@@ -94,18 +122,19 @@ binary-arch: build install
 	dh_testroot
 	dh_installchangelogs ChangeLog
 	dh_installdocs
-	dh_installexamples data/conky.conf
-	dh_installmenu
-	dh_installman doc/conky.1
-	dh_link
-	dh_strip
+	dh_installmenu -a
+	dh_installman -a doc/conky.1
+	dh_install -a
+	dh_link -a
+	dh_strip -a
 	dh_compress
 	dh_fixperms
-	dh_installdeb
-	dh_shlibdeps
+	dh_installdeb -a
+	dh_shlibdeps -a
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
 
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure patch reverse-patch
+binary: binary-arch binary-indep
+
+.PHONY: configure build clean install binary binary-indep binary-arch

@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2007 Toni Spets
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -56,6 +59,11 @@
 #include <net80211/ieee80211_ioctl.h>
 
 #include "conky.h"
+#include "diskio.h"
+#include "logging.h"
+#include "net_stat.h"
+#include "openbsd.h"
+#include "top.h"
 
 #define	MAXSHOWDEVS		16
 
@@ -81,7 +89,7 @@ static int kvm_init()
 
 	kd = kvm_open(NULL, NULL, NULL, KVM_NO_FILES, NULL);
 	if (kd == NULL) {
-		ERR("error opening kvm");
+		NORM_ERR("error opening kvm");
 	} else {
 		init_kvm = 1;
 	}
@@ -144,7 +152,7 @@ void update_uptime()
 		time(&now);
 		info.uptime = now - boottime.tv_sec;
 	} else {
-		ERR("Could not get uptime");
+		NORM_ERR("Could not get uptime");
 		info.uptime = 0;
 	}
 }
@@ -180,9 +188,11 @@ void update_meminfo()
 	if ((swapmode(&swap_used, &swap_avail)) >= 0) {
 		info.swapmax = swap_avail;
 		info.swap = swap_used;
+		info.swapfree = swap_avail - swap_used;
 	} else {
 		info.swapmax = 0;
 		info.swap = 0;
+		info.swapfree = 0;
 	}
 }
 
@@ -205,7 +215,7 @@ void update_net_stats()
 	}
 
 	for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-		ns = get_net_stat((const char *) ifa->ifa_name);
+		ns = get_net_stat((const char *) ifa->ifa_name, NULL, NULL);
 
 		if (ifa->ifa_flags & IFF_UP) {
 			struct ifaddrs *iftmp;
@@ -314,21 +324,21 @@ void get_cpu_count()
 	size_t len = sizeof(cpu_count);
 
 	if (sysctl(mib, 2, &cpu_count, &len, NULL, 0) != 0) {
-		ERR("error getting cpu count, defaulting to 1");
+		NORM_ERR("error getting cpu count, defaulting to 1");
 	}
 #endif
 	info.cpu_count = cpu_count;
 
 	info.cpu_usage = malloc(info.cpu_count * sizeof(float));
 	if (info.cpu_usage == NULL) {
-		CRIT_ERR("malloc");
+		CRIT_ERR(NULL, NULL, "malloc");
 	}
 
 #ifndef OLDCPU
 	assert(fresh == NULL);	/* XXX Is this leaking memory? */
 	/* XXX Where shall I free this? */
 	if (NULL == (fresh = calloc(cpu_count, sizeof(int64_t) * CPUSTATES))) {
-		CRIT_ERR("calloc");
+		CRIT_ERR(NULL, NULL, "calloc");
 	}
 #endif
 }
@@ -353,7 +363,7 @@ void update_cpu_usage()
 
 #ifdef OLDCPU
 	if (sysctl(mib, 2, &cp_time, &len, NULL, 0) < 0) {
-		ERR("Cannot get kern.cp_time");
+		NORM_ERR("Cannot get kern.cp_time");
 	}
 
 	fresh.load[0] = cp_time[CP_USER];
@@ -381,7 +391,7 @@ void update_cpu_usage()
 			int cp_time_mib[] = { CTL_KERN, KERN_CPTIME2, i };
 			if (sysctl(cp_time_mib, 3, &(fresh[i * CPUSTATES]), &size, NULL, 0)
 					< 0) {
-				ERR("sysctl kern.cp_time2 failed");
+				NORM_ERR("sysctl kern.cp_time2 failed");
 			}
 		}
 	} else {
@@ -390,7 +400,7 @@ void update_cpu_usage()
 
 		size = sizeof(cp_time_tmp);
 		if (sysctl(cp_time_mib, 2, cp_time_tmp, &size, NULL, 0) < 0) {
-			ERR("sysctl kern.cp_time failed");
+			NORM_ERR("sysctl kern.cp_time failed");
 		}
 
 		for (i = 0; i < CPUSTATES; i++) {
@@ -429,6 +439,14 @@ void update_load_average()
 	info.loadavg[1] = (float) v[1];
 	info.loadavg[2] = (float) v[2];
 }
+
+#define OBSD_MAX_SENSORS 256
+static struct obsd_sensors_struct {
+       int device;
+       float temp[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
+       unsigned int fan[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
+       float volt[MAXSENSORDEVICES][OBSD_MAX_SENSORS];
+} obsd_sensors;
 
 /* read sensors from sysctl */
 void update_obsd_sensors()
@@ -493,6 +511,41 @@ void update_obsd_sensors()
 	init_sensors = 1;
 }
 
+void parse_obsd_sensor(struct text_object *obj, const char *arg)
+{
+	if (!isdigit(arg[0]) || atoi(&arg[0]) < 0
+			|| atoi(&arg[0]) > OBSD_MAX_SENSORS - 1) {
+		obj->data.l = 0;
+		NORM_ERR("Invalid sensor number!");
+	} else
+		obj->data.l = atoi(&arg[0]);
+}
+
+void print_obsd_sensors_temp(struct text_object *obj, char *p, int p_max_size)
+{
+	obsd_sensors.device = sensor_device;
+	update_obsd_sensors();
+	temp_print(p, p_max_size,
+			obsd_sensors.temp[obsd_sensors.device][obj->data.l],
+			TEMP_CELSIUS);
+}
+
+void print_obsd_sensors_fan(struct text_object *obj, char *p, int p_max_size)
+{
+	obsd_sensors.device = sensor_device;
+	update_obsd_sensors();
+	snprintf(p, p_max_size, "%d",
+			obsd_sensors.fan[obsd_sensors.device][obj->data.l]);
+}
+
+void print_obsd_sensors_volt(struct text_object *obj, char *p, int p_max_size)
+{
+	obsd_sensors.device = sensor_device;
+	update_obsd_sensors();
+	snprintf(p, p_max_size, "%.2f",
+			obsd_sensors.volt[obsd_sensors.device][obj->data.l]);
+}
+
 /* chipset vendor */
 void get_obsd_vendor(char *buf, size_t client_buffer_size)
 {
@@ -504,7 +557,7 @@ void get_obsd_vendor(char *buf, size_t client_buffer_size)
 	size_t size = sizeof(vendor);
 
 	if (sysctl(mib, 2, vendor, &size, NULL, 0) == -1) {
-		ERR("error reading vendor");
+		NORM_ERR("error reading vendor");
 		snprintf(buf, client_buffer_size, "unknown");
 	} else {
 		snprintf(buf, client_buffer_size, "%s", vendor);
@@ -522,54 +575,11 @@ void get_obsd_product(char *buf, size_t client_buffer_size)
 	size_t size = sizeof(product);
 
 	if (sysctl(mib, 2, product, &size, NULL, 0) == -1) {
-		ERR("error reading product");
+		NORM_ERR("error reading product");
 		snprintf(buf, client_buffer_size, "unknown");
 	} else {
 		snprintf(buf, client_buffer_size, "%s", product);
 	}
-}
-
-/* rdtsc() and get_freq_dynamic() copied from linux.c */
-
-#if  defined(__i386) || defined(__x86_64)
-__inline__ unsigned long long int rdtsc()
-{
-	unsigned long long int x;
-
-	__asm__ volatile(".byte 0x0f, 0x31":"=A" (x));
-	return x;
-}
-#endif
-
-/* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
-void get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
-		const char *p_format, int divisor)
-{
-#if  defined(__i386) || defined(__x86_64)
-	struct timezone tz;
-	struct timeval tvstart, tvstop;
-	unsigned long long cycles[2];	/* gotta be 64 bit */
-	unsigned int microseconds;	/* total time taken */
-
-	memset(&tz, 0, sizeof(tz));
-
-	/* get this function in cached memory */
-	gettimeofday(&tvstart, &tz);
-	cycles[0] = rdtsc();
-	gettimeofday(&tvstart, &tz);
-
-	/* we don't trust that this is any specific length of time */
-	usleep(100);
-	cycles[1] = rdtsc();
-	gettimeofday(&tvstop, &tz);
-	microseconds = ((tvstop.tv_sec - tvstart.tv_sec) * 1000000) +
-		(tvstop.tv_usec - tvstart.tv_usec);
-
-	snprintf(p_client_buffer, client_buffer_size, p_format,
-		(float) ((cycles[1] - cycles[0]) / microseconds) / divisor);
-#else
-	get_freq(p_client_buffer, client_buffer_size, p_format, divisor, 1);
-#endif
 }
 
 /* void */
@@ -659,6 +669,10 @@ void clear_diskio_stats()
 {
 }
 
+struct diskio_stat *prepare_diskio_stat(const char *s)
+{
+}
+
 void update_diskio()
 {
 	return;	/* XXX: implement? hifi: not sure how */
@@ -681,11 +695,11 @@ int comparecpu(const void *a, const void *b)
 
 int comparemem(const void *a, const void *b)
 {
-	if (((struct process *) a)->totalmem > ((struct process *) b)->totalmem) {
+	if (((struct process *) a)->rss > ((struct process *) b)->rss) {
 		return -1;
 	}
 
-	if (((struct process *) a)->totalmem < ((struct process *) b)->totalmem) {
+	if (((struct process *) a)->rss < ((struct process *) b)->rss) {
 		return 1;
 	}
 
@@ -710,7 +724,7 @@ inline void proc_find_top(struct process **cpu, struct process **mem)
 	size_t size = sizeof(usermem);
 
 	if (sysctl(mib, 2, &usermem, &size, NULL, 0) == -1) {
-		ERR("error reading usermem");
+		NORM_ERR("error reading usermem");
 	}
 
 	/* translate bytes into page count */
@@ -726,8 +740,6 @@ inline void proc_find_top(struct process **cpu, struct process **mem)
 			processes[j].pid = p[i].p_pid;
 			processes[j].name = strndup(p[i].p_comm, text_buffer_size);
 			processes[j].amount = 100.0 * p[i].p_pctcpu / FSCALE;
-			processes[j].totalmem = (float) (p[i].p_vm_rssize /
-					(float) total_pages) * 100.0;
 			j++;
 		}
 	}
@@ -739,7 +751,6 @@ inline void proc_find_top(struct process **cpu, struct process **mem)
 		tmp = malloc(sizeof(struct process));
 		tmp->pid = processes[i].pid;
 		tmp->amount = processes[i].amount;
-		tmp->totalmem = processes[i].totalmem;
 		tmp->name = strndup(processes[i].name, text_buffer_size);
 
 		ttmp = mem[i];
@@ -757,7 +768,6 @@ inline void proc_find_top(struct process **cpu, struct process **mem)
 		tmp = malloc(sizeof(struct process));
 		tmp->pid = processes[i].pid;
 		tmp->amount = processes[i].amount;
-		tmp->totalmem = processes[i].totalmem;
 		tmp->name = strndup(processes[i].name, text_buffer_size);
 
 		ttmp = cpu[i];
@@ -905,8 +915,14 @@ void prepare_update()
 {
 }
 
-void update_entropy(void)
+int get_entropy_avail(unsigned int *val)
 {
+	return 1;
+}
+
+int get_entropy_poolsize(unsigned int *val)
+{
+	return 1;
 }
 
 void free_all_processes(void)

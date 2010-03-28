@@ -1,4 +1,5 @@
-/*
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
  * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
@@ -8,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  * (see AUTHORS)
  * All rights reserved.
  *
@@ -49,5 +50,16 @@ struct diskio_stat *prepare_diskio_stat(const char *);
 void update_diskio(void);
 void clear_diskio_stats(void);
 void update_diskio_values(struct diskio_stat *, unsigned int, unsigned int);
+
+void parse_diskio_arg(struct text_object *, const char *);
+void print_diskio(struct text_object *, char *, int);
+void print_diskio_read(struct text_object *, char *, int);
+void print_diskio_write(struct text_object *, char *, int);
+#ifdef X11
+void parse_diskiograph_arg(struct text_object *, const char *);
+void print_diskiograph(struct text_object *, char *, int);
+void print_diskiograph_read(struct text_object *, char *, int);
+void print_diskiograph_write(struct text_object *, char *, int);
+#endif /* X11 */
 
 #endif /* DISKIO_H_ */

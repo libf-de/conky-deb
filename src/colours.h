@@ -1,4 +1,6 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -27,8 +29,9 @@
 #ifndef _COLOURS_H
 #define _COLOURS_H
 
-unsigned int adjust_colors(unsigned int);
-unsigned long do_gradient(unsigned long, unsigned long);
-unsigned long gradient_max(unsigned long, unsigned long);
+unsigned int adjust_colours(unsigned int);
+unsigned long *do_gradient(int, unsigned long, unsigned long);
+
+long get_x11_color(const char *);
 
 #endif /* _COLOURS_H */

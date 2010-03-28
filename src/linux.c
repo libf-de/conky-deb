@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -8,7 +11,7 @@
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
  * Copyright (c) 2007 Toni Spets
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -30,7 +33,9 @@
 #include "logging.h"
 #include "common.h"
 #include "linux.h"
+#include "net_stat.h"
 #include "diskio.h"
+#include "temphelper.h"
 #include <dirent.h>
 #include <ctype.h>
 #include <errno.h>
@@ -58,6 +63,7 @@
 #endif
 #include <linux/route.h>
 #include <math.h>
+#include <pthread.h>
 
 /* The following ifdefs were adapted from gkrellm */
 #include <linux/major.h>
@@ -77,6 +83,14 @@
 #ifdef HAVE_IWLIB
 #include <iwlib.h>
 #endif
+
+struct sysfs {
+	int fd;
+	int arg;
+	char devtype[256];
+	char type[64];
+	float factor, offset;
+};
 
 #define SHORTSTAT_TEMPL "%*s %llu %llu %llu"
 #define LONGSTAT_TEMPL "%*s %llu %llu %llu "
@@ -112,7 +126,6 @@ void update_uptime(void)
 		fscanf(fp, "%lf", &info.uptime);
 		fclose(fp);
 	}
-	info.mask |= (1 << INFO_UPTIME);
 }
 
 int check_mount(char *s)
@@ -132,7 +145,7 @@ int check_mount(char *s)
 		}
 		fclose(mtab);
 	} else {
-		ERR("Could not open mtab");
+		NORM_ERR("Could not open mtab");
 	}
 	return ret;
 }
@@ -148,7 +161,7 @@ void update_meminfo(void)
 	/* unsigned int a; */
 	char buf[256];
 
-	info.mem = info.memmax = info.swap = info.swapmax = info.bufmem =
+	info.mem = info.memmax = info.swap = info.swapfree = info.swapmax = info.bufmem =
 		info.buffers = info.cached = info.memfree = info.memeasyfree = 0;
 
 	if (!(meminfo_fp = open_file("/proc/meminfo", &rep))) {
@@ -167,7 +180,7 @@ void update_meminfo(void)
 		} else if (strncmp(buf, "SwapTotal:", 10) == 0) {
 			sscanf(buf, "%*s %llu", &info.swapmax);
 		} else if (strncmp(buf, "SwapFree:", 9) == 0) {
-			sscanf(buf, "%*s %llu", &info.swap);
+			sscanf(buf, "%*s %llu", &info.swapfree);
 		} else if (strncmp(buf, "Buffers:", 8) == 0) {
 			sscanf(buf, "%*s %llu", &info.buffers);
 		} else if (strncmp(buf, "Cached:", 7) == 0) {
@@ -177,11 +190,9 @@ void update_meminfo(void)
 
 	info.mem = info.memmax - info.memfree;
 	info.memeasyfree = info.memfree;
-	info.swap = info.swapmax - info.swap;
+	info.swap = info.swapmax - info.swapfree;
 
 	info.bufmem = info.cached + info.buffers;
-
-	info.mask |= (1 << INFO_MEM) | (1 << INFO_BUFFERS);
 
 	fclose(meminfo_fp);
 }
@@ -225,6 +236,12 @@ char *get_ioscheduler(char *disk)
 	return strndup("n/a", text_buffer_size);
 }
 
+static struct {
+	char *iface;
+	char *ip;
+	int count;
+} gw_info;
+
 #define COND_FREE(x) if(x) free(x); x = 0
 #define SAVE_SET_STRING(x, y) \
 	if (x && strcmp((char *)x, (char *)y)) { \
@@ -240,8 +257,8 @@ void update_gateway_info_failure(const char *reason)
 		perror(reason);
 	}
 	//2 pointers to 1 location causes a crash when we try to free them both
-	info.gw_info.iface = strndup("failed", text_buffer_size);
-	info.gw_info.ip = strndup("failed", text_buffer_size);
+	gw_info.iface = strndup("failed", text_buffer_size);
+	gw_info.ip = strndup("failed", text_buffer_size);
 }
 
 
@@ -256,11 +273,9 @@ void update_gateway_info(void)
 	unsigned long dest, gate, mask;
 	unsigned int flags;
 
-	struct gateway_info *gw_info = &info.gw_info;
-
-	COND_FREE(gw_info->iface);
-	COND_FREE(gw_info->ip);
-	gw_info->count = 0;
+	COND_FREE(gw_info.iface);
+	COND_FREE(gw_info.ip);
+	gw_info.count = 0;
 
 	if ((fp = fopen("/proc/net/route", "r")) == NULL) {
 		update_gateway_info_failure("fopen()");
@@ -277,14 +292,38 @@ void update_gateway_info(void)
 			break;
 		}
 		if (!(dest || mask) && ((flags & RTF_GATEWAY) || !gate) ) {
-			gw_info->count++;
-			SAVE_SET_STRING(gw_info->iface, iface)
+			gw_info.count++;
+			SAVE_SET_STRING(gw_info.iface, iface)
 			ina.s_addr = gate;
-			SAVE_SET_STRING(gw_info->ip, inet_ntoa(ina))
+			SAVE_SET_STRING(gw_info.ip, inet_ntoa(ina))
 		}
 	}
 	fclose(fp);
 	return;
+}
+
+void free_gateway_info(void)
+{
+	if (gw_info.iface)
+		free(gw_info.iface);
+	if (gw_info.ip)
+		free(gw_info.ip);
+	memset(&gw_info, 0, sizeof(gw_info));
+}
+
+int gateway_exists(void)
+{
+	return !!gw_info.count;
+}
+
+void print_gateway_iface(char *p, int p_max_size)
+{
+	snprintf(p, p_max_size, "%s", gw_info.iface);
+}
+
+void print_gateway_ip(char *p, int p_max_size)
+{
+	snprintf(p, p_max_size, "%s", gw_info.ip);
 }
 
 void update_net_stats(void)
@@ -324,7 +363,7 @@ void update_net_stats(void)
 	fgets(buf, 255, net_dev_fp);	/* garbage (field names) */
 
 	/* read each interface */
-	for (i2 = 0; i2 < 16; i2++) {
+	for (i2 = 0; i2 < MAX_NET_INTERFACES; i2++) {
 		struct net_stat *ns;
 		char *s, *p;
 		char temp_addr[18];
@@ -349,11 +388,11 @@ void update_net_stats(void)
 		*p = '\0';
 		p++;
 
-		ns = get_net_stat(s);
+		ns = get_net_stat(s, NULL, NULL);
 		ns->up = 1;
 		memset(&(ns->addr.sa_data), 0, 14);
 
-		memset(ns->addrs, 0, 17 * 16 + 1); /* Up to 17 chars per ip, max 16 interfaces. Nasty memory usage... */
+		memset(ns->addrs, 0, 17 * MAX_NET_INTERFACES + 1); /* Up to 17 chars per ip, max MAX_NET_INTERFACES interfaces. Nasty memory usage... */
 
 		last_recv = ns->recv;
 		last_trans = ns->trans;
@@ -380,8 +419,8 @@ void update_net_stats(void)
 		/*** ip addr patch ***/
 		i = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
 
-		conf.ifc_buf = malloc(sizeof(struct ifreq) * 16);
-		conf.ifc_len = sizeof(struct ifreq) * 16;
+		conf.ifc_buf = malloc(sizeof(struct ifreq) * MAX_NET_INTERFACES);
+		conf.ifc_len = sizeof(struct ifreq) * MAX_NET_INTERFACES;
 		memset(conf.ifc_buf, 0, conf.ifc_len);
 
 		ioctl((long) i, SIOCGIFCONF, &conf);
@@ -393,7 +432,7 @@ void update_net_stats(void)
 				break;
 
 			ns2 = get_net_stat(
-					((struct ifreq *) conf.ifc_buf)[k].ifr_ifrn.ifrn_name);
+					((struct ifreq *) conf.ifc_buf)[k].ifr_ifrn.ifrn_name, NULL, NULL);
 			ns2->addr = ((struct ifreq *) conf.ifc_buf)[k].ifr_ifru.ifru_addr;
 			sprintf(temp_addr, "%u.%u.%u.%u, ",
 					ns2->addr.sa_data[2] & 255,
@@ -420,23 +459,17 @@ void update_net_stats(void)
 		curtmp2 = 0;
 		// get an average
 #ifdef HAVE_OPENMP
-#pragma omp parallel for reduction(+:curtmp1, curtmp2)
+#pragma omp parallel for reduction(+:curtmp1, curtmp2) schedule(dynamic,10)
 #endif /* HAVE_OPENMP */
 		for (i = 0; i < info.net_avg_samples; i++) {
 			curtmp1 = curtmp1 + ns->net_rec[i];
 			curtmp2 = curtmp2 + ns->net_trans[i];
 		}
-		if (curtmp1 == 0) {
-			curtmp1 = 1;
-		}
-		if (curtmp2 == 0) {
-			curtmp2 = 1;
-		}
 		ns->recv_speed = curtmp1 / (double) info.net_avg_samples;
 		ns->trans_speed = curtmp2 / (double) info.net_avg_samples;
 		if (info.net_avg_samples > 1) {
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic,10)
 #endif /* HAVE_OPENMP */
 			for (i = info.net_avg_samples; i > 1; i--) {
 				ns->net_rec[i - 1] = ns->net_rec[i - 2];
@@ -505,20 +538,43 @@ void update_net_stats(void)
 	first = 0;
 
 	fclose(net_dev_fp);
-
-	info.mask |= (1 << INFO_NET);
 }
 
 int result;
 
 void update_total_processes(void)
 {
+	DIR *dir;
+	struct dirent *entry;
+	int ignore1;
+	char ignore2;
+
+	info.procs = 0;
+	if (!(dir = opendir("/proc"))) {
+		return;
+	}
+	while ((entry = readdir(dir))) {
+		if (!entry) {
+			/* Problem reading list of processes */
+			closedir(dir);
+			info.procs = 0;
+			return;
+		}
+		if (sscanf(entry->d_name, "%d%c", &ignore1, &ignore2) == 1) {
+			info.procs++;
+		}
+	}
+	closedir(dir);
+}
+
+void update_threads(void)
+{
 #ifdef HAVE_SYSINFO
 	if (!prefer_proc) {
 		struct sysinfo s_info;
 
 		sysinfo(&s_info);
-		info.procs = s_info.procs;
+		info.threads = s_info.procs;
 	} else
 #endif
 	{
@@ -526,13 +582,12 @@ void update_total_processes(void)
 		FILE *fp;
 
 		if (!(fp = open_file("/proc/loadavg", &rep))) {
-			info.procs = 0;
+			info.threads = 0;
 			return;
 		}
-		fscanf(fp, "%*f %*f %*f %*d/%hu", &info.procs);
+		fscanf(fp, "%*f %*f %*f %*d/%hu", &info.threads);
 		fclose(fp);
 	}
-	info.mask |= (1 << INFO_PROCS);
 }
 
 #define CPU_SAMPLE_COUNT 15
@@ -606,7 +661,7 @@ void get_cpu_count(void)
 #define TMPL_LONGSTAT "%*s %llu %llu %llu %llu %llu %llu %llu %llu"
 #define TMPL_SHORTSTAT "%*s %llu %llu %llu %llu"
 
-inline static void update_stat(void)
+void update_stat(void)
 {
 	FILE *stat_fp;
 	static int rep = 0;
@@ -617,6 +672,21 @@ inline static void update_stat(void)
 	double curtmp;
 	const char *stat_template = NULL;
 	unsigned int malloc_cpu_size = 0;
+	extern void* global_cpu;
+
+	static pthread_mutex_t last_stat_update_mutex = PTHREAD_MUTEX_INITIALIZER;
+	static double last_stat_update = 0.0;
+
+	/* since we use wrappers for this function, the update machinery
+	 * can't eliminate double invocations of this function. Check for
+	 * them here, otherwise cpu_usage counters are freaking out. */
+	pthread_mutex_lock(&last_stat_update_mutex);
+	if (last_stat_update == current_update_time) {
+		pthread_mutex_unlock(&last_stat_update_mutex);
+		return;
+	}
+	last_stat_update = current_update_time;
+	pthread_mutex_unlock(&last_stat_update_mutex);
 
 	/* add check for !info.cpu_usage since that mem is freed on a SIGUSR1 */
 	if (!cpu_setup || !info.cpu_usage) {
@@ -629,14 +699,15 @@ inline static void update_stat(void)
 			KFLAG_ISSET(KFLAG_IS_LONGSTAT) ? TMPL_LONGSTAT : TMPL_SHORTSTAT;
 	}
 
-	if (!cpu) {
+	if (!global_cpu) {
 		malloc_cpu_size = (info.cpu_count + 1) * sizeof(struct cpu_info);
 		cpu = malloc(malloc_cpu_size);
 		memset(cpu, 0, malloc_cpu_size);
+		global_cpu = cpu;
 	}
 
 	if (!(stat_fp = open_file("/proc/stat", &rep))) {
-		info.run_procs = 0;
+		info.run_threads = 0;
 		if (info.cpu_usage) {
 			memset(info.cpu_usage, 0, info.cpu_count * sizeof(float));
 		}
@@ -650,8 +721,7 @@ inline static void update_stat(void)
 		}
 
 		if (strncmp(buf, "procs_running ", 14) == 0) {
-			sscanf(buf, "%*s %hu", &info.run_procs);
-			info.mask |= (1 << INFO_RUN_PROCS);
+			sscanf(buf, "%*s %hu", &info.run_threads);
 		} else if (strncmp(buf, "cpu", 3) == 0) {
 			double delta;
 			if (isdigit(buf[3])) {
@@ -672,7 +742,6 @@ inline static void update_stat(void)
 
 			cpu[idx].cpu_active_total = cpu[idx].cpu_total -
 				(cpu[idx].cpu_idle + cpu[idx].cpu_iowait);
-			info.mask |= (1 << INFO_CPU);
 
 			delta = current_update_time - last_update_time;
 
@@ -685,7 +754,7 @@ inline static void update_stat(void)
 				(float) (cpu[idx].cpu_total - cpu[idx].cpu_last_total);
 			curtmp = 0;
 #ifdef HAVE_OPENMP
-#pragma omp parallel for reduction(+:curtmp)
+#pragma omp parallel for reduction(+:curtmp) schedule(dynamic,10)
 #endif /* HAVE_OPENMP */
 			for (i = 0; i < info.cpu_avg_samples; i++) {
 				curtmp = curtmp + cpu[idx].cpu_val[i];
@@ -705,7 +774,7 @@ inline static void update_stat(void)
 			cpu[idx].cpu_last_total = cpu[idx].cpu_total;
 			cpu[idx].cpu_last_active_total = cpu[idx].cpu_active_total;
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic,10)
 #endif /* HAVE_OPENMP */
 			for (i = info.cpu_avg_samples - 1; i > 0; i--) {
 				cpu[idx].cpu_val[i] = cpu[idx].cpu_val[i - 1];
@@ -749,41 +818,6 @@ void update_load_average(void)
 			&info.loadavg[2]);
 		fclose(fp);
 	}
-	info.mask |= (1 << INFO_LOADAVG);
-}
-
-#define PROC_I8K "/proc/i8k"
-#define I8K_DELIM " "
-static char *i8k_procbuf = NULL;
-void update_i8k(void)
-{
-	FILE *fp;
-
-	if (!i8k_procbuf) {
-		i8k_procbuf = (char *) malloc(128 * sizeof(char));
-	}
-	if ((fp = fopen(PROC_I8K, "r")) == NULL) {
-		CRIT_ERR("/proc/i8k doesn't exist! use insmod to make sure the kernel "
-			"driver is loaded...");
-	}
-
-	memset(&i8k_procbuf[0], 0, 128);
-	if (fread(&i8k_procbuf[0], sizeof(char), 128, fp) == 0) {
-		ERR("something wrong with /proc/i8k...");
-	}
-
-	fclose(fp);
-
-	i8k.version = strtok(&i8k_procbuf[0], I8K_DELIM);
-	i8k.bios = strtok(NULL, I8K_DELIM);
-	i8k.serial = strtok(NULL, I8K_DELIM);
-	i8k.cpu_temp = strtok(NULL, I8K_DELIM);
-	i8k.left_fan_status = strtok(NULL, I8K_DELIM);
-	i8k.right_fan_status = strtok(NULL, I8K_DELIM);
-	i8k.left_fan_rpm = strtok(NULL, I8K_DELIM);
-	i8k.right_fan_rpm = strtok(NULL, I8K_DELIM);
-	i8k.ac_status = strtok(NULL, I8K_DELIM);
-	i8k.buttons_status = strtok(NULL, I8K_DELIM);
 }
 
 /***********************************************************/
@@ -806,7 +840,7 @@ static int get_first_file_in_a_directory(const char *dir, char *s, int *rep)
 	n = scandir(dir, &namelist, no_dots, alphasort);
 	if (n < 0) {
 		if (!rep || !*rep) {
-			ERR("scandir for %s: %s", dir, strerror(errno));
+			NORM_ERR("scandir for %s: %s", dir, strerror(errno));
 			if (rep) {
 				*rep = 1;
 			}
@@ -821,7 +855,7 @@ static int get_first_file_in_a_directory(const char *dir, char *s, int *rep)
 		s[255] = '\0';
 
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic,10)
 #endif /* HAVE_OPENMP */
 		for (i = 0; i < n; i++) {
 			free(namelist[i]);
@@ -832,14 +866,13 @@ static int get_first_file_in_a_directory(const char *dir, char *s, int *rep)
 	}
 }
 
-int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
+static int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
 		int *divisor, char *devtype)
 {
 	char path[256];
 	char buf[256];
 	int fd;
 	int divfd;
-	struct stat st;
 
 	memset(buf, 0, sizeof(buf));
 
@@ -866,13 +899,6 @@ int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
 		}
 	}
 
-	/* At least the acpitz hwmon doesn't have a 'device' subdir,
-	 * so check it's existence and strip it from buf otherwise. */
-	snprintf(path, 255, "%s%s", dir, dev);
-	if (stat(path, &st)) {
-		buf[strlen(buf) - 7] = 0;
-	}
-
 	/* change vol to in, tempf to temp */
 	if (strcmp(type, "vol") == 0) {
 		type = "in";
@@ -880,15 +906,24 @@ int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
 		type = "temp";
 	}
 
+	/* construct path */
 	snprintf(path, 255, "%s%s/%s%d_input", dir, dev, type, n);
-	strncpy(devtype, path, 255);
 
-	/* open file */
+	/* first, attempt to open file in /device */
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		CRIT_ERR("can't open '%s': %s\nplease check your device or remove this "
-			"var from "PACKAGE_NAME, path, strerror(errno));
+
+		/* if it fails, strip the /device from dev and attempt again */
+		buf[strlen(buf) - 7] = 0;
+		snprintf(path, 255, "%s%s/%s%d_input", dir, dev, type, n);
+		fd = open(path, O_RDONLY);
+		if (fd < 0) {
+			CRIT_ERR(NULL, NULL, "can't open '%s': %s\nplease check your device or remove this "
+					 "var from "PACKAGE_NAME, path, strerror(errno));
+		}
 	}
+
+	strncpy(devtype, path, 255);
 
 	if (strcmp(type, "in") == 0 || strcmp(type, "temp") == 0
 			|| strcmp(type, "tempf") == 0) {
@@ -918,19 +953,18 @@ int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
 		/* should read until n == 0 but I doubt that kernel will give these
 		 * in multiple pieces. :) */
 		if (divn < 0) {
-			ERR("open_sysfs_sensor(): can't read from sysfs");
+			NORM_ERR("open_sysfs_sensor(): can't read from sysfs");
 		} else {
 			divbuf[divn] = '\0';
 			*divisor = atoi(divbuf);
 		}
+		close(divfd);
 	}
-
-	close(divfd);
 
 	return fd;
 }
 
-double get_sysfs_info(int *fd, int divisor, char *devtype, char *type)
+static double get_sysfs_info(int *fd, int divisor, char *devtype, char *type)
 {
 	int val = 0;
 
@@ -948,7 +982,7 @@ double get_sysfs_info(int *fd, int divisor, char *devtype, char *type)
 		/* should read until n == 0 but I doubt that kernel will give these
 		 * in multiple pieces. :) */
 		if (n < 0) {
-			ERR("get_sysfs_info(): read from %s failed\n", devtype);
+			NORM_ERR("get_sysfs_info(): read from %s failed\n", devtype);
 		} else {
 			buf[n] = '\0';
 			val = atoi(buf);
@@ -959,7 +993,7 @@ double get_sysfs_info(int *fd, int divisor, char *devtype, char *type)
 	/* open file */
 	*fd = open(devtype, O_RDONLY);
 	if (*fd < 0) {
-		ERR("can't open '%s': %s", devtype, strerror(errno));
+		NORM_ERR("can't open '%s': %s", devtype, strerror(errno));
 	}
 
 	/* My dirty hack for computing CPU value
@@ -989,59 +1023,81 @@ double get_sysfs_info(int *fd, int divisor, char *devtype, char *type)
 	}
 }
 
-/* Prior to kernel version 2.6.12, the CPU fan speed was available in
- * ADT746X_FAN_OLD, whereas later kernel versions provide this information in
- * ADT746X_FAN. */
-#define ADT746X_FAN "/sys/devices/temperatures/sensor1_fan_speed"
-#define ADT746X_FAN_OLD "/sys/devices/temperatures/cpu_fan_speed"
+#define HWMON_RESET() {\
+		buf1[0] = 0; \
+		factor = 1.0; \
+		offset = 0.0; }
 
-void get_adt746x_fan(char *p_client_buffer, size_t client_buffer_size)
+static void parse_sysfs_sensor(struct text_object *obj, const char *arg, const char *path, const char *type)
 {
-	static int rep = 0;
-	char adt746x_fan_state[64];
-	FILE *fp;
+	char buf1[64], buf2[64];
+	float factor, offset;
+	int n, found = 0;
+	struct sysfs *sf;
 
-	if (!p_client_buffer || client_buffer_size <= 0) {
+	if (sscanf(arg, "%63s %d %f %f", buf2, &n, &factor, &offset) == 4) found = 1; else HWMON_RESET();
+	if (!found && sscanf(arg, "%63s %63s %d %f %f", buf1, buf2, &n, &factor, &offset) == 5) found = 1; else if (!found) HWMON_RESET();
+	if (!found && sscanf(arg, "%63s %63s %d", buf1, buf2, &n) == 3) found = 1; else if (!found) HWMON_RESET();
+	if (!found && sscanf(arg, "%63s %d", buf2, &n) == 2) found = 1; else if (!found) HWMON_RESET();
+
+	if (!found) {
+		NORM_ERR("i2c failed to parse arguments");
+		obj->type = OBJ_text;
 		return;
 	}
-
-	if ((fp = open_file(ADT746X_FAN, &rep)) == NULL
-			&& (fp = open_file(ADT746X_FAN_OLD, &rep)) == NULL) {
-		sprintf(adt746x_fan_state, "adt746x not found");
-	} else {
-		fgets(adt746x_fan_state, sizeof(adt746x_fan_state), fp);
-		adt746x_fan_state[strlen(adt746x_fan_state) - 1] = 0;
-		fclose(fp);
-	}
-
-	snprintf(p_client_buffer, client_buffer_size, "%s", adt746x_fan_state);
+	DBGP("parsed %s args: '%s' '%s' %d %f %f\n", type, buf1, buf2, n, factor, offset);
+	sf = malloc(sizeof(struct sysfs));
+	memset(sf, 0, sizeof(struct sysfs));
+	sf->fd = open_sysfs_sensor(path, (*buf1) ? buf1 : 0, buf2, n,
+			&sf->arg, sf->devtype);
+	strncpy(sf->type, buf2, 63);
+	sf->factor = factor;
+	sf->offset = offset;
+	obj->data.opaque = sf;
 }
 
-/* Prior to kernel version 2.6.12, the CPU temperature was found in
- * ADT746X_CPU_OLD, whereas later kernel versions provide this information in
- * ADT746X_CPU. */
-#define ADT746X_CPU "/sys/devices/temperatures/sensor1_temperature"
-#define ADT746X_CPU_OLD "/sys/devices/temperatures/cpu_temperature"
+#define PARSER_GENERATOR(name, path)                                \
+void parse_##name##_sensor(struct text_object *obj, const char *arg) \
+{                                                                   \
+	parse_sysfs_sensor(obj, arg, path, #name);           \
+}
 
-void get_adt746x_cpu(char *p_client_buffer, size_t client_buffer_size)
+PARSER_GENERATOR(i2c, "/sys/bus/i2c/devices/")
+PARSER_GENERATOR(hwmon, "/sys/class/hwmon/")
+PARSER_GENERATOR(platform, "/sys/bus/platform/devices/")
+
+void print_sysfs_sensor(struct text_object *obj, char *p, int p_max_size)
 {
-	static int rep = 0;
-	char adt746x_cpu_state[64];
-	FILE *fp;
+	double r;
+	struct sysfs *sf = obj->data.opaque;
 
-	if (!p_client_buffer || client_buffer_size <= 0) {
+	if (!sf)
 		return;
-	}
 
-	if ((fp = open_file(ADT746X_CPU, &rep)) == NULL
-			&& (fp = open_file(ADT746X_CPU_OLD, &rep)) == NULL) {
-		sprintf(adt746x_cpu_state, "adt746x not found");
+	r = get_sysfs_info(&sf->fd, sf->arg,
+			sf->devtype, sf->type);
+
+	r = r * sf->factor + sf->offset;
+
+	if (!strncmp(sf->type, "temp", 4)) {
+		temp_print(p, p_max_size, r, TEMP_CELSIUS);
+	} else if (r >= 100.0 || r == 0) {
+		snprintf(p, p_max_size, "%d", (int) r);
 	} else {
-		fscanf(fp, "%2s", adt746x_cpu_state);
-		fclose(fp);
+		snprintf(p, p_max_size, "%.1f", r);
 	}
+}
 
-	snprintf(p_client_buffer, client_buffer_size, "%s", adt746x_cpu_state);
+void free_sysfs_sensor(struct text_object *obj)
+{
+	struct sysfs *sf = obj->data.opaque;
+
+	if (!sf)
+		return;
+
+	close(sf->fd);
+	free(obj->data.opaque);
+	obj->data.opaque = NULL;
 }
 
 #define CPUFREQ_PREFIX "/sys/devices/system/cpu"
@@ -1146,7 +1202,7 @@ char get_freq(char *p_client_buffer, size_t client_buffer_size,
  * Peter Tarjan (ptarjan@citromail.hu) */
 
 /* return cpu voltage in mV (use divisor=1) or V (use divisor=1000) */
-char get_voltage(char *p_client_buffer, size_t client_buffer_size,
+static char get_voltage(char *p_client_buffer, size_t client_buffer_size,
 		const char *p_format, int divisor, unsigned int cpu)
 {
 	FILE *f;
@@ -1215,6 +1271,22 @@ char get_voltage(char *p_client_buffer, size_t client_buffer_size,
 	return 1;
 }
 
+void print_voltage_mv(struct text_object *obj, char *p, int p_max_size)
+{
+	static int ok = 1;
+	if (ok) {
+		ok = get_voltage(p, p_max_size, "%.0f", 1, obj->data.i);
+	}
+}
+
+void print_voltage_v(struct text_object *obj, char *p, int p_max_size)
+{
+	static int ok = 1;
+	if (ok) {
+		ok = get_voltage(p, p_max_size, "%'.3f", 1000, obj->data.i);
+	}
+}
+
 #define ACPI_FAN_DIR "/proc/acpi/fan/"
 
 void get_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
@@ -1249,7 +1321,7 @@ void get_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
 	snprintf(p_client_buffer, client_buffer_size, "%s", buf);
 }
 
-#define SYSFS_AC_ADAPTER_DIR "/sys/class/power_supply/AC"
+#define SYSFS_AC_ADAPTER_DIR "/sys/class/power_supply"
 #define ACPI_AC_ADAPTER_DIR "/proc/acpi/ac_adapter/"
 /* Linux 2.6.25 onwards ac adapter info is in
    /sys/class/power_supply/AC/
@@ -1261,9 +1333,12 @@ void get_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
      POWER_SUPPLY_NAME=AC
      POWER_SUPPLY_TYPE=Mains
      POWER_SUPPLY_ONLINE=1
+
+   Update: it seems the folder name is hardware-dependent. We add an aditional adapter
+   argument, specifying the folder name.
 */
 
-void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size)
+void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size, const char *adapter)
 {
 	static int rep = 0;
 
@@ -1275,7 +1350,7 @@ void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size)
 		return;
 	}
 
-	snprintf(buf2, sizeof(buf2), "%s/uevent", SYSFS_AC_ADAPTER_DIR);
+	snprintf(buf2, sizeof(buf2), "%s/%s/uevent", SYSFS_AC_ADAPTER_DIR, adapter);
 	fp = open_file(buf2, &rep);
 	if (fp) {
 		/* sysfs processing */
@@ -1351,7 +1426,7 @@ int open_acpi_temperature(const char *name)
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		ERR("can't open '%s': %s", path, strerror(errno));
+		NORM_ERR("can't open '%s': %s", path, strerror(errno));
 	}
 
 	return fd;
@@ -1382,7 +1457,7 @@ double get_acpi_temperature(int fd)
 
 		n = read(fd, buf, 255);
 		if (n < 0) {
-			ERR("can't read fd %d: %s", fd, strerror(errno));
+			NORM_ERR("can't read fd %d: %s", fd, strerror(errno));
 		} else {
 			buf[n] = '\0';
 			sscanf(buf, "temperature: %lf", &last_acpi_temp);
@@ -1490,7 +1565,7 @@ void init_batteries(void)
 		return;
 	}
 #ifdef HAVE_OPENMP
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic,10)
 #endif /* HAVE_OPENMP */
 	for (idx = 0; idx < MAX_BATTERY_COUNT; idx++) {
 		batteries[idx][0] = '\0';
@@ -1643,7 +1718,7 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
  		}
  		/* charged */
  		/* thanks to Lukas Zapletal <lzap@seznam.cz> */
- 		else if (strncmp(charging_state, "Charged", 64) == 0) {
+		else if (strncmp(charging_state, "Charged", 64) == 0 || strncmp(charging_state, "Full", 64) == 0) {
  				/* Below happens with the second battery on my X40,
  				 * when the second one is empty and the first one
  				 * being charged. */
@@ -1793,6 +1868,8 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 				strncpy(last_battery_str[idx], "AC", 64);
 			}
 		}
+		fclose(acpi_bat_fp[idx]);
+		acpi_bat_fp[idx] = NULL;
 	} else {
 		/* APM */
 		if (apm_bat_fp[idx] == NULL) {
@@ -1848,6 +1925,18 @@ void get_battery_short_status(char *buffer, unsigned int n, const char *bat)
 		memmove(buffer + 1, buffer + 8, n - 8);
 	} else if (0 == strncmp("discharging", buffer, 11)) {
 		buffer[0] = 'D';
+		memmove(buffer + 1, buffer + 11, n - 11);
+	} else if (0 == strncmp("charged", buffer, 7)) {
+		buffer[0] = 'F';
+		memmove(buffer + 1, buffer + 7, n - 7);
+	} else if (0 == strncmp("not present", buffer, 11)) {
+		buffer[0] = 'N';
+		memmove(buffer + 1, buffer + 11, n - 11);
+	} else if (0 == strncmp("empty", buffer, 5)) {
+		buffer[0] = 'E';
+		memmove(buffer + 1, buffer + 5, n - 5);
+	} else if (0 != strncmp("AC", buffer, 2)) {
+		buffer[0] = 'U';
 		memmove(buffer + 1, buffer + 11, n - 11);
 	}
 }
@@ -2095,36 +2184,46 @@ void get_powerbook_batt_info(char *buffer, size_t n, int i)
 
 void update_top(void)
 {
-	process_find_top(info.cpu, info.memu, info.time);
+	process_find_top(info.cpu, info.memu, info.time
+#ifdef IOSTATS
+                , info.io
+#endif
+                );
 	info.first_process = get_first_process();
 }
 
-void update_entropy(void)
+#define ENTROPY_AVAIL_PATH "/proc/sys/kernel/random/entropy_avail"
+
+int get_entropy_avail(unsigned int *val)
 {
 	static int rep = 0;
-	const char *entropy_avail = "/proc/sys/kernel/random/entropy_avail";
-	const char *entropy_poolsize = "/proc/sys/kernel/random/poolsize";
-	FILE *fp1, *fp2;
+	FILE *fp;
 
-	info.entropy.entropy_avail = 0;
-	info.entropy.poolsize = 0;
+	if (!(fp = open_file(ENTROPY_AVAIL_PATH, &rep)))
+		return 1;
 
-	if ((fp1 = open_file(entropy_avail, &rep)) == NULL) {
-		return;
-	}
+	if (fscanf(fp, "%u", val) != 1)
+		return 1;
 
-	if ((fp2 = open_file(entropy_poolsize, &rep)) == NULL) {
-		fclose(fp1);
-		return;
-	}
+	fclose(fp);
+	return 0;
+}
 
-	fscanf(fp1, "%u", &info.entropy.entropy_avail);
-	fscanf(fp2, "%u", &info.entropy.poolsize);
+#define ENTROPY_POOLSIZE_PATH "/proc/sys/kernel/random/poolsize"
 
-	fclose(fp1);
-	fclose(fp2);
+int get_entropy_poolsize(unsigned int *val)
+{
+	static int rep = 0;
+	FILE *fp;
 
-	info.mask |= (1 << INFO_ENTROPY);
+	if (!(fp = open_file(ENTROPY_POOLSIZE_PATH, &rep)))
+		return 1;
+
+	if (fscanf(fp, "%u", val) != 1)
+		return 1;
+
+	fclose(fp);
+	return 0;
 }
 
 const char *get_disk_protect_queue(const char *disk)
@@ -2145,6 +2244,49 @@ const char *get_disk_protect_queue(const char *disk)
 	}
 	fclose(fp);
 	return (state > 0) ? "frozen" : "free  ";
+}
+
+typedef struct DEV_LIST_TYPE
+{
+	char *dev_name;
+	int memoized;
+	struct DEV_LIST_TYPE *next;
+
+} DEV_LIST, *DEV_LIST_PTR;
+
+/* Same as sf #2942117 but memoized using a linked list */
+int is_disk(char *dev)
+{
+	char syspath[PATH_MAX];
+	char *slash;
+	static DEV_LIST_PTR dev_head = NULL;
+	DEV_LIST_PTR dev_cur, dev_last;
+
+	dev_cur = dev_head;
+
+	while (dev_cur) {
+		if (strcmp(dev_cur->dev_name, dev) == 0)
+			return dev_cur->memoized;
+		dev_last = dev_cur;
+		dev_cur  = dev_cur->next;
+	}
+
+	dev_cur = (DEV_LIST_PTR)malloc(sizeof(DEV_LIST));
+	dev_cur->dev_name = (char *)malloc((strlen(dev)+1)*sizeof(char));
+	strcpy(dev_cur->dev_name,dev);
+	dev_cur->next = NULL;
+
+	while ((slash = strchr(dev, '/')))
+		*slash = '!';
+	snprintf(syspath, sizeof(syspath), "/sys/block/%s", dev);
+	dev_cur->memoized = !(access(syspath, F_OK));
+
+	if (dev_head)
+		dev_last->next = dev_cur;
+	else
+		dev_head = dev_cur;
+
+	return dev_cur->memoized;
 }
 
 void update_diskio(void)
@@ -2177,8 +2319,11 @@ void update_diskio(void)
 		 * XXX: ignore devices which are part of a SW RAID (MD_MAJOR) */
 		if (col_count == 5 && major != LVM_BLK_MAJOR && major != NBD_MAJOR
 				&& major != RAMDISK_MAJOR && major != LOOP_MAJOR) {
-			total_reads += reads;
-			total_writes += writes;
+			/* check needed for kernel >= 2.6.31, see sf #2942117 */
+			if (is_disk(devbuf)) {
+				total_reads += reads;
+				total_writes += writes;
+			}
 		} else {
 			col_count = sscanf(buf, "%u %u %s %*u %u %*u %u",
 				&major, &minor, devbuf, &reads, &writes);

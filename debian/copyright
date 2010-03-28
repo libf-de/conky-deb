@@ -1,330 +1,139 @@
-Files under debian/:
---------------------
-This package was debianized by Jason Tan <jtan325@gmail.com>.
-
-The Debian package was maintained by Bartosz Fenski <fenio@debian.org>
-from version 1.4.1-1 to 1.4.4-1.
-
-The Debian package is currently maintained by
-Kapil Hari Paranjape <kapil@debian.org>
-
-Some modifications were made by Steve Langasek <vorlon@debian.org>
-and Laszlo Boszormenyi (GCS) <gcs@debian.hu>.
-
-The files under debian/ constitute source for the Debian packaging.
-Each such file should be deemed to carry a notice as follows:
-
-   Copyright (c) 2005 Jason Tan
-   Copyright (c) 2006 Steve Langasek, Laszlo Boszormenyi, Bartosz Fenski
-   Copyright (c) 2007 Kapil Hari Paranjape
-
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-  
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>. 
-
-Upstream source:
-----------------
-The upstream source was downloaded from
-http://www.sourceforge.net/projects/conky
-
-THe upstream source is a fork of the torsmo project.
-
-The current upstream maintainer is
-Brendan Matthews <brenden1@users.sourceforge.net>.
-The complete list of authors of the upstream code can be found in the
-file AUTHORS which is reproduced below.
-
-The upstream COPYING file contains the copyright assertion which
-states:
-
-   Any original torsmo code is licensed under the BSD license (see
-   LICENSE.BSD for a copy)
-
-   All code written since the fork of torsmo is licensed under the GPL
-   (see LICENSE.GPL for a copy), except where noted differently (such as
-   in portmon code, timed thread code, and audacious code which are
-   LGPL, and prss which is an MIT-style license).
-
-   Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
-   Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al.
-   (see AUTHORS)
-   All rights reserved.
-
-Full texts of licenses:
------------------------
-On Debian systems: the complete text of the BSD License, the GPL and
-the LGPL can be found in the files with the same names under the
-directory `/usr/share/common-licenses/'. The complete text for the
-MIT-style license for the "prss" code is reproduced from "src/prss.c"
-below:
-
-   Permission to use, copy, modify, and distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-  
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-Full text of AUTHORS file from upstream:
-----------------------------------------
-# $Id: AUTHORS 908 2007-08-10 20:49:57Z brenden1 $
-
-Authors of conky in alphapetical order (please, send mail if I forgot
-somebody or email address / name is wrong):
-
-adi <razorbladeworks at yahoo dot com>
-  Outline stuff
-  ACPI fan & adapter
-
-Adi Zaimi
-  original top code
-
-Alex <godexsoft at bk dot ru>
-  Iconv patch
-
-affinity <affy at users dot sourceforge dot net>
-  X-Mozilla-Status support
-
-akash <akash at users dot sourceforge dot net>
-  battery_percent and battery_bar
-
-Blondak <blondak_nesercz at users dot sourceforge dot net>
-  diskio read & write patch
-
-Bobby Beckmann <bbeckmann at users dot sourceforge dot net>
-  Interface IP and Wireless Quality patch
-
-David Carter <boojit at pundo dot com>
-  CPU usage being reported incorrectly by top
-
-Brenden Matthews <brenden at rty dot ca>
-  project maintainer
-
-Bruce Merry <bmerry at cs dot uct dot ac dot za>
-  Xdbe (double buffering)
-
-btlee
-  linkstatus patch (http://forums.gentoo.org/viewtopic-p-2765647.html#2765647)
-
-calmar <mac at calmar dot ws>
-  mboxscan
-
-cromka <cromka at users dot sourceforge dot net>
-  if_existing patch for string matching
-
-dan-h <dan-h at users dot sourceforge dot net>
-  adt746x fix
-
-Dan Piponi <dan at tanelorn dot demon dot co dot uk>
-  original top code
-
-Dave Clark <clarkd at skynet dot ca>
-  original top code
-
-David McCabe
-  utime
-
-Ram Yalamanchili
-  tztime
-
-Daniel Thiele <dthiele at gmx dot net>
-  APM support for FreeBSD
-
-Denis <d-st at users dot sourceforge dot net>
-  WM_CLASS patch
-  statfs patch
-
-Dennis Frommknecht
-  NVCtrl, temperature monitoring for nvdia-based graphics cards
-
-Dennis Kaandorp <addict at quicknet dot nl>
-  adt746x stuff
-
-Elisey O. Savateev <bio3k at softboard dot ru>
-  Fixed if_mounted on FreeBSD
-
-Egor(knick_)
-  Iconv patch
-
-Erik Scharwaechter <erik at diozaka dot org>
-  $if_empty patch
-
-Falk Feuersenger <lumberjack at users dot sourceforge dot net>
-  I2C divisor from a file
-
-Fanat1k
-  Iconv patch
-
-flitsch <flitsch at users dot sourceforge dot net>
-  hwmon support
-
-fow <facadedewalls at yahoo dot com>
-  mpd_title max length
-
-Gwenhael LE MOINE <cycojesus at yahoo dot fr>
-  Manual setting of the position
-  WM_CLASS for window when drawing to own window
-
-Hannu Saransaari <hipo at users dot sourceforge dot net>
-  Main code
-
-Jason Mitchell <jason.mitchell03 at saintleo dot edu>
-  developer
-  UTF8 fix
-  Source clean up
-
-Jason Tan <jtan325 at users dot sourceforge dot net>
-  developer
-  debian package maintainer
-
-Joe Myre - <joemyre at users dot sourceforge dot net>
-  developer
-
-jack_mort - gentoo forums
-  $tab patch
-
-Jarmo Hekkanen
-  SETI stuff
-
-Jeremy Burch <ascii021 at yahoo dot com>
-  $cached and $buffers
-
-JL Farinacci
-  pad_percents
-
-Johannes Winkelmann <jw at tks6 dot net>
-  disk I/O on linux
-  more consistent cpu freq handling on linux
-  capitalize Hertz in cpu frequeny
-
-jolapache <jolapache at free dot fr>
-  maildir format
-
-Joshua Gerrish <jgerrish at users dot sourceforge dot net>
-  mpd password patch
-
-Jørgen P. Tjernø <daxxar at mental dot mine dot nu>
-  Restores default settings before loading new config file in SIGHUP
-  Some cleaning and commenting apparently :)
-  SIGHUP config file reload
-
-killfire
-  fs_used_perc and fs_bar_free patch
-
-Lassi Selander <sleipner at users dot sourceforge dot net>
-  XMMS2 patch
-
-Lauri Hakkarainen <b10nik at users dot sourceforge dot net>
-  Some translating, web and other stuff
-
-Leszek Krupiñski <leszek at wafel dot com>
-  Battery number for ACPI battery
-  Load average bug fix
-
-Lucas Brutschy <lbrutschy at users dot sourceforge dot net>
-  MLDonkey patch
-  if constructs patch
-
-Michal Januszewski <spock at gentoo dot org>
-  hddtemp support
-
-Moncelier Camille <pixdamix at users dot sourceforge dot net>
-  METAR patch
-
-Nattfodd <Nattfodd@gmail.com>
-  Fixed top_mem dupes
-
-nathanj439 <nathanj439 at users dot sourceforge dot net>
-  MPD time fix
-
-Pascal Eberhard <pascal dor eberhard at gmail dot com>
-  graph and bar fix for right alignment
-
-Peter Tarjan <ptarjan at citromail dot hu>
-  IBM acpi support patch
-  SMP support for freq stuff
-  CPU voltage patch
-  
-Petr Holub <hopet@users.sourceforge.net>  
-  fix autotools on FreeBSD in autogen.sh
-  Improved battery readout on FreeBSD
-
-Philip Kovacs <pkovacs at users dot sourceforge dot net>
-  tcp port monitor with hashing functionality
-  Audacious, Xmms, BMP, Infopipe stuff
-  Various Xlib changes, e.g. own_window hints, etc.
-
-Phil <n0-1 at users dot sourceforge dot net>
-  multiple batteries support
-
-Psychon <psychon at users dot sourceforge dot net>
-  a bunch of code cleanups
-
-roiban adi <adiroiban at users dot sourceforge dot net>
-  hex colour patch
-
-Rui Paulo <rpaulo at netbsd-pt dot org>
-  NetBSD support
-
-Roman Bogorodskiy <novel at clublife dot ru>
-  FreeBSD support
-  BMPx support
-
-Ryan Twitchell <tryan2 at rochester dot rr dot com>
-  head/tail rewrite patch
-
-Mikko Sysikaski <sisu at users dot sourceforge dot net>
-  prss.c and prss.h
-
-Stepan Zastupov <redchrom at gmail dot com>
-  WiFi signal level detection support on FreeBSD
-
-Szymon Boniecki
-  Reads current LC_TIME
-
-Thomas Cort
-  CPU frequency patch for alpha
-
-Toni <bleach at users dot sourceforge dot net>
-  exec*/tail/head output evalution
-
-Toni Spets hifi <spets at users dot sourceforge dot net>
-  OpenBSD support
-  Linux wifi code
-  RSS code (created with Mikko Sysikaski)
-
-tyir <tyir at users dot sourceforge dot net>
-  MPD features patch 1319461
-
-Vivenzio Pagliari <vivenzio@web.de>
-  Some useful patches for port monitoring
-  PowerBook battery patch
-
-Walt Nelson <wnelsonjr at comcast dot net>
-  $freq fix
-
-Warren Dukes <warren dot dukes at gmail dot com>
-  libmpdclient
-
-William DiPlacido <bimbasaari at yahoo dot com>
-  Frequency from /proc/cpuinfo
-  Some other SETI stuff
-
-zimba-tm <zimba-tm at users dot sourceforge dot net>
-  alignment none patch
-
-zotrix <zotrix at users dot sourceforge dot net>
-  FreeBSD patch for <10 procs
+Format-Specification: http://dep.debian.net/deps/dep5/
+Name: conky
+Maintainer: Brenden Matthews <brenden@rty.ca>
+Source: http://sourceforge.net/projects/conky/files/
+
+Files: autogen.sh, src/*.[c,h]
+Copyright: 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+	   2004, Hannu Saransaari, Lauri Hakkarainen
+	   2005, Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>
+	   2007, Toni Spets
+	   2008, Markus Meissner
+	   2008, Asbjørn Zweidorff Kjær
+	   2008, Henri Häkkinen
+	   2008, Phil Sutter <phil@nwl.cc>
+	   2009, Yeon-Hyeong Yang <lbird94@gmail.com>
+License:  GPL-3+
+
+Files: src/smapi.c, src/temphelper.c
+Copyright: Copyright: 2007 Phil Sutter <Phil@nwl.cc>
+License: GPL-2+
+
+Files: src/libtcp-portmon.c, src/audacious.c, src/timed_thread.c, src/apcupsd.c
+Copyright: 2005-2007 Philip Kovacs pkovacs@users.sourceforge.net
+	   2009, Jaromir Smrcek <jaromir.smrcek@zoner.com>
+License: LGPL-2.1+
+
+Files: src/libmpdclient.c
+License: BSD
+
+Files: src/prss.c
+Copyright: 2007, Mikko Sysikaski <mikko.sysikaski@gmail.com>
+License: ISC
+
+Files: debian/*
+Copyright: 2005, Jason Tan <jtan325@gmail.com>
+Copyright: 2006, Steve Langasek, Laszlo Boszormenyi, Bartosz Fenski
+Copyright: 2007, 2008 Kapil Hari Paranjape <kapil@debian.org>
+Copyright: 2009, 2010 Cesare Tirabassi <norsetto@ubuntu.com>
+License:  GPL-3+
+
+License: GPL-3+
+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this package; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 3 can be found in `/usr/share/common-licenses/GPL-3'.
+
+License: GPL-2+
+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this package; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 2 can be found in `/usr/share/common-licenses/GPL-2'.
+
+License: BSD
+
+ - Redistributions of source code must retain the above copyright
+ notice, this list of conditions and the following disclaimer.
+ .
+ - Redistributions in binary form must reproduce the above copyright
+ notice, this list of conditions and the following disclaimer in the
+ documentation and/or other materials provided with the distribution.
+ .
+ - Neither the name of the Music Player Daemon nor the names of its
+ contributors may be used to endorse or promote products derived from
+ this software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ .
+ On Debian systems, the complete text of the BSD License version
+ can be found in `/usr/share/common-licenses/BSD'.
+
+License: LGPL-2.1+
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ .
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ .
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
+ USA.
+ .
+ On Debian systems, the complete text of the GNU Lesse General Public
+ License version 2.1 can be found in `/usr/share/common-licenses/LGPL-2.1'.
+
+License: ISC
+
+ Permission to use, copy, modify, and distribute this software for any
+ purpose with or without fee is hereby granted, provided that the above
+ copyright notice and this permission notice appear in all copies.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.

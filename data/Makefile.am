@@ -1,3 +1,5 @@
+# -*- mode: Makefile; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+#
 # Conky, a system monitor, based on torsmo
 #
 # Any original torsmo code is licensed under the BSD license
@@ -7,7 +9,7 @@
 # Please see COPYING for details
 #
 # Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
-# Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+# Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
 # All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -24,6 +26,6 @@
 #
 
 configdir = ${sysconfdir}/conky
-dist_config_DATA = conky.conf
+dist_config_DATA = conky.conf conky_no_x11.conf
 
-# vi:set ts=8 sw=8 noet ai nocindent syntax=automake:
+# vi:set ts=4 sw=4 noet ai nocindent syntax=automake:

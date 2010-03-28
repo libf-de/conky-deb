@@ -1,7 +1,9 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Copyright (c) 2008 Asbjørn Zweidorff Kjær
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -19,44 +21,11 @@
  *
  */
 
-#define _GNU_SOURCE
-#define MAXCHARS 4
-#define EVE_UPDATE_DELAY 60
+#ifndef _EVE_H
+#define _EVE_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
+void scan_eve(struct text_object *, const char *);
+void print_eve(struct text_object *, char *, int);
+void free_eve(struct text_object *);
 
-#include <time.h>
-
-typedef struct {
-	char *charid;
-	char *skillname;
-	char *time;
-	char *lastOutput;
-
-	struct tm ends;
-	struct tm cache;
-
-	time_t delay;
-
-	int level;
-	int skill;
-} Character;
-
-struct xmlData {
-	char *data;
-	size_t size;
-};
-
-char *eve(char *, char *, char *);
-char *getXmlFromAPI(const char *, const char *, const char *, const char *);
-char *getSkillname(const char *, int);
-char *formatTime(struct tm *);
-int parseTrainingXml(char *, Character *);
-int parseSkilltreeXml(char *, char *);
-int isCacheValid(struct tm);
-int file_exists(const char *);
-void writeSkilltree(char *, const char *);
-void init_eve(void);
+#endif /* _EVE_H */

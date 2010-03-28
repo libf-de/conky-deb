@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -31,6 +34,7 @@
 #include "config.h"	/* defines */
 #include "common.h"	/* at least for struct dns_data */
 #include <sys/utsname.h> /* struct uname_s */
+#include <arpa/inet.h>
 
 #if defined(HAS_MCHECK_H)
 #include <mcheck.h>
@@ -59,6 +63,9 @@ char *strndup(const char *s, size_t n);
  * in every code file optionally using the feature
  */
 
+/* forward define to make gcc happy */
+struct text_object;
+
 #ifdef AUDACIOUS
 #include "audacious.h"
 #endif
@@ -83,17 +90,23 @@ char *strndup(const char *s, size_t n);
 #include "mpd.h"
 #endif
 
-#ifdef NVIDIA
-#include "nvidia.h"
-#endif
+#ifdef HAVE_CURL
+#include "ccurl_thread.h"
+#endif /* HAVE_CURL */
 
 #ifdef RSS
 #include "rss.h"
-#endif
+#endif /* RSS */
 
-#ifdef HAVE_LUA
-#include "llua.h"
-#endif
+#ifdef XOAP
+#ifndef WEATHER
+#error "WEATHER needs to be defined if XOAP is defined"
+#endif /* WEATHER */
+#endif /* XOAP */
+
+#ifdef WEATHER
+#include "weather.h"
+#endif /* WEATHER */
 
 #ifdef TCP_PORT_MONITOR
 #include "tcp-portmon.h"
@@ -119,22 +132,12 @@ char *strndup(const char *s, size_t n);
  * one doesn't know what to choose. Defaults to 256.  */
 extern unsigned int text_buffer_size;
 
-struct entropy_s {
-	unsigned int entropy_avail;
-	unsigned int poolsize;
-};
-
 struct usr_info {
 	char *names;
 	char *times;
+	char *ctime;
 	char *terms;
 	int number;
-};
-
-struct gateway_info {
-	char *iface;
-	char *ip;
-	int count;
 };
 
 #ifdef X11
@@ -143,68 +146,56 @@ struct monitor_info {
 	int current;
 };
 
+struct desktop_info {
+        int current;
+        int number;
+        unsigned int nitems;
+        char *all_names;
+        char *name;
+};
+
 struct x11_info {
 	struct monitor_info monitor;
+	struct desktop_info desktop;
 };
-#endif
 
-enum {
-	INFO_CPU = 0,
-	INFO_MAIL = 1,
-	INFO_MEM = 2,
-	INFO_NET = 3,
-	INFO_PROCS = 4,
-	INFO_RUN_PROCS = 5,
-	INFO_UPTIME = 6,
-	INFO_BUFFERS = 7,
-	INFO_FS = 8,
-	INFO_SYSFS = 9,
-	INFO_MIXER = 10,
-	INFO_LOADAVG = 11,
-	INFO_UNAME = 12,
-	INFO_FREQ = 13,
-#ifdef MPD
-	INFO_MPD = 14,
-#endif
-	INFO_TOP = 15,
-	INFO_WIFI = 16,
-	INFO_DISKIO = 17,
-	INFO_I8K = 18,
-#ifdef TCP_PORT_MONITOR
-	INFO_TCP_PORT_MONITOR = 19,
-#endif
-#ifdef AUDACIOUS
-	INFO_AUDACIOUS = 20,
-#endif
-#ifdef BMPX
-	INFO_BMPX = 21,
-#endif
-#ifdef XMMS2
-	INFO_XMMS2 = 22,
-#endif
-	INFO_ENTROPY = 23,
-#ifdef RSS
-	INFO_RSS = 24,
-#endif
-#ifdef IBM
-	INFO_SMAPI = 25,
-#endif
-	INFO_USERS = 26,
-	INFO_GW = 27,
-#ifdef NVIDIA
-	INFO_NVIDIA = 28,
-#endif
-#ifdef X11
-	INFO_X11 = 29,
-#endif
-	INFO_DNS = 30,
-#ifdef MOC
-	INFO_MOC = 31,
-#endif
-#ifdef APCUPSD
- 	INFO_APCUPSD = 32,
-#endif
+int get_stippled_borders(void);
+
+#endif /* X11 */
+
+/* defined in conky.c */
+extern long default_fg_color, default_bg_color, default_out_color;
+extern long color0, color1, color2, color3, color4, color5, color6, color7,
+	   color8, color9;
+void set_current_text_color(long colour);
+long get_current_text_color(void);
+
+void set_updatereset(int);
+int get_updatereset(void);
+
+int percent_print(char *, int, unsigned);
+void human_readable(long long, char *, int);
+
+struct conftree {
+	char* string;
+	struct conftree* horz_next;
+	struct conftree* vert_next;
+	struct conftree* back;
 };
+
+char load_config_file(const char *);
+
+char *get_global_text(void);
+extern long global_text_lines;
+
+//adds newstring to to the tree unless you can already see it when travelling back.
+//if it's possible to attach it then it returns a pointer to the leaf, else it returns NULL
+struct conftree* conftree_add(struct conftree* previous, const char* newstring);
+
+extern struct conftree *currentconffile;
+
+#define MAX_TEMPLATES 10
+char **get_templates(void);
 
 /* get_battery_stuff() item selector
  * needed by conky.c, linux.c and freebsd.c */
@@ -231,15 +222,17 @@ struct information {
 	double uptime;
 
 	/* memory information in kilobytes */
-	unsigned long long mem, memeasyfree, memfree, memmax, swap, swapmax;
+	unsigned long long mem, memeasyfree, memfree, memmax, swap, swapfree, swapmax;
 	unsigned long long bufmem, buffers, cached;
 
 	unsigned short procs;
 	unsigned short run_procs;
+	unsigned short threads;
+	unsigned short run_threads;
 
 	float *cpu_usage;
 	/* struct cpu_stat cpu_summed; what the hell is this? */
-	unsigned int cpu_count;
+	int cpu_count;
 	int cpu_avg_samples;
 
 	int net_avg_samples;
@@ -248,8 +241,6 @@ struct information {
 
 	float loadavg[3];
 
-	struct mail_s *mail;
-	int mail_running;
 #ifdef XMMS2
 	struct xmms2_s xmms2;
 #endif
@@ -260,14 +251,14 @@ struct information {
 	struct bmpx_s bmpx;
 #endif
 	struct usr_info users;
-	struct gateway_info gw_info;
-	struct dns_data nameserver_info;
 	struct process *cpu[10];
 	struct process *memu[10];
 	struct process *time[10];
+#ifdef IOSTATS
+	struct process *io[10];
+#endif
 	struct process *first_process;
 	unsigned long looped;
-	struct entropy_s entropy;
 	double music_player_interval;
 
 #ifdef X11
@@ -280,6 +271,10 @@ struct information {
 
 	short kflags;	/* kernel settings, see enum KFLAG */
 };
+
+#ifdef HAVE_LUA
+#include "llua.h"
+#endif /* HAVE_LUA */
 
 /* needed by linux.c and top.c -> outsource somewhere */
 enum {
@@ -298,6 +293,12 @@ enum {
 
 /* defined in conky.c, needed by top.c */
 extern int top_cpu, top_mem, top_time;
+#ifdef IOSTATS
+extern int top_io;
+#endif
+#ifdef __linux__
+extern int top_running;
+#endif
 
 /* defined in conky.c, needed by top.c */
 extern int cpu_separate;
@@ -308,6 +309,7 @@ extern struct information info;
 
 /* defined in users.c */
 void update_users(void);
+void update_user_time(char *tty);
 
 /* defined in conky.c */
 extern double current_update_time, last_update_time, update_interval;
@@ -317,13 +319,27 @@ int spaced_print(char *, int, const char *, int, ...)
 	__attribute__((format(printf, 3, 5)));
 extern int inotify_fd;
 
+/* defined in conky.c
+ * evaluates 'text' and places the result in 'p' of max length 'p_max_size'
+ */
+void evaluate(const char *text, char *p, int p_max_size);
+
+/* maximum size of config TEXT buffer, i.e. below TEXT line. */
+extern unsigned int max_user_text;
+
+/* path to config file */
+extern char *current_config;
+
 #ifdef X11
 #define TO_X 1
-#endif
+#endif /* X11 */
 #define TO_STDOUT 2
 #define TO_STDERR 4
 #define OVERWRITE_FILE 8
 #define APPEND_FILE 16
+#ifdef NCURSES
+#define TO_NCURSES 32
+#endif /* NCURSES */
 enum x_initialiser_state {
 	NO = 0,
 	YES = 1,
@@ -332,4 +348,19 @@ enum x_initialiser_state {
 extern int output_methods;
 extern enum x_initialiser_state x_initialised;
 
+void set_update_interval(double interval);
+
+#define DEFAULT_TEXT_BUFFER_SIZE_S "##DEFAULT_TEXT_BUFFER_SIZE"
+
+#define NOBATTERY 0
+
+/* to get rid of 'unused variable' warnings */
+#define UNUSED(a)  (void)a
+#define UNUSED_ATTR __attribute__ ((unused))
+
+void parse_conky_vars(struct text_object *, const char *,
+			char *, int, struct information *);
+
+void generate_text_internal(char *, int, struct text_object,
+                                   struct information *);
 #endif /* _conky_h_ */

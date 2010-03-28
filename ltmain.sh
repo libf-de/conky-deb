@@ -1,6 +1,6 @@
 # Generated from ltmain.m4sh.
 
-# ltmain.sh (GNU libtool) 2.2.6
+# ltmain.sh (GNU libtool) 2.2.6b
 # Written by Gordon Matzigkeit <gord@gnu.ai.mit.edu>, 1996
 
 # Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007 2008 Free Software Foundation, Inc.
@@ -65,7 +65,7 @@
 #       compiler:		$LTCC
 #       compiler flags:		$LTCFLAGS
 #       linker:		$LD (gnu? $with_gnu_ld)
-#       $progname:		(GNU libtool) 2.2.6
+#       $progname:		(GNU libtool) 2.2.6b Debian-2.2.6b-2
 #       automake:		$automake_version
 #       autoconf:		$autoconf_version
 #
@@ -73,9 +73,9 @@
 
 PROGRAM=ltmain.sh
 PACKAGE=libtool
-VERSION=2.2.6
+VERSION="2.2.6b Debian-2.2.6b-2"
 TIMESTAMP=""
-package_revision=1.3012
+package_revision=1.3017
 
 # Be Bourne compatible
 if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then
@@ -116,15 +116,15 @@ $lt_unset CDPATH
 
 : ${CP="cp -f"}
 : ${ECHO="echo"}
-: ${EGREP="/usr/bin/grep -E"}
-: ${FGREP="/usr/bin/grep -F"}
-: ${GREP="/usr/bin/grep"}
+: ${EGREP="/bin/grep -E"}
+: ${FGREP="/bin/grep -F"}
+: ${GREP="/bin/grep"}
 : ${LN_S="ln -s"}
 : ${MAKE="make"}
 : ${MKDIR="mkdir"}
 : ${MV="mv -f"}
 : ${RM="rm -f"}
-: ${SED="/opt/local/bin/gsed"}
+: ${SED="/bin/sed"}
 : ${SHELL="${CONFIG_SHELL-/bin/sh}"}
 : ${Xsed="$SED -e 1s/^X//"}
 
@@ -569,13 +569,6 @@ elif test "X`{ $ECHO '\t'; } 2>/dev/null`" = 'X\t'; then
 else
   # Restart under the correct shell, and then maybe $ECHO will work.
   exec $SHELL "$progpath" --no-reexec ${1+"$@"}
-fi
-# Same for EGREP, and just to be sure, do LTCC as well
-if test "x$EGREP" = x ; then
-    EGREP=egrep
-fi
-if test "x$LTCC" = x ; then
-    LTCC=${CC-gcc}
 fi
 
 if test "X$1" = X--fallback-echo; then
@@ -5040,7 +5033,10 @@ func_mode_link ()
 	case $pass in
 	dlopen) libs="$dlfiles" ;;
 	dlpreopen) libs="$dlprefiles" ;;
-	link) libs="$deplibs %DEPLIBS% $dependency_libs" ;;
+	link)
+	  libs="$deplibs %DEPLIBS%"
+	  test "X$link_all_deplibs" != Xno && libs="$libs $dependency_libs"
+	  ;;
 	esac
       fi
       if test "$linkmode,$pass" = "lib,dlpreopen"; then
@@ -5351,19 +5347,19 @@ func_mode_link ()
 	    # It is a libtool convenience library, so add in its objects.
 	    convenience="$convenience $ladir/$objdir/$old_library"
 	    old_convenience="$old_convenience $ladir/$objdir/$old_library"
+	    tmp_libs=
+	    for deplib in $dependency_libs; do
+	      deplibs="$deplib $deplibs"
+	      if $opt_duplicate_deps ; then
+		case "$tmp_libs " in
+		*" $deplib "*) specialdeplibs="$specialdeplibs $deplib" ;;
+		esac
+	      fi
+	      tmp_libs="$tmp_libs $deplib"
+	    done
 	  elif test "$linkmode" != prog && test "$linkmode" != lib; then
 	    func_fatal_error "\`$lib' is not a convenience library"
 	  fi
-	  tmp_libs=
-	  for deplib in $dependency_libs; do
-	    deplibs="$deplib $deplibs"
-	    if $opt_duplicate_deps ; then
-	      case "$tmp_libs " in
-	      *" $deplib "*) specialdeplibs="$specialdeplibs $deplib" ;;
-	      esac
-	    fi
-	    tmp_libs="$tmp_libs $deplib"
-	  done
 	  continue
 	fi # $pass = conv
 
@@ -5900,6 +5896,7 @@ func_mode_link ()
 	  if test "$link_all_deplibs" != no; then
 	    # Add the search paths of all dependency libraries
 	    for deplib in $dependency_libs; do
+	      path=
 	      case $deplib in
 	      -L*) path="$deplib" ;;
 	      *.la)
@@ -6212,6 +6209,9 @@ func_mode_link ()
 	    age="$number_minor"
 	    revision="$number_minor"
 	    lt_irix_increment=no
+	    ;;
+	  *)
+	    func_fatal_configuration "$modename: unknown library version type \`$version_type'"
 	    ;;
 	  esac
 	  ;;
@@ -8066,53 +8066,9 @@ EOF
 		eval libdir=`${SED} -n -e 's/^libdir=\(.*\)$/\1/p' $deplib`
 		test -z "$libdir" && \
 		  func_fatal_error "\`$deplib' is not a valid libtool archive"
-		if test "x$EGREP" = x ; then
-			EGREP=egrep
-		fi
-		# We do not want portage's install root ($D) present.  Check only for
-		# this if the .la is being installed.
-		if test "$installed" = yes && test "$D"; then
-		  eval mynewdependency_lib=`echo "$libdir/$name" |sed -e "s:$D:/:g" -e 's:/\+:/:g'`
-		else
-		  mynewdependency_lib="$libdir/$name"
-		fi
-		# Do not add duplicates
-		if test "$mynewdependency_lib"; then
-		  my_little_ninja_foo_1=`echo $newdependency_libs |$EGREP -e "$mynewdependency_lib"`
-		  if test -z "$my_little_ninja_foo_1"; then
-		    newdependency_libs="$newdependency_libs $mynewdependency_lib"
-		  fi
-		fi
+		newdependency_libs="$newdependency_libs $libdir/$name"
 		;;
-		  *)
-		if test "$installed" = yes; then
-		  # Rather use S=WORKDIR if our version of portage supports it.
-		  # This is because some ebuild (gcc) do not use $S as buildroot.
-		  if test "$PWORKDIR"; then
-		    S="$PWORKDIR"
-		  fi
-		  # We do not want portage's build root ($S) present.
-		  my_little_ninja_foo_2=`echo $deplib |$EGREP -e "$S"`
-		  # We do not want portage's install root ($D) present.
-		  my_little_ninja_foo_3=`echo $deplib |$EGREP -e "$D"`
-		  if test -n "$my_little_ninja_foo_2" && test "$S"; then
-		    mynewdependency_lib=""
-		  elif test -n "$my_little_ninja_foo_3" && test "$D"; then
-		    eval mynewdependency_lib=`echo "$deplib" |sed -e "s:$D:/:g" -e 's:/\+:/:g'`
-		  else
-		    mynewdependency_lib="$deplib"
-		  fi
-		else
-		  mynewdependency_lib="$deplib"
-		fi
-		# Do not add duplicates
-		if test "$mynewdependency_lib"; then
-		  my_little_ninja_foo_4=`echo $newdependency_libs |$EGREP -e "$mynewdependency_lib"`
-		  if test -z "$my_little_ninja_foo_4"; then
-			newdependency_libs="$newdependency_libs $mynewdependency_lib"
-		  fi
-		fi
-		;;
+	      *) newdependency_libs="$newdependency_libs $deplib" ;;
 	      esac
 	    done
 	    dependency_libs="$newdependency_libs"
@@ -8176,10 +8132,6 @@ EOF
 	  case $host,$output,$installed,$module,$dlname in
 	    *cygwin*,*lai,yes,no,*.dll | *mingw*,*lai,yes,no,*.dll | *cegcc*,*lai,yes,no,*.dll) tdlname=../bin/$dlname ;;
 	  esac
-	  # Do not add duplicates
-	  if test "$installed" = yes && test "$D"; then
-	    install_libdir=`echo "$install_libdir" |sed -e "s:$D:/:g" -e 's:/\+:/:g'`
-	  fi
 	  $ECHO > $output "\
 # $outputname - a libtool library file
 # Generated by $PROGRAM (GNU $PACKAGE$TIMESTAMP) $VERSION

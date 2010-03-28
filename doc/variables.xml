@@ -4,8 +4,11 @@
             <command>
                 <option>acpiacadapter</option>
             </command>
+            <option>(adapter)</option>
         </term>
-        <listitem>ACPI ac adapter state. 
+        <listitem>ACPI ac adapter state. On linux, the adapter option specifies the
+        subfolder of /sys/class/power_supply containing the state information (defaults
+        to "AC"). Other systems ignore it.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -31,7 +34,7 @@
             <command>
                 <option>addr</option>
             </command>
-            <option>interface</option>
+            <option>(interface)</option>
         </term>
         <listitem>IP address for an interface, or "No Address" if
         no address is assigned. 
@@ -42,7 +45,7 @@
             <command>
                 <option>addrs</option>
             </command>
-            <option>interface</option>
+            <option>(interface)</option>
         </term>
         <listitem>IP addresses for an interface (if one - works
         like addr). Linux only. 
@@ -167,6 +170,8 @@
             <command>
                 <option>apcupsd_loadgraph</option>
             </command>
+            <option>(height),(width) (gradient colour 1) (gradient
+            colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>History graph of current load. 
         <para /></listitem>
@@ -431,8 +436,9 @@
         <listitem>Battery status and remaining percentage capacity
         of ACPI or APM battery. ACPI battery number can be given as
         argument (default is BAT0). This mode display a short
-        status, which means that C is displayed instead of charging
-        and D is displayed instead of discharging. 
+        status, which means that C is displayed instead of
+        charging, D for discharging, F for full, N for not present,
+        E for empty and U for unknown. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -445,6 +451,17 @@
         <listitem>Battery charge/discharge time remaining of ACPI
         battery. ACPI battery number can be given as argument
         (default is BAT0). 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>blink</option>
+            </command>
+            <option>text_and_other_conky_vars</option>
+        </term>
+        <listitem>Let 'text_and_other_conky_vars' blink on and off.
+        
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -522,11 +539,25 @@
     <varlistentry>
         <term>
             <command>
+                <option>cmdline_to_pid</option>
+            </command>
+            <option>string</option>
+        </term>
+        <listitem>PID of the first process that has string in it's
+	commandline
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>color</option>
             </command>
             <option>(color)</option>
         </term>
-        <listitem>Change drawing color to color 
+        <listitem>Change drawing color to 'color' which is a name of
+        a color or a hexcode preceded with # (for example #0A1B2C ).
+        If you use ncurses only the following colors are supported:
+	red,green,yellow,blue,magenta,cyan,black,white.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -547,7 +578,7 @@
             <option>var1 var2</option>
         </term>
         <listitem>Places the lines of var2 to the right of the
-        lines of var1 seperated by the chars that are put between
+        lines of var1 separated by the chars that are put between
         var1 and var2. For example: ${combine ${head /proc/cpuinfo
         2} - ${head /proc/meminfo 1}} gives as output
         "cpuinfo_line1 - meminfo_line1" on line 1 and
@@ -623,14 +654,64 @@
             <command>
                 <option>cpugraph</option>
             </command>
-            <option>(cpuN) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</option>
+            <option>(cpuN) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>CPU usage graph, with optional colours in hex,
         minus the #. See $cpu for more info on SMP. Uses a
-        logarithmic scale (to see small numbers) when you use "log"
-        instead of "normal". 
+        logarithmic scale (to see small numbers) when you use the
+        -l switch. Takes the switch '-t' to use a temperature
+        gradient, which makes the gradient values change depending
+        on the amplitude of a particular graph value (try it and
+        see). 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>curl</option>
+            </command>
+            <option>url (interval_in_minutes)</option>
+        </term>
+        <listitem>
+            <para>Download data from URI using Curl at the
+            specified interval. The interval may be a floating
+            point value greater than 0, otherwise defaults to 15
+            minutes. Most useful when used in conjunction with Lua
+            and the Lua API. This object is threaded, and once a
+            thread is created it can't be explicitly destroyed.
+            One thread will run for each URI specified. You can use
+            any protocol that Curl supports.</para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>desktop</option>
+            </command>
+        </term>
+        <listitem>Number of the desktop on which conky is running
+        or the message "Not running in X" if this is the case. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>desktop_name</option>
+            </command>
+        </term>
+        <listitem>Name of the desktop on which conky is running or
+        the message "Not running in X" if this is the case. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>desktop_number</option>
+            </command>
+        </term>
+        <listitem>Number of desktops or the message "Not running in
+        X" if this is the case. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -684,14 +765,16 @@
             <command>
                 <option>diskiograph</option>
             </command>
-            <option>(device) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</option>
+            <option>(device) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>Disk IO graph, colours defined in hex, minus the
         #. If scale is non-zero, it becomes the scale for the
         graph. Uses a logarithmic scale (to see small numbers) when
-        you use "log" instead of "normal". 
+        you use -l switch. Takes the switch '-t' to use a
+        temperature gradient, which makes the gradient values
+        change depending on the amplitude of a particular graph
+        value (try it and see). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -699,15 +782,16 @@
             <command>
                 <option>diskiograph_read</option>
             </command>
-            <option>(device) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</option>
+            <option>(device) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>Disk IO graph for reads, colours defined in hex,
         minus the #. If scale is non-zero, it becomes the scale for
         the graph. Device as in diskio. Uses a logarithmic scale
-        (to see small numbers) when you use "log" instead of
-        "normal". 
+        (to see small numbers) when you use -l switch. Takes the
+        switch '-t' to use a temperature gradient, which makes the
+        gradient values change depending on the amplitude of a
+        particular graph value (try it and see). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -715,15 +799,16 @@
             <command>
                 <option>diskiograph_write</option>
             </command>
-            <option>(device) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</option>
+            <option>(device) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>Disk IO graph for writes, colours defined in hex,
         minus the #. If scale is non-zero, it becomes the scale for
         the graph. Device as in diskio. Uses a logarithmic scale
-        (to see small numbers) when you use "log" instead of
-        "normal". 
+        (to see small numbers) when you use -l switch. Takes the
+        switch '-t' to use a temperature gradient, which makes the
+        gradient values change depending on the amplitude of a
+        particular graph value (try it and see). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -731,9 +816,9 @@
             <command>
                 <option>downspeed</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
-        <listitem>Download speed in KiB 
+        <listitem>Download speed in suitable IEC units 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -741,7 +826,7 @@
             <command>
                 <option>downspeedf</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Download speed in KiB with one decimal 
         <para /></listitem>
@@ -751,14 +836,16 @@
             <command>
                 <option>downspeedgraph</option>
             </command>
-            <option>(netdev) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</option>
+            <option>(netdev) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>Download speed graph, colours defined in hex,
         minus the #. If scale is non-zero, it becomes the scale for
         the graph. Uses a logarithmic scale (to see small numbers)
-        when you use "log" instead of "normal". 
+        when you use -l switch. Takes the switch '-t' to use a
+        temperature gradient, which makes the gradient values
+        change depending on the amplitude of a particular graph
+        value (try it and see). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -816,6 +903,16 @@
     <varlistentry>
         <term>
             <command>
+                <option>entropy_perc</option>
+            </command>
+        </term>
+        <listitem>Percentage of entropy available in comparison to
+        the poolsize 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>entropy_poolsize</option>
             </command>
         </term>
@@ -830,7 +927,7 @@
             </command>
             <option>string</option>
         </term>
-        <listitem>Evalutates given string according to the rules of
+        <listitem>Evaluates given string according to the rules of
         TEXT interpretation, i.e. parsing any contained text object
         specifications into their output, any occuring '$$' into a
         single '$' and so on. The output is then being parsed
@@ -893,14 +990,17 @@
             <command>
                 <option>execgraph</option>
             </command>
-            <option>("normal"|"log") (height),(width) (gradient
-            colour 1) (gradient colour 2) (scale) command</option>
+            <option>(-t) (-l) command</option>
         </term>
         <listitem>Same as execbar, but graphs values. Uses a
-        logaritmic scale when the log option is given (to see small
-        numbers). Values still have to be between 0 and 100. The
-        size for graphs can be controlled via the
-        default_graph_size config setting. 
+        logaritmic scale when the log option (-l switch) is given
+        (to see small numbers). Values still have to be between 0
+        and 100. The size for graphs can be controlled via the
+        default_graph_size config setting. Takes the switch '-t' to
+        use a temperature gradient, which makes the gradient values
+        change depending on the amplitude of a particular graph
+        value (try it and see). If -t or -l is your first argument,
+        you may need to preceed it by a space (' '). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -941,10 +1041,11 @@
             <command>
                 <option>execigraph</option>
             </command>
-            <option>interval command</option>
+            <option>interval (-t) (-l) command</option>
         </term>
         <listitem>Same as execgraph, but takes an interval arg and
-        graphs values. 
+        graphs values. If -t or -l is your first argument, you may
+        need to preceed it by a space (' '). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1006,6 +1107,28 @@
         apply to the current line and everything following. You can
         use a $font with no arguments to change back to the default
         font (much like with $color) 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>format_time</option>
+            </command>
+            <option>seconds format</option>
+        </term>
+        <listitem>Format time given in seconds. This var only works when
+	the times_in_seconds configuration setting is on. Format is a string
+	that should start and end with a "-char. The "-chars are not
+	part of the output, \w,\d,\h,\m,\s,\(,\) and \\ are replaced by
+	weeks,days,hours,minutes,seconds,(,) and \. If you leave out a unit,
+	it's value will be expressed in the highest unite lower then the
+	one left out. Text between ()-chars will not be visible if a
+	replaced unit in this text is 0. If seconds is a decimal number
+	then you can see the numbers behind the point by using \S
+	followed by a number that specifies the amount of
+	digits behind the point that you want to see (maximum 9).
+	You can also place a 'x' behind \S so you have all digits behind
+	the point and no trailing zero's. (also maximum 9)
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1164,12 +1287,13 @@
             <command>
                 <option>hddtemp</option>
             </command>
-            <option>dev, (host,(port))</option>
+            <option>(dev)</option>
         </term>
         <listitem>Displays temperature of a selected hard disk
-        drive as reported by the hddtemp daemon running on
-        host:port. Default host is 127.0.0.1, default port is 7634.
-        
+		drive as reported by the hddtemp daemon. Use hddtemp_host
+		and hddtemp_port to specify a host and port for all hddtemp
+		objects. If no dev parameter is given, the first disk returned
+		by the hddtemp daemon is used.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1177,12 +1301,12 @@
             <command>
                 <option>head</option>
             </command>
-            <option>logfile lines (interval)</option>
+            <option>logfile lines (next_check)</option>
         </term>
-        <listitem>Displays first N lines of supplied text text
-        file. If interval is not supplied, Conky assumes 2x Conky's
-        interval. Max of 30 lines can be displayed, or until the
-        text buffer is filled. 
+        <listitem>Displays first N lines of supplied text file. The
+        file is checked every 'next_check' update. If next_check is
+        not supplied, Conky defaults to 2. Max of 30 lines can be
+        displayed, or until the text buffer is filled. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1469,15 +1593,14 @@
         and right side types are: 
         <simplelist>
             <member>
-            <command>double</command>: argument consists of only
+            <command>double</command>Argument consists of only
             digits and a single dot.</member>
             <member>
-            <command>long</command>: argument consists of only
+            <command>long</command>Argument consists of only
             digits.</member>
             <member>
-            <command>string</command>: argument is enclosed in
-            quotation mark or the checks for double and long failed
-            before.</member>
+            <command>string</command>Argument is enclosed in
+            quotation marks (")</member>
         </simplelist>Valid operands are: '&gt;', '&lt;', '&gt;=',
         '&lt;=', '==', '!='. 
         <para /></listitem>
@@ -1581,21 +1704,25 @@
             <command>
                 <option>image</option>
             </command>
-            <option>&lt;path to image&gt; (-p x,y) (-s
-            WxH)</option>
+            <option>&lt;path to image&gt; (-p x,y) (-s WxH) (-n)
+            (-f interval)</option>
         </term>
         <listitem>Renders an image from the path specified using
-        IMLIB2. Takes 2 optional arguments, one being a position,
-        the other an size. Changing the x,y position will move the
-        position of the image, and changing the WxH will scale the
-        image. Example: ${image /home/brenden/cheeseburger.jpg -p
-        20,20 -s 200x200} will render 'cheeseburger.jpg' at (20,20)
-        scaled to 200x200 pixels. Conky does not make any attempt
-        to adjust the position (or any other formatting) of images,
-        they are just rendered as per the arguments passed. The
-        only reason $image is part of the TEXT section, is to allow
-        for runtime modifications, through $execp $lua_parse,
-        $lua_read_parse, or some other method. 
+        Imlib2. Takes 4 optional arguments: a position, a size, a
+        no-cache switch, and a cache flush interval. Changing the
+        x,y position will move the position of the image, and
+        changing the WxH will scale the image. If you specify the
+        no-cache flag (-n), the image will not be cached.
+        Alternately, you can specify the -f int switch to specify a
+        cache flust interval for a particular image. Example:
+        ${image /home/brenden/cheeseburger.jpg -p 20,20 -s 200x200}
+        will render 'cheeseburger.jpg' at (20,20) scaled to 200x200
+        pixels. Conky does not make any attempt to adjust the
+        position (or any other formatting) of images, they are just
+        rendered as per the arguments passed. The only reason
+        $image is part of the TEXT section, is to allow for runtime
+        modifications, through $execp $lua_parse, or some other
+        method. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1607,9 +1734,9 @@
         </term>
         <listitem>Displays the number of messages in your global
         IMAP inbox by default. You can define individual IMAP
-        inboxes seperately by passing arguments to this object.
+        inboxes separately by passing arguments to this object.
         Arguments are: "host user pass [-i interval (in seconds)]
-        [-f folder] [-p port] [-e command] [-r retries]". Default
+        [-f 'folder'] [-p port] [-e 'command'] [-r retries]". Default
         port is 143, default folder is 'INBOX', default interval is
         5 minutes, and default number of retries before giving up
         is 5. If the password is supplied as '*', you will be
@@ -1625,14 +1752,28 @@
         </term>
         <listitem>Displays the number of unseen messages in your
         global IMAP inbox by default. You can define individual
-        IMAP inboxes seperately by passing arguments to this
+        IMAP inboxes separately by passing arguments to this
         object. Arguments are: "host user pass [-i interval (in
-        seconds)] [-f folder] [-p port] [-e command] [-r retries]".
+        seconds)] [-f 'folder'] [-p port] [-e 'command'] [-r retries]".
         Default port is 143, default folder is 'INBOX', default
         interval is 5 minutes, and default number of retries before
         giving up is 5. If the password is supplied as '*', you
         will be prompted to enter the password when Conky starts. 
         <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>include</option>
+            </command>
+            <option>path</option>
+        </term>
+        <listitem>
+            <para>Loads the configfile at path, places the
+            configsettings behind the configsettings in the orginal
+            config and places the vars where the includevar
+            stood.</para>
+        </listitem>
     </varlistentry>
     <varlistentry>
         <term>
@@ -1678,9 +1819,11 @@
             <command>
                 <option>loadavg</option>
             </command>
+            <option>(1|2|3)</option>
         </term>
-        <listitem>(1,2,3)&gt; System load average, 1 is for past 1
-        minute, 2 for past 5 minutes and 3 for past 15 minutes. 
+        <listitem>System load average, 1 is for past 1 minute, 2
+	for past 5 minutes and 3 for past 15 minutes. Without argument, prints
+	all three values separated by whitespace.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1688,13 +1831,15 @@
             <command>
                 <option>loadgraph</option>
             </command>
-            <option>("normal"|"log") (height),(width) (gradient
-            colour 1) (gradient colour 2) (scale)</option>
+            <option>(height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>Load1 average graph, similar to xload, with
         optional colours in hex, minus the #. Uses a logarithmic
-        scale (to see small numbers) when you use "log" instead of
-        "normal". 
+        scale (to see small numbers) when you use the -l switch.
+        Takes the switch '-t' to use a temperature gradient, which
+        makes the gradient values change depending on the amplitude
+        of a particular graph value (try it and see). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1706,7 +1851,10 @@
         </term>
         <listitem>Executes a Lua function with given parameters,
         then prints the returned string. See also 'lua_load' on how
-        to load scripts. 
+        to load scripts. Conky puts 'conky_' in front of
+        function_name to prevent accidental calls to the wrong
+        function unless you put you place 'conky_' in front of it
+        yourself. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1719,7 +1867,10 @@
         </term>
         <listitem>Executes a Lua function with given parameters and
         draws a bar. Expects result value to be an integer between
-        0 and 100. See also 'lua_load' on how to load scripts. 
+        0 and 100. See also 'lua_load' on how to load scripts.
+        Conky puts 'conky_' in front of function_name to prevent
+        accidental calls to the wrong function unless you put you
+        place 'conky_' in front of it yourself. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1733,7 +1884,9 @@
         <listitem>Executes a Lua function with given parameters and
         draws a gauge. Expects result value to be an integer
         between 0 and 100. See also 'lua_load' on how to load
-        scripts. 
+        scripts. Conky puts 'conky_' in front of function_name to
+        prevent accidental calls to the wrong function unless you
+        put you place 'conky_' in front of it yourself. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1741,14 +1894,18 @@
             <command>
                 <option>lua_graph</option>
             </command>
-            <option>function_name (function parameters)
-            ("normal"|"log") (height),(width) (gradient colour 1)
-            (gradient colour 2) (scale)</option>
+            <option>function_name (height),(width) (gradient colour
+            1) (gradient colour 2) (scale) (-t) (-l)</option>
         </term>
-        <listitem>Executes a Lua function with given parameters and
-        draws a graph. Expects result value to be any number, and
-        by default will scale to show the full range. See also
-        'lua_load' on how to load scripts. 
+        <listitem>Executes a Lua function with and draws a graph.
+        Expects result value to be any number, and by default will
+        scale to show the full range. See also 'lua_load' on how to
+        load scripts. Takes the switch '-t' to use a temperature
+        gradient, which makes the gradient values change depending
+        on the amplitude of a particular graph value (try it and
+        see). Conky puts 'conky_' in front of function_name to
+        prevent accidental calls to the wrong function unless you
+        put you place 'conky_' in front of it yourself. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1761,22 +1918,10 @@
         <listitem>Executes a Lua function with given parameters as
         per $lua, then parses and prints the result value as per
         the syntax for Conky's TEXT section. See also 'lua_load' on
-        how to load scripts. 
-        <para /></listitem>
-    </varlistentry>
-    <varlistentry>
-        <term>
-            <command>
-                <option>lua_read_parse</option>
-            </command>
-            <option>function_name (conky text)</option>
-        </term>
-        <listitem>Executes a Lua function per $lua, except takes a
-        2nd argument which is first evaluated as per Conky's TEXT
-        section and passed to the function first. The return value
-        is then parsed and prints the result value as per the
-        syntax for Conky's TEXT section. See also 'lua_load' on how
-        to load scripts. 
+        how to load scripts. Conky puts 'conky_' in front of
+        function_name to prevent accidental calls to the wrong
+        function unless you put you place 'conky_' in front of it
+        yourself. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1871,11 +2016,14 @@
             <command>
                 <option>memgraph</option>
             </command>
-            <option>("normal"|"log") (height),(width) (gradient
-            colour 1) (gradient colour 2) (scale)</option>
+            <option>(height),(width) (gradient colour 1) (gradient
+            colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>Memory usage graph. Uses a logarithmic scale (to
-        see small numbers) when you use "log" instead of "normal". 
+        see small numbers) when you use the -l switch. Takes the
+        switch '-t' to use a temperature gradient, which makes the
+        gradient values change depending on the amplitude of a
+        particular graph value (try it and see). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1904,15 +2052,10 @@
             <option>(device)</option>
         </term>
         <listitem>Prints the mixer value as reported by the OS.
-        Default mixer is "vol", but you can specify one of the
-        following optional arguments: "vol", "bass", "treble",
-        "synth", "pcm", "speaker", "line", "mic", "cd", "mix",
-        "pcm2", "rec", "igain", "ogain", "line1", "line2", "line3",
-        "dig1", "dig2", "dig3", "phin", "phout", "video", "radio",
-        "monitor". Refer to the definition of SOUND_DEVICE_NAMES in
-        &lt;linux/soundcard.h&gt; (on Linux), &lt;soundcard.h&gt;
-        (on OpenBSD), or &lt;sys/soundcard.h&gt; to find the exact
-        options available on your system. 
+        Default mixer is "Master", but you can specify one of the
+        available ALSA Simple mixer controls.
+        You can find the list of those available on your system
+        using amixer.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2077,7 +2220,8 @@
                 <option>monitor</option>
             </command>
         </term>
-        <listitem>Number of the monitor on which conky is running 
+        <listitem>Number of the monitor on which conky is running
+        or the message "Not running in X" if this is the case. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2086,7 +2230,8 @@
                 <option>monitor_number</option>
             </command>
         </term>
-        <listitem>Number of monitors 
+        <listitem>Number of monitors or the message "Not running in
+        X" if this is the case. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2289,23 +2434,33 @@
         other values as integer. 
         <simplelist>
             <member>
-            <command>threshold</command>: the thresholdtemperature
-            at which the gpu slows down</member>
+		<command>threshold</command>
+		<option>The thresholdtemperature at
+			which the gpu slows down</option>
+            </member>
             <member>
-            <command>temp</command>: gives the gpu current
-            temperature</member>
+		<command>temp</command>
+		<option>Gives the gpu current
+			temperature</option>
+            </member>
             <member>
-            <command>ambient</command>: gives current air
-            temperature near GPU case</member>
+                <command>ambient</command>
+                <option>Gives current air temperature near GPU
+                case</option>
+            </member>
             <member>
-            <command>gpufreq</command>: gives the current gpu
-            frequency</member>
+                <command>gpufreq</command>
+                <option>Gives the current gpu frequency</option>
+            </member>
             <member>
-            <command>memfreq</command>: gives the current mem
-            frequency</member>
+                <command>memfreq</command>
+                <option>Gives the current mem frequency</option>
+            </member>
             <member>
-            <command>imagequality</command>: which imagequality
-            should be choosen by OpenGL applications</member>
+                <command>imagequality</command>
+                <option>Which imagequality should be chosen by
+                OpenGL applications</option>
+            </member>
         </simplelist>
         <para /></listitem>
     </varlistentry>
@@ -2342,21 +2497,430 @@
         must be specified. Valid items are: 
         <simplelist>
             <member>
-            <command>status</command>: Display if battery is fully
-            charged, charging, discharging or absent (running on
-            AC)</member>
+                <command>status</command>
+                <option>Display if battery is fully charged,
+                charging, discharging or absent (running on
+                AC)</option>
+            </member>
             <member>
-            <command>percent</command>: Display charge of battery
-            in percent, if charging or discharging. Nothing will be
-            displayed, if battery is fully charged or
-            absent.</member>
+                <command>percent</command>
+                <option>Display charge of battery in percent, if
+                charging or discharging. Nothing will be displayed,
+                if battery is fully charged or absent.</option>
+            </member>
             <member>
-            <command>time</command>: Display the time remaining
-            until the battery will be fully charged or discharged
-            at current rate. Nothing is displayed, if battery is
-            absent or if it's present but fully charged and not
-            discharging.</member>
+                <command>time</command>
+                <option>Display the time remaining until the
+                battery will be fully charged or discharged at
+                current rate. Nothing is displayed, if battery is
+                absent or if it's present but fully charged and not
+                discharging.</option>
+            </member>
         </simplelist>
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_chroot</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Directory used as rootdirectory by the process
+	(this will be "/" unless the process did a chroot syscall)
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_cmdline</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Command line this process was invoked with
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_cwd</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Current working directory of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_environ</option>
+            </command>
+            <option>pid varname</option>
+        </term>
+        <listitem>Contents of a environment-var of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_environ_list</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>List of environment-vars that the process can see
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_exe</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Path to executed command that started the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_nice</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The nice value of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_openfiles</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>List of files that the process has open
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_parent</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The pid of the parent of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_priority</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The priority of the process (see 'priority' in "man 5 proc")
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_read</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Total number of bytes read by the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_state</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>State of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_state_short</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>One of the chars in "RSDZTW" representing the state
+	of the process where R is running, S is sleeping in an
+	interruptible wait, D is waiting in uninterruptible disk sleep,
+	Z is zombie, T is traced or stopped (on a signal), and W is paging
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_stderr</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Filedescriptor binded to the STDERR of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_stdin</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Filedescriptor binded to the STDIN of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_stdout</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Filedescriptor binded to the STDOUT of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_threads</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Number of threads in process containing this thread
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_thread_list</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>List with pid's from threads from this process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_time_kernelmode</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Amount of time that the process has been scheduled in kernel mode in seconds
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_time_usermode</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Amount of time that the process has been scheduled in user mode in seconds
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_time</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Sum of $pid_time_kernelmode and $pid_time_usermode
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_uid</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The real uid of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_euid</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The effective uid of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_suid</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The saved set uid of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_fsuid</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The file system uid of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_gid</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The real gid of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_egid</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The effective gid of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_sgid</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The saved set gid of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_fsgid</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>The file system gid of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmpeak</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Peak virtual memory size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmsize</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Virtual memory size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmlck</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Locked memory size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmhwm</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Peak resident set size ("high water mark") of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmrss</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Resident set size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmdata</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Data segment size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmstk</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Stack segment size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmexe</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Text segment size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmlib</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Shared library code size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_vmpte</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Page table entries size of the process
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>pid_write</option>
+            </command>
+            <option>pid</option>
+        </term>
+        <listitem>Total number of bytes written by the process
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2387,9 +2951,9 @@
         </term>
         <listitem>Displays the number of unseen messages in your
         global POP3 inbox by default. You can define individual
-        POP3 inboxes seperately by passing arguments to this
+        POP3 inboxes separately by passing arguments to this
         object. Arguments are: "host user pass [-i interval (in
-        seconds)] [-p port] [-e command] [-r retries]". Default
+        seconds)] [-p port] [-e 'command'] [-r retries]". Default
         port is 110, default interval is 5 minutes, and default
         number of retries before giving up is 5. If the password is
         supplied as '*', you will be prompted to enter the password
@@ -2405,9 +2969,9 @@
         </term>
         <listitem>Displays the amount of space (in MiB, 2^20) used
         in your global POP3 inbox by default. You can define
-        individual POP3 inboxes seperately by passing arguments to
+        individual POP3 inboxes separately by passing arguments to
         this object. Arguments are: "host user pass [-i interval
-        (in seconds)] [-p port] [-e command] [-r retries]". Default
+        (in seconds)] [-p port] [-e 'command'] [-r retries]". Default
         port is 110, default interval is 5 minutes, and default
         number of retries before giving up is 5. If the password is
         supplied as '*', you will be prompted to enter the password
@@ -2437,6 +3001,18 @@
     <varlistentry>
         <term>
             <command>
+                <option>read_tcp</option>
+            </command>
+            <option>(host) port</option>
+        </term>
+        <listitem>Connects to a tcp port on a host (default is
+        localhost), reads every char available at the moment and
+        shows them. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>replied_mails</option>
             </command>
             <option>(maildir)</option>
@@ -2452,15 +3028,22 @@
             <command>
                 <option>rss</option>
             </command>
-            <option>url delay_in_minutes action (num_par
+            <option>uri interval_in_minutes action (num_par
             (spaces_in_front))</option>
         </term>
-        <listitem>Download and parse RSS feeds. Action may be one
-        of the following: feed_title, item_title (with num par),
-        item_desc (with num par) and item_titles (when using this
-        action and spaces_in_front is given conky places that many
-        spaces in front of each item). 
-        <para /></listitem>
+        <listitem>
+            <para>Download and parse RSS feeds. The interval may be
+            a floating point value greater than 0, otherwise
+            defaults to 15 minutes. Action may be one of the
+            following: feed_title, item_title (with num par),
+            item_desc (with num par) and item_titles (when using
+            this action and spaces_in_front is given conky places
+            that many spaces in front of each item). This object is
+            threaded, and once a thread is created it can't be
+            explicitly destroyed. One thread will run for each URI
+            specified. You can use any protocol that Curl
+            supports.</para>
+        </listitem>
     </varlistentry>
     <varlistentry>
         <term>
@@ -2475,6 +3058,15 @@
     <varlistentry>
         <term>
             <command>
+                <option>running_threads</option>
+            </command>
+        </term>
+        <listitem>Number of running (runnable) threads. Linux only.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>scroll</option>
             </command>
             <option>length (step) text</option>
@@ -2484,12 +3076,10 @@
         may also contain variables. 'step' is optional and defaults
         to 1 if not set. If a var creates output on multiple lines
         then the lines are placed behind each other separated with
-        a '|'-sign. Do NOT use vars that change colors or otherwise
-        affect the design inside a scrolling text. If you want
-        spaces between the start and the end of 'text', place them
-        at the end of 'text' not at the front ("foobar" and "
-        foobar" can both generate "barfoo" but "foobar " will keep
-        the spaces like this "bar foo"). 
+        a '|'-sign. If you change the textcolor inside $scroll it
+        will automatically have it's old value back at the end of
+        $scroll. The end and the start of text will be separated by
+        'length' number of spaces. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2623,6 +3213,15 @@
     <varlistentry>
         <term>
             <command>
+                <option>swapfree</option>
+            </command>
+        </term>
+        <listitem>Amount of free swap 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>swapmax</option>
             </command>
         </term>
@@ -2663,12 +3262,12 @@
             <command>
                 <option>tail</option>
             </command>
-            <option>logfile lines (interval)</option>
+            <option>logfile lines (next_check)</option>
         </term>
-        <listitem>Displays last N lines of supplied text text file.
-        If interval is not supplied, Conky assumes 2x Conky's
-        interval. Max of 30 lines can be displayed, or until the
-        text buffer is filled. 
+        <listitem>Displays last N lines of supplied text file. The
+        file is checked every 'next_check' update. If next_check is
+        not supplied, Conky defaults to 2. Max of 30 lines can be
+        displayed, or until the text buffer is filled. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2677,70 +3276,103 @@
                 <option>tcp_portmon</option>
             </command>
             <option>port_begin port_end item (index)</option>
-            <emphasis>(ip4 only at present)</emphasis>
         </term>
-        <listitem>TCP port monitor for specified local ports. Port
-        numbers must be in the range 1 to 65535. Valid items are: 
-        <simplelist>
-            <member>
-            <command>count</command>- total number of connections
-            in the range</member>
-            <member>
-            <command>rip</command>- remote ip address</member>
-            <member>
-            <command>rhost</command>- remote host name</member>
-            <member>
-            <command>rport</command>- remote port number</member>
-            <member>
-            <command>rservice</command>- remote service name from
-            /etc/services</member>
-            <member>
-            <command>lip</command>- local ip address</member>
-            <member>
-            <command>lhost</command>- local host name</member>
-            <member>
-            <command>lport</command>- local port number</member>
-            <member>
-            <command>lservice</command>- local service name from
-            /etc/services</member>
-        </simplelist>The connection index provides you with access
-        to each connection in the port monitor. The monitor will
-        return information for index values from 0 to n-1
-        connections. Values higher than n-1 are simply ignored. For
-        the "count" item, the connection index must be omitted. It
-        is required for all other items. 
-        <simplelist>
-            <member>Examples:</member>
-            <member>
-            <command>${tcp_portmon 6881 6999 count}</command>-
-            displays the number of connections in the bittorrent
-            port range</member>
-            <member>
-            <command>${tcp_portmon 22 22 rip 0}</command>- displays
-            the remote host ip of the first sshd
-            connection</member>
-            <member>
-            <command>${tcp_portmon 22 22 rip 9}</command>- displays
-            the remote host ip of the tenth sshd
-            connection</member>
-            <member>
-            <command>${tcp_portmon 1 1024 rhost 0}</command>-
-            displays the remote host name of the first connection
-            on a privileged port</member>
-            <member>
-            <command>${tcp_portmon 1 1024 rport 4}</command>-
-            displays the remote host port of the fifth connection
-            on a privileged port</member>
-            <member>
-            <command>${tcp_portmon 1 65535 lservice 14}</command>-
-            displays the local service name of the fifteenth
-            connection in the range of all ports</member>
-        </simplelist>Note that port monitor variables which share
-        the same port range actually refer to the same monitor, so
-        many references to a single port range for different items
-        and different indexes all use the same monitor internally.
-        In other words, the program avoids creating redundant
-        monitors.</listitem>
+        <listitem>
+            <para>TCP port (both IPv6 and IPv4) monitor for
+            specified local ports. Port numbers must be in
+            the range 1 to 65535. Valid items are:</para>
+            <simplelist>
+                <member>
+                    <command>count</command>
+                    <option>Total number of connections in the
+                    range</option>
+                </member>
+                <member>
+                    <command>rip</command>
+                    <option>Remote ip address</option>
+                </member>
+                <member>
+                    <command>rhost</command>
+                    <option>Remote host name</option>
+                </member>
+                <member>
+                    <command>rport</command>
+                    <option>Remote port number</option>
+                </member>
+                <member>
+                    <command>rservice</command>
+                    <option>Remote service name from
+                    /etc/services</option>
+                </member>
+                <member>
+                    <command>lip</command>
+                    <option>Local ip address</option>
+                </member>
+                <member>
+                    <command>lhost</command>
+                    <option>Local host name</option>
+                </member>
+                <member>
+                    <command>lport</command>
+                    <option>Local port number</option>
+                </member>
+                <member>
+                    <command>lservice</command>
+                    <option>Local service name from
+                    /etc/services</option>
+                </member>
+            </simplelist>
+            <para>The connection index provides you with access to
+            each connection in the port monitor. The monitor will
+            return information for index values from 0 to n-1
+            connections. Values higher than n-1 are simply ignored.
+            For the "count" item, the connection index must be
+            omitted. It is required for all other items.</para>
+            <para>Examples:</para>
+            <simplelist>
+                <member>
+                    <command>${tcp_portmon 6881 6999
+                    count}</command>
+                    <option>Displays the number of connections in
+                    the bittorrent port range</option>
+                </member>
+                <member>
+                    <command>${tcp_portmon 22 22 rip 0}</command>
+                    <option>Displays the remote host ip of the
+                    first sshd connection</option>
+                </member>
+                <member>
+                    <command>${tcp_portmon 22 22 rip 9}</command>
+                    <option>Displays the remote host ip of the
+                    tenth sshd connection</option>
+                </member>
+                <member>
+                    <command>${tcp_portmon 1 1024 rhost
+                    0}</command>
+                    <option>Displays the remote host name of the
+                    first connection on a privileged port</option>
+                </member>
+                <member>
+                    <command>${tcp_portmon 1 1024 rport
+                    4}</command>
+                    <option>Displays the remote host port of the
+                    fifth connection on a privileged port</option>
+                </member>
+                <member>
+                    <command>${tcp_portmon 1 65535 lservice
+                    14}</command>
+                    <option>Displays the local service name of the
+                    fifteenth connection in the range of all
+                    ports</option>
+                </member>
+            </simplelist>
+            <para>Note that port monitor variables which share the
+            same port range actually refer to the same monitor, so
+            many references to a single port range for different
+            items and different indexes all use the same monitor
+            internally. In other words, the program avoids creating
+            redundant monitors.</para>
+        </listitem>
     </varlistentry>
     <varlistentry>
         <term>
@@ -2751,59 +3383,63 @@
             <option>(arg2)</option>
             <option>(arg3 ...)</option>
         </term>
-        <listitem>Evaluate the content of the templateN
-        configuration variable (where N is a value between 0 and 9,
-        inclusively), applying substitutions as described in the
-        documentation of the corresponding configuration variable.
-        The number of arguments is optional, but must match the
-        highest referred index in the template. You can use the
-        same special sequences in each argument as the ones valid
-        for a template definition, e.g. to allow an argument to
-        contain a whitespace. Also simple nesting of templates is
-        possible this way. 
-        <para /></listitem>
-        <listitem>Here are some examples of template definitions: 
-        <simplelist>
-            <member>template0 $\1\2</member>
-            <member>template1 \1: ${fs_used \2} / ${fs_size
-            \2}</member>
-            <member>template2 \1 \2</member>
-        </simplelist>The following list shows sample usage of the
-        templates defined above, with the equivalent syntax when
-        not using any template at all: 
-        <table>
-            <tgroup cols="2">
-                <thead>
-                    <row rowsep="1">
-                        <entry>using template</entry>
-                        <entry>same without template</entry>
-                    </row>
-                </thead>
-                <tbody>
-                    <row>
-                        <entry>${template0 node name}</entry>
-                        <entry>$nodename</entry>
-                    </row>
-                    <row>
-                        <entry>${template1 root /}</entry>
-                        <entry>root: ${fs_free /} / ${fs_size
-                        /}</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <programlisting>${template1
-                            ${template2\ disk\ root}
-                            /}</programlisting>
-                        </entry>
-                        <entry>
-                            <programlisting>disk root: ${fs_free /}
-                            / ${fs_size /}</programlisting>
-                        </entry>
-                    </row>
-                </tbody>
-            </tgroup>
-        </table>
-        <para /></listitem>
+        <listitem>
+            <para>Evaluate the content of the templateN
+            configuration variable (where N is a value between 0
+            and 9, inclusively), applying substitutions as
+            described in the documentation of the corresponding
+            configuration variable. The number of arguments is
+            optional, but must match the highest referred index in
+            the template. You can use the same special sequences in
+            each argument as the ones valid for a template
+            definition, e.g. to allow an argument to contain a
+            whitespace. Also simple nesting of templates is
+            possible this way.</para>
+            <para>Here are some examples of template
+            definitions:</para>
+            <simplelist>
+                <member>template0 $\1\2</member>
+                <member>template1 \1: ${fs_used \2} / ${fs_size
+                \2}</member>
+                <member>template2 \1 \2</member>
+            </simplelist>
+            <para>The following list shows sample usage of the
+            templates defined above, with the equivalent syntax
+            when not using any template at all:</para>
+            <table>
+                <tgroup cols="2">
+                    <thead>
+                        <row rowsep="1">
+                            <entry>using template</entry>
+                            <entry>same without template</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>${template0 node name}</entry>
+                            <entry>$nodename</entry>
+                        </row>
+                        <row>
+                            <entry>${template1 root /}</entry>
+                            <entry>root: ${fs_free /} / ${fs_size
+                            /}</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                ${template1
+                                ${template2\ disk\ root}
+                                /}
+                            </entry>
+                            <entry>
+                                disk root:
+                                ${fs_free /} / ${fs_size
+                                /}
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </listitem>
     </varlistentry>
     <varlistentry>
         <term>
@@ -2819,7 +3455,19 @@
         longer then the time it takes your script to execute. For
         example, if you have a script that take 5 seconds to
         execute, you should make the interval at least 6 seconds.
-        See also $execi. 
+        See also $execi. This object will clean up the thread when
+        it is destroyed, so it can safely be used in a nested
+        fashion, though it may not produce the desired behaviour if
+        used this way. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>threads</option>
+            </command>
+        </term>
+        <listitem>Total threads
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2836,16 +3484,39 @@
     <varlistentry>
         <term>
             <command>
+                <option>to_bytes</option>
+            </command>
+            <option>size</option>
+        </term>
+        <listitem>If 'size' is a number followed by a size-unit
+        (kilobyte,mb,GiB,...) then it converts the size to bytes
+        and shows it without unit, otherwise it just shows 'size'. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>top</option>
             </command>
-            <option>type, num</option>
+            <option>type num</option>
         </term>
         <listitem>This takes arguments in the form:top (name)
         (number) Basically, processes are ranked from highest to
         lowest in terms of cpu usage, which is what (num)
         represents. The types are: "name", "pid", "cpu", "mem",
-        "mem_res", "mem_vsize", and "time". There can be a max of
-        10 processes listed. 
+        "mem_res", "mem_vsize", "time", "io_perc", "io_read" and
+        "io_write". There can be a max of 10 processes listed. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>top_io</option>
+            </command>
+            <option>type num</option>
+        </term>
+        <listitem>Same as top, except sorted by the amount of I/O
+        the process has done during the update interval 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2853,7 +3524,7 @@
             <command>
                 <option>top_mem</option>
             </command>
-            <option>type, num</option>
+            <option>type num</option>
         </term>
         <listitem>Same as top, except sorted by mem usage instead
         of cpu 
@@ -2864,7 +3535,7 @@
             <command>
                 <option>top_time</option>
             </command>
-            <option>type, num</option>
+            <option>type num</option>
         </term>
         <listitem>Same as top, except sorted by total CPU time
         instead of current CPU usage 
@@ -2875,7 +3546,7 @@
             <command>
                 <option>totaldown</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Total download, overflows at 4 GB on Linux with
         32-bit arch and there doesn't seem to be a way to know how
@@ -2888,7 +3559,7 @@
             <command>
                 <option>totalup</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Total upload, this one too, may overflow 
         <para /></listitem>
@@ -2911,13 +3582,33 @@
             <command>
                 <option>tztime</option>
             </command>
-            <option>(timezone) (format)</option>
+            <option>(timezone (format))</option>
         </term>
         <listitem>Local time for specified timezone, see man
         strftime to get more information about format. The timezone
         argument is specified in similar fashion as TZ environment
         variable. For hints, look in /usr/share/zoneinfo. e.g.
         US/Pacific, Europe/Zurich, etc. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>gid_name</option>
+            </command>
+            <option>gid</option>
+        </term>
+        <listitem>Name of group with this gid
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>uid_name</option>
+            </command>
+            <option>uid</option>
+        </term>
+        <listitem>Username of user with this uid
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2987,9 +3678,9 @@
             <command>
                 <option>upspeed</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
-        <listitem>Upload speed in KiB 
+        <listitem>Upload speed in suitable IEC units 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2997,7 +3688,7 @@
             <command>
                 <option>upspeedf</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Upload speed in KiB with one decimal 
         <para /></listitem>
@@ -3007,14 +3698,16 @@
             <command>
                 <option>upspeedgraph</option>
             </command>
-            <option>(netdev) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</option>
+            <option>(netdev) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</option>
         </term>
         <listitem>Upload speed graph, colours defined in hex, minus
         the #. If scale is non-zero, it becomes the scale for the
         graph. Uses a logarithmic scale (to see small numbers) when
-        you use "log" instead of "normal". 
+        you use the -l switch. Takes the switch '-t' to use a
+        temperature gradient, which makes the gradient values
+        change depending on the amplitude of a particular graph
+        value (try it and see). 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -3074,6 +3767,17 @@
     <varlistentry>
         <term>
             <command>
+                <option>user_time</option>
+            </command>
+	    <option>console</option>
+        </term>
+        <listitem>Lists how long the user for the given console has been
+        logged in for
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>utime</option>
             </command>
             <option>(format)</option>
@@ -3117,9 +3821,185 @@
     <varlistentry>
         <term>
             <command>
+                <option>weather</option>
+            </command>
+            <option>URI locID data_type
+            (interval_in_minutes)</option>
+        </term>
+        <listitem>
+            <para>Download, parse and display METAR data.</para>
+            <para>For the 'URI', there are two
+            possibilities:</para>
+            <simplelist>
+                <member>
+                http://weather.noaa.gov/pub/data/observations/metar/stations/</member>
+                <member>
+                http://xoap.weather.com/weather/local/</member>
+            </simplelist>
+            <para>The first one is free to use but the second
+            requires you to register and obtain your partner ID and
+            license key. These two must be written, separated by a
+            space, into a file called .xoaprc which needs to be
+            placed into your home directory.</para>
+            <para>'locID' must be a valid location identifier for
+            the required uri. For the NOAA site this must be a
+            valid ICAO (see for instance
+            https://pilotweb.nas.faa.gov/qryhtml/icao/). For the
+            weather.com site this must be a valid location ID (see
+            for instance
+            http://aspnetresources.com/tools/locid.aspx).</para>
+            <para>'data_type' must be one of the following:</para>
+            <simplelist>
+                <member>
+                    <command>last_update</command>
+                    <para>The date and time stamp of the data.
+                    The result depends on the URI used. For the
+                    NOAA site it is date (yyyy/mm/dd) and UTC time.
+                    For the weather.com one it is date
+                    ([m]m/[d]d/yy) and Local Time of the
+                    station.</para>
+                </member>
+                <member>
+                    <command>temperature</command>
+					<para>Air temperature (you can use the
+                    'temperature_unit' config setting to change
+					units)</para>
+                </member>
+                <member>
+                    <command>cloud_cover</command>
+                    <para>The highest cloud cover status</para>
+                </member>
+                <member>
+                    <command>pressure</command>
+                    <para>Air pressure in millibar</para>
+                </member>
+                <member>
+                    <command>wind_speed</command>
+                    <para>Wind speed in km/h</para>
+                </member>
+                <member>
+                    <command>wind_dir</command>
+                    <para>Wind direction</para>
+                </member>
+                <member>
+                    <command>wind_dir_DEG</command>
+                    <para>Compass wind direction</para>
+                </member>
+                <member>
+                    <command>humidity</command>
+                    <para>Relative humidity in %</para>
+                </member>
+                <member>
+                    <command>weather</command>
+                    <para>Any relevant weather event (rain, snow,
+                    etc.). This is not used if you are querying the
+                    weather.com site since this data is aggregated
+                    into the cloud_cover one</para>
+                </member>
+                <member>
+                    <command>icon</command>
+                    <para>Weather icon (only for
+                    www.weather.com). Can be used together with the
+                    icon kit provided upon registering to their
+                    service.</para>
+                </member>
+            </simplelist>
+            <para>'delay_in_minutes' (optional, default 30) cannot
+            be less than 30 minutes.</para>
+            <para>This object is threaded, and once a thread is
+            created it can't be explicitly destroyed. One thread
+            will run for each URI specified.</para>
+            <para>Note that these variables are still EXPERIMENTAL
+            and can be subject to many future changes.</para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>weather_forecast</option>
+            </command>
+            <option>URI locID day data_type
+            (interval_in_minutes)</option>
+        </term>
+        <listitem>
+            <para>Download, parse and display weather forecast data
+	    for a given day (daytime only).</para>
+            <para>For the 'URI', for the time being only
+            http://xoap.weather.com/weather/local/ is
+	    supported. See 'weather' above for details of usage</para>
+            <para>'locID', see 'weather' above.</para>
+            <para>'day' is a number from 0 (today) to 4 (3 days
+            after tomorrow).</para>
+            <para>'data_type' must be one of the following:</para>
+            <simplelist>
+                <member>
+                    <command>day</command>
+					<option>Day of the week</option>
+				</member>
+                <member>
+                    <command>date</command>
+					<option>Date, in the form MMM DD (ie. Jul 14)</option>
+				</member>
+                <member>
+                    <command>low</command>
+					<option>Minimun temperature (you can use the
+                    'temperature_unit' config setting to change
+                    units)</option>
+				</member>
+                <member>
+                    <command>hi</command>
+					<option>Maximum temperature (you can use the
+                    'temperature_unit' config setting to change
+                    units)</option>
+				</member>
+                <member>
+                    <command>icon</command>
+                    <option>Weather icon. Can be used together with the
+                    icon kit provided upon registering to the weather.com
+                    service</option>
+				</member>
+                <member>
+                    <command>forecast</command>
+                    <option>Weather forecast (sunny, rainy, etc.)</option>
+				</member>
+                <member>
+                    <command>wind_speed</command>
+                    <option>Wind speed in km/h</option>
+                </member>
+                <member>
+                    <command>wind_dir</command>
+                    <option>Wind direction</option>
+                </member>
+                <member>
+                    <command>wind_dir_DEG</command>
+                    <option>Compass wind direction</option>
+                </member>
+                <member>
+                    <command>humidity</command>
+                    <option>Relative humidity in %</option>
+                </member>
+                <member>
+                    <command>precipitation</command>
+                    <option>Probability of having a
+					precipitation (in %)</option>
+                </member>
+            </simplelist>
+            <para>'delay_in_minutes' (optional, default 210) cannot
+            be lower than 210 min.</para>
+            <para>This object is threaded, and once a thread is
+            created it can't be explicitly destroyed. One thread
+            will run for each URI specified. You can use any
+            protocol that Curl supports.</para>
+            <para>Note that these variables are still EXPERIMENTAL
+            and can be subject to many future changes.</para>
+	</listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>wireless_ap</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Wireless access point MAC address (Linux only) 
         <para /></listitem>
@@ -3129,7 +4009,7 @@
             <command>
                 <option>wireless_bitrate</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Wireless bitrate (ie 11 Mb/s) (Linux only) 
         <para /></listitem>
@@ -3139,7 +4019,7 @@
             <command>
                 <option>wireless_essid</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Wireless access point ESSID (Linux only) 
         <para /></listitem>
@@ -3149,7 +4029,7 @@
             <command>
                 <option>wireless_link_bar</option>
             </command>
-            <option>(height), (width) net</option>
+            <option>(height),(width) (net)</option>
         </term>
         <listitem>Wireless link quality bar (Linux only) 
         <para /></listitem>
@@ -3159,7 +4039,7 @@
             <command>
                 <option>wireless_link_qual</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Wireless link quality (Linux only) 
         <para /></listitem>
@@ -3169,7 +4049,7 @@
             <command>
                 <option>wireless_link_qual_max</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Wireless link quality maximum value (Linux only) 
         <para /></listitem>
@@ -3179,7 +4059,7 @@
             <command>
                 <option>wireless_link_qual_perc</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Wireless link quality in percents (Linux only) 
         <para /></listitem>
@@ -3189,7 +4069,7 @@
             <command>
                 <option>wireless_mode</option>
             </command>
-            <option>net</option>
+            <option>(net)</option>
         </term>
         <listitem>Wireless mode (Managed/Ad-Hoc/Master) (Linux
         only) 

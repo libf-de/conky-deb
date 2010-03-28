@@ -1,4 +1,6 @@
-/* tcp-portmon.h - libtcp-portmon hooks protoypes
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * tcp-portmon.h - libtcp-portmon hooks protoypes
  *
  * Copyright (C) 2008 Phil Sutter <Phil@nwl.cc>
  *
@@ -33,10 +35,14 @@ struct tcp_port_monitor_data {
 	int connection_index;
 };
 
-int tcp_portmon_init(const char *, struct tcp_port_monitor_data *);
-int tcp_portmon_action(char *, int, struct tcp_port_monitor_data *);
-int tcp_portmon_update(void);
+/* forward declare to make gcc happy */
+struct text_object;
+
+int tcp_portmon_init(struct text_object *, const char *);
+int tcp_portmon_action(struct text_object *, char *, int);
+void tcp_portmon_update(void);
 int tcp_portmon_clear(void);
 int tcp_portmon_set_max_connections(int);
+void tcp_portmon_free(struct text_object *);
 
 #endif /* _TCP_PORTMON_H */

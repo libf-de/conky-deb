@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -8,7 +11,7 @@
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
  * Copyright (c) 2007 Toni Spets
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -30,10 +33,14 @@
 #include "config.h"
 #include "ibm.h"
 #include "logging.h"
+#include "temphelper.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+
+static int ibm_acpi_temps[8];
 
 /* Here come the IBM ACPI-specific things. For reference, see
  * http://ibm-acpi.sourceforge.net/README
@@ -66,13 +73,15 @@ speed:          2944
 commands:       enable, disable
  * Peter Tarjan (ptarjan@citromail.hu) */
 
-void get_ibm_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
+void get_ibm_acpi_fan(struct text_object *obj, char *p, int p_max_size)
 {
 	FILE *fp;
 	unsigned int speed = 0;
 	char fan[128];
 
-	if (!p_client_buffer || client_buffer_size <= 0) {
+	(void)obj;
+
+	if (!p || p_max_size <= 0) {
 		return;
 	}
 
@@ -91,12 +100,12 @@ void get_ibm_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
 			}
 		}
 	} else {
-		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
+		CRIT_ERR(NULL, NULL, "can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
 			"ibm* from your "PACKAGE_NAME" config file.", fan, strerror(errno));
 	}
 
 	fclose(fp);
-	snprintf(p_client_buffer, client_buffer_size, "%d", speed);
+	snprintf(p, p_max_size, "%d", speed);
 }
 
 /* get the measured temperatures from the temperature sensors
@@ -120,22 +129,11 @@ void get_ibm_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
 temperatures:   41 43 31 46 33 -128 29 -128
  * Peter Tarjan (ptarjan@citromail.hu) */
 
-static double last_ibm_acpi_temp_time;
 void get_ibm_acpi_temps(void)
 {
 
 	FILE *fp;
 	char thermal[128];
-
-	/* don't update too often */
-	if (current_update_time - last_ibm_acpi_temp_time < 10.00) {
-		return;
-	}
-	last_ibm_acpi_temp_time = current_update_time;
-
-	/* if (!p_client_buffer || client_buffer_size <= 0) {
-		return;
-	} */
 
 	snprintf(thermal, 127, "%s/thermal", IBM_ACPI_DIR);
 	fp = fopen(thermal, "r");
@@ -148,14 +146,14 @@ void get_ibm_acpi_temps(void)
 				break;
 			}
 			if (sscanf(line, "temperatures: %d %d %d %d %d %d %d %d",
-					&ibm_acpi.temps[0], &ibm_acpi.temps[1], &ibm_acpi.temps[2],
-					&ibm_acpi.temps[3], &ibm_acpi.temps[4], &ibm_acpi.temps[5],
-					&ibm_acpi.temps[6], &ibm_acpi.temps[7])) {
+					&ibm_acpi_temps[0], &ibm_acpi_temps[1], &ibm_acpi_temps[2],
+					&ibm_acpi_temps[3], &ibm_acpi_temps[4], &ibm_acpi_temps[5],
+					&ibm_acpi_temps[6], &ibm_acpi_temps[7])) {
 				break;
 			}
 		}
 	} else {
-		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
+		CRIT_ERR(NULL, NULL, "can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
 			"ibm* from your "PACKAGE_NAME" config file.", thermal, strerror(errno));
 	}
 
@@ -172,14 +170,16 @@ commands:       up, down, mute
 commands:       level <level> (<level> is 0-15)
  * Peter Tarjan (ptarjan@citromail.hu) */
 
-void get_ibm_acpi_volume(char *p_client_buffer, size_t client_buffer_size)
+void get_ibm_acpi_volume(struct text_object *obj, char *p, int p_max_size)
 {
 	FILE *fp;
 	char volume[128];
 	unsigned int vol = -1;
 	char mute[3] = "";
 
-	if (!p_client_buffer || client_buffer_size <= 0) {
+	(void)obj;
+
+	if (!p || p_max_size <= 0) {
 		return;
 	}
 
@@ -203,19 +203,16 @@ void get_ibm_acpi_volume(char *p_client_buffer, size_t client_buffer_size)
 			}
 		}
 	} else {
-		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
+		CRIT_ERR(NULL, NULL, "can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
 			"ibm* from your "PACKAGE_NAME" config file.", volume, strerror(errno));
 	}
 
 	fclose(fp);
 
-	if (strcmp(mute, "on") == 0) {
-		snprintf(p_client_buffer, client_buffer_size, "%s", "mute");
-		return;
-	} else {
-		snprintf(p_client_buffer, client_buffer_size, "%d", vol);
-		return;
-	}
+	if (strcmp(mute, "on") == 0)
+		snprintf(p, p_max_size, "%s", "mute");
+	else
+		snprintf(p, p_max_size, "%d", vol);
 }
 
 /* static FILE *fp = NULL; */
@@ -227,13 +224,15 @@ commands:       up, down
 commands:       level <level> (<level> is 0-7)
  * Peter Tarjan (ptarjan@citromail.hu) */
 
-void get_ibm_acpi_brightness(char *p_client_buffer, size_t client_buffer_size)
+void get_ibm_acpi_brightness(struct text_object *obj, char *p, int p_max_size)
 {
 	FILE *fp;
 	unsigned int brightness = 0;
 	char filename[128];
 
-	if (!p_client_buffer || client_buffer_size <= 0) {
+	(void)obj;
+
+	if (!p || p_max_size <= 0) {
 		return;
 	}
 
@@ -252,12 +251,26 @@ void get_ibm_acpi_brightness(char *p_client_buffer, size_t client_buffer_size)
 			}
 		}
 	} else {
-		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
+		CRIT_ERR(NULL, NULL, "can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
 			"ibm* from your "PACKAGE_NAME" config file.", filename, strerror(errno));
 	}
 
 	fclose(fp);
 
-	snprintf(p_client_buffer, client_buffer_size, "%d", brightness);
+	snprintf(p, p_max_size, "%d", brightness);
 }
 
+void parse_ibm_temps_arg(struct text_object *obj, const char *arg)
+{
+	if (!isdigit(arg[0]) || strlen(arg) > 1 || atoi(&arg[0]) >= 8) {
+		obj->data.l = 0;
+		NORM_ERR("Invalid temperature sensor! Sensor number must be 0 to 7. "
+				"Using 0 (CPU temp sensor).");
+	} else
+		obj->data.l = atoi(arg);
+}
+
+void print_ibm_temps(struct text_object *obj, char *p, int p_max_size)
+{
+	temp_print(p, p_max_size, ibm_acpi_temps[obj->data.l], TEMP_CELSIUS);
+}

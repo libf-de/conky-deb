@@ -1,3 +1,5 @@
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*- */
+
 #ifndef _LINUX_H
 #define _LINUX_H
 
@@ -5,38 +7,27 @@
 
 const char *get_disk_protect_queue(const char *);
 
-struct i8k_struct {
-	char *version;
-	char *bios;
-	char *serial;
-	char *cpu_temp;
-	char *left_fan_status;
-	char *right_fan_status;
-	char *left_fan_rpm;
-	char *right_fan_rpm;
-	char *ac_status;
-	char *buttons_status;
-};
-
-struct i8k_struct i8k;
-
 char *get_ioscheduler(char *);
 int get_laptop_mode(void);
+
 void update_gateway_info(void);
+void free_gateway_info(void);
+int gateway_exists(void);
+void print_gateway_iface(char *, int);
+void print_gateway_ip(char *, int);
 
 enum { PB_BATT_STATUS, PB_BATT_PERCENT, PB_BATT_TIME };
 void get_powerbook_batt_info(char *, size_t, int);
 
-int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
-	int *divisor, char *devtype);
+void parse_i2c_sensor(struct text_object *, const char *);
+void parse_hwmon_sensor(struct text_object *, const char *);
+void parse_platform_sensor(struct text_object *, const char *);
+void print_sysfs_sensor(struct text_object *, char *, int );
+void free_sysfs_sensor(struct text_object *);
 
-#define open_i2c_sensor(dev, type, n, divisor, devtype) \
-	open_sysfs_sensor("/sys/bus/i2c/devices/", dev, type, n, divisor, devtype)
-#define open_platform_sensor(dev, type, n, divisor, devtype) \
-	open_sysfs_sensor("/sys/bus/platform/devices/", dev, type, n, divisor, devtype)
-#define open_hwmon_sensor(dev, type, n, divisor, devtype) \
-	open_sysfs_sensor("/sys/class/hwmon/", dev, type, n, divisor, devtype)
+int get_entropy_avail(unsigned int *);
+int get_entropy_poolsize(unsigned int *);
 
-double get_sysfs_info(int *fd, int arg, char *devtype, char *type);
+void update_stat(void);
 
 #endif /* _LINUX_H */

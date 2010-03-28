@@ -1,4 +1,7 @@
-/* temphelper.c:  aid in converting temperature units
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * temphelper.c:  aid in converting temperature units
  *
  * Copyright (C) 2008 Phil Sutter <Phil@nwl.cc>
  *
@@ -30,22 +33,19 @@
 /* default to output in celsius */
 static enum TEMP_UNIT output_unit = TEMP_CELSIUS;
 
-static double
-fahrenheit_to_celsius(double n)
+static double fahrenheit_to_celsius(double n)
 {
 	return ((n - 32) * 5 / 9);
 }
 
-static double
-celsius_to_fahrenheit(double n)
+static double celsius_to_fahrenheit(double n)
 {
 	return ((n * 9 / 5) + 32);
 }
 
-int
-set_temp_output_unit(const char *name)
+int set_temp_output_unit(const char *name)
 {
-	size_t i;
+	long i;
 	int rc = 0;
 	char *buf;
 
@@ -53,7 +53,7 @@ set_temp_output_unit(const char *name)
 		return 1;
 
 	buf = strdup(name);
-	for (i = 0; i < strlen(name); i++)
+	for (i = 0; i < (long)strlen(name); i++)
 		buf[i] = tolower(name[i]);
 
 	if (!strcmp(buf, "celsius"))
@@ -66,8 +66,7 @@ set_temp_output_unit(const char *name)
 	return rc;
 }
 
-static double
-convert_temp_output(double n, enum TEMP_UNIT input_unit)
+static double convert_temp_output(double n, enum TEMP_UNIT input_unit)
 {
 	if (input_unit == output_unit)
 		return n;

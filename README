@@ -2,20 +2,20 @@ conky(1)                                                              conky(1)
 
 
 
-[1mNAME[0m
+NAME
        conky - A system monitor for X originally based on the torsmo code, but
        more kickass. It just keeps on given'er. Yeah.
 
-[1mSYNOPSIS[0m
-       [1mconky [22m[[4moptions[24m]
+SYNOPSIS
+       conky [ options ]
 
-[1mDESCRIPTION[0m
+DESCRIPTION
        Conky is a system monitor for X originally based on torsmo.  Since  its
        inception,  Conky has changed significantly from its predecessor, while
        maintaining simplicity and  configurability.  Conky  can  display  just
        about  anything,  either on your root desktop or in its own window. Not
        only does Conky have many built-in objects, it can  also  display  just
-       about any piece of information by using scripts and other external pro‐
+       about any piece of information by using scripts and other external pro-
        grams.
 
        Conky has more than 250 built  in  objects,  including  support  for  a
@@ -27,448 +27,546 @@ conky(1)                                                              conky(1)
        graph widgets, with different fonts and colours.
 
        We are always looking for help, whether  its  reporting  bugs,  writing
-       patches,  or writing docs.  Please use the facilities at SourceForge to
+       patches,  or  writing docs. Please use the facilities at SourceForge to
        make bug reports, feature requests, and  submit  patches,  or  stop  by
        #conky on irc.freenode.net if you have questions or want to contribute.
 
        Thanks for your interest in Conky.
 
-[1mCOMPILING[0m
+COMPILING
        For  users compiling from source on a binary distro, make sure you have
-       the X development libraries installed. This should be a  package  along
-       the  lines  of "libx11-dev" or "xorg-x11-dev" for X11 libs, and similar
-       "-dev" format for the other libs required (depending on your  configure
-       options).
+       the X development libraries installed  (Unless  you  provide  configure
+       with  "--disable-x11").  This  should  be  a package along the lines of
+       "libx11-dev" or "xorg-x11-dev" for X11 libs, and similar "-dev"  format
+       for  the other libs required (depending on your configure options). You
+       should be able to see which extra packages you need to install by read-
+       ing  errors  that  you  get  from './configure'. You can enable/disable
+       stuff by giving options to configure, but be  careful  with  disabling.
+       For  example:  with --disable-math you won't get errors but logarithmic
+       graphs will be normal graphs and gauges will miss their line.
 
-       Conky  has  (for  some time) been available in the repositories of most
-       popular distributions.  Here are some installation instructions  for  a
+       Conky has (for some time) been available in the  repositories  of  most
+       popular  distributions.  Here  are some installation instructions for a
        few:
 
-       Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-
-       admin/conky" for installation.
+       Gentoo users -- Conky is in Gentoo's  Portage...   simply  use  "emerge
+       app-admin/conky" for installation.
 
-       Debian, etc. users -- Conky should be in your repositories, and can  be
+       Debian,  etc. users -- Conky should be in your repositories, and can be
        installed by doing "aptitude install conky".
 
-       Example  to  compile  and  run Conky with all optional components (note
+       Example to compile and run Conky with  all  optional  components  (note
        that some configure options may differ for your system):
 
-       [1msh autogen.sh # Only required if building from the git repo[0m
+       sh autogen.sh # Only required if building from the git repo
 
-       [1m./configure      --prefix=/usr      --mandir=/usr/share/man       --in‐[0m
-       [1mfodir=/usr/share/info  --datadir=/usr/share  --sysconfdir=/etc --local‐[0m
-       [1mstatedir=/var/lib --disable-own-window --enable-audacious[=yes|no|lega‐[0m
-       [1mcy] --enable-bmpx --disable-hddtemp --disable-mpd --enable-xmms2 --dis‐[0m
-       [1mable-portmon  --disable-network  --enable-debug  --disable-x11   --dis‐[0m
-       [1mable-double-buffer --disable-xdamage --disable-xft[0m
+       ./configure       --prefix=/usr      --mandir=/usr/share/man      --in-
+       fodir=/usr/share/info --datadir=/usr/share  --sysconfdir=/etc  --local-
+       statedir=/var/lib --disable-own-window --enable-audacious[=yes|no|lega-
+       cy] --enable-bmpx --disable-hddtemp --disable-mpd --enable-xmms2 --dis-
+       able-portmon   --disable-network  --enable-debug  --disable-x11  --dis-
+       able-double-buffer --disable-xdamage --disable-xft
 
-       [1mmake[0m
+       make
 
-       [1mmake install # Optional[0m
+       make install # Optional
 
-       [1msrc/conky[0m
+       src/conky
 
-       Conky  has  been tested to be compatible with C99 C, however it has not
+       Conky has been tested to be compatible with C99 C, however it  has  not
        been tested with anything other than gcc, and is not guaranteed to work
        with other compilers.
 
-[1mYOU SHOULD KNOW[0m
-       Conky  is generally very good on resources. That said, the more you try
+YOU SHOULD KNOW
+       Conky is generally very good on resources. That said, the more you  try
        to make Conky do, the more resources it is going to consume.
 
        An easy way to force Conky to reload your ~/.conkyrc: "killall -SIGUSR1
-       conky".   Saves you the trouble of having to kill and then restart. You
+       conky". Saves you the trouble of having to kill and then  restart.  You
        can now also do the same with SIGHUP.
 
-[1mOPTIONS[0m
-       Command line options override configurations defined  in  configuration
+OPTIONS
+       Command  line  options override configurations defined in configuration
        file.
 
-       [1m-v | -V | --version[0m
+       -v | -V | --version
               Prints version and exits
 
 
-       [1m-q | --quiet[0m
+       -q | --quiet
               Run Conky in 'quiet mode' (ie. no output)
 
 
-       [1m-D | --debug[0m
+       -D | --debug
               Increase debugging output, ie. -DD for more debugging
 
 
-       [1m-a | --alignment=ALIGNMENT[0m
-              Text  alignment  on screen, {top,bottom,middle}_{left,right,mid‐
-              dle} or none. Can also be abbreviated with first chars of  posi‐
+       -a | --alignment= ALIGNMENT
+              Text alignment on  screen,  {top,bottom,middle}_{left,right,mid-
+              dle}  or none. Can also be abbreviated with first chars of posi-
               tion, ie. tr for top_right.
 
 
-       [1m-b | --double-buffer[0m
+       -b | --double-buffer
               Use double buffering (eliminates "flicker")
 
 
-       [1m-c | --config=FILE[0m
+       -c | --config= FILE
               Config file to load instead of $HOME/.conkyrc
 
 
-       [1m-C | --print-config[0m
-              Print builtin default config to stdout. See also the section EX‐
+       -C | --print-config
+              Print builtin default config to stdout. See also the section EX-
               AMPLES for more information.
 
 
-       [1m-d | --daemonize[0m
+       -d | --daemonize
               Daemonize Conky, aka fork to background
 
 
-       [1m-f | --font=FONT[0m
+       -f | --font= FONT
               Font to use
 
 
-       [1m-h | --help[0m
+       -h | --help
               Prints command line help and exits
 
 
-       [1m-o | --own-window[0m
+       -o | --own-window
               Create own window to draw
 
 
-       [1m-t | --text=TEXT[0m
+       -t | --text= TEXT
               Text to render, remember single quotes, like -t ' $uptime '
 
 
-       [1m-u | --interval=SECONDS[0m
+       -p | --pause= SECONDS
+              Time to pause before actually starting Conky
+
+
+       -u | --interval= SECONDS
               Update interval
 
 
-       [1m-w | --window-id=WIN_ID[0m
+       -w | --window-id= WIN_ID
               Window id to draw
 
 
-       [1m-X | --display=DISPLAY[0m
+       -X | --display= DISPLAY
               X11 display to use
 
 
-       [1m-x X_COORDINATE[0m
+       -x X_COORDINATE
               X position
 
 
-       [1m-y Y_COORDINATE[0m
+       -y Y_COORDINATE
               Y position
 
 
-       [1m-i COUNT[0m
+       -i COUNT
               Number of times to update Conky (and quit)
 
 
-[1mCONFIGURATION SETTINGS[0m
-       Default   configuration   file   location    is    $HOME/.conkyrc    or
-       ${sysconfdir}/conky/conky.conf.  On  most  systems, sysconfdir is /etc,
+CONFIGURATION SETTINGS
+       Default    configuration    file    location   is   $HOME/.conkyrc   or
+       ${sysconfdir}/conky/conky.conf. On most systems,  sysconfdir  is  /etc,
        and you can find the sample config file there (/etc/conky/conky.conf).
 
-       You might want to copy it to $HOME/.conkyrc and  then  start  modifying
-       it.  Other configs can be found at http://conky.sf.net/
+       You  might  want  to copy it to $HOME/.conkyrc and then start modifying
+       it. Other configs can be found at http://conky.sf.net/
 
-       [1mTEXT   [22mAfter this begins text to be formatted on screen.  Backslash (\)
-              escapes newlines in the text section. This  can  be  useful  for
-              cleaning  up  config  files where conky is used to pipe input to
+       TEXT   After this begins text to be formatted on screen.  Backslash (\)
+              escapes  newlines  in  the  text section. This can be useful for
+              cleaning up config files where conky is used to  pipe  input  to
               dzen2.
 
 
-       [1malias  [22mUse this to create aliases of variables. The first  argument  is
-              the  new  name, the second the old name, and the other arguments
-              are passed on to the variable.  Example: If you want to use $al‐
-              pha  instead  of  ${beta gamma delta} then you have to write the
-              following: alias alpha beta gamma delta . PS: Instead of  creat‐
-              ing  an  alias  in the config you can also use environment vari‐
-              ables. Example: Start conky like this: alpha="beta gamma  delta"
-              conky
+       alignment
+              Aligned position on screen, may be top_left, top_right, top_mid-
+              dle, bottom_left, bottom_right, bottom_middle, middle_left, mid-
+              dle_middle, middle_right, or none (also can be abreviated as tl,
+              tr, tm, bl, br, bm, ml, mm, mr). See also gap_x and gap_y.
 
 
-       [1malignment[0m
-              Aligned position on screen, may be top_left, top_right, top_mid‐
-              dle, bottom_left, bottom_right, bottom_middle, middle_left, mid‐
-              dle_right,  or  none  (also can be abreviated as tl, tr, tm, bl,
-              br, bm, ml, mr). See also gap_x and gap_y.
-
-
-       [1mappend_file[0m
+       append_file
               Append the file given as argument.
 
 
-       [1mbackground[0m
+       background
               Boolean value, if true, Conky will be forked to background  when
               started.
 
 
-       [1mborder_margin[0m
-              Border margin in pixels.
+       border_inner_margin
+              Inner border margin in pixels (the margin between the border and
+              text).
 
 
-       [1mborder_width[0m
+       border_outer_margin
+              Outer border margin in pixels (the margin between the border and
+              the edge of the window).
+
+
+       border_width
               Border width in pixels.
 
 
-       [1mcolorN [22mPredefine a color for use inside TEXT segments.  Substitute N by
+       colorN Predefine a color for use inside TEXT segments.  Substitute N by
               a digit between 0 and 9, inclusively. When specifying the  color
               value in hex, omit the leading hash (#).
 
 
-       [1mcpu_avg_samples[0m
+       cpu_avg_samples
               The number of samples to average for CPU monitoring.
 
 
-       [1mdefault_bar_size[0m
-              Specify  a  default  width  and  height for bars.  Example: 'de‐
+       default_bar_size
+              Specify  a  default  width  and  height for bars.  Example: 'de-
               fault_bar_size 0 6'. This is particularly useful for execbar and
               execibar as they do not take size arguments.
 
 
-       [1mdefault_color[0m
+       default_color
               Default color and border color
 
 
-       [1mdefault_gauge_size[0m
-              Specify  a  default  width and height for gauges.  Example: 'de‐
-              fault_gauge_size 25 25'. This is particularly useful  for  exec‐
+       default_gauge_size
+              Specify  a  default  width and height for gauges.  Example: 'de-
+              fault_gauge_size 25 25'. This is particularly useful  for  exec-
               gauge and execigauge as they do not take size arguments
 
 
-       [1mdefault_graph_size[0m
-              Specify  a  default  width and height for graphs.  Example: 'de‐
-              fault_graph_size 0 25'. This is particularly  useful  for  exec‐
+       default_graph_size
+              Specify  a  default  width and height for graphs.  Example: 'de-
+              fault_graph_size 0 25'. This is particularly  useful  for  exec-
               graph and execigraph as they do not take size arguments
 
 
-       [1mdefault_outline_color[0m
+       default_outline_color
               Default outline color
 
 
-       [1mdefault_shade_color[0m
+       default_shade_color
               Default shading color and border's shading color
 
 
-       [1mdiskio_avg_samples[0m
+       disable_auto_reload
+              Enable to disable the inotify-based auto config reload feature.
+
+
+       diskio_avg_samples
               The number of samples to average for disk I/O monitoring.
 
 
-       [1mdisplay[0m
+       display
               Specify an X display to connect to.
 
 
-       [1mdouble_buffer[0m
-              Use the Xdbe extension? (eliminates flicker) It is highly recom‐
+       double_buffer
+              Use the Xdbe extension? (eliminates flicker) It is highly recom-
               mended to use own window with this one so double buffer won't be
               so big.
 
 
-       [1mdraw_borders[0m
+       draw_borders
               Draw borders around text?
 
 
-       [1mdraw_graph_borders[0m
+       draw_graph_borders
               Draw borders around graphs?
 
 
-       [1mdraw_outline[0m
+       draw_outline
               Draw outlines?
 
 
-       [1mdraw_shades[0m
+       draw_shades
               Draw shades?
 
 
-       [1mfont   [22mFont name in X, xfontsel can be used to get a nice font
+       extra_newline
+              Put  an  extra newline at the end when writing to stdout, useful
+              for writing to awesome's wiboxes.
 
 
-       [1mgap_x  [22mGap,  in pixels, between right or left border of screen, same as
-              passing -x at command line, e.g. gap_x 10.  For  other  position
+       font   Font name in X, xfontsel can be used to get a nice font
+
+
+       format_human_readable
+              If enabled, values which are in bytes will be printed  in  human
+              readable  format  (i.e., KiB, MiB, etc). If disabled, the number
+              of bytes is printed instead.
+
+
+       gap_x  Gap, in pixels, between right or left border of screen, same  as
+              passing  -x  at command line, e.g. gap_x 10.  For other position
               related stuff, see 'alignment'.
 
 
-       [1mgap_y  [22mGap,  in pixels, between top or bottom border of screen, same as
-              passing -y at command line, e.g. gap_y 10.  For  other  position
+       gap_y  Gap, in pixels, between top or bottom border of screen, same  as
+              passing  -y  at command line, e.g. gap_y 10.  For other position
               related stuff, see 'alignment'.
 
 
-       [1mif_up_strictness[0m
+       hddtemp_host
+              Hostname  to  connect  to  for  hddtemp  objects.  Defaults   to
+              "127.0.0.1".
+
+
+       hddtemp_port
+              Port to use for hddtemp connections. Defaults to 7634.
+
+
+       if_up_strictness
               How  strict  should if_up be when testing an interface for being
               up? The value is one of up, link or address, to  check  for  the
               interface being solely up, being up and having link or being up,
               having link and an assigned IP address.
 
 
-       [1mimap   [22mDefault global IMAP server. Arguments are: "host user  pass  [-i
-              interval  (in  seconds)]  [-f folder] [-p port] [-e command] [-r
-              retries]". Default port is 143, default folder is  'INBOX',  de‐
-              fault  interval  is 5 minutes, and default number of retries be‐
+       imap   Default global IMAP server. Arguments are: "host user  pass  [-i
+              interval  (in  seconds)]  [-f 'folder'] [-p port] [-e 'command']
+              [-r retries]". Default port is 143, default folder  is  'INBOX',
+              default interval is 5 minutes, and default number of retries be-
               fore giving up is 5. If the password is  supplied  as  '*',  you
               will be prompted to enter the password when Conky starts.
 
 
-       [1mimlib_cache_size[0m
-              IMLIB2  image  cache  size, in bytes. Defaults to 4MiB. Increase
+       imlib_cache_flush_interval
+              Interval (in seconds) to flush Imlib2 cache.
+
+
+       imlib_cache_size
+              Imlib2  image  cache  size, in bytes. Defaults to 4MiB. Increase
               this value if you use $image lots. Set to 0 to disable the image
               cache.
 
 
-       [1mlua_load[0m
+       lua_draw_hook_post function_name [function arguments]
+              This  function, if defined, will be called by Conky through each
+              iteration after drawing to the window. Requires X support. Takes
+              any  number  of  optional  arguments.  Use this hook for drawing
+              things on top of what Conky draws. Conky puts 'conky_' in  front
+              of  function_name to prevent accidental calls to the wrong func-
+              tion unless you place 'conky_' in front of it yourself.
+
+
+       lua_draw_hook_pre function_name [function arguments]
+              This function, if defined, will be called by Conky through  each
+              iteration  before  drawing  to  the  window. Requires X support.
+              Takes any number of optional arguments. Use this hook for  draw-
+              ing  things  on  top of what Conky draws. Conky puts 'conky_' in
+              front of function_name to prevent accidental calls to the  wrong
+              function unless you place 'conky_' in front of it yourself.
+
+
+       lua_load
               Loads the Lua scripts separated by spaces.
 
 
-       [1mmail_spool[0m
+       lua_shutdown_hook function_name [function arguments]
+              This  function,  if defined, will be called by Conky at shutdown
+              or when the configuration is reloaded. Use this hook to clean up
+              after  yourself, such as freeing memory which has been allocated
+              by external libraries via Lua. Conky puts 'conky_' in  front  of
+              function_name  to prevent accidental calls to the wrong function
+              unless you place 'conky_' in front of it yourself.
+
+
+       lua_startup_hook function_name [function arguments]
+              This function, if defined, will be called by Conky at startup or
+              when the configuration is reloaded.  Use this hook to initialize
+              values, or for any run-once applications. Conky puts 'conky_' in
+              front  of function_name to prevent accidental calls to the wrong
+              function unless you place 'conky_' in front of it yourself.
+
+
+       mail_spool
               Mail spool for mail checking
 
 
-       [1mmax_port_monitor_connections[0m
-              Allow  each  port monitor to track at most this many connections
+       max_port_monitor_connections
+              Allow each port monitor to track at most this  many  connections
               (if 0 or not set, default is 256)
 
 
-       [1mmax_specials[0m
-              Maximum number of special things, e.g. fonts,  offsets,  aligns,
+       max_specials
+              Maximum  number  of special things, e.g. fonts, offsets, aligns,
               etc. (default is 512)
 
 
-       [1mmax_user_text bytes[0m
+       max_text_width width
+              When a line in the output contains 'width'  chars  and  the  end
+              isn't  reached,  the  next char will start on a new line. If you
+              want to make sure that lines don't get broken, set 'width' to 0
+
+
+       max_user_text bytes
               Maximum size of user text buffer, i.e. layout below TEXT line in
               config file (default is 16384 bytes)
 
 
-       [1mmaximum_width pixels[0m
+       maximum_width pixels
               Maximum width of window
 
 
-       [1mminimum_size width (height)[0m
+       minimum_size width (height)
               Minimum size of window
 
 
-       [1mmpd_host[0m
+       mpd_host
               Host of MPD server
 
 
-       [1mmpd_password[0m
+       mpd_password
               MPD server password
 
 
-       [1mmpd_port[0m
+       mpd_port
               Port of MPD server
 
 
-       [1mmusic_player_interval[0m
-              Music player thread update interval (defaults to Conky's  update
+       music_player_interval
+              Music  player thread update interval (defaults to Conky's update
               interval)
 
 
-       [1mnet_avg_samples[0m
+       net_avg_samples
               The number of samples to average for net data
 
 
-       [1mno_buffers[0m
-              Substract (file system) buffers from used memory?
+       no_buffers
+              Subtract (file system) buffers from used memory?
 
 
-       [1mout_to_console[0m
+       out_to_console
               Print text to stdout.
 
 
-       [1mout_to_stderr[0m
+       out_to_ncurses
+              Print text in the console, but use ncurses  so  that  conky  can
+              print the text of a new update over the old text. (In the future
+              this will provide more useful things)
+
+
+       out_to_stderr
               Print text to stderr.
 
 
-       [1mout_to_x[0m
-              When  set  to  no, there will be no output in X (useful when you
-              also use things like out_to_console). If you set it to no,  make
-              sure  that  it's placed before all other X-related setting (take
-              the first line of your configfile to be sure). Default value  is
+       out_to_x
+              When set to no, there will be no output in X  (useful  when  you
+              also  use things like out_to_console). If you set it to no, make
+              sure that it's placed before all other X-related  setting  (take
+              the  first line of your configfile to be sure). Default value is
               yes
 
 
-       [1moverride_utf8_locale[0m
+       override_utf8_locale
               Force UTF8? requires XFT
 
 
-       [1moverwrite_file[0m
+       overwrite_file
               Overwrite the file given as argument.
 
 
-       [1mown_window[0m
+       own_window
               Boolean, create own window to draw?
 
 
-       [1mown_window_class[0m
+       own_window_class
               Manually set the WM_CLASS name. Defaults to "Conky".
 
 
-       [1mown_window_colour colour[0m
-              If  own_window_transparent no, set a specified background colour
-              (defaults to black). Takes either a hex  value  (#ffffff)  or  a
-              valid RGB name (see /usr/lib/X11/rgb.txt)
+       own_window_colour colour
+              If own_window_transparent no, set a specified background  colour
+              (defaults to black). Takes either a hex value (e.g. ffffff, note
+              the lack of '#') or a valid RGB name (see /usr/lib/X11/rgb.txt)
 
 
-       [1mown_window_hints undecorated,below,above,sticky,skip_taskbar,skip_pager[0m
-              If  own_window is yes, you may use these window manager hints to
-              affect the way Conky displays. Notes: Use own_window_type  desk‐
-              top  as another way to implement many of these hints implicitly.
-              If you use own_window_type override, window manager  hints  have
+       own_window_hints undecorated,below,above,sticky,skip_taskbar,skip_pager
+              If own_window is yes, you may use these window manager hints  to
+              affect  the way Conky displays. Notes: Use own_window_type desk-
+              top as another way to implement many of these hints  implicitly.
+              If  you  use own_window_type override, window manager hints have
               no meaning and are ignored.
 
 
-       [1mown_window_title[0m
+       own_window_title
               Manually set the window name. Defaults to "<hostname> - conky".
 
 
-       [1mown_window_transparent[0m
-              Boolean, set pseudo-transparency?
+       own_window_argb_visual
+              Boolean, use ARGB visual? ARGB can be used for real  transparen-
+              cy,  note  that  a composite manager is required for real trans-
+              parency. This option will not work as desired (in most cases) in
+              conjunction with 'own_window_type override'.
 
 
-       [1mown_window_type[0m
-              if own_window is yes, you may specify type normal, desktop, dock
-              or override (default: normal).  Desktop windows are special win‐
-              dows that have no window decorations; are always visible on your
-              desktop; do not appear in your pager or taskbar; and are  sticky
-              across  all  workspaces. Override windows are not under the con‐
-              trol of the window manager. Hints are ignored. This type of win‐
-              dow can be useful for certain situations.
+       own_window_argb_value
+              When ARGB visuals are enabled, this use this to modify the alpha
+              value used. Valid range is 0-255, where 0 is 0% opacity, and 255
+              is 100% opacity. Note that if own_window_transparent is enabled,
+              this value has no effect.
 
 
-       [1mpad_percents[0m
+       own_window_transparent
+              Boolean, set transparency? If ARGB visual is enabled, sets back-
+              ground opacity to 0%.
+
+
+       own_window_type
+              if  own_window  is  yes,  you  may specify type normal, desktop,
+              dock, panel or override (default: normal).  Desktop windows  are
+              special windows that have no window decorations; are always vis-
+              ible on your desktop; do not appear in your  pager  or  taskbar;
+              and  are  sticky  across  all  workspaces. Panel windows reserve
+              space along a desktop edge, just like panels and taskbars,  pre-
+              venting  maximized  windows  from  overlapping them. The edge is
+              chosen based on the alignment option. Override windows  are  not
+              under the control of the window manager. Hints are ignored. This
+              type of window can be useful for certain situations.
+
+
+       pad_percents
               Pad percentages to this many decimals (0 = no padding)
 
 
-       [1mpop3   [22mDefault  global  POP3 server. Arguments are: "host user pass [-i
-              interval (in seconds)] [-p port] [-e command] [-r retries]". De‐
-              fault  port  is  110, default interval is 5 minutes, and default
-              number of retries before giving up is 5. If the password is sup‐
-              plied  as  '*',  you will be prompted to enter the password when
+       pop3   Default global POP3 server. Arguments are: "host user  pass  [-i
+              interval  (in  seconds)] [-p port] [-e 'command'] [-r retries]".
+              Default port is 110, default interval is 5 minutes, and  default
+              number of retries before giving up is 5. If the password is sup-
+              plied as '*', you will be prompted to enter  the  password  when
               Conky starts.
 
 
-       [1mshort_units[0m
-              Shortens units to a single character (kiB->k, GiB->G, etc.). De‐
+       short_units
+              Shortens units to a single character (kiB->k, GiB->G, etc.). De-
               fault is off.
 
 
-       [1mshow_graph_range[0m
+       show_graph_range
               Shows the time range covered by a graph.
 
 
-       [1mshow_graph_scale[0m
+       show_graph_scale
               Shows the maximum value in scaled graphs.
 
 
-       [1mstippled_borders[0m
+       stippled_borders
               Border stippling (dashing) in pixels
 
 
-       [1mtemperature_unit[0m
-              Desired output unit of all objects displaying a temperature. Pa‐
-              rameters are either "fahrenheit" or "celsius". The default  unit
+       temperature_unit
+              Desired output unit of all objects displaying a temperature. Pa-
+              rameters  are either "fahrenheit" or "celsius". The default unit
               is degree Celsius.
 
 
-       [1mtemplateN[0m
+       templateN
               Define a template for later use inside TEXT segments. Substitute
-              N by a digit between 0 and 9,  inclusively.  The  value  of  the
-              variable is being inserted into the stuff below TEXT at the cor‐
+              N  by  a  digit  between  0 and 9, inclusively. The value of the
+              variable is being inserted into the stuff below TEXT at the cor-
               responding position, but before some substitutions are applied:
 
               '\n' -> newline
@@ -477,1353 +575,1650 @@ conky(1)                                                              conky(1)
               '\N' -> template argument N
 
 
-       [1mtext_buffer_size bytes[0m
-              Size of the standard text buffer (default is  256  bytes).  This
-              buffer  is used for intermediary text, such as individual lines,
-              output from $exec vars, and various other variables.  Increasing
-              the  size  of this buffer can drastically reduce Conky's perfor‐
-              mance, but will allow for more text display  per  variable.  The
-              size  of this buffer cannot be smaller than the default value of
+       text_buffer_size bytes
+              Size  of  the  standard text buffer (default is 256 bytes). This
+              buffer is used for intermediary text, such as individual  lines,
+              output  from $exec vars, and various other variables. Increasing
+              the size of this buffer can drastically reduce  Conky's  perfor-
+              mance,  but  will  allow for more text display per variable. The
+              size of this buffer cannot be smaller than the default value  of
               256 bytes.
 
 
-       [1mtop_cpu_separate[0m
+       times_in_seconds
+              If true, variables that output times output a number that repre-
+              sents seconds. This doesn't affect $time, $tztime and $utime
+
+
+       top_cpu_separate
               If true, cpu in top will show usage of one processor's power. If
               false,  cpu  in top will show the usage of all processors' power
               combined.
 
 
-       [1mtop_name_width[0m
+       top_name_width
               Width for $top name value (defaults to 15 characters).
 
 
-       [1mtotal_run_times[0m
+       total_run_times
               Total number of times for Conky to update before quitting.  Zero
               makes Conky run forever
 
 
-       [1mupdate_interval[0m
-              Update interval in seconds
+       update_interval seconds
+              Update interval
 
 
-       [1muppercase[0m
+       update_interval_on_battery seconds
+              Update interval when running on batterypower
+
+
+       uppercase
               Boolean value, if true, text is rendered in upper case
 
 
-       [1muse_spacer[0m
-              Adds spaces around certain objects to stop them from moving oth‐
+       use_spacer
+              Adds spaces around certain objects to stop them from moving oth-
               er things around. Arguments are left, right, and none (default).
               The   old  true/false  values  are  deprecated  and  default  to
               right/none respectively. Note that this only helps  if  you  are
               using a mono font, such as Bitstream Vera Sans Mono.
 
 
-       [1muse_xft[0m
+       use_xft
               Use Xft (anti-aliased font and stuff)
 
 
-       [1mxftalpha[0m
+       xftalpha
               Alpha of Xft font. Must be a value at or between 1 and 0.
 
 
-       [1mxftfont[0m
+       xftfont
               Xft font to use.
 
 
-[1mVARIABLES[0m
-       Colors  are  parsed using XParsecolor(), there might be a list of them:
-       /usr/share/X11/rgb.txt.   Also,    ⟨http://sedition.com/perl/rgb.html⟩.
-       Color can be also in #rrggbb format (hex).
+OBJECTS/VARIABLES
+       Colours  are parsed using XParsecolor(), there might be a list of them:
+       /usr/share/X11/rgb.txt.  Colour can be also in #rrggbb format (hex).
 
-       [1macpiacadapter[0m
-              ACPI ac adapter state.
+       Some objects may create threads, and sometimes these threads  will  not
+       be  destroyed  until  Conky  terminates.  There is no way to destroy or
+       clean up threads while Conky is running. For example, if you use an MPD
+       variable,  the  MPD  thread  will  keep  running until Conky dies. Some
+       threaded objects will use one of the parameters as a 'key', so that you
+       only  have  1 relevant thread running (for example, the $curl, $rss and
+       $weather objects launch one thread per URI).
+
+       acpiacadapter (adapter)
+              ACPI ac adapter state. On linux, the  adapter  option  specifies
+              the  subfolder  of  /sys/class/power_supply containing the state
+              information (defaults to "AC"). Other systems ignore it.
 
 
-       [1macpifan[0m
+       acpifan
               ACPI fan state
 
 
-       [1macpitemp[0m
+       acpitemp
               ACPI temperature in C.
 
 
-       [1maddr interface[0m
-              IP  address  for  an interface, or "No Address" if no address is
+       addr (interface)
+              IP address for an interface, or "No Address" if  no  address  is
               assigned.
 
 
-       [1maddrs interface[0m
-              IP addresses for an interface (if one - works like addr).  Linux
+       addrs (interface)
+              IP  addresses for an interface (if one - works like addr). Linux
               only.
 
 
-       [1madt746xcpu[0m
+       adt746xcpu
               CPU temperature from therm_adt746x
 
 
-       [1madt746xfan[0m
+       adt746xfan
               Fan speed from therm_adt746x
 
 
-       [1malignc (num)[0m
+       alignc (num)
               Align text to centre
 
 
-       [1malignr (num)[0m
+       alignr (num)
               Right-justify text, with space of N
 
 
-       [1mapcupsd host port[0m
-              Sets  up  the  connection to apcupsd daemon. Prints nothing, de‐
+       apcupsd host port
+              Sets up the connection to apcupsd daemon.  Prints  nothing,  de-
               faults to localhost:3551
 
 
-       [1mapcupsd_cable[0m
+       apcupsd_cable
               Prints the UPS connection type.
 
 
-       [1mapcupsd_charge[0m
+       apcupsd_charge
               Current battery capacity in percent.
 
 
-       [1mapcupsd_lastxfer[0m
+       apcupsd_lastxfer
               Reason for last transfer from line to battery.
 
 
-       [1mapcupsd_linev[0m
+       apcupsd_linev
               Nominal input voltage.
 
 
-       [1mapcupsd_load[0m
+       apcupsd_load
               Current load in percent.
 
 
-       [1mapcupsd_loadbar[0m
+       apcupsd_loadbar
               Bar showing current load.
 
 
-       [1mapcupsd_loadgauge (height),(width)[0m
+       apcupsd_loadgauge (height),(width)
               Gauge that shows current load.
 
 
-       [1mapcupsd_loadgraph[0m
+       apcupsd_loadgraph (height),(width) (gradient colour 1) (gradient colour
+       2) (scale) (-t) (-l)
               History graph of current load.
 
 
-       [1mapcupsd_model[0m
+       apcupsd_model
               Prints the model of the UPS.
 
 
-       [1mapcupsd_name[0m
+       apcupsd_name
               Prints the UPS user-defined name.
 
 
-       [1mapcupsd_status[0m
+       apcupsd_status
               Prints current status (on-line, on-battery).
 
 
-       [1mapcupsd_temp[0m
+       apcupsd_temp
               Current internal temperature.
 
 
-       [1mapcupsd_timeleft[0m
+       apcupsd_timeleft
               Time left to run on battery.
 
 
-       [1mapcupsd_upsmode[0m
+       apcupsd_upsmode
               Prints the UPS mode (e.g. standalone).
 
 
-       [1mapm_adapter[0m
+       apm_adapter
               Display APM AC adapter status (FreeBSD only)
 
 
-       [1mapm_battery_life[0m
+       apm_battery_life
               Display APM battery life in percent (FreeBSD only)
 
 
-       [1mapm_battery_time[0m
+       apm_battery_time
               Display remaining APM battery life in hh:mm:ss or  "unknown"  if
               AC adapterstatus is on-line or charging (FreeBSD only)
 
 
-       [1maudacious_bar (height),(width)[0m
+       audacious_bar (height),(width)
               Progress bar
 
 
-       [1maudacious_bitrate[0m
+       audacious_bitrate
               Bitrate of current tune
 
 
-       [1maudacious_channels[0m
+       audacious_channels
               Number of audio channels of current tune
 
 
-       [1maudacious_filename[0m
+       audacious_filename
               Full path and filename of current tune
 
 
-       [1maudacious_frequency[0m
+       audacious_frequency
               Sampling frequency of current tune
 
 
-       [1maudacious_length[0m
+       audacious_length
               Total length of current tune as MM:SS
 
 
-       [1maudacious_length_seconds[0m
+       audacious_length_seconds
               Total length of current tune in seconds
 
 
-       [1maudacious_main_volume[0m
+       audacious_main_volume
               The current volume fetched from Audacious
 
 
-       [1maudacious_playlist_length[0m
+       audacious_playlist_length
               Number of tunes in playlist
 
 
-       [1maudacious_playlist_position[0m
+       audacious_playlist_position
               Playlist position of current tune
 
 
-       [1maudacious_position[0m
+       audacious_position
               Position of current tune (MM:SS)
 
 
-       [1maudacious_position_seconds[0m
+       audacious_position_seconds
               Position of current tune in seconds
 
 
-       [1maudacious_status[0m
+       audacious_status
               Player status (Playing/Paused/Stopped/Not running)
 
 
-       [1maudacious_title (max length)[0m
+       audacious_title (max length)
               Title of current tune with optional maximum length specifier
 
 
-       [1mbattery (num)[0m
+       battery (num)
               Battery  status and remaining percentage capacity of ACPI or APM
               battery. ACPI battery number can be given as  argument  (default
               is BAT0).
 
 
-       [1mbattery_bar (height),(width) (num)[0m
-              Battery percentage remaining of ACPI battery in a bar. ACPI bat‐
+       battery_bar (height),(width) (num)
+              Battery percentage remaining of ACPI battery in a bar. ACPI bat-
               tery number can be given as argument (default is BAT0).
 
 
-       [1mbattery_percent (num)[0m
+       battery_percent (num)
               Battery percentage remaining for  ACPI  battery.   ACPI  battery
               number can be given as argument (default is BAT0).
 
 
-       [1mbattery_short (num)[0m
+       battery_short (num)
               Battery  status and remaining percentage capacity of ACPI or APM
               battery. ACPI battery number can be given as  argument  (default
               is  BAT0).  This mode display a short status, which means that C
-              is displayed instead of charging and D is displayed  instead  of
-              discharging.
+              is displayed instead of charging, D for discharging, F for full,
+              N for not present, E for empty and U for unknown.
 
 
-       [1mbattery_time (num)[0m
+       battery_time (num)
               Battery  charge/discharge  time  remaining of ACPI battery. ACPI
               battery number can be given as argument (default is BAT0).
 
 
-       [1mbmpx_album[0m
+       blink text_and_other_conky_vars
+              Let 'text_and_other_conky_vars' blink on and off.
+
+
+       bmpx_album
               Album in current BMPx track
 
 
-       [1mbmpx_artist[0m
+       bmpx_artist
               Artist in current BMPx track
 
 
-       [1mbmpx_bitrate[0m
+       bmpx_bitrate
               Bitrate of the current BMPx track
 
 
-       [1mbmpx_title[0m
+       bmpx_title
               Title of the current BMPx track
 
 
-       [1mbmpx_track[0m
+       bmpx_track
               Track number of the current BMPx track
 
 
-       [1mbmpx_uri[0m
+       bmpx_uri
               URI of the current BMPx track
 
 
-       [1mbuffers[0m
+       buffers
               Amount of memory buffered
 
 
-       [1mcached [22mAmount of memory cached
+       cached Amount of memory cached
 
 
-       [1mcolor (color)[0m
-              Change drawing color to color
+       cmdline_to_pid string
+              PID of the first process that has string in it's commandline
 
 
-       [1mcolorN [22mChange drawing color to colorN configuration option, where N  is
+       color (color)
+              Change drawing color to 'color' which is a name of a color or  a
+              hexcode  preceded  with  #  (for  example #0A1B2C ).  If you use
+              ncurses only the following colors are supported:  red,green,yel-
+              low,blue,magenta,cyan,black,white.
+
+
+       colorN Change  drawing color to colorN configuration option, where N is
               a digit between 0 and 9, inclusively.
 
 
-       [1mcombine var1 var2[0m
-              Places  the  lines  of  var2  to  the right of the lines of var1
-              seperated by the chars that are put between var1 and  var2.  For
-              example: ${combine ${head /proc/cpuinfo 2} - ${head /proc/memin‐
-              fo 1}} gives as output "cpuinfo_line1 - meminfo_line1" on line 1
-              and "cpuinfo_line2 -" on line 2. $combine vars can also be nest‐
+       combine var1 var2
+              Places the lines of var2 to the right of the lines of var1 sepa-
+              rated by the chars that are put between var1 and var2. For exam-
+              ple: ${combine ${head /proc/cpuinfo 2}  -  ${head  /proc/meminfo
+              1}}  gives  as  output "cpuinfo_line1 - meminfo_line1" on line 1
+              and "cpuinfo_line2 -" on line 2. $combine vars can also be nest-
               ed to place more vars next to each other.
 
 
-       [1mconky_build_arch[0m
+       conky_build_arch
               CPU architecture Conky was built for
 
 
-       [1mconky_build_date[0m
+       conky_build_date
               Date Conky was built
 
 
-       [1mconky_version[0m
+       conky_version
               Conky version
 
 
-       [1mcpu (cpuN)[0m
-              CPU usage in percents. For SMP machines, the CPU number  can  be
-              provided  as  an  argument.  ${cpu cpu0} is the total usage, and
+       cpu (cpuN)
+              CPU  usage  in percents. For SMP machines, the CPU number can be
+              provided as an argument. ${cpu cpu0} is  the  total  usage,  and
               ${cpu cpuX} (X >= 1) are individual CPUs.
 
 
-       [1mcpubar (cpuN) (height),(width)[0m
-              Bar that shows CPU usage, height is bar's height in pixels.  See
+       cpubar (cpuN) (height),(width)
+              Bar  that shows CPU usage, height is bar's height in pixels. See
               $cpu for more info on SMP.
 
 
-       [1mcpugauge (cpuN) (height),(width)[0m
-              Elliptical  gauge  that  shows  CPU  usage, height and width are
-              gauge's vertical and horizontal axis respectively. See $cpu  for
+       cpugauge (cpuN) (height),(width)
+              Elliptical gauge that shows CPU  usage,  height  and  width  are
+              gauge's  vertical and horizontal axis respectively. See $cpu for
               more info on SMP.
 
 
-       [1mcpugraph  (cpuN)  ("normal"|"log") (height),(width) (gradient colour 1)[0m
-       [1m(gradient colour 2) (scale)[0m
-              CPU usage graph, with optional colours in hex, minus the #.  See
-              $cpu  for  more  info  on  SMP. Uses a logarithmic scale (to see
-              small numbers) when you use "log" instead of "normal".
+       cpugraph (cpuN) (height),(width) (gradient colour 1)  (gradient  colour
+       2) (scale) (-t) (-l)
+              CPU  usage graph, with optional colours in hex, minus the #. See
+              $cpu for more info on SMP. Uses  a  logarithmic  scale  (to  see
+              small numbers) when you use the -l switch. Takes the switch '-t'
+              to use a temperature gradient, which makes the  gradient  values
+              change  depending  on  the amplitude of a particular graph value
+              (try it and see).
 
 
-       [1mdisk_protect device[0m
+       curl url (interval_in_minutes)
+              Download data from URI using Curl at the specified interval. The
+              interval may be a floating point value greater than 0, otherwise
+              defaults to 15 minutes. Most useful  when  used  in  conjunction
+              with  Lua  and  the Lua API. This object is threaded, and once a
+              thread is created it can't be explicitly destroyed.  One  thread
+              will  run  for each URI specified. You can use any protocol that
+              Curl supports.
+
+       desktop
+              Number of the desktop on which conky is running or  the  message
+              "Not running in X" if this is the case.
+
+
+       desktop_name
+              Name  of  the  desktop  on which conky is running or the message
+              "Not running in X" if this is the case.
+
+
+       desktop_number
+              Number of desktops or the message "Not running in X" if this  is
+              the case.
+
+
+       disk_protect device
               Disk  protection  status,  if  supported  (needs  kernel-patch).
               Prints either "frozen" or "free " (note the padding).
 
 
-       [1mdiskio (device)[0m
+       diskio (device)
               Displays current disk IO. Device is optional, and takes the form
               of sda for /dev/sda. Individual partitions are allowed.
 
 
-       [1mdiskio_read (device)[0m
+       diskio_read (device)
               Displays current disk IO for reads. Device as in diskio.
 
 
-       [1mdiskio_write (device)[0m
+       diskio_write (device)
               Displays current disk IO for writes. Device as in diskio.
 
 
-       [1mdiskiograph (device) ("normal"|"log") (height),(width) (gradient colour[0m
-       [1m1) (gradient colour 2) (scale)[0m
-              Disk  IO graph, colours defined in hex, minus the #. If scale is
+       diskiograph  (device)  (height),(width)  (gradient  colour 1) (gradient
+       colour 2) (scale) (-t) (-l)
+              Disk IO graph, colours defined in hex, minus the #. If scale  is
               non-zero, it becomes the scale for the graph. Uses a logarithmic
-              scale (to see small numbers) when you use "log" instead of "nor‐
-              mal".
+              scale (to see small numbers) when you use -l switch.  Takes  the
+              switch  '-t' to use a temperature gradient, which makes the gra-
+              dient values change depending on the amplitude of  a  particular
+              graph value (try it and see).
 
 
-       [1mdiskiograph_read (device) ("normal"|"log")  (height),(width)  (gradient[0m
-       [1mcolour 1) (gradient colour 2) (scale)[0m
+       diskiograph_read  (device) (height),(width) (gradient colour 1) (gradi-
+       ent colour 2) (scale) (-t) (-l)
               Disk IO graph for reads, colours defined in hex, minus the #. If
               scale is non-zero, it becomes the scale for the graph. Device as
-              in  diskio. Uses a logarithmic scale (to see small numbers) when
-              you use "log" instead of "normal".
+              in diskio. Uses a logarithmic scale (to see small numbers)  when
+              you  use  -l  switch. Takes the switch '-t' to use a temperature
+              gradient, which makes the gradient values  change  depending  on
+              the amplitude of a particular graph value (try it and see).
 
 
-       [1mdiskiograph_write (device) ("normal"|"log") (height),(width)  (gradient[0m
-       [1mcolour 1) (gradient colour 2) (scale)[0m
-              Disk  IO  graph for writes, colours defined in hex, minus the #.
+       diskiograph_write (device) (height),(width) (gradient colour 1) (gradi-
+       ent colour 2) (scale) (-t) (-l)
+              Disk IO graph for writes, colours defined in hex, minus  the  #.
               If scale is non-zero, it becomes the scale for the graph. Device
-              as  in  diskio.  Uses a logarithmic scale (to see small numbers)
-              when you use "log" instead of "normal".
+              as in diskio. Uses a logarithmic scale (to  see  small  numbers)
+              when  you use -l switch. Takes the switch '-t' to use a tempera-
+              ture gradient, which makes the gradient values change  depending
+              on the amplitude of a particular graph value (try it and see).
 
 
-       [1mdownspeed net[0m
-              Download speed in KiB
+       downspeed (net)
+              Download speed in suitable IEC units
 
 
-       [1mdownspeedf net[0m
+       downspeedf (net)
               Download speed in KiB with one decimal
 
 
-       [1mdownspeedgraph  (netdev)  ("normal"|"log")  (height),(width)  (gradient[0m
-       [1mcolour 1) (gradient colour 2) (scale)[0m
-              Download  speed  graph,  colours defined in hex, minus the #. If
-              scale is non-zero, it becomes the scale for the  graph.  Uses  a
-              logarithmic  scale (to see small numbers) when you use "log" in‐
-              stead of "normal".
+       downspeedgraph  (netdev) (height),(width) (gradient colour 1) (gradient
+       colour 2) (scale) (-t) (-l)
+              Download speed graph, colours defined in hex, minus  the  #.  If
+              scale  is  non-zero,  it becomes the scale for the graph. Uses a
+              logarithmic scale (to see small numbers) when you use -l switch.
+              Takes the switch '-t' to use a temperature gradient, which makes
+              the gradient values change depending on the amplitude of a  par-
+              ticular graph value (try it and see).
 
 
-       [1mdraft_mails (maildir) (interval)[0m
+       draft_mails (maildir) (interval)
               Number of mails marked as draft in the specified mailbox or mail
-              spool  if  not.  Only maildir type mailboxes are supported, mbox
+              spool if not. Only maildir type mailboxes  are  supported,  mbox
               type will return -1.
 
 
-       [1melse   [22mText to show if any of the above are not true
+       else   Text to show if any of the above are not true
 
 
-       [1mendif  [22mEnds an $if block.
+       endif  Ends an $if block.
 
 
-       [1mentropy_avail[0m
+       entropy_avail
               Current entropy available for crypto freaks
 
 
-       [1mentropy_bar (height),(width)[0m
+       entropy_bar (height),(width)
               Normalized bar of available entropy for crypto freaks
 
 
-       [1mentropy_poolsize[0m
+       entropy_perc
+              Percentage of entropy available in comparison to the poolsize
+
+
+       entropy_poolsize
               Total size of system entropy pool for crypto freaks
 
 
-       [1meval string[0m
-              Evalutates given string according to the rules of TEXT interpre‐
-              tation,  i.e.  parsing  any contained text object specifications
-              into their output, any occuring '$$' into a single  '$'  and  so
+       eval string
+              Evaluates  given string according to the rules of TEXT interpre-
+              tation, i.e. parsing any contained  text  object  specifications
+              into  their  output,  any occuring '$$' into a single '$' and so
               on. The output is then being parsed again.
 
 
-       [1meve api_userid api_key character_id[0m
-              Fetches  your  currently  training skill from the Eve Online API
+       eve api_userid api_key character_id
+              Fetches your currently training skill from the  Eve  Online  API
               servers  (http://www.eve-online.com/)  and  displays  the  skill
               along with the remaining training time.
 
 
-       [1mexec command[0m
-              Executes a shell command and displays the output in conky. warn‐
-              ing: this takes a lot more resources than other  variables.  I'd
+       exec command
+              Executes a shell command and displays the output in conky. warn-
+              ing:  this  takes a lot more resources than other variables. I'd
               recommend coding wanted behaviour in C and posting a patch.
 
 
-       [1mexecbar command[0m
-              Same  as  exec,  except if the first value return is a value be‐
-              tween 0-100, it will use that number for a bar.   The  size  for
+       execbar command
+              Same as exec, except if the first value return is  a  value  be-
+              tween  0-100,  it  will use that number for a bar.  The size for
               bars can be controlled via the default_bar_size config setting.
 
 
-       [1mexecgauge command[0m
-              Same  as exec, except if the first value returned is a value be‐
-              tween 0-100, it will use that number for a gauge. The  size  for
-              gauges  can be controlled via the default_gauge_size config set‐
+       execgauge command
+              Same as exec, except if the first value returned is a value  be-
+              tween  0-100,  it will use that number for a gauge. The size for
+              gauges can be controlled via the default_gauge_size config  set-
               ting.
 
 
-       [1mexecgraph ("normal"|"log") (height),(width) (gradient colour 1) (gradi‐[0m
-       [1ment colour 2) (scale) command[0m
+       execgraph (-t) (-l) command
               Same as execbar, but graphs values. Uses a logaritmic scale when
-              the log option is given (to see  small  numbers).  Values  still
-              have  to  be  between 0 and 100. The size for graphs can be con‐
-              trolled via the default_graph_size config setting.
+              the log option (-l switch) is given (to see small numbers). Val-
+              ues  still have to be between 0 and 100. The size for graphs can
+              be controlled via the default_graph_size config  setting.  Takes
+              the  switch  '-t' to use a temperature gradient, which makes the
+              gradient values change depending on the amplitude of a  particu-
+              lar  graph value (try it and see). If -t or -l is your first ar-
+              gument, you may need to preceed it by a space (' ').
 
 
-       [1mexeci interval command[0m
+       execi interval command
               Same as exec but with specific interval. Interval can't be  less
               than update_interval in configuration. See also $texeci
 
 
-       [1mexecibar interval command[0m
+       execibar interval command
               Same as execbar, except with an interval
 
 
-       [1mexecigauge interval command[0m
+       execigauge interval command
               Same as execgauge, but takes an interval arg and gauges values.
 
 
-       [1mexecigraph interval command[0m
-              Same as execgraph, but takes an interval arg and graphs values.
+       execigraph interval (-t) (-l) command
+              Same  as execgraph, but takes an interval arg and graphs values.
+              If -t or -l is your first argument, you may need to  preceed  it
+              by a space (' ').
 
 
-       [1mexecp command[0m
-              Executes a shell command and displays the output in conky. warn‐
+       execp command
+              Executes a shell command and displays the output in conky. warn-
               ing: this takes a lot more resources than other  variables.  I'd
               recommend coding wanted behaviour in C and posting a patch. This
               differs from $exec in that it parses the output of the  command,
               so  you  can  insert things like ${color red}hi!${color} in your
               script and have it correctly parsed  by  Conky.  Caveats:  Conky
               parses  and  evaluates  the  output  of  $execp every time Conky
-              loops, and then destroys all the objects. If you try to use any‐
-              thing  like $execi within an $execp statement, it will function‐
+              loops, and then destroys all the objects. If you try to use any-
+              thing  like $execi within an $execp statement, it will function-
               ally run at the same interval that the $execp statement runs, as
               it is created and destroyed at every interval.
 
 
-       [1mexecpi interval command[0m
+       execpi interval command
               Same  as  execp  but  with specific interval.  Interval can't be
               less than update_interval in configuration. Note that the output
               from  the $execpi command is still parsed and evaluated at every
               interval.
 
 
-       [1mflagged_mails (maildir) (interval)[0m
+       flagged_mails (maildir) (interval)
               Number of mails marked as flagged in the  specified  mailbox  or
               mail  spool  if  not. Only maildir type mailboxes are supported,
               mbox type will return -1.
 
 
-       [1mfont (font)[0m
-              Specify a different font. This new font will apply to  the  cur‐
+       font (font)
+              Specify a different font. This new font will apply to  the  cur-
               rent  line and everything following. You can use a $font with no
               arguments to change back to the default  font  (much  like  with
               $color)
 
 
-       [1mforwarded_mails (maildir) (interval)[0m
+       format_time seconds format
+              Format  time  given  in  seconds.  This  var only works when the
+              times_in_seconds configuration setting is on. Format is a string
+              that  should  start  and  end with a "-char. The "-chars are not
+              part of the output, \w,\d,\h,\m,\s,\(,\) and \\ are replaced  by
+              weeks,days,hours,minutes,seconds,(,)  and  \. If you leave out a
+              unit, it's value will be expressed in the  highest  unite  lower
+              then the one left out. Text between ()-chars will not be visible
+              if a replaced unit in this text is 0. If seconds  is  a  decimal
+              number then you can see the numbers behind the point by using \S
+              followed by a number that specifies the amount of digits  behind
+              the  point that you want to see (maximum 9).  You can also place
+              a 'x' behind \S so you have all digits behind the point  and  no
+              trailing zero's. (also maximum 9)
+
+
+       forwarded_mails (maildir) (interval)
               Number  of mails marked as forwarded in the specified mailbox or
               mail spool if not. Only maildir type  mailboxes  are  supported,
               mbox type will return -1.
 
 
-       [1mfreq (n)[0m
+       freq (n)
               Returns  CPU  #n's frequency in MHz. CPUs are counted from 1. If
               omitted, the parameter defaults to 1.
 
 
-       [1mfreq_g (n)[0m
+       freq_g (n)
               Returns CPU #n's frequency in GHz. CPUs are counted from  1.  If
               omitted, the parameter defaults to 1.
 
 
-       [1mfs_bar (height),(width) fs[0m
+       fs_bar (height),(width) fs
               Bar  that  shows how much space is used on a file system. height
               is the height in pixels. fs is any file on that file system.
 
 
-       [1mfs_bar_free (height),(width) fs[0m
+       fs_bar_free (height),(width) fs
               Bar that shows how much space is free on a file  system.  height
               is the height in pixels. fs is any file on that file system.
 
 
-       [1mfs_free (fs)[0m
+       fs_free (fs)
               Free space on a file system available for users.
 
 
-       [1mfs_free_perc (fs)[0m
+       fs_free_perc (fs)
               Free percentage of space on a file system available for users.
 
 
-       [1mfs_size (fs)[0m
+       fs_size (fs)
               File system size.
 
 
-       [1mfs_type (fs)[0m
+       fs_type (fs)
               File system type.
 
 
-       [1mfs_used (fs)[0m
+       fs_used (fs)
               File system used space.
 
 
-       [1mfs_used_perc (fs)[0m
+       fs_used_perc (fs)
               Percent of file system used space.
 
 
-       [1mgoto x [22mThe next element will be printed at position 'x'.
+       goto x The next element will be printed at position 'x'.
 
 
-       [1mgw_iface[0m
-              Displays  the default route's interface or "multiple"/"none" ac‐
+       gw_iface
+              Displays  the default route's interface or "multiple"/"none" ac-
               cordingly.
 
 
-       [1mgw_ip  [22mDisplays the default gateway's IP or  "multiple"/"none"  accord‐
+       gw_ip  Displays the default gateway's IP or  "multiple"/"none"  accord-
               ingly.
 
 
-       [1mhddtemp dev, (host,(port))[0m
+       hddtemp (dev)
               Displays  temperature  of a selected hard disk drive as reported
-              by the hddtemp daemon running  on  host:port.  Default  host  is
-              127.0.0.1, default port is 7634.
+              by the hddtemp daemon.  Use  hddtemp_host  and  hddtemp_port  to
+              specify  a  host and port for all hddtemp objects. If no dev pa-
+              rameter is given, the first disk returned by the hddtemp  daemon
+              is used.
 
 
-       [1mhead logfile lines (interval)[0m
-              Displays  first  N lines of supplied text text file. If interval
-              is not supplied, Conky assumes 2x Conky's interval.  Max  of  30
-              lines can be displayed, or until the text buffer is filled.
+       head logfile lines (next_check)
+              Displays  first  N  lines  of  supplied  text  file. The file is
+              checked every 'next_check' update. If  next_check  is  not  sup-
+              plied, Conky defaults to 2. Max of 30 lines can be displayed, or
+              until the text buffer is filled.
 
 
-       [1mhr (height)[0m
+       hr (height)
               Horizontal line, height is the height in pixels
 
 
-       [1mhwmon (dev) type n (factor offset)[0m
-              Hwmon  sensor from sysfs (Linux 2.6). Parameter dev may be omit‐
+       hwmon (dev) type n (factor offset)
+              Hwmon sensor from sysfs (Linux 2.6). Parameter dev may be  omit-
               ted if you have only one hwmon device.  Parameter type is either
               'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning
-              temperature.  Parameter  n  is  number  of   the   sensor.   See
+              temperature.   Parameter   n   is  number  of  the  sensor.  See
               /sys/class/hwmon/ on your local computer. The optional arguments
-              'factor' and 'offset' allow precalculation  of  the  raw  input,
-              which  is  being  modified as follows: 'input = input * factor +
+              'factor'  and  'offset'  allow  precalculation of the raw input,
+              which is being modified as follows: 'input = input  *  factor  +
               offset'. Note that they have to be given as decimal values (i.e.
               contain at least one decimal place).
 
 
-       [1mi2c (dev) type n (factor offset)[0m
-              I2C  sensor from sysfs (Linux 2.6). Parameter dev may be omitted
-              if you have only one I2C device. Parameter type is  either  'in'
-              or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning tem‐
-              perature.  Parameter  n   is   number   of   the   sensor.   See
-              /sys/bus/i2c/devices/ on your local computer. The optional argu‐
-              ments 'factor' and 'offset' allow precalculation of the raw  in‐
+       i2c (dev) type n (factor offset)
+              I2C sensor from sysfs (Linux 2.6). Parameter dev may be  omitted
+              if  you  have only one I2C device. Parameter type is either 'in'
+              or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning tem-
+              perature.   Parameter   n   is   number   of   the  sensor.  See
+              /sys/bus/i2c/devices/ on your local computer. The optional argu-
+              ments  'factor' and 'offset' allow precalculation of the raw in-
               put, which is being modified as follows: 'input = input * factor
-              + offset'.  Note that they have to be given  as  decimal  values
+              +  offset'.   Note  that they have to be given as decimal values
               (i.e.  contain at least one decimal place).
 
 
-       [1mi8k_ac_status[0m
-              If  running the i8k kernel driver for Inspiron laptops, displays
-              whether ac power is on, as listed in  /proc/i8k  (translated  to
-              human-readable).  Beware  that this is by default not enabled by
+       i8k_ac_status
+              If running the i8k kernel driver for Inspiron laptops,  displays
+              whether  ac  power  is on, as listed in /proc/i8k (translated to
+              human-readable). Beware that this is by default not  enabled  by
               i8k itself.
 
 
-       [1mi8k_bios[0m
-              If running the i8k kernel driver for Inspiron laptops,  displays
+       i8k_bios
+              If  running the i8k kernel driver for Inspiron laptops, displays
               the bios version as listed in /proc/i8k.
 
 
-       [1mi8k_buttons_status[0m
-              If  running the i8k kernel driver for Inspiron laptops, displays
+       i8k_buttons_status
+              If running the i8k kernel driver for Inspiron laptops,  displays
               the volume buttons status as listed in /proc/i8k.
 
 
-       [1mi8k_cpu_temp[0m
-              If running the i8k kernel driver for Inspiron laptops,  displays
+       i8k_cpu_temp
+              If  running the i8k kernel driver for Inspiron laptops, displays
               the cpu temperature in Celsius, as reported by /proc/i8k.
 
 
-       [1mi8k_left_fan_rpm[0m
-              If  running the i8k kernel driver for Inspiron laptops, displays
-              the left fan's rate of rotation, in revolutions  per  minute  as
+       i8k_left_fan_rpm
+              If running the i8k kernel driver for Inspiron laptops,  displays
+              the  left  fan's  rate of rotation, in revolutions per minute as
               listed in /proc/i8k. Beware, some laptops i8k reports these fans
               in reverse order.
 
 
-       [1mi8k_left_fan_status[0m
-              If running the i8k kernel driver for Inspiron laptops,  displays
+       i8k_left_fan_status
+              If  running the i8k kernel driver for Inspiron laptops, displays
               the left fan status as listed in /proc/i8k (translated to human-
-              readable). Beware, some laptops i8k reports these  fans  in  re‐
+              readable).  Beware,  some  laptops i8k reports these fans in re-
               verse order.
 
 
-       [1mi8k_right_fan_rpm[0m
-              If  running the i8k kernel driver for Inspiron laptops, displays
-              the right fan's rate of rotation, in revolutions per  minute  as
+       i8k_right_fan_rpm
+              If running the i8k kernel driver for Inspiron laptops,  displays
+              the  right  fan's rate of rotation, in revolutions per minute as
               listed in /proc/i8k. Beware, some laptops i8k reports these fans
               in reverse order.
 
 
-       [1mi8k_right_fan_status[0m
-              If running the i8k kernel driver for Inspiron laptops,  displays
-              the  right  fan status as listed in /proc/i8k (translated to hu‐
-              man-readable). Beware, some laptops i8k reports  these  fans  in
+       i8k_right_fan_status
+              If  running the i8k kernel driver for Inspiron laptops, displays
+              the right fan status as listed in /proc/i8k (translated  to  hu-
+              man-readable).  Beware,  some  laptops i8k reports these fans in
               reverse order.
 
 
-       [1mi8k_serial[0m
-              If  running the i8k kernel driver for Inspiron laptops, displays
+       i8k_serial
+              If running the i8k kernel driver for Inspiron laptops,  displays
               your laptop serial number as listed in /proc/i8k.
 
 
-       [1mi8k_version[0m
-              If running the i8k kernel driver for Inspiron laptops,  displays
+       i8k_version
+              If  running the i8k kernel driver for Inspiron laptops, displays
               the version formatting of /proc/i8k.
 
 
-       [1mibm_brightness[0m
+       ibm_brightness
               If running the IBM ACPI, displays the brigtness of the laptops's
               LCD (0-7).
 
 
-       [1mibm_fan[0m
+       ibm_fan
               If running the IBM ACPI, displays the fan speed.
 
 
-       [1mibm_temps N[0m
-              If running the IBM ACPI, displays the temperatures from the  IBM
+       ibm_temps N
+              If  running the IBM ACPI, displays the temperatures from the IBM
               temperature sensors (N=0..7) Sensor 0 is on the CPU, 3 is on the
               GPU.
 
 
-       [1mibm_volume[0m
-              If running the IBM ACPI,  displays  the  "master"  volume,  con‐
+       ibm_volume
+              If  running  the  IBM  ACPI,  displays the "master" volume, con-
               trolled by the volume keys (0-14).
 
 
-       [1miconv_start codeset_from codeset_to[0m
-              Convert  text from one codeset to another using GNU iconv. Needs
+       iconv_start codeset_from codeset_to
+              Convert text from one codeset to another using GNU iconv.  Needs
               to be stopped with iconv_stop.
 
 
-       [1miconv_stop[0m
+       iconv_stop
               Stop iconv codeset conversion.
 
 
-       [1mif_empty (var)[0m
-              if conky variable  VAR  is  empty,  display  everything  between
+       if_empty (var)
+              if  conky  variable  VAR  is  empty,  display everything between
               $if_empty and the matching $endif
 
 
-       [1mif_existing file (string)[0m
-              if  FILE  exists, display everything between if_existing and the
-              matching $endif. The optional second paramater checks  for  FILE
-              containing  the  specified  string and prints everything between
+       if_existing file (string)
+              if FILE exists, display everything between if_existing  and  the
+              matching  $endif.  The optional second paramater checks for FILE
+              containing the specified string and  prints  everything  between
               $if_existing and the matching $endif.
 
 
-       [1mif_gw  [22mif there is at least one default gateway, display everything be‐
+       if_gw  if there is at least one default gateway, display everything be-
               tween $if_gw and the matching $endif
 
 
-       [1mif_match expression[0m
-              Evaluates  the given boolean expression, printing everything be‐
+       if_match expression
+              Evaluates the given boolean expression, printing everything  be-
               tween $if_match and the matching $endif depending on whether the
-              evaluation  returns true or not.  Valid expressions consist of a
-              left side, an operator and a right side. Left  and  right  sides
-              are  being  parsed for contained text objects before evaluation.
+              evaluation returns true or not.  Valid expressions consist of  a
+              left  side,  an  operator and a right side. Left and right sides
+              are being parsed for contained text objects  before  evaluation.
               Recognised left and right side types are:
 
-              [1mdouble[22m: argument consists of only digits and a single dot.
-              [1mlong[22m: argument consists of only digits.
-              [1mstring[22m: argument is enclosed in quotation mark or the checks for
-              double and long failed before.
+              doubleArgument consists of only digits and a single dot.
+              longArgument consists of only digits.
+              stringArgument is enclosed in quotation marks (")
 
               Valid operands are: '>', '<', '>=', '<=', '==', '!='.
 
 
-       [1mif_mixer_mute (mixer)[0m
+       if_mixer_mute (mixer)
               If  mixer  exists, display everything between $if_mixer_mute and
               the matching $endif. If no mixer is specified, "Master" is used.
 
 
-       [1mif_mounted (mountpoint)[0m
+       if_mounted (mountpoint)
               if MOUNTPOINT is mounted, display everything between $if_mounted
               and the matching $endif
 
 
-       [1mif_mpd_playing[0m
+       if_mpd_playing
               if   mpd  is  playing  or  paused,  display  everything  between
               $if_mpd_playing and the matching $endif
 
 
-       [1mif_running (process)[0m
+       if_running (process)
               if PROCESS is running, display everything  $if_running  and  the
               matching  $endif.  This  uses  the  ``pidof'' command, so the -x
               switch is also supported.
 
 
-       [1mif_smapi_bat_installed (INDEX)[0m
+       if_smapi_bat_installed (INDEX)
               when using smapi, if the battery with index INDEX is  installed,
               display   everything  between  $if_smapi_bat_installed  and  the
               matching $endif
 
 
-       [1mif_up (interface)[0m
+       if_up (interface)
               if INTERFACE exists and is up, display everything between $if_up
               and the matching $endif
 
 
-       [1mif_updatenr (updatenr)[0m
-              If  it's the UPDATENR-th time that conky updates, display every‐
+       if_updatenr (updatenr)
+              If  it's the UPDATENR-th time that conky updates, display every-
               thing between $if_updatenr and the matching $endif. The  counter
-              resets when the highest UPDATENR is reached. Example : "{$if_up‐
-              datenr 1}foo$endif{$if_updatenr 2}bar$endif{$if_updatenr  4}$en‐
+              resets when the highest UPDATENR is reached. Example : "{$if_up-
+              datenr 1}foo$endif{$if_updatenr 2}bar$endif{$if_updatenr  4}$en-
               dif"  shows  foo 25% of the time followed by bar 25% of the time
               followed by nothing the other half of the time.
 
 
-       [1mif_xmms2_connected[0m
+       if_xmms2_connected
               Display everything between $if_xmms2_connected and the  matching
               $endif if xmms2 is running.
 
 
-       [1mimage <path to image> (-p x,y) (-s WxH)[0m
-              Renders  an  image from the path specified using IMLIB2. Takes 2
-              optional arguments, one being a position,  the  other  an  size.
-              Changing  the  x,y position will move the position of the image,
-              and changing the WxH will  scale  the  image.  Example:  ${image
-              /home/brenden/cheeseburger.jpg  -p 20,20 -s 200x200} will render
-              'cheeseburger.jpg' at (20,20) scaled to  200x200  pixels.  Conky
-              does  not  make any attempt to adjust the position (or any other
-              formatting) of images, they are just rendered as per  the  argu‐
-              ments  passed.  The  only reason $image is part of the TEXT sec‐
-              tion, is to allow  for  runtime  modifications,  through  $execp
-              $lua_parse, $lua_read_parse, or some other method.
+       image <path to image> (-p x,y) (-s WxH) (-n) (-f interval)
+              Renders  an  image from the path specified using Imlib2. Takes 4
+              optional arguments: a position, a size, a no-cache switch, and a
+              cache  flush  interval.  Changing the x,y position will move the
+              position of the image, and changing the WxH will scale  the  im-
+              age.  If  you specify the no-cache flag (-n), the image will not
+              be cached.  Alternately, you can specify the -f  int  switch  to
+              specify  a cache flust interval for a particular image. Example:
+              ${image /home/brenden/cheeseburger.jpg -p 20,20 -s 200x200} will
+              render  'cheeseburger.jpg'  at (20,20) scaled to 200x200 pixels.
+              Conky does not make any attempt to adjust the position  (or  any
+              other  formatting)  of images, they are just rendered as per the
+              arguments passed. The only reason $image is  part  of  the  TEXT
+              section,  is  to allow for runtime modifications, through $execp
+              $lua_parse, or some other method.
 
 
-       [1mimap_messages (args)[0m
-              Displays the number of messages in your global IMAP inbox by de‐
-              fault. You can define  individual  IMAP  inboxes  seperately  by
-              passing  arguments  to  this  object.  Arguments are: "host user
-              pass [-i interval (in seconds)] [-f folder] [-p port]  [-e  com‐
-              mand] [-r retries]". Default port is 143, default folder is 'IN‐
-              BOX', default interval is 5 minutes, and default number  of  re‐
-              tries before giving up is 5. If the password is supplied as '*',
-              you will be prompted to enter the password when Conky starts.
+       imap_messages (args)
+              Displays the number of messages in your global IMAP inbox by de-
+              fault.  You  can  define  individual  IMAP inboxes separately by
+              passing arguments to this object.   Arguments  are:  "host  user
+              pass  [-i  interval  (in  seconds)]  [-f 'folder'] [-p port] [-e
+              'command'] [-r retries]". Default port is 143, default folder is
+              'INBOX',  default  interval  is 5 minutes, and default number of
+              retries before giving up is 5. If the password  is  supplied  as
+              '*',  you  will  be  prompted  to  enter the password when Conky
+              starts.
 
 
-       [1mimap_unseen (args)[0m
+       imap_unseen (args)
               Displays the number of unseen messages in your global IMAP inbox
-              by default. You can define individual IMAP inboxes seperately by
+              by default. You can define individual IMAP inboxes separately by
               passing arguments to this object. Arguments are: "host user pass
-              [-i  interval  (in  seconds)] [-f folder] [-p port] [-e command]
-              [-r retries]".  Default port is 143, default folder is  'INBOX',
-              default interval is 5 minutes, and default number of retries be‐
-              fore giving up is 5. If the password is  supplied  as  '*',  you
-              will be prompted to enter the password when Conky starts.
+              [-i  interval  (in  seconds)]  [-f 'folder'] [-p port] [-e 'com-
+              mand'] [-r retries]".  Default port is 143,  default  folder  is
+              'INBOX',  default  interval  is 5 minutes, and default number of
+              retries before giving up is 5. If the password  is  supplied  as
+              '*',  you  will  be  prompted  to  enter the password when Conky
+              starts.
 
 
-       [1mioscheduler disk[0m
-              Prints  the  current  ioscheduler  used  for the given disk name
+       include path
+              Loads the configfile at path, places the  configsettings  behind
+              the  configsettings  in  the  orginal config and places the vars
+              where the includevar stood.
+
+       ioscheduler disk
+              Prints the current ioscheduler used  for  the  given  disk  name
               (i.e. e.g. "hda" or "sdb")
 
 
-       [1mkernel [22mKernel version
+       kernel Kernel version
 
 
-       [1mlaptop_mode[0m
+       laptop_mode
               The value of /proc/sys/vm/laptop_mode
 
 
-       [1mlines textfile[0m
+       lines textfile
               Displays the number of lines in the given file
 
 
-       [1mloadavg[0m
-              (1,2,3)> System load average, 1 is for past 1 minute, 2 for past
-              5 minutes and 3 for past 15 minutes.
+       loadavg (1|2|3)
+              System  load  average, 1 is for past 1 minute, 2 for past 5 min-
+              utes and 3 for past 15 minutes.  Without  argument,  prints  all
+              three values separated by whitespace.
 
 
-       [1mloadgraph ("normal"|"log") (height),(width) (gradient colour 1) (gradi‐[0m
-       [1ment colour 2) (scale)[0m
+       loadgraph  (height),(width)  (gradient  colour  1)  (gradient colour 2)
+       (scale) (-t) (-l)
               Load1 average graph, similar to xload, with optional colours  in
-              hex,  minus  the  #. Uses a logarithmic scale (to see small num‐
-              bers) when you use "log" instead of "normal".
+              hex,  minus  the  #. Uses a logarithmic scale (to see small num-
+              bers) when you use the -l switch.  Takes the switch '-t' to  use
+              a  temperature  gradient, which makes the gradient values change
+              depending on the amplitude of a particular graph value  (try  it
+              and see).
 
 
-       [1mlua function_name (function parameters)[0m
-              Executes a Lua function with given parameters, then  prints  the
-              returned string. See also 'lua_load' on how to load scripts.
+       lua function_name (function parameters)
+              Executes  a  Lua function with given parameters, then prints the
+              returned string. See also 'lua_load' on  how  to  load  scripts.
+              Conky  puts  'conky_' in front of function_name to prevent acci-
+              dental calls to the wrong function  unless  you  put  you  place
+              'conky_' in front of it yourself.
 
 
-       [1mlua_bar (height, width) function_name (function parameters)[0m
+       lua_bar (height, width) function_name (function parameters)
               Executes  a  Lua function with given parameters and draws a bar.
-              Expects result value to be an integer between 0 and 100. See al‐
-              so 'lua_load' on how to load scripts.
+              Expects result value to be an integer between 0 and 100. See al-
+              so  'lua_load'  on  how to load scripts.  Conky puts 'conky_' in
+              front of function_name to prevent accidental calls to the  wrong
+              function  unless you put you place 'conky_' in front of it your-
+              self.
 
 
-       [1mlua_gauge (height, width) function_name (function parameters)[0m
+       lua_gauge (height, width) function_name (function parameters)
               Executes a Lua function with given parameters and draws a gauge.
-              Expects result value to be an integer between 0 and 100. See al‐
-              so 'lua_load' on how to load scripts.
+              Expects result value to be an integer between 0 and 100. See al-
+              so 'lua_load' on how to load scripts.  Conky  puts  'conky_'  in
+              front  of function_name to prevent accidental calls to the wrong
+              function unless you put you place 'conky_' in front of it  your-
+              self.
 
 
-       [1mlua_graph    function_name   (function   parameters)   ("normal"|"log")[0m
-       [1m(height),(width) (gradient colour 1) (gradient colour 2) (scale)[0m
-              Executes a Lua function with given parameters and draws a graph.
-              Expects result value to be any number, and by default will scale
-              to show the full range. See  also  'lua_load'  on  how  to  load
-              scripts.
+       lua_graph  function_name (height),(width) (gradient colour 1) (gradient
+       colour 2) (scale) (-t) (-l)
+              Executes a Lua function with and draws a graph.  Expects  result
+              value  to  be  any number, and by default will scale to show the
+              full range. See also 'lua_load' on how to  load  scripts.  Takes
+              the  switch  '-t' to use a temperature gradient, which makes the
+              gradient values change depending on the amplitude of a  particu-
+              lar  graph  value (try it and see). Conky puts 'conky_' in front
+              of function_name to prevent accidental calls to the wrong  func-
+              tion unless you put you place 'conky_' in front of it yourself.
 
 
-       [1mlua_parse function_name (function parameters)[0m
+       lua_parse function_name (function parameters)
               Executes  a Lua function with given parameters as per $lua, then
               parses and prints the result value as per the syntax for Conky's
-              TEXT section. See also 'lua_load' on how to load scripts.
+              TEXT  section. See also 'lua_load' on how to load scripts. Conky
+              puts 'conky_' in front of function_name  to  prevent  accidental
+              calls to the wrong function unless you put you place 'conky_' in
+              front of it yourself.
 
 
-       [1mlua_read_parse function_name (conky text)[0m
-              Executes  a  Lua  function per $lua, except takes a 2nd argument
-              which is first evaluated as per Conky's TEXT section and  passed
-              to  the  function  first.  The  return  value is then parsed and
-              prints the result value as per the syntax for Conky's TEXT  sec‐
-              tion. See also 'lua_load' on how to load scripts.
-
-
-       [1mmachine[0m
+       machine
               Machine, i686 for example
 
 
-       [1mmails (mailbox) (interval)[0m
-              Mail  count  in the specified mailbox or your mail spool if not.
-              Both mbox and maildir type mailboxes are supported. You can  use
-              a  program  like  fetchmail  to get mails from some server using
+       mails (mailbox) (interval)
+              Mail count in the specified mailbox or your mail spool  if  not.
+              Both  mbox and maildir type mailboxes are supported. You can use
+              a program like fetchmail to get mails  from  some  server  using
               your favourite protocol. See also new_mails.
 
 
-       [1mmboxscan (-n number of messages to print) (-fw from width) (-sw subject[0m
-       [1mwidth) mbox[0m
-              Print  a  summary  of recent messages in an mbox format mailbox.
-              mbox parameter is the filename of the mailbox (can  be  encapsu‐
+       mboxscan (-n number of messages to print) (-fw from width) (-sw subject
+       width) mbox
+              Print a summary of recent messages in an  mbox  format  mailbox.
+              mbox  parameter  is the filename of the mailbox (can be encapsu-
               lated using '"', ie. ${mboxscan -n 10 "/home/brenden/some box"}
 
 
-       [1mmem    [22mAmount of memory in use
+       mem    Amount of memory in use
 
 
-       [1mmembar (height),(width)[0m
+       membar (height),(width)
               Bar that shows amount of memory in use
 
 
-       [1mmemeasyfree[0m
-              Amount  of  free memory including the memory that is very easily
+       memeasyfree
+              Amount of free memory including the memory that is  very  easily
               freed (buffers/cache)
 
 
-       [1mmemfree[0m
+       memfree
               Amount of free memory
 
 
-       [1mmemgauge (height),(width)[0m
+       memgauge (height),(width)
               Gauge that shows amount of memory in use (see cpugauge)
 
 
-       [1mmemgraph ("normal"|"log") (height),(width) (gradient colour 1)  (gradi‐[0m
-       [1ment colour 2) (scale)[0m
-              Memory  usage graph. Uses a logarithmic scale (to see small num‐
-              bers) when you use "log" instead of "normal".
+       memgraph  (height),(width)  (gradient  colour  1)  (gradient  colour 2)
+       (scale) (-t) (-l)
+              Memory usage graph. Uses a logarithmic scale (to see small  num-
+              bers) when you use the -l switch. Takes the switch '-t' to use a
+              temperature gradient, which makes the gradient values change de-
+              pending on the amplitude of a particular graph value (try it and
+              see).
 
 
-       [1mmemmax [22mTotal amount of memory
+       memmax Total amount of memory
 
 
-       [1mmemperc[0m
+       memperc
               Percentage of memory in use
 
 
-       [1mmixer (device)[0m
+       mixer (device)
               Prints the mixer value as reported by the OS.  Default mixer  is
-              "vol",  but  you can specify one of the following optional argu‐
-              ments:  "vol",  "bass",  "treble",  "synth",  "pcm",  "speaker",
-              "line",  "mic",  "cd",  "mix",  "pcm2", "rec", "igain", "ogain",
-              "line1",  "line2",  "line3",  "dig1",  "dig2",  "dig3",  "phin",
-              "phout", "video", "radio", "monitor". Refer to the definition of
-              SOUND_DEVICE_NAMES in <linux/soundcard.h>  (on  Linux),  <sound‐
-              card.h> (on OpenBSD), or <sys/soundcard.h> to find the exact op‐
-              tions available on your system.
+              "Master",  but  you can specify one of the available ALSA Simple
+              mixer controls.  You can find the list  of  those  available  on
+              your system using amixer.
 
 
-       [1mmixerbar (device)[0m
-              Displays mixer value in a bar as reported by the  OS.  See  docs
+       mixerbar (device)
+              Displays  mixer  value  in a bar as reported by the OS. See docs
               for $mixer for details on arguments.
 
 
-       [1mmixerl (device)[0m
-              Prints  the  left channel mixer value as reported by the OS. See
+       mixerl (device)
+              Prints the left channel mixer value as reported by the  OS.  See
               docs for $mixer for details on arguments.
 
 
-       [1mmixerlbar (device)[0m
-              Displays the left channel mixer value in a bar  as  reported  by
+       mixerlbar (device)
+              Displays  the  left  channel mixer value in a bar as reported by
               the OS. See docs for $mixer for details on arguments.
 
 
-       [1mmixerr (device)[0m
-              Prints  the right channel mixer value as reported by the OS. See
+       mixerr (device)
+              Prints the right channel mixer value as reported by the OS.  See
               docs for $mixer for details on arguments.
 
 
-       [1mmixerrbar (device)[0m
-              Displays the right channel mixer value in a bar as  reported  by
+       mixerrbar (device)
+              Displays  the  right channel mixer value in a bar as reported by
               the OS. See docs for $mixer for details on arguments.
 
 
-       [1mmoc_album[0m
+       moc_album
               Album of the current MOC song
 
 
-       [1mmoc_artist[0m
+       moc_artist
               Artist of the current MOC song
 
 
-       [1mmoc_bitrate[0m
+       moc_bitrate
               Bitrate in the current MOC song
 
 
-       [1mmoc_curtime[0m
+       moc_curtime
               Current time of the current MOC song
 
 
-       [1mmoc_file[0m
+       moc_file
               File name of the current MOC song
 
 
-       [1mmoc_rate[0m
+       moc_rate
               Rate of the current MOC song
 
 
-       [1mmoc_song[0m
+       moc_song
               The current song name being played in MOC.
 
 
-       [1mmoc_state[0m
+       moc_state
               Current state of MOC; playing, stopped etc.
 
 
-       [1mmoc_timeleft[0m
+       moc_timeleft
               Time left in the current MOC song
 
 
-       [1mmoc_title[0m
+       moc_title
               Title of the current MOC song
 
 
-       [1mmoc_totaltime[0m
+       moc_totaltime
               Total length of the current MOC song
 
 
-       [1mmonitor[0m
-              Number of the monitor on which conky is running
+       monitor
+              Number of the monitor on which conky is running or  the  message
+              "Not running in X" if this is the case.
 
 
-       [1mmonitor_number[0m
-              Number of monitors
+       monitor_number
+              Number  of monitors or the message "Not running in X" if this is
+              the case.
 
 
-       [1mmpd_album[0m
+       mpd_album
               Album in current MPD song
 
 
-       [1mmpd_artist[0m
+       mpd_artist
               Artist in current MPD song must be enabled at compile
 
 
-       [1mmpd_bar (height),(width)[0m
+       mpd_bar (height),(width)
               Bar of mpd's progress
 
 
-       [1mmpd_bitrate[0m
+       mpd_bitrate
               Bitrate of current song
 
 
-       [1mmpd_elapsed[0m
+       mpd_elapsed
               Song's elapsed time
 
 
-       [1mmpd_file[0m
+       mpd_file
               Prints the file name of the current MPD song
 
 
-       [1mmpd_length[0m
+       mpd_length
               Song's length
 
 
-       [1mmpd_name[0m
+       mpd_name
               Prints the MPD name field
 
 
-       [1mmpd_percent[0m
+       mpd_percent
               Percent of song's progress
 
 
-       [1mmpd_random[0m
+       mpd_random
               Random status (On/Off)
 
 
-       [1mmpd_repeat[0m
+       mpd_repeat
               Repeat status (On/Off)
 
 
-       [1mmpd_smart (max length)[0m
+       mpd_smart (max length)
               Prints the song name in either the form "artist - title" or file
               name, depending on whats available
 
 
-       [1mmpd_status[0m
+       mpd_status
               Playing, stopped, et cetera.
 
 
-       [1mmpd_title (max length)[0m
+       mpd_title (max length)
               Title of current MPD song
 
 
-       [1mmpd_track[0m
+       mpd_track
               Prints the MPD track field
 
 
-       [1mmpd_vol[0m
+       mpd_vol
               MPD's volume
 
 
-       [1mnameserver (index)[0m
-              Print a nameserver from /etc/resolv.conf. Index  starts  at  and
+       nameserver (index)
+              Print  a  nameserver  from /etc/resolv.conf. Index starts at and
               defaults to 0.
 
 
-       [1mnew_mails (mailbox) (interval)[0m
+       new_mails (mailbox) (interval)
               Unread mail count in the specified mailbox or mail spool if not.
               Both mbox and maildir type mailboxes are supported.
 
 
-       [1mnodename[0m
+       nodename
               Hostname
 
 
-       [1mnvidia threshold temp ambient gpufreq memfreq imagequality[0m
-              Nvidia graficcard support for the XNVCtrl library.  Each  option
+       nvidia threshold temp ambient gpufreq memfreq imagequality
+              Nvidia  graficcard  support for the XNVCtrl library. Each option
               can be shortened to the least significant part. Temperatures are
               printed as float, all other values as integer.
 
-              [1mthreshold[22m: the thresholdtemperature at which the gpu slows down
-              [1mtemp[22m: gives the gpu current temperature
-              [1mambient[22m: gives current air temperature near GPU case
-              [1mgpufreq[22m: gives the current gpu frequency
-              [1mmemfreq[22m: gives the current mem frequency
-              [1mimagequality[22m: which imagequality should be choosen by OpenGL ap‐
+              threshold The thresholdtemperature at which the gpu slows down
+              temp Gives the gpu current temperature
+              ambient Gives current air temperature near GPU case
+              gpufreq Gives the current gpu frequency
+              memfreq Gives the current mem frequency
+              imagequality  Which  imagequality should be chosen by OpenGL ap-
               plications
 
 
-       [1moffset (pixels)[0m
+       offset (pixels)
               Move text over by N pixels. See also $voffset.
 
 
-       [1moutlinecolor (color)[0m
+       outlinecolor (color)
               Change outline color
 
 
-       [1mpb_battery item[0m
-              If running on Apple powerbook/ibook, display information on bat‐
-              tery status. The item parameter specifies, what  information  to
+       pb_battery item
+              If running on Apple powerbook/ibook, display information on bat-
+              tery  status.  The item parameter specifies, what information to
               display. Exactly one item must be specified. Valid items are:
 
-              [1mstatus[22m: Display if battery is fully charged, charging, discharg‐
+              status Display if battery is fully charged, charging,  discharg-
               ing or absent (running on AC)
-              [1mpercent[22m: Display charge of battery in percent,  if  charging  or
-              discharging.  Nothing  will  be  displayed,  if battery is fully
+              percent  Display  charge  of  battery in percent, if charging or
+              discharging. Nothing will be  displayed,  if  battery  is  fully
               charged or absent.
-              [1mtime[22m: Display the time remaining until the battery will be fully
-              charged  or discharged at current rate. Nothing is displayed, if
-              battery is absent or if it's present but fully charged  and  not
+              time  Display the time remaining until the battery will be fully
+              charged or discharged at current rate. Nothing is displayed,  if
+              battery  is  absent or if it's present but fully charged and not
               discharging.
 
 
-       [1mplatform (dev) type n (factor offset)[0m
-              Platform  sensor  from  sysfs  (Linux 2.6). Parameter dev may be
-              omitted if you have only one platform device.  Platform type  is
-              either  'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp'
-              meaning temperature. Parameter n is number of  the  sensor.  See
-              /sys/bus/platform/devices/  on your local computer. The optional
-              arguments 'factor' and 'offset' allow precalculation of the  raw
-              input, which is being modified as follows: 'input = input * fac‐
+       pid_chroot pid
+              Directory used as rootdirectory by the process (this will be "/"
+              unless the process did a chroot syscall)
+
+
+       pid_cmdline pid
+              Command line this process was invoked with
+
+
+       pid_cwd pid
+              Current working directory of the process
+
+
+       pid_environ pid varname
+              Contents of a environment-var of the process
+
+
+       pid_environ_list pid
+              List of environment-vars that the process can see
+
+
+       pid_exe pid
+              Path to executed command that started the process
+
+
+       pid_nice pid
+              The nice value of the process
+
+
+       pid_openfiles pid
+              List of files that the process has open
+
+
+       pid_parent pid
+              The pid of the parent of the process
+
+
+       pid_priority pid
+              The priority of the process (see 'priority' in "man 5 proc")
+
+
+       pid_read pid
+              Total number of bytes read by the process
+
+
+       pid_state pid
+              State of the process
+
+
+       pid_state_short pid
+              One  of  the  chars  in  "RSDZTW"  representing the state of the
+              process where R is running, S is sleeping  in  an  interruptible
+              wait, D is waiting in uninterruptible disk sleep, Z is zombie, T
+              is traced or stopped (on a signal), and W is paging
+
+
+       pid_stderr pid
+              Filedescriptor binded to the STDERR of the process
+
+
+       pid_stdin pid
+              Filedescriptor binded to the STDIN of the process
+
+
+       pid_stdout pid
+              Filedescriptor binded to the STDOUT of the process
+
+
+       pid_threads pid
+              Number of threads in process containing this thread
+
+
+       pid_thread_list pid
+              List with pid's from threads from this process
+
+
+       pid_time_kernelmode pid
+              Amount of time that the process has  been  scheduled  in  kernel
+              mode in seconds
+
+
+       pid_time_usermode pid
+              Amount  of time that the process has been scheduled in user mode
+              in seconds
+
+
+       pid_time pid
+              Sum of $pid_time_kernelmode and $pid_time_usermode
+
+
+       pid_uid pid
+              The real uid of the process
+
+
+       pid_euid pid
+              The effective uid of the process
+
+
+       pid_suid pid
+              The saved set uid of the process
+
+
+       pid_fsuid pid
+              The file system uid of the process
+
+
+       pid_gid pid
+              The real gid of the process
+
+
+       pid_egid pid
+              The effective gid of the process
+
+
+       pid_sgid pid
+              The saved set gid of the process
+
+
+       pid_fsgid pid
+              The file system gid of the process
+
+
+       pid_vmpeak pid
+              Peak virtual memory size of the process
+
+
+       pid_vmsize pid
+              Virtual memory size of the process
+
+
+       pid_vmlck pid
+              Locked memory size of the process
+
+
+       pid_vmhwm pid
+              Peak resident set size ("high water mark") of the process
+
+
+       pid_vmrss pid
+              Resident set size of the process
+
+
+       pid_vmdata pid
+              Data segment size of the process
+
+
+       pid_vmstk pid
+              Stack segment size of the process
+
+
+       pid_vmexe pid
+              Text segment size of the process
+
+
+       pid_vmlib pid
+              Shared library code size of the process
+
+
+       pid_vmpte pid
+              Page table entries size of the process
+
+
+       pid_write pid
+              Total number of bytes written by the process
+
+
+       platform (dev) type n (factor offset)
+              Platform sensor from sysfs (Linux 2.6).  Parameter  dev  may  be
+              omitted  if you have only one platform device.  Platform type is
+              either 'in' or 'vol' meaning voltage; 'fan' meaning fan;  'temp'
+              meaning  temperature.  Parameter  n is number of the sensor. See
+              /sys/bus/platform/devices/ on your local computer. The  optional
+              arguments  'factor' and 'offset' allow precalculation of the raw
+              input, which is being modified as follows: 'input = input * fac-
               tor + offset'. Note that they have to be given as decimal values
               (i.e. contain at least one decimal place).
 
 
-       [1mpop3_unseen (args)[0m
+       pop3_unseen (args)
               Displays the number of unseen messages in your global POP3 inbox
-              by default. You can define individual POP3 inboxes seperately by
+              by default. You can define individual POP3 inboxes separately by
               passing arguments to this object. Arguments are: "host user pass
-              [-i interval (in seconds)] [-p port] [-e command] [-r retries]".
-              Default  port is 110, default interval is 5 minutes, and default
-              number of retries before giving up is 5. If the password is sup‐
-              plied  as  '*',  you will be prompted to enter the password when
-              Conky starts.
+              [-i  interval  (in  seconds)]  [-p  port] [-e 'command'] [-r re-
+              tries]". Default port is 110, default interval is 5 minutes, and
+              default number of retries before giving up is 5. If the password
+              is supplied as '*', you will be prompted to enter  the  password
+              when Conky starts.
 
 
-       [1mpop3_used (args)[0m
-              Displays the amount of space (in MiB, 2^20) used in your  global
-              POP3  inbox  by  default. You can define individual POP3 inboxes
-              seperately by passing arguments to this object.  Arguments  are:
-              "host  user  pass  [-i interval (in seconds)] [-p port] [-e com‐
-              mand] [-r retries]". Default port is 110, default interval is  5
+       pop3_used (args)
+              Displays  the amount of space (in MiB, 2^20) used in your global
+              POP3 inbox by default. You can define  individual  POP3  inboxes
+              separately  by  passing arguments to this object. Arguments are:
+              "host user pass [-i interval (in seconds)] [-p port]  [-e  'com-
+              mand'] [-r retries]". Default port is 110, default interval is 5
               minutes, and default number of retries before giving up is 5. If
-              the password is supplied as '*', you will be prompted  to  enter
+              the  password  is supplied as '*', you will be prompted to enter
               the password when Conky starts.
 
 
-       [1mpre_exec shell command[0m
+       pre_exec shell command
               Executes a shell command one time before conky displays anything
               and puts output as text.
 
 
-       [1mprocesses[0m
+       processes
               Total processes (sleeping and running)
 
 
-       [1mreplied_mails (maildir) (interval)[0m
+       read_tcp (host) port
+              Connects  to  a tcp port on a host (default is localhost), reads
+              every char available at the moment and shows them.
+
+
+       replied_mails (maildir) (interval)
               Number of mails marked as replied in the  specified  mailbox  or
               mail  spool  if  not. Only maildir type mailboxes are supported,
               mbox type will return -1.
 
 
-       [1mrss url delay_in_minutes action (num_par (spaces_in_front))[0m
-              Download and parse RSS feeds. Action may be one of  the  follow‐
-              ing:  feed_title, item_title (with num par), item_desc (with num
-              par) and item_titles (when using this action and spaces_in_front
-              is given conky places that many spaces in front of each item).
+       rss uri interval_in_minutes action (num_par (spaces_in_front))
+              Download and parse RSS feeds. The interval  may  be  a  floating
+              point  value  greater  than 0, otherwise defaults to 15 minutes.
+              Action may be one of the following: feed_title, item_title (with
+              num  par),  item_desc (with num par) and item_titles (when using
+              this action and spaces_in_front is given conky places that  many
+              spaces in front of each item). This object is threaded, and once
+              a thread is created it can't be explicitly destroyed. One thread
+              will  run  for each URI specified. You can use any protocol that
+              Curl supports.
 
-
-       [1mrunning_processes[0m
+       running_processes
               Running processes (not sleeping), requires Linux 2.6
 
 
-       [1mscroll length (step) text[0m
-              Scroll  'text'  by  'step' characters showing 'length' number of
-              characters at the same time. The text  may  also  contain  vari‐
+       running_threads
+              Number of running (runnable) threads. Linux only.
+
+
+       scroll length (step) text
+              Scroll 'text' by 'step' characters showing  'length'  number  of
+              characters  at  the  same  time. The text may also contain vari-
               ables. 'step' is optional and defaults to 1 if not set. If a var
-              creates output on multiple lines then the lines are  placed  be‐
-              hind  each other separated with a '|'-sign. Do NOT use vars that
-              change colors or otherwise affect the design inside a  scrolling
-              text.  If  you  want  spaces  between  the  start and the end of
-              'text', place them at the end of 'text' not at the front  ("foo‐
-              bar" and " foobar" can both generate "barfoo" but "foobar " will
-              keep the spaces like this "bar foo").
+              creates  output  on multiple lines then the lines are placed be-
+              hind each other separated with a '|'-sign.  If  you  change  the
+              textcolor  inside  $scroll  it  will automatically have it's old
+              value back at the end of $scroll. The end and the start of  text
+              will be separated by 'length' number of spaces.
 
 
-       [1mseen_mails (maildir) (interval)[0m
-              Number of mails marked as seen in the specified mailbox or  mail
-              spool  if  not.  Only maildir type mailboxes are supported, mbox
+       seen_mails (maildir) (interval)
+              Number  of mails marked as seen in the specified mailbox or mail
+              spool if not. Only maildir type mailboxes  are  supported,  mbox
               type will return -1.
 
 
-       [1mshadecolor (color)[0m
+       shadecolor (color)
               Change shading color
 
 
-       [1msmapi (ARGS)[0m
-              when using smapi, display  contents  of  the  /sys/devices/plat‐
-              form/smapi  directory. ARGS are either '(FILENAME)' or 'bat (IN‐
-              DEX) (FILENAME)' to display the  corresponding  files'  content.
-              This  is  a  very raw method of accessing the smapi values. When
+       smapi (ARGS)
+              when  using  smapi,  display  contents of the /sys/devices/plat-
+              form/smapi directory. ARGS are either '(FILENAME)' or 'bat  (IN-
+              DEX)  (FILENAME)'  to  display the corresponding files' content.
+              This is a very raw method of accessing the  smapi  values.  When
               available, better use one of the smapi_* variables instead.
 
 
-       [1msmapi_bat_bar (INDEX),(height),(width)[0m
-              when using smapi, display the remaining capacity of the  battery
+       smapi_bat_bar (INDEX),(height),(width)
+              when  using smapi, display the remaining capacity of the battery
               with index INDEX as a bar.
 
 
-       [1msmapi_bat_perc (INDEX)[0m
-              when  using  smapi, display the remaining capacity in percent of
-              the battery with index INDEX. This is a  separate  variable  be‐
+       smapi_bat_perc (INDEX)
+              when using smapi, display the remaining capacity in  percent  of
+              the  battery  with  index INDEX. This is a separate variable be-
               cause it supports the 'use_spacer' configuration option.
 
 
-       [1msmapi_bat_power INDEX[0m
-              when  using smapi, display the current power of the battery with
-              index INDEX in watt. This is a  separate  variable  because  the
-              original  read out value is being converted from mW. The sign of
-              the output reflects charging (positive)  or  discharging  (nega‐
+       smapi_bat_power INDEX
+              when using smapi, display the current power of the battery  with
+              index  INDEX  in  watt.  This is a separate variable because the
+              original read out value is being converted from mW. The sign  of
+              the  output  reflects  charging (positive) or discharging (nega-
               tive) state.
 
 
-       [1msmapi_bat_temp INDEX[0m
+       smapi_bat_temp INDEX
               when using smapi, display the current temperature of the battery
-              with index INDEX in degree Celsius. This is a separate  variable
-              because the original read out value is being converted from mil‐
+              with  index INDEX in degree Celsius. This is a separate variable
+              because the original read out value is being converted from mil-
               li degree Celsius.
 
 
-       [1msony_fanspeed[0m
-              Displays the Sony VAIO fanspeed information if sony-laptop  ker‐
+       sony_fanspeed
+              Displays  the Sony VAIO fanspeed information if sony-laptop ker-
               nel support is enabled. Linux only.
 
 
-       [1mstippled_hr (space)[0m
+       stippled_hr (space)
               Stippled (dashed) horizontal line
 
 
-       [1mswap   [22mAmount of swap in use
+       swap   Amount of swap in use
 
 
-       [1mswapbar (height),(width)[0m
+       swapbar (height),(width)
               Bar that shows amount of swap in use
 
 
-       [1mswapmax[0m
+       swapfree
+              Amount of free swap
+
+
+       swapmax
               Total amount of swap
 
 
-       [1mswapperc[0m
+       swapperc
               Percentage of swap in use
 
 
-       [1msysname[0m
+       sysname
               System name, Linux for example
 
 
-       [1mtab (width, (start))[0m
+       tab (width, (start))
               Puts a tab of the specified width, starting from column 'start'.
               The unit is pixels for both arguments.
 
 
-       [1mtail logfile lines (interval)[0m
-              Displays last N lines of supplied text text file.   If  interval
-              is  not  supplied,  Conky assumes 2x Conky's interval. Max of 30
-              lines can be displayed, or until the text buffer is filled.
+       tail logfile lines (next_check)
+              Displays last N lines of supplied text file. The file is checked
+              every 'next_check' update. If next_check is not supplied,  Conky
+              defaults  to  2.  Max of 30 lines can be displayed, or until the
+              text buffer is filled.
 
 
-       [1mtcp_portmon port_begin port_end item (index) [4m[22m(ip4[24m [4monly[24m [4mat[24m [4mpresent)[0m
-              TCP port monitor for specified local ports. Port numbers must be
-              in the range 1 to 65535. Valid items are:
+       tcp_portmon port_begin port_end item (index)
+              TCP port (both IPv6 and IPv4) monitor for specified local ports.
+              Port numbers must be in the range 1 to 65535. Valid items are:
 
-              [1mcount[22m- total number of connections in the range
-              [1mrip[22m- remote ip address
-              [1mrhost[22m- remote host name
-              [1mrport[22m- remote port number
-              [1mrservice[22m- remote service name from /etc/services
-              [1mlip[22m- local ip address
-              [1mlhost[22m- local host name
-              [1mlport[22m- local port number
-              [1mlservice[22m- local service name from /etc/services
+              count Total number of connections in the range
+              rip Remote ip address
+              rhost Remote host name
+              rport Remote port number
+              rservice Remote service name from /etc/services
+              lip Local ip address
+              lhost Local host name
+              lport Local port number
+              lservice Local service name from /etc/services
 
               The connection index provides you with access to each connection
-              in the port monitor. The monitor will return information for in‐
+              in the port monitor. The monitor will return information for in-
               dex values from 0 to n-1 connections. Values higher than n-1 are
-              simply ignored. For the "count" item, the connection index  must
+              simply ignored.  For the "count" item, the connection index must
               be omitted. It is required for all other items.
 
               Examples:
-              [1m${tcp_portmon  6881  6999 count}[22m- displays the number of connec‐
+
+              ${tcp_portmon  6881  6999  count} Displays the number of connec-
               tions in the bittorrent port range
-              [1m${tcp_portmon 22 22 rip 0}[22m- displays the remote host ip  of  the
+              ${tcp_portmon 22 22 rip 0} Displays the remote host  ip  of  the
               first sshd connection
-              [1m${tcp_portmon  22  22 rip 9}[22m- displays the remote host ip of the
+              ${tcp_portmon  22  22  rip 9} Displays the remote host ip of the
               tenth sshd connection
-              [1m${tcp_portmon 1 1024 rhost 0}[22m- displays the remote host name  of
+              ${tcp_portmon 1 1024 rhost 0} Displays the remote host  name  of
               the first connection on a privileged port
-              [1m${tcp_portmon  1 1024 rport 4}[22m- displays the remote host port of
+              ${tcp_portmon  1  1024 rport 4} Displays the remote host port of
               the fifth connection on a privileged port
-              [1m${tcp_portmon 1 65535 lservice 14}[22m- displays the  local  service
+              ${tcp_portmon 1 65535 lservice 14} Displays  the  local  service
               name of the fifteenth connection in the range of all ports
 
               Note that port monitor variables which share the same port range
-              actually refer to the same monitor, so many references to a sin‐
+              actually refer to the same monitor, so many references to a sin-
               gle port range for different items and different indexes all use
-              the same monitor internally.  In other words, the program avoids
+              the same monitor internally. In other words, the program  avoids
               creating redundant monitors.
 
-       [1mtemplateN (arg1) (arg2) (arg3 ...)[0m
+       templateN (arg1) (arg2) (arg3 ...)
               Evaluate  the  content  of  the templateN configuration variable
-              (where N is a value between 0 and 9, inclusively), applying sub‐
-              stitutions  as described in the documentation of the correspond‐
-              ing configuration variable.  The number of arguments is  option‐
-              al,  but  must match the highest referred index in the template.
-              You can use the same special sequences in each argument  as  the
-              ones  valid for a template definition, e.g. to allow an argument
-              to contain a whitespace. Also simple  nesting  of  templates  is
-              possible this way.
+              (where N is a value between 0 and 9, inclusively), applying sub-
+              stitutions  as described in the documentation of the correspond-
+              ing configuration variable. The number of arguments is optional,
+              but  must  match the highest referred index in the template. You
+              can use the same special sequences in each argument as the  ones
+              valid  for  a  template definition, e.g. to allow an argument to
+              contain a whitespace. Also simple nesting of templates is possi-
+              ble this way.
 
               Here are some examples of template definitions:
 
@@ -1835,321 +2230,561 @@ conky(1)                                                              conky(1)
               above, with the equivalent syntax when not using any template at
               all:
 
-              using template                                         same without template
-              ──────────────────────────────────────────────────────────────────────────────────────────────────
-              ${template0 node name}                                 $nodename
-              ${template1 root /}                                    root:   ${fs_free   /}   /
-                                                                     ${fs_size /}
-              ${template1                                            disk root: ${fs_free /}
-                                          ${template2\ disk\ root}                               / ${fs_size /}
-                                          /}
+              using template               same without template
+              ��������������������������������������������������������
+              ${template0 node name}       $nodename
+              ${template1 root /}          root:   ${fs_free   /}   /
+                                           ${fs_size /}
+              ${template1   ${template2\   disk  root: ${fs_free /} /
+              disk\ root} /}               ${fs_size /}
 
-
-       [1mtexeci interval command[0m
+       texeci interval command
               Runs a command at an interval inside a thread and  displays  the
               output.  Same  as  $execi,  except  the  command is run inside a
-              thread. Use this if you have a slow script to keep Conky  updat‐
+              thread. Use this if you have a slow script to keep Conky  updat-
               ing.  You should make the interval slightly longer then the time
               it takes your script to execute. For  example,  if  you  have  a
-              script  that  take 5 seconds to execute, you should make the in‐
-              terval at least 6 seconds.  See also $execi.
+              script  that  take 5 seconds to execute, you should make the in-
+              terval at least 6 seconds.  See also $execi.  This  object  will
+              clean  up  the  thread when it is destroyed, so it can safely be
+              used in a nested fashion, though it may not produce the  desired
+              behaviour if used this way.
 
 
-       [1mtime (format)[0m
-              Local time, see man strftime to get more information about  for‐
+       threads
+              Total threads
+
+
+       time (format)
+              Local  time, see man strftime to get more information about for-
               mat
 
 
-       [1mtop type, num[0m
-              This  takes arguments in the form:top (name) (number) Basically,
-              processes are ranked from highest to lowest in terms of cpu  us‐
-              age,  which  is  what  (num)  represents. The types are: "name",
-              "pid", "cpu", "mem", "mem_res", "mem_vsize", and  "time".  There
-              can be a max of 10 processes listed.
+       to_bytes size
+              If  'size'  is  a  number  followed  by   a   size-unit   (kilo-
+              byte,mb,GiB,...) then it converts the size to bytes and shows it
+              without unit, otherwise it just shows 'size'.
 
 
-       [1mtop_mem type, num[0m
+       top type num
+              This takes arguments in the form:top (name) (number)  Basically,
+              processes  are ranked from highest to lowest in terms of cpu us-
+              age, which is what (num)  represents.  The  types  are:  "name",
+              "pid",  "cpu", "mem", "mem_res", "mem_vsize", "time", "io_perc",
+              "io_read" and "io_write". There can be a  max  of  10  processes
+              listed.
+
+
+       top_io type num
+              Same  as top, except sorted by the amount of I/O the process has
+              done during the update interval
+
+
+       top_mem type num
               Same as top, except sorted by mem usage instead of cpu
 
 
-       [1mtop_time type, num[0m
-              Same  as top, except sorted by total CPU time instead of current
+       top_time type num
+              Same as top, except sorted by total CPU time instead of  current
               CPU usage
 
 
-       [1mtotaldown net[0m
-              Total download, overflows at 4 GB on Linux with 32-bit arch  and
-              there doesn't seem to be a way to know how many times it has al‐
+       totaldown (net)
+              Total  download, overflows at 4 GB on Linux with 32-bit arch and
+              there doesn't seem to be a way to know how many times it has al-
               ready done that before conky has started.
 
 
-       [1mtotalup net[0m
+       totalup (net)
               Total upload, this one too, may overflow
 
 
-       [1mtrashed_mails (maildir) (interval)[0m
-              Number of mails marked as trashed in the  specified  mailbox  or
-              mail  spool  if  not. Only maildir type mailboxes are supported,
+       trashed_mails (maildir) (interval)
+              Number  of  mails  marked as trashed in the specified mailbox or
+              mail spool if not. Only maildir type  mailboxes  are  supported,
               mbox type will return -1.
 
 
-       [1mtztime (timezone) (format)[0m
-              Local time for specified timezone, see man strftime to get  more
-              information  about format. The timezone argument is specified in
-              similar fashion as TZ environment variable. For hints,  look  in
+       tztime (timezone (format))
+              Local  time for specified timezone, see man strftime to get more
+              information about format. The timezone argument is specified  in
+              similar  fashion  as TZ environment variable. For hints, look in
               /usr/share/zoneinfo. e.g.  US/Pacific, Europe/Zurich, etc.
 
 
-       [1munflagged_mails (maildir) (interval)[0m
-              Number  of  mails not marked as flagged in the specified mailbox
+       gid_name gid
+              Name of group with this gid
+
+
+       uid_name uid
+              Username of user with this uid
+
+
+       unflagged_mails (maildir) (interval)
+              Number of mails not marked as flagged in the  specified  mailbox
               or mail spool if not. Only maildir type mailboxes are supported,
               mbox type will return -1.
 
 
-       [1munforwarded_mails (maildir) (interval)[0m
+       unforwarded_mails (maildir) (interval)
               Number of mails not marked as forwarded in the specified mailbox
               or mail spool if not. Only maildir type mailboxes are supported,
               mbox type will return -1.
 
 
-       [1munreplied_mails (maildir) (interval)[0m
-              Number  of  mails not marked as replied in the specified mailbox
+       unreplied_mails (maildir) (interval)
+              Number of mails not marked as replied in the  specified  mailbox
               or mail spool if not. Only maildir type mailboxes are supported,
               mbox type will return -1.
 
 
-       [1munseen_mails (maildir) (interval)[0m
-              Number  of  new or unseen mails in the specified mailbox or mail
-              spool if not. Only maildir type mailboxes  are  supported,  mbox
+       unseen_mails (maildir) (interval)
+              Number of new or unseen mails in the specified mailbox  or  mail
+              spool  if  not.  Only maildir type mailboxes are supported, mbox
               type will return -1.
 
 
-       [1mupdates Number of updates[0m
+       updates Number of updates
               for debugging
 
 
-       [1mupspeed net[0m
-              Upload speed in KiB
+       upspeed (net)
+              Upload speed in suitable IEC units
 
 
-       [1mupspeedf net[0m
+       upspeedf (net)
               Upload speed in KiB with one decimal
 
 
-       [1mupspeedgraph   (netdev)   ("normal"|"log")  (height),(width)  (gradient[0m
-       [1mcolour 1) (gradient colour 2) (scale)[0m
-              Upload speed graph, colours defined in  hex,  minus  the  #.  If
-              scale  is  non-zero,  it becomes the scale for the graph. Uses a
-              logarithmic scale (to see small numbers) when you use "log"  in‐
-              stead of "normal".
+       upspeedgraph (netdev) (height),(width) (gradient  colour  1)  (gradient
+       colour 2) (scale) (-t) (-l)
+              Upload  speed  graph,  colours  defined  in hex, minus the #. If
+              scale is non-zero, it becomes the scale for the  graph.  Uses  a
+              logarithmic  scale  (to  see  small numbers) when you use the -l
+              switch. Takes the switch '-t' to  use  a  temperature  gradient,
+              which  makes  the gradient values change depending on the ampli-
+              tude of a particular graph value (try it and see).
 
 
-       [1muptime [22mUptime
+       uptime Uptime
 
 
-       [1muptime_short[0m
+       uptime_short
               Uptime in a shorter format
 
 
-       [1muser_names[0m
+       user_names
               Lists the names of the users logged in
 
 
-       [1muser_number[0m
+       user_number
               Number of users logged in
 
 
-       [1muser_terms[0m
+       user_terms
               Lists the consoles in use
 
 
-       [1muser_times[0m
+       user_times
               Lists how long users have been logged in for
 
 
-       [1mutime (format)[0m
+       user_time console
+              Lists how long the user for the given console has been logged in
+              for
+
+
+       utime (format)
               Display time in UTC (universal coordinate time).
 
 
-       [1mvoffset (pixels)[0m
+       voffset (pixels)
               Change  vertical  offset by N pixels. Negative values will cause
               text to overlap. See also $offset.
 
 
-       [1mvoltage_mv (n)[0m
+       voltage_mv (n)
               Returns CPU #n's voltage in mV. CPUs  are  counted  from  1.  If
               omitted, the parameter defaults to 1.
 
 
-       [1mvoltage_v (n)[0m
-              Returns CPU #n's voltage in V. CPUs are counted from 1. If omit‐
+       voltage_v (n)
+              Returns CPU #n's voltage in V. CPUs are counted from 1. If omit-
               ted, the parameter defaults to 1.
 
 
-       [1mwireless_ap net[0m
+       weather URI locID data_type (interval_in_minutes)
+              Download, parse and display METAR data.
+
+              For the 'URI', there are two possibilities:
+
+              http://weather.noaa.gov/pub/data/observations/metar/stations/
+              http://xoap.weather.com/weather/local/
+
+              The first one is free to use but the second requires you to reg-
+              ister and obtain your partner ID and license key. These two must
+              be written, separated by a space, into  a  file  called  .xoaprc
+              which needs to be placed into your home directory.
+
+              'locID'  must  be  a  valid location identifier for the required
+              uri. For the NOAA site this must be a valid ICAO  (see  for  in-
+              stance   https://pilotweb.nas.faa.gov/qryhtml/icao/).   For  the
+              weather.com site this must be a valid location ID (see  for  in-
+              stance http://aspnetresources.com/tools/locid.aspx).
+
+              'data_type' must be one of the following:
+
+              last_update The date and time stamp of the data.  The result de-
+              pends on the URI used. For the NOAA site it is date (yyyy/mm/dd)
+              and UTC time.  For the weather.com one it is date ([m]m/[d]d/yy)
+              and Local Time of the station.
+              temperature
+
+              Air temperature (you can use the 'temperature_unit' config  set-
+              ting to change units)
+              cloud_cover
+
+              The highest cloud cover status
+              pressure
+
+              Air pressure in millibar
+              wind_speed
+
+              Wind speed in km/h
+              wind_dir
+
+              Wind direction
+              wind_dir_DEG
+
+              Compass wind direction
+              humidity
+
+              Relative humidity in %
+              weather
+
+              Any  relevant weather event (rain, snow, etc.). This is not used
+              if you are querying the weather.com site since this data is  ag-
+              gregated into the cloud_cover one
+              icon
+
+              Weather  icon  (only  for www.weather.com). Can be used together
+              with the icon kit provided upon registering to their service.
+
+              'delay_in_minutes' (optional, default 30) cannot be less than 30
+              minutes.
+
+              This  object  is threaded, and once a thread is created it can't
+              be explicitly destroyed. One thread will run for each URI speci-
+              fied.
+
+              Note that these variables are still EXPERIMENTAL and can be sub-
+              ject to many future changes.
+
+       weather_forecast URI locID day data_type (interval_in_minutes)
+              Download, parse and display weather forecast data  for  a  given
+              day (daytime only).
+
+              For  the  'URI',  for  the  time  being  only http://xoap.weath-
+              er.com/weather/local/ is supported. See 'weather' above for  de-
+              tails of usage
+
+              'locID', see 'weather' above.
+
+              'day' is a number from 0 (today) to 4 (3 days after tomorrow).
+
+              'data_type' must be one of the following:
+
+              day Day of the week
+              date Date, in the form MMM DD (ie. Jul 14)
+              low Minimun temperature (you can use the 'temperature_unit' con-
+              fig setting to change units)
+              hi Maximum temperature (you can use the 'temperature_unit'  con-
+              fig setting to change units)
+              icon  Weather  icon. Can be used together with the icon kit pro-
+              vided upon registering to the weather.com service
+              forecast Weather forecast (sunny, rainy, etc.)
+              wind_speed Wind speed in km/h
+              wind_dir Wind direction
+              wind_dir_DEG Compass wind direction
+              humidity Relative humidity in %
+              precipitation Probability of having a precipitation (in %)
+
+              'delay_in_minutes' (optional, default 210) cannot be lower  than
+              210 min.
+
+              This  object  is threaded, and once a thread is created it can't
+              be explicitly destroyed. One thread will run for each URI speci-
+              fied. You can use any protocol that Curl supports.
+
+              Note that these variables are still EXPERIMENTAL and can be sub-
+              ject to many future changes.
+
+       wireless_ap (net)
               Wireless access point MAC address (Linux only)
 
 
-       [1mwireless_bitrate net[0m
+       wireless_bitrate (net)
               Wireless bitrate (ie 11 Mb/s) (Linux only)
 
 
-       [1mwireless_essid net[0m
+       wireless_essid (net)
               Wireless access point ESSID (Linux only)
 
 
-       [1mwireless_link_bar (height), (width) net[0m
+       wireless_link_bar (height),(width) (net)
               Wireless link quality bar (Linux only)
 
 
-       [1mwireless_link_qual net[0m
+       wireless_link_qual (net)
               Wireless link quality (Linux only)
 
 
-       [1mwireless_link_qual_max net[0m
+       wireless_link_qual_max (net)
               Wireless link quality maximum value (Linux only)
 
 
-       [1mwireless_link_qual_perc net[0m
+       wireless_link_qual_perc (net)
               Wireless link quality in percents (Linux only)
 
 
-       [1mwireless_mode net[0m
+       wireless_mode (net)
               Wireless mode (Managed/Ad-Hoc/Master) (Linux only)
 
 
-       [1mwords textfile[0m
+       words textfile
               Displays the number of words in the given file
 
 
-       [1mxmms2_album[0m
+       xmms2_album
               Album in current XMMS2 song
 
 
-       [1mxmms2_artist[0m
+       xmms2_artist
               Artist in current XMMS2 song
 
 
-       [1mxmms2_bar (height),(width)[0m
+       xmms2_bar (height),(width)
               Bar of XMMS2's progress
 
 
-       [1mxmms2_bitrate[0m
+       xmms2_bitrate
               Bitrate of current song
 
 
-       [1mxmms2_comment[0m
+       xmms2_comment
               Comment in current XMMS2 song
 
 
-       [1mxmms2_date[0m
+       xmms2_date
               Returns song's date.
 
 
-       [1mxmms2_duration[0m
+       xmms2_duration
               Duration of current song
 
 
-       [1mxmms2_elapsed[0m
+       xmms2_elapsed
               Song's elapsed time
 
 
-       [1mxmms2_genre[0m
+       xmms2_genre
               Genre in current XMMS2 song
 
 
-       [1mxmms2_id[0m
+       xmms2_id
               XMMS2 id of current song
 
 
-       [1mxmms2_percent[0m
+       xmms2_percent
               Percent of song's progress
 
 
-       [1mxmms2_playlist[0m
+       xmms2_playlist
               Returns the XMMS2 playlist.
 
 
-       [1mxmms2_size[0m
+       xmms2_size
               Size of current song
 
 
-       [1mxmms2_smart[0m
+       xmms2_smart
               Prints the song name in either the form "artist - title" or file
               name, depending on whats available
 
 
-       [1mxmms2_status[0m
+       xmms2_status
               XMMS2 status (Playing, Paused, Stopped, or Disconnected)
 
 
-       [1mxmms2_timesplayed[0m
+       xmms2_timesplayed
               Number of times a song was played (presumably).
 
 
-       [1mxmms2_title[0m
+       xmms2_title
               Title in current XMMS2 song
 
 
-       [1mxmms2_tracknr[0m
+       xmms2_tracknr
               Track number in current XMMS2 song
 
 
-       [1mxmms2_url[0m
+       xmms2_url
               Full path to current song
 
 
-[1mEXAMPLES[0m
-       conky [1m-t '${time %D %H:%M}' -o -u 30[0m
+LUA API
+       Conky  features a Lua Programming API, and also ships with Lua bindings
+       for some useful libraries. Conky defines certain global  functions  and
+       variables which can be accessed from Lua code running in Conky.
+
+       To  use  Lua  Conky,  you first need to make sure you have a version of
+       Conky with Lua support enabled (``conky -v'' will report this). Scripts
+       must  first be loaded using the lua_load configuration option. You then
+       call functions in Lua via Conky's $lua, $lua_read, and Lua hooks.
+
+       Be careful when creating threaded objects  through  the  Lua  API.  You
+       could wind up with a whole bunch of threads running if a thread is cre-
+       ated with each iteration.
+
+       At this time, the Lua API should  not  be  considered  stable  and  may
+       change drastically from one release to another as it matures.
+
+       NOTE:  In  order to accommodate certain features in the cairo library's
+       API, Conky will export a few additional functions for the  creation  of
+       certain structures. These are documented below.
+
+       conky_parse(string) function
+              This  function  takes  a string that is evaluated as per Conky's
+              TEXT section, and then returns a string with the result.
+
+       conky_set_update_interval(number) function
+              Sets Conky's update interval (in seconds) to 'number'.
+
+       conky_window table
+              This table contains some information about Conky's  window.  The
+              following table describes the values contained:
+
+              drawable  Window's drawable (Xlib Drawable), requires Lua extras
+              enabled at compile time.
+              visual Window's visual (Xlib Visual), requires  Lua  extras  en-
+              abled at compile time.
+              display Window's display (Xlib Display), requires Lua extras en-
+              abled at compile time.
+              width Window width (in pixels).
+              height Window height (in pixels).
+              border_inner_margin Window's inner border margin (in pixels).
+              border_outer_margin Window's outer border margin (in pixels).
+              border_width Window's border width (in pixels).
+              text_start_x The x component of the starting coordinate of  text
+              drawing.
+              text_start_y  The y component of the starting coordinate of text
+              drawing.
+              text_width The width of the text drawing region.
+              text_height The height of the text drawing region.
+
+              NOTE: This table is only defined when X support is enabled.
+
+       conky_info table
+              This table contains some information about Conky's internal  da-
+              ta. The following table describes the values contained:
+
+              update_interval Conky's update interval (in seconds).
+              uptime System uptime, in seconds.
+
+       conky_build_info string
+              A  string containing the build info for this particular instance
+              of Conky, including the version, build date, and architecture.
+
+       conky_build_date string
+              A string containing the build date for this particular  instance
+              of Conky.
+
+       conky_build_arch string
+              A  string  containing the build architecture for this particular
+              instance of Conky.
+
+       conky_version string
+              A string containing the  version  of  the  current  instance  of
+              Conky.
+
+       conky_config string
+              A  string containing the path of the current Conky configuration
+              file.
+
+       cairo_text_extents_t:create() function
+              Call this function to return a new  cairo_text_extents_t  struc-
+              ture.  A creation function for this structure is not provided by
+              the cairo API. After calling this, you should use tolua.takeown-
+              ership() on the return value to ensure ownership is passed prop-
+              erly.
+
+       cairo_font_extents_t:create() function
+              Call this function to return a new  cairo_font_extents_t  struc-
+              ture.  A creation function for this structure is not provided by
+              the cairo API. After calling this, you should use tolua.takeown-
+              ership() on the return value to ensure ownership is passed prop-
+              erly.
+
+       cairo_matrix_t:create() function
+              Call this function to return a new cairo_matrix_t  structure.  A
+              creation  function  for  this  structure  is not provided by the
+              cairo API. After calling this, you should  use  tolua.takeowner-
+              ship() on the return value to ensure ownership is passed proper-
+              ly.
+
+EXAMPLES
+       conky -t '${time %D %H:%M}' -o -u 30
               Start Conky in its own window with date and clock as text and 30
               sec update interval.
 
-       conky [1m-a top_left -x 5 -y 500 -d[0m
+       conky -a top_left -x 5 -y 500 -d
               Start Conky to background at coordinates (5, 500).
 
-       conky [1m-C > ~/.conkyrc[0m
-              Do not start Conky, but have it output the builtin default  con‐
+       conky -C > ~/.conkyrc
+              Do  not start Conky, but have it output the builtin default con-
               fig file to ~/.conkyrc for later customising.
 
-[1mFILES[0m
-       [4m${sysconfdir}/conky/conky.conf[0m
-              Default   system-wide   configuration   file.   The   value   of
-              ${sysconfdir} depends on the compile-time options  (most  likely
+FILES
+       ${sysconfdir}/conky/conky.conf
+              Default  system-wide   configuration   file.    The   value   of
+              ${sysconfdir}  depends  on the compile-time options (most likely
               /etc).
 
-       [4m~/.conkyrc[0m
+       ~/.conkyrc
               Default personal configuration file.
 
-[1mBUGS[0m
+BUGS
        Drawing to root or some other desktop window directly doesn't work with
        all window managers. Especially doesn't work well with Gnome and it has
-       been  reported  that  it  doesn't work with KDE either. Nautilus can be
-       disabled from drawing to desktop  with  program  gconf-editor.  Uncheck
-       show_desktop  in  /apps/nautilus/preferences/.  There  is  -w switch in
-       Conky to set some specific window id. You  might  find  xwininfo  -tree
-       useful  to  find  the  window  to draw to. You can also use -o argument
+       been reported that it doesn't work with KDE  either.  Nautilus  can  be
+       disabled  from  drawing  to  desktop with program gconf-editor. Uncheck
+       show_desktop in /apps/nautilus/preferences/.  There  is  -w  switch  in
+       Conky  to  set  some  specific window id. You might find xwininfo -tree
+       useful to find the window to draw to.  You can  also  use  -o  argument
        which makes Conky to create its own window. If you do try running Conky
-       in  its  own window, be sure to read up on the own_window_type settings
+       in its own window, be sure to read up on the  own_window_type  settings
        and experiment.
 
-[1mSEE ALSO[0m
-       ⟨http://conky.sourceforge.net/⟩
+SEE ALSO
+       ��http://conky.sourceforge.net/��
 
-       ⟨http://www.sourceforge.net/projects/conky⟩
+       ��http://www.sourceforge.net/projects/conky��
+
+       ��http://wiki.conky.be��
 
        #conky on irc.freenode.net
 
-[1mCOPYING[0m
-       Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et.  al.   Any
+COPYING
+       Copyright  (c)  2005-2010  Brenden Matthews, Philip Kovacs, et. al. Any
        original torsmo code is licensed under the BSD license (see LICENSE.BSD
-       for a copy).  All code written since the fork of torsmo is licensed un‐
-       der the GPL (see LICENSE.GPL for a copy), except where noted different‐
-       ly (such as in portmon code, timed  thread  code,  and  audacious  code
+       for  a copy). All code written since the fork of torsmo is licensed un-
+       der the GPL (see LICENSE.GPL for a copy), except where noted different-
+       ly  (such  as  in  portmon  code, timed thread code, and audacious code
        which are LGPL, and prss which is an MIT-style license).
 
-[1mAUTHORS[0m
+AUTHORS
        The Conky dev team (see AUTHORS for a full list of contributors).
 
 
 
-                                  2009-06-06                          conky(1)
+                                  2009-08-01                          conky(1)

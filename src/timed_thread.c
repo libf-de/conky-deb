@@ -1,4 +1,7 @@
-/* timed_thread.c: Abstraction layer for timed threads
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * timed_thread.c: Abstraction layer for timed threads
  *
  * Copyright (C) 2006-2007 Philip Kovacs pkovacs@users.sourceforge.net
  *
@@ -15,7 +18,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
- * USA. */
+ * USA.
+ *
+ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -47,6 +52,7 @@ struct _timed_thread {
 	struct timespec interval_time;	/* interval_usecs as a struct timespec */
 	struct timespec wait_time;		/* absolute future time next timed_thread_test will wait until */
 	int pipefd[2];
+	int die;
 };
 
 /* linked list of created threads */
@@ -156,6 +162,7 @@ void timed_thread_destroy(timed_thread *p_timed_thread,
 	/* signal thread to stop */
 	pthread_mutex_lock(&p_timed_thread->runnable_mutex);
 	pthread_cond_signal(&p_timed_thread->runnable_cond);
+	p_timed_thread->die = 1;
 	pthread_mutex_unlock(&p_timed_thread->runnable_mutex);
 	write(p_timed_thread->pipefd[1], "die", 3);
 
@@ -207,6 +214,11 @@ int timed_thread_test(timed_thread *p_timed_thread, int override_wait_time)
 		/* could not acquire runnable_cond mutex,
 		 * so tell caller to exit thread */
 		return -1;
+	}
+
+	if (p_timed_thread->die) {
+		/* if we were kindly asked to die, then die */
+		return 1;
 	}
 
 	if (override_wait_time && now(&p_timed_thread->wait_time)) {

@@ -1,4 +1,7 @@
-/* apcupsd.h:  conky module for APC UPS daemon monitoring
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * apcupsd.h:  conky module for APC UPS daemon monitoring
  *
  * Copyright (C) 2009 Jaromir Smrcek <jaromir.smrcek@zoner.com>
  *
@@ -15,7 +18,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
- * USA. */
+ * USA.
+ *
+ */
 
 #ifndef APCUPSD_H_
 #define APCUPSD_H_
@@ -45,8 +50,5 @@ typedef struct apcupsd_s {
 
 /* Service routine for the conky main thread */
 void update_apcupsd(void);
-
-/* fill in the default values */
-void init_apcupsd(void);
 
 #endif /*APCUPSD_H_*/

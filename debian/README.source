@@ -1,0 +1,45 @@
+Please note that this source package will produce 3 different binary
+packages, with 3 different configuration, compilation and installation runs.
+
+These packages are: conky-cli, conky-std and conky-all.
+
+conky-cli
+---------
+
+conky-cli is a basic package that can be useful in servers or piped with dzen2.
+At this time it includes the following support:
+
+MPD, MOC, math, apcupsd, ncurses and I/O stats.
+
+These are basically all the features enabled by default upstream
+minus those that requires X11 or a 3rd party library (beside the standard
+C one and ncurses).
+
+conky-std
+---------
+
+conky-std should be a good compromise for most users that do not need special
+features.
+At this time it includes the following support, which is enabled by default
+upstream:
+
+X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
+wireless, ALSA mixer, apcupsd, I/O stats, argb and Lua.
+
+conky-all
+---------
+
+conky-all includes almost all of the available support:
+
+X11, XDamage, XDBE, Xft, MPD, MOC, OpenMP, math, hddtemp, portmon, RSS,
+Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
+apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings.
+
+These are all the available features minus those related to media players
+(at this time, audacious, xmms2 and bpmx) and ncurses.
+
+Please check upstream documentation and source files when updating this
+package, some features might be removed or changed, others added, so that
+any update will stick to this general philosophy.
+
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Sun, 24 Jan 2010 21:10:43 +0100
