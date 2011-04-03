@@ -1,8 +1,5 @@
 Description: Avoid rewriting an arbitrary user file
- This patch fixes issue "TEMP-0612033-026F3E" in Debian's security tracker.
-Origin: upstream, http://git.omp.am/?p=conky.git;a=patch;h=70b6f35a846f7b85bd11e66c1f23feee6b369688
-Bug-Debian: http://bugs.debian.org/612033
-Bug-Ubuntu: https://launchpad.net/bugs/607309
+Origin: http://git.omp.am/?p=conky.git;a=patch;h=70b6f35a846f7b85bd11e66c1f23feee6b369688
 
 Index: conky-1.8.0/src/eve.c
 ===================================================================
