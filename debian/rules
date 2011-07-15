@@ -9,7 +9,7 @@
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
-DEB_HOST_ARCH_CPU   ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
+DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
 CFLAGS = -Wall -g
 LDFLAGS = -Wl,--as-needed
@@ -25,12 +25,16 @@ ifeq ($(DEB_HOST_ARCH_OS),linux)
        LINUX_CONF_ARGS_ALL=--enable-wlan --enable-ibm
 endif
 
-ifeq ($(DEB_HOST_ARCH_CPU),i386)
+ifeq ($(DEB_HOST_ARCH),i386)
+ifeq ($(DEB_HOST_ARCH_OS),linux)
        ENABLE_NVIDIA=--enable-nvidia
 endif
+endif
 
-ifeq ($(DEB_HOST_ARCH_CPU),amd64)
+ifeq ($(DEB_HOST_ARCH),amd64)
+ifeq ($(DEB_HOST_ARCH_OS),linux)
        ENABLE_NVIDIA=--enable-nvidia
+endif
 endif
 
 COMMON_CONFIGURE_FLAGS = --host=$(DEB_HOST_GNU_TYPE) \
@@ -60,8 +64,7 @@ config-stamp:
 	../configure $(COMMON_CONFIGURE_FLAGS) \
 	--disable-lua --disable-double-buffer --disable-x11 \
 	--disable-xdamage --disable-own-window --disable-xft \
-	--disable-hddtemp --disable-alsa --disable-portmon \
-	--enable-ncurses
+	--disable-hddtemp --disable-alsa --disable-portmon
 
 	cd build-all && CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	../configure $(COMMON_CONFIGURE_FLAGS) \
@@ -72,7 +75,11 @@ config-stamp:
 
 	touch $@
 
-build: build-stamp
+build: build-arch build-indep
+
+build-arch: build-stamp
+
+build-indep: build-stamp
 
 build-stamp: config-stamp
 	dh_testdir
@@ -104,7 +111,7 @@ clean:
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k 
+	dh_prep
 
 	cd build-std && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-std
 	cd build-cli && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-cli

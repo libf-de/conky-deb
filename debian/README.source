@@ -23,7 +23,7 @@ features.
 At this time it includes the following support, which is enabled by default
 upstream:
 
-X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
+X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, ncurses
 wireless, ALSA mixer, apcupsd, I/O stats, argb and Lua.
 
 conky-all
@@ -36,7 +36,7 @@ Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
 apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings.
 
 These are all the available features minus those related to media players
-(at this time, audacious, xmms2 and bpmx) and ncurses.
+(at this time, audacious, xmms2 and bpmx).
 
 Please check upstream documentation and source files when updating this
 package, some features might be removed or changed, others added, so that

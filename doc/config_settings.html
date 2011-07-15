@@ -404,12 +404,19 @@
 </td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">nvidia_display</td>
+<td>The display that the nvidia variable will use (defaults to the value of the
+            display variable)
+        <p></p>
+</td>
+</tr>
+<tr bgcolor="#b4cdcd">
 <td align="center">out_to_console</td>
 <td>Print text to stdout. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">out_to_ncurses</td>
 <td>Print text in the console, but use ncurses so
         that conky can print the text of a new update over the old
@@ -417,13 +424,13 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">out_to_stderr</td>
 <td>Print text to stderr. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">out_to_x</td>
 <td>When set to no, there will be no output in X
         (useful when you also use things like out_to_console). If
@@ -433,32 +440,32 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">override_utf8_locale</td>
 <td>Force UTF8? requires XFT 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">overwrite_file</td>
 <td>Overwrite the file given as argument. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window</td>
 <td>Boolean, create own window to draw? 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">own_window_class</td>
 <td>Manually set the WM_CLASS name. Defaults to
         "Conky". 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window_colour</td>
 <td>If own_window_transparent no, set a specified
         background colour (defaults to black). Takes either a hex
@@ -467,7 +474,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">own_window_hints</td>
 <td>If own_window is yes, you may use these window
         manager hints to affect the way Conky displays. Notes: Use
@@ -478,14 +485,14 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window_title</td>
 <td>Manually set the window name. Defaults to
         "&lt;hostname&gt; - conky". 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">own_window_argb_visual</td>
 <td>Boolean, use ARGB visual? ARGB can be used for real
 			transparency, note that a composite manager is required for real
@@ -494,20 +501,20 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window_argb_value</td>
-<td>When ARGB visuals are enabled, this use this to modify the alpha value used.  Valid range is 0-255, where 0 is 0% opacity, and 255 is 100% opacity.  Note that if own_window_transparent is enabled, this value has no effect.
+<td>When ARGB visuals are enabled, this use this to modify the alpha value used.  Valid range is 0-255, where 0 is 0% opacity, and 255 is 100% opacity.
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">own_window_transparent</td>
 <td>Boolean, set transparency? If ARGB visual is enabled, sets
 			background opacity to 0%.
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window_type</td>
 <td>if own_window is yes, you may specify type
         normal, desktop, dock, panel or override (default: normal).
@@ -523,14 +530,14 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pad_percents</td>
 <td>Pad percentages to this many decimals (0 = no
         padding) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pop3</td>
 <td>Default global POP3 server. Arguments are: "host
         user pass [-i interval (in seconds)] [-p port] [-e 'command']
@@ -541,32 +548,32 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">short_units</td>
 <td>Shortens units to a single character (kiB-&gt;k,
         GiB-&gt;G, etc.). Default is off. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">show_graph_range</td>
 <td>Shows the time range covered by a graph. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">show_graph_scale</td>
 <td>Shows the maximum value in scaled graphs. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">stippled_borders</td>
 <td>Border stippling (dashing) in pixels 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">temperature_unit</td>
 <td>Desired output unit of all objects displaying a
         temperature. Parameters are either "fahrenheit" or
@@ -574,7 +581,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">templateN</td>
 <td>Define a template for later use inside TEXT
         segments. Substitute N by a digit between 0 and 9,
@@ -590,7 +597,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">text_buffer_size</td>
 <td>Size of the standard text buffer (default is 256
         bytes). This buffer is used for intermediary text, such as
@@ -602,7 +609,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">times_in_seconds</td>
 <td>If true, variables that output times output a number
 	that represents seconds. This doesn't affect $time, $tztime and
@@ -610,7 +617,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">top_cpu_separate</td>
 <td>If true, cpu in top will show usage of one
         processor's power. If false, cpu in top will show the usage
@@ -618,40 +625,40 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">top_name_width</td>
 <td>Width for $top name value (defaults to 15
         characters). 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">total_run_times</td>
 <td>Total number of times for Conky to update before
         quitting. Zero makes Conky run forever 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">update_interval</td>
 <td>Update interval 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">update_interval_on_battery</td>
 <td>Update interval when running on batterypower 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">uppercase</td>
 <td>Boolean value, if true, text is rendered in upper
         case 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">use_spacer</td>
 <td>Adds spaces around certain objects to stop them
         from moving other things around. Arguments are left, right,
@@ -662,20 +669,20 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">use_xft</td>
 <td>Use Xft (anti-aliased font and stuff) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xftalpha</td>
 <td>Alpha of Xft font. Must be a value at or between
         1 and 0. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xftfont</td>
 <td>Xft font to use. 
         <p></p>

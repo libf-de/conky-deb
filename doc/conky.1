@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH conky 1 2009-08-01 "" ""
+.TH conky 1 2010-10-05 "" ""
 .SH NAME
 conky \- A system monitor for X originally based on the torsmo code, but more kickass. It just keeps on given'er. Yeah.
 .SH SYNOPSIS
@@ -489,6 +489,11 @@ The number of samples to average for net data
 Subtract (file system) buffers from used memory?
 
 .TP 
+\fB\*(T<\fBnvidia_display\fR\*(T> \fR
+The display that the nvidia variable will use (defaults to the value of the
+display variable)
+
+.TP 
 \fB\*(T<\fBout_to_console\fR\*(T> \fR
 Print text to stdout. 
 
@@ -557,7 +562,7 @@ in conjunction with 'own_window_type override'.
 
 .TP 
 \fB\*(T<\fBown_window_argb_value\fR\*(T> \fR
-When ARGB visuals are enabled, this use this to modify the alpha value used. Valid range is 0-255, where 0 is 0% opacity, and 255 is 100% opacity. Note that if own_window_transparent is enabled, this value has no effect.
+When ARGB visuals are enabled, this use this to modify the alpha value used. Valid range is 0-255, where 0 is 0% opacity, and 255 is 100% opacity.
 
 .TP 
 \fB\*(T<\fBown_window_transparent\fR\*(T> \fR
@@ -715,8 +720,8 @@ URI).
 .TP 
 \fB\*(T<\fBacpiacadapter\fR\*(T> \fR\*(T<\fB(adapter)\fR\*(T> 
 ACPI ac adapter state. On linux, the adapter option specifies the
-subfolder of /sys/class/power_supply containing the state information (defaults
-to "AC"). Other systems ignore it.
+subfolder of /sys/class/power_supply containing the state information (tries "AC"
+and "ADP1" if there is no argument given). Non-linux systems ignore it.
 
 .TP 
 \fB\*(T<\fBacpifan\fR\*(T> \fR
@@ -1195,13 +1200,17 @@ default_graph_size config setting. Takes the switch '-t' to
 use a temperature gradient, which makes the gradient values
 change depending on the amplitude of a particular graph
 value (try it and see). If -t or -l is your first argument,
-you may need to preceed it by a space (' '). 
+you may need to preceed it by a space (' '). You may also use
+double-quotes around the exec argument should you need to execute a
+command with spaces. For example, ${execgraph "date +'%S'"} to execute
+`date +'%S'` and graph the result. Without quotes, it would simply
+print the result of `date`.
 
 .TP 
 \fB\*(T<\fBexeci\fR\*(T> \fR\*(T<\fBinterval command\fR\*(T> 
 Same as exec but with specific interval. Interval
 can't be less than update_interval in configuration. See
-also $texeci 
+also $texeci
 
 .TP 
 \fB\*(T<\fBexecibar\fR\*(T> \fR\*(T<\fBinterval command\fR\*(T> 
@@ -1918,6 +1927,10 @@ supported.
 .TP 
 \fB\*(T<\fBnodename\fR\*(T> \fR
 Hostname 
+
+.TP 
+\fB\*(T<\fBnodename_short\fR\*(T> \fR
+Short hostname (same as 'hostname -s' shell command).
 
 .TP 
 \fB\*(T<\fBnvidia\fR\*(T> \fR\*(T<\fBthreshold\fR\*(T> \*(T<\fBtemp\fR\*(T> \*(T<\fBambient\fR\*(T> \*(T<\fBgpufreq\fR\*(T> \*(T<\fBmemfreq\fR\*(T> \*(T<\fBimagequality\fR\*(T> 

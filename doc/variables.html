@@ -13,8 +13,8 @@
 <td align="center">acpiacadapter</td>
 <td align="center">(adapter)</td>
 <td>ACPI ac adapter state. On linux, the adapter option specifies the
-        subfolder of /sys/class/power_supply containing the state information (defaults
-        to "AC"). Other systems ignore it.
+        subfolder of /sys/class/power_supply containing the state information (tries "AC"
+        and "ADP1" if there is no argument given). Non-linux systems ignore it.
         <p></p>
 </td>
 </tr>
@@ -777,7 +777,11 @@
         use a temperature gradient, which makes the gradient values
         change depending on the amplitude of a particular graph
         value (try it and see). If -t or -l is your first argument,
-        you may need to preceed it by a space (' '). 
+        you may need to preceed it by a space (' ').  You may also use
+        double-quotes around the exec argument should you need to execute a
+        command with spaces.  For example, ${execgraph "date +'%S'"} to execute
+        `date +'%S'` and graph the result.  Without quotes, it would simply
+        print the result of `date`.
         <p></p>
 </td>
 </tr>
@@ -786,7 +790,7 @@
 <td align="center">interval command</td>
 <td>Same as exec but with specific interval. Interval
         can't be less than update_interval in configuration. See
-        also $texeci 
+        also $texeci
         <p></p>
 </td>
 </tr>
@@ -1876,6 +1880,13 @@
 </td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">nodename_short</td>
+<td align="center"></td>
+<td>Short hostname (same as 'hostname -s' shell command).
+        <p></p>
+</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">nvidia</td>
 <td align="center">threshold</td>
 <td>Nvidia graficcard support for the XNVCtrl
@@ -1921,21 +1932,21 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">offset</td>
 <td align="center">(pixels)</td>
 <td>Move text over by N pixels. See also $voffset. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">outlinecolor</td>
 <td align="center">(color)</td>
 <td>Change outline color 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pb_battery</td>
 <td align="center">item</td>
 <td>If running on Apple powerbook/ibook, display
@@ -1970,7 +1981,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_chroot</td>
 <td align="center">pid</td>
 <td>Directory used as rootdirectory by the process
@@ -1978,84 +1989,84 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_cmdline</td>
 <td align="center">pid</td>
 <td>Command line this process was invoked with
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_cwd</td>
 <td align="center">pid</td>
 <td>Current working directory of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_environ</td>
 <td align="center">pid varname</td>
 <td>Contents of a environment-var of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_environ_list</td>
 <td align="center">pid</td>
 <td>List of environment-vars that the process can see
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_exe</td>
 <td align="center">pid</td>
 <td>Path to executed command that started the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_nice</td>
 <td align="center">pid</td>
 <td>The nice value of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_openfiles</td>
 <td align="center">pid</td>
 <td>List of files that the process has open
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_parent</td>
 <td align="center">pid</td>
 <td>The pid of the parent of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_priority</td>
 <td align="center">pid</td>
 <td>The priority of the process (see 'priority' in "man 5 proc")
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_read</td>
 <td align="center">pid</td>
 <td>Total number of bytes read by the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_state</td>
 <td align="center">pid</td>
 <td>State of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_state_short</td>
 <td align="center">pid</td>
 <td>One of the chars in "RSDZTW" representing the state
@@ -2065,196 +2076,196 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_stderr</td>
 <td align="center">pid</td>
 <td>Filedescriptor binded to the STDERR of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_stdin</td>
 <td align="center">pid</td>
 <td>Filedescriptor binded to the STDIN of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_stdout</td>
 <td align="center">pid</td>
 <td>Filedescriptor binded to the STDOUT of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_threads</td>
 <td align="center">pid</td>
 <td>Number of threads in process containing this thread
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_thread_list</td>
 <td align="center">pid</td>
 <td>List with pid's from threads from this process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_time_kernelmode</td>
 <td align="center">pid</td>
 <td>Amount of time that the process has been scheduled in kernel mode in seconds
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_time_usermode</td>
 <td align="center">pid</td>
 <td>Amount of time that the process has been scheduled in user mode in seconds
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_time</td>
 <td align="center">pid</td>
 <td>Sum of $pid_time_kernelmode and $pid_time_usermode
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_uid</td>
 <td align="center">pid</td>
 <td>The real uid of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_euid</td>
 <td align="center">pid</td>
 <td>The effective uid of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_suid</td>
 <td align="center">pid</td>
 <td>The saved set uid of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_fsuid</td>
 <td align="center">pid</td>
 <td>The file system uid of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_gid</td>
 <td align="center">pid</td>
 <td>The real gid of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_egid</td>
 <td align="center">pid</td>
 <td>The effective gid of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_sgid</td>
 <td align="center">pid</td>
 <td>The saved set gid of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_fsgid</td>
 <td align="center">pid</td>
 <td>The file system gid of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_vmpeak</td>
 <td align="center">pid</td>
 <td>Peak virtual memory size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_vmsize</td>
 <td align="center">pid</td>
 <td>Virtual memory size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_vmlck</td>
 <td align="center">pid</td>
 <td>Locked memory size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_vmhwm</td>
 <td align="center">pid</td>
 <td>Peak resident set size ("high water mark") of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_vmrss</td>
 <td align="center">pid</td>
 <td>Resident set size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_vmdata</td>
 <td align="center">pid</td>
 <td>Data segment size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_vmstk</td>
 <td align="center">pid</td>
 <td>Stack segment size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_vmexe</td>
 <td align="center">pid</td>
 <td>Text segment size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_vmlib</td>
 <td align="center">pid</td>
 <td>Shared library code size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pid_vmpte</td>
 <td align="center">pid</td>
 <td>Page table entries size of the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pid_write</td>
 <td align="center">pid</td>
 <td>Total number of bytes written by the process
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">platform</td>
 <td align="center">(dev) type n (factor offset)</td>
 <td>Platform sensor from sysfs (Linux 2.6). Parameter
@@ -2270,7 +2281,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pop3_unseen</td>
 <td align="center">(args)</td>
 <td>Displays the number of unseen messages in your
@@ -2285,7 +2296,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pop3_used</td>
 <td align="center">(args)</td>
 <td>Displays the amount of space (in MiB, 2^20) used
@@ -2300,7 +2311,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pre_exec</td>
 <td align="center">shell command</td>
 <td>Executes a shell command one time before conky
@@ -2308,14 +2319,14 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">processes</td>
 <td align="center"></td>
 <td>Total processes (sleeping and running) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">read_tcp</td>
 <td align="center">(host) port</td>
 <td>Connects to a tcp port on a host (default is
@@ -2324,7 +2335,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">replied_mails</td>
 <td align="center">(maildir)</td>
 <td>Number of mails marked as replied in the
@@ -2333,7 +2344,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">rss</td>
 <td align="center">uri interval_in_minutes action (num_par
             (spaces_in_front))</td>
@@ -2351,7 +2362,7 @@
             supports.</p>
         </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">running_processes</td>
 <td align="center"></td>
 <td>Running processes (not sleeping), requires Linux
@@ -2359,14 +2370,14 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">running_threads</td>
 <td align="center"></td>
 <td>Number of running (runnable) threads. Linux only.
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">scroll</td>
 <td align="center">length (step) text</td>
 <td>Scroll 'text' by 'step' characters showing
@@ -2381,7 +2392,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">seen_mails</td>
 <td align="center">(maildir)</td>
 <td>Number of mails marked as seen in the specified
@@ -2390,14 +2401,14 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">shadecolor</td>
 <td align="center">(color)</td>
 <td>Change shading color 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">smapi</td>
 <td align="center">(ARGS)</td>
 <td>when using smapi, display contents of the
@@ -2409,7 +2420,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">smapi_bat_bar</td>
 <td align="center">(INDEX),(height),(width)</td>
 <td>when using smapi, display the remaining capacity
@@ -2417,7 +2428,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">smapi_bat_perc</td>
 <td align="center">(INDEX)</td>
 <td>when using smapi, display the remaining capacity
@@ -2427,7 +2438,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">smapi_bat_power</td>
 <td align="center">INDEX</td>
 <td>when using smapi, display the current power of
@@ -2438,7 +2449,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">smapi_bat_temp</td>
 <td align="center">INDEX</td>
 <td>when using smapi, display the current temperature
@@ -2448,7 +2459,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">sony_fanspeed</td>
 <td align="center"></td>
 <td>Displays the Sony VAIO fanspeed information if
@@ -2456,56 +2467,56 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">stippled_hr</td>
 <td align="center">(space)</td>
 <td>Stippled (dashed) horizontal line 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">swap</td>
 <td align="center"></td>
 <td>Amount of swap in use 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">swapbar</td>
 <td align="center">(height),(width)</td>
 <td>Bar that shows amount of swap in use 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">swapfree</td>
 <td align="center"></td>
 <td>Amount of free swap 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">swapmax</td>
 <td align="center"></td>
 <td>Total amount of swap 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">swapperc</td>
 <td align="center"></td>
 <td>Percentage of swap in use 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">sysname</td>
 <td align="center"></td>
 <td>System name, Linux for example 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">tab</td>
 <td align="center">(width, (start))</td>
 <td>Puts a tab of the specified width, starting from
@@ -2513,7 +2524,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">tail</td>
 <td align="center">logfile lines (next_check)</td>
 <td>Displays last N lines of supplied text file. The
@@ -2523,7 +2534,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">tcp_portmon</td>
 <td align="center">port_begin port_end item (index)</td>
 <td>
@@ -2638,7 +2649,7 @@
             redundant monitors.</p>
         </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">templateN</td>
 <td align="center">(arg1)</td>
 <td>
@@ -2699,7 +2710,7 @@
             
         </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">texeci</td>
 <td align="center">interval command</td>
 <td>Runs a command at an interval inside a thread and
@@ -2716,14 +2727,14 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">threads</td>
 <td align="center"></td>
 <td>Total threads
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">time</td>
 <td align="center">(format)</td>
 <td>Local time, see man strftime to get more
@@ -2731,7 +2742,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">to_bytes</td>
 <td align="center">size</td>
 <td>If 'size' is a number followed by a size-unit
@@ -2740,7 +2751,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">top</td>
 <td align="center">type num</td>
 <td>This takes arguments in the form:top (name)
@@ -2752,7 +2763,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">top_io</td>
 <td align="center">type num</td>
 <td>Same as top, except sorted by the amount of I/O
@@ -2760,7 +2771,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">top_mem</td>
 <td align="center">type num</td>
 <td>Same as top, except sorted by mem usage instead
@@ -2768,7 +2779,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">top_time</td>
 <td align="center">type num</td>
 <td>Same as top, except sorted by total CPU time
@@ -2776,7 +2787,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">totaldown</td>
 <td align="center">(net)</td>
 <td>Total download, overflows at 4 GB on Linux with
@@ -2786,14 +2797,14 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">totalup</td>
 <td align="center">(net)</td>
 <td>Total upload, this one too, may overflow 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">trashed_mails</td>
 <td align="center">(maildir)</td>
 <td>Number of mails marked as trashed in the
@@ -2802,7 +2813,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">tztime</td>
 <td align="center">(timezone (format))</td>
 <td>Local time for specified timezone, see man
@@ -2813,21 +2824,21 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">gid_name</td>
 <td align="center">gid</td>
 <td>Name of group with this gid
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">uid_name</td>
 <td align="center">uid</td>
 <td>Username of user with this uid
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">unflagged_mails</td>
 <td align="center">(maildir)</td>
 <td>Number of mails not marked as flagged in the
@@ -2836,7 +2847,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">unforwarded_mails</td>
 <td align="center">(maildir)</td>
 <td>Number of mails not marked as forwarded in the
@@ -2845,7 +2856,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">unreplied_mails</td>
 <td align="center">(maildir)</td>
 <td>Number of mails not marked as replied in the
@@ -2854,7 +2865,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">unseen_mails</td>
 <td align="center">(maildir)</td>
 <td>Number of new or unseen mails in the specified
@@ -2863,28 +2874,28 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">updates</td>
 <td align="center">Number of updates</td>
 <td>for debugging 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">upspeed</td>
 <td align="center">(net)</td>
 <td>Upload speed in suitable IEC units 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">upspeedf</td>
 <td align="center">(net)</td>
 <td>Upload speed in KiB with one decimal 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">upspeedgraph</td>
 <td align="center">(netdev) (height),(width) (gradient colour 1)
             (gradient colour 2) (scale) (-t) (-l)</td>
@@ -2898,49 +2909,49 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">uptime</td>
 <td align="center"></td>
 <td>Uptime 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">uptime_short</td>
 <td align="center"></td>
 <td>Uptime in a shorter format 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">user_names</td>
 <td align="center"></td>
 <td>Lists the names of the users logged in 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">user_number</td>
 <td align="center"></td>
 <td>Number of users logged in 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">user_terms</td>
 <td align="center"></td>
 <td>Lists the consoles in use 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">user_times</td>
 <td align="center"></td>
 <td>Lists how long users have been logged in for 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">user_time</td>
 <td align="center">console</td>
 <td>Lists how long the user for the given console has been
@@ -2948,14 +2959,14 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">utime</td>
 <td align="center">(format)</td>
 <td>Display time in UTC (universal coordinate time). 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">voffset</td>
 <td align="center">(pixels)</td>
 <td>Change vertical offset by N pixels. Negative
@@ -2963,7 +2974,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">voltage_mv</td>
 <td align="center">(n)</td>
 <td>Returns CPU #n's voltage in mV. CPUs are counted
@@ -2971,7 +2982,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">voltage_v</td>
 <td align="center">(n)</td>
 <td>Returns CPU #n's voltage in V. CPUs are counted
@@ -2979,7 +2990,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">weather</td>
 <td align="center">URI locID data_type
             (interval_in_minutes)</td>
@@ -3080,7 +3091,7 @@
             and can be subject to many future changes.</p>
         </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">weather_forecast</td>
 <td align="center">URI locID day data_type
             (interval_in_minutes)</td>
@@ -3168,56 +3179,56 @@
             and can be subject to many future changes.</p>
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">wireless_ap</td>
 <td align="center">(net)</td>
 <td>Wireless access point MAC address (Linux only) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">wireless_bitrate</td>
 <td align="center">(net)</td>
 <td>Wireless bitrate (ie 11 Mb/s) (Linux only) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">wireless_essid</td>
 <td align="center">(net)</td>
 <td>Wireless access point ESSID (Linux only) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">wireless_link_bar</td>
 <td align="center">(height),(width) (net)</td>
 <td>Wireless link quality bar (Linux only) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">wireless_link_qual</td>
 <td align="center">(net)</td>
 <td>Wireless link quality (Linux only) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">wireless_link_qual_max</td>
 <td align="center">(net)</td>
 <td>Wireless link quality maximum value (Linux only) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">wireless_link_qual_perc</td>
 <td align="center">(net)</td>
 <td>Wireless link quality in percents (Linux only) 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">wireless_mode</td>
 <td align="center">(net)</td>
 <td>Wireless mode (Managed/Ad-Hoc/Master) (Linux
@@ -3225,105 +3236,105 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">words</td>
 <td align="center">textfile</td>
 <td>Displays the number of words in the given file 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_album</td>
 <td align="center"></td>
 <td>Album in current XMMS2 song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_artist</td>
 <td align="center"></td>
 <td>Artist in current XMMS2 song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_bar</td>
 <td align="center">(height),(width)</td>
 <td>Bar of XMMS2's progress 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_bitrate</td>
 <td align="center"></td>
 <td>Bitrate of current song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_comment</td>
 <td align="center"></td>
 <td>Comment in current XMMS2 song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_date</td>
 <td align="center"></td>
 <td>Returns song's date. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_duration</td>
 <td align="center"></td>
 <td>Duration of current song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_elapsed</td>
 <td align="center"></td>
 <td>Song's elapsed time 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_genre</td>
 <td align="center"></td>
 <td>Genre in current XMMS2 song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_id</td>
 <td align="center"></td>
 <td>XMMS2 id of current song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_percent</td>
 <td align="center"></td>
 <td>Percent of song's progress 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_playlist</td>
 <td align="center"></td>
 <td>Returns the XMMS2 playlist. 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_size</td>
 <td align="center"></td>
 <td>Size of current song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_smart</td>
 <td align="center"></td>
 <td>Prints the song name in either the form "artist -
@@ -3331,7 +3342,7 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_status</td>
 <td align="center"></td>
 <td>XMMS2 status (Playing, Paused, Stopped, or
@@ -3339,28 +3350,28 @@
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_timesplayed</td>
 <td align="center"></td>
 <td>Number of times a song was played (presumably). 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_title</td>
 <td align="center"></td>
 <td>Title in current XMMS2 song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms2_tracknr</td>
 <td align="center"></td>
 <td>Track number in current XMMS2 song 
         <p></p>
 </td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms2_url</td>
 <td align="center"></td>
 <td>Full path to current song 

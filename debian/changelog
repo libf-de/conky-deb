@@ -1,3 +1,35 @@
+conky (1.8.1-1) unstable; urgency=low
+
+  * Adopt package. (Closes: #632655)
+  * Acknowledge NMU patch for #612033, which fixes a known vulnerability in
+    Conky. Thanks to Luca Falavigna! (LP: #607309)
+  * New upstream release. (Closes: #604921)
+    - Fix bug in $if_existing. (Closes: #612904)
+    - Fix various memory leaks. (Closes: #628527)
+    - Fix battery_bar not parsing arguments correctly. (LP: #569195)
+  * Fix ncurses being enabled for all binary packages (upstream default).
+  * Rename "70b6f35a.patch" to "fix-race-condition.patch", and add a full
+    DEP-3 formatted header.
+  * Add debian/patches/fix-acpitemp.patch to let $acpitemp use /sys instead
+    of /proc. (Closes: #609745, #628519; LP: #810667)
+  * Change section of source package from "contrib/utils" to "utils".
+    (Closes: #579102)
+    - Change section of binary package conky-all to "contrib/utils".
+    - Remove build-dependency on nvidia-settings; add build-dependency on
+      libxnvctrl-dev instead to conky-all, due to the move of the
+      NVCtrl/NVCtrl.h header file to libxnvctrl-dev.
+    - Update debian/NEWS and debian/README.source to reflect the changes to
+      Conky packaging in Debian.
+  * Change dependency of transitional conky package to
+    "conky-all | conky-std".
+  * debian/copyright: Remove reference to deprecated BSD license file
+    (/usr/share/common-licenses/BSD).
+  * Change Vcs-* entries in debian/control to point to collab-maint.
+  * Update Standards version from 3.8.4 to 3.9.2, no changes required.
+  * Update debhelper compatiblity level from 5 to 8.
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Fri, 15 Jul 2011 10:41:54 -0700
+
 conky (1.8.0-1.1) unstable; urgency=medium
 
   * Non-maintainer upload.

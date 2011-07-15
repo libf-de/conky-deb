@@ -53,7 +53,7 @@ struct {
 #define PROC_I8K "/proc/i8k"
 #define I8K_DELIM " "
 static char *i8k_procbuf = NULL;
-void update_i8k(void)
+int update_i8k(void)
 {
 	FILE *fp;
 
@@ -61,8 +61,13 @@ void update_i8k(void)
 		i8k_procbuf = (char *) malloc(128 * sizeof(char));
 	}
 	if ((fp = fopen(PROC_I8K, "r")) == NULL) {
-		CRIT_ERR(NULL, NULL, "/proc/i8k doesn't exist! use insmod to make sure the kernel "
+		free(i8k_procbuf);
+		i8k_procbuf = NULL;
+		NORM_ERR("/proc/i8k doesn't exist! use insmod to make sure the kernel "
 			"driver is loaded...");
+		clean_up_without_threads(NULL, NULL);
+		free(current_mail_spool);
+		return 1;
 	}
 
 	memset(&i8k_procbuf[0], 0, 128);
@@ -71,6 +76,8 @@ void update_i8k(void)
 	}
 
 	fclose(fp);
+
+	DBGP("read `%s' from /proc/i8k\n", i8k_procbuf);
 
 	i8k.version = strtok(&i8k_procbuf[0], I8K_DELIM);
 	i8k.bios = strtok(NULL, I8K_DELIM);
@@ -82,23 +89,24 @@ void update_i8k(void)
 	i8k.right_fan_rpm = strtok(NULL, I8K_DELIM);
 	i8k.ac_status = strtok(NULL, I8K_DELIM);
 	i8k.buttons_status = strtok(NULL, I8K_DELIM);
+	return 0;
 }
 
-static const char *fan_status_to_string(int status)
+static void print_i8k_fan_status(char *p, int p_max_size, const char *status)
 {
-	switch(status) {
-		case 0: return "off";
-		case 1: return "low";
-		case 2: return "high";
-	}
-	return "error";
+	static const char *status_arr[] = { "off", "low", "high", "error" };
+
+	int i = status ? atoi(status) : 3;
+	if(i < 0 || i > 3)
+		i = 3;
+
+	snprintf(p, p_max_size, "%s", status_arr[i]);
 }
 
 void print_i8k_left_fan_status(struct text_object *obj, char *p, int p_max_size)
 {
 	(void)obj;
-	snprintf(p, p_max_size, "%s",
-	         fan_status_to_string(atoi(i8k.left_fan_status)));
+	print_i8k_fan_status(p, p_max_size, i8k.left_fan_status);
 }
 
 void print_i8k_cpu_temp(struct text_object *obj, char *p, int p_max_size)
@@ -114,8 +122,7 @@ void print_i8k_cpu_temp(struct text_object *obj, char *p, int p_max_size)
 void print_i8k_right_fan_status(struct text_object *obj, char *p, int p_max_size)
 {
 	(void)obj;
-	snprintf(p, p_max_size, "%s",
-	         fan_status_to_string(atoi(i8k.right_fan_status)));
+	print_i8k_fan_status(p, p_max_size, i8k.right_fan_status);
 }
 
 void print_i8k_ac_status(struct text_object *obj, char *p, int p_max_size)

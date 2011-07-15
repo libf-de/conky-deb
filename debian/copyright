@@ -36,6 +36,7 @@ Copyright: 2005, Jason Tan <jtan325@gmail.com>
 Copyright: 2006, Steve Langasek, Laszlo Boszormenyi, Bartosz Fenski
 Copyright: 2007, 2008 Kapil Hari Paranjape <kapil@debian.org>
 Copyright: 2009, 2010 Cesare Tirabassi <norsetto@ubuntu.com>
+Copyright: 2011 Vincent Cheng <Vincentc1208@gmail.com>
 License:  GPL-3+
 
 License: GPL-3+
@@ -100,9 +101,6 @@ License: BSD
  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- .
- On Debian systems, the complete text of the BSD License version
- can be found in `/usr/share/common-licenses/BSD'.
 
 License: LGPL-2.1+
 

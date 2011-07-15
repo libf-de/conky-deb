@@ -1,26 +1,24 @@
 Source: conky
-Section: contrib/utils
+Section: utils
 Priority: optional
-Maintainer: Cesare Tirabassi <norsetto@ubuntu.com>
-Build-Depends: debhelper (>= 5.0.0), libtool, automake1.11,
+Maintainer: Vincent Cheng <Vincentc1208@gmail.com>
+Build-Depends: debhelper (>= 8), libtool, automake1.11,
 	       pkg-config (>= 0.19), libx11-dev, libxft-dev,
 	       libxdamage-dev, libxext-dev, libglib2.0-dev,	       
 	       libxml2-dev, libcurl4-gnutls-dev, liblua5.1-0-dev,	       
 	       libimlib2-dev, libtolua++5.1-dev, libcairo2-dev,
-	       libiw-dev[!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
-	       libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
-	       libkvm-dev [kfreebsd-i386 kfreebsd-amd64],
-	       libdevstat-dev [kfreebsd-i386 kfreebsd-amd64],
-	       nvidia-settings [i386 amd64], libncurses5-dev
+	       libiw-dev [linux-any], libasound2-dev [linux-any],
+	       libkvm-dev [kfreebsd-any], libdevstat-dev [kfreebsd-any],
+	       libxnvctrl-dev [i386 amd64], libncurses5-dev
 Homepage: http://conky.sourceforge.net/
-Standards-Version: 3.8.4
-Vcs-Browser: https://code.launchpad.net/~norsetto/+junk/conky
-Vcs-Bzr: lp:~norsetto/+junk/conky
+Standards-Version: 3.9.2
+Vcs-Svn: svn://svn.debian.org/svn/collab-maint/deb-maint/conky/trunk
+Vcs-Browser: http://svn.debian.org/wsvn/collab-maint/deb-maint/conky/trunk
 
 Package: conky
 Architecture: all
 Priority: extra
-Depends: conky-all, ${misc:Depends}
+Depends: conky-all | conky-std, ${misc:Depends}
 Description: highly configurable system monitor (transitional package)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
@@ -49,7 +47,7 @@ Description: highly configurable system monitor (default version)
  It includes the following support:
  .
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
- wireless, ALSA mixer, apcupsd, I/O stats, argb and Lua.
+ wireless, ncurses, ALSA mixer, apcupsd, I/O stats, argb and Lua.
 
 Package: conky-cli
 Architecture: any
@@ -71,6 +69,7 @@ Description: highly configurable system monitor (basic version)
 
 Package: conky-all
 Architecture: any
+Section: contrib/utils
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Suggests: apcupsd, moc, mpd
 Conflicts: conky-std, conky-cli
@@ -85,7 +84,7 @@ Description: highly configurable system monitor (all features enabled)
  This is a full conky with most compile options enabled:
  .
  X11, XDamage, XDBE, Xft, MPD, MOC, OpenMP, math, hddtemp, portmon, RSS,
- Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
+ Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer, ncurses,
  apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings.
  .
  Use this if you are not sure what conky flavour you need.

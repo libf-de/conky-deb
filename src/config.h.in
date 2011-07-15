@@ -260,9 +260,6 @@
 /* Default maximum size of config TEXT buffer, i.e. below TEXT line. */
 #undef MAX_USER_TEXT_DEFAULT
 
-/* Define if the mixers use ALSA */
-#undef MIXER_IS_ALSA
-
 /* Define if you want MOC support */
 #undef MOC
 

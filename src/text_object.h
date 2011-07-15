@@ -140,9 +140,7 @@ enum text_object_type {
 	OBJ_ibm_volume,
 	OBJ_ibm_brightness,
 	OBJ_smapi,
-#ifdef X11
 	OBJ_smapi_bat_bar,
-#endif /* X11 */
 	OBJ_smapi_bat_perc,
 	OBJ_smapi_bat_temp,
 	OBJ_smapi_bat_power,
@@ -230,6 +228,7 @@ enum text_object_type {
 #endif /* X11 */
 	OBJ_nameserver,
 	OBJ_nodename,
+	OBJ_nodename_short,
 	OBJ_nvidia,
 	OBJ_pre_exec,
 	OBJ_cmdline_to_pid,

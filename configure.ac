@@ -3,9 +3,9 @@
 dnl major, minor and micro version macros.
 m4_define([conky_version_major], [1])
 m4_define([conky_version_minor], [8])
-m4_define([conky_version_micro], [0])
+m4_define([conky_version_micro], [1])
 m4_define([conky_version_tag]) dnl, [pre]) dnl [] for releases
-m4_define([conky_version_revision],[_rc3])
+m4_define([conky_version_revision],[_rc1])
 m4_define([conky_version],
     [conky_version_major().conky_version_minor().conky_version_micro()ifelse(
       conky_version_tag(), [pre],
@@ -149,7 +149,7 @@ AC_ARG_ENABLE([audacious],
 
 AM_CONDITIONAL(BUILD_AUDACIOUS, test x$want_audacious = xyes -o x$want_audacious = xlegacy)
 if test x$want_audacious = xyes; then
-      PKG_CHECK_MODULES([Audacious], [audacious >= 1.4.0 dbus-glib-1 glib-2.0 gobject-2.0])
+      PKG_CHECK_MODULES([Audacious], [audacious >= 1.4.0 audclient dbus-glib-1 glib-2.0 gobject-2.0])
       conky_CFLAGS="$conky_CFLAGS $Audacious_CFLAGS"
       conky_LIBS="$conky_LIBS $Audacious_LIBS"
       save_CPPFLAGS="$CPPFLAGS"
@@ -767,9 +767,6 @@ fi
 if test x$want_alsa = xyes; then
     AC_CHECK_LIB(asound, snd_pcm_open,conky_LIBS="$conky_LIBS -lasound", want_alsa=no)
 fi
-if test x$want_alsa = xyes; then
-AC_DEFINE(MIXER_IS_ALSA, 1, [Define if the mixers use ALSA])
-fi
 dnl
 dnl Some headers
 dnl
@@ -1011,6 +1008,7 @@ dnl  OpenMP:           $want_openmp
   ALSA mixer:       $want_alsa
   apcupsd:          $want_apcupsd
   I/O stats:        $want_iostats
+  ncurses:          $want_ncurses
 
  * Lua ($want_lua) bindings:
   Cairo:            $want_lua_cairo
