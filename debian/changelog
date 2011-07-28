@@ -1,3 +1,10 @@
+conky (1.6.0-2+lenny1) oldstable; urgency=low
+
+  * Patch TEMP-0612033-026F3E: security issue in Conky's "eve" module, which
+    causes Conky to be vulnerable to rewriting any user file.
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Wed, 27 Jul 2011 18:29:12 -0700
+
 conky (1.6.0-2) testing; urgency=low
 
   * Backport of fixes from version 1.6.1-1.
