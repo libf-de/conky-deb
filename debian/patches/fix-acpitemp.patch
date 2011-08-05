@@ -8,7 +8,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/810667
 
 --- a/src/linux.c
 +++ b/src/linux.c
-@@ -1449,26 +1449,20 @@ critical (S5):           73 C
+@@ -1421,26 +1421,20 @@
  passive:                 73 C: tc1=4 tc2=3 tsp=40 devices=0xcdf6e6c0
  */
  
@@ -40,7 +40,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/810667
  	fd = open(path, O_RDONLY);
  	if (fd < 0) {
  		NORM_ERR("can't open '%s': %s", path, strerror(errno));
-@@ -1480,6 +1474,9 @@ int open_acpi_temperature(const char *name)
+@@ -1452,6 +1446,9 @@
  static double last_acpi_temp;
  static double last_acpi_temp_time;
  
@@ -50,7 +50,7 @@ Bug-Ubuntu: https://launchpad.net/bugs/810667
  double get_acpi_temperature(int fd)
  {
  	if (fd <= 0) {
-@@ -1497,15 +1494,16 @@ double get_acpi_temperature(int fd)
+@@ -1469,15 +1466,16 @@
  
  	/* read */
  	{
@@ -69,3 +69,4 @@ Bug-Ubuntu: https://launchpad.net/bugs/810667
 +			last_acpi_temp /= 1000;
  		}
  	}
+ 

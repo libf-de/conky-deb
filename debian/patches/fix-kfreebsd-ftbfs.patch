@@ -1,0 +1,16 @@
+Description: Fix FTBFS on kfreebsd
+ Conky needs to be explicitly linked with -lbsd.
+Forwarded: no
+Author: Vincent Cheng <Vincentc1208@gmail.com>
+Last-Update: 2011-08-05
+
+--- a/configure.ac.in
++++ b/configure.ac.in
+@@ -60,6 +60,7 @@
+   FreeBSD*|GNU/kFreeBSD*)
+     WANT_KVM=yes
+     WANT_DEVSTAT=yes
++    conky_LIBS="$conky_LIBS -lbsd"
+     ;;
+ #  NetBSD*)
+ #    WANT_KVM=yes

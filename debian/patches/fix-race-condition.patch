@@ -4,11 +4,9 @@ Origin: upstream, http://git.omp.am/?p=conky.git;a=patch;h=70b6f35a846f7b85bd11e
 Bug-Debian: http://bugs.debian.org/612033
 Bug-Ubuntu: https://launchpad.net/bugs/607309
 
-Index: conky-1.8.0/src/eve.c
-===================================================================
---- conky-1.8.0.orig/src/eve.c	2011-04-03 15:15:02.658500522 +0200
-+++ conky-1.8.0/src/eve.c	2011-04-03 15:14:58.162500519 +0200
-@@ -252,19 +252,6 @@
+--- a/src/eve.c
++++ b/src/eve.c
+@@ -251,19 +251,6 @@
  	}
  }
  
@@ -28,7 +26,7 @@ Index: conky-1.8.0/src/eve.c
  static void writeSkilltree(char *content, const char *filename)
  {
  	FILE *fp = fopen(filename, "w");
-@@ -280,13 +267,12 @@
+@@ -279,13 +266,12 @@
  	xmlDocPtr doc = 0;
  	xmlNodePtr root = 0;
  
@@ -46,7 +44,7 @@ Index: conky-1.8.0/src/eve.c
  	if (!doc)
  		return NULL;
  
-@@ -337,7 +323,7 @@
+@@ -336,7 +322,7 @@
  static char *eve(char *userid, char *apikey, char *charid)
  {
  	Character *chr = NULL;
@@ -55,7 +53,7 @@ Index: conky-1.8.0/src/eve.c
  	int i = 0;
  	char *output = 0;
  	char *timel = 0;
-@@ -345,6 +331,7 @@
+@@ -344,6 +330,7 @@
  	char *content = 0;
  	time_t now = 0;
  	char *error = 0;
@@ -63,7 +61,7 @@ Index: conky-1.8.0/src/eve.c
  
  
  	for (i = 0; i < MAXCHARS; i++) {
-@@ -397,6 +384,14 @@
+@@ -396,6 +383,14 @@
  
  		output = (char *)malloc(200 * sizeof(char));
  		timel = formatTime(&chr->ends);

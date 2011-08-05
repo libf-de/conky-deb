@@ -9,7 +9,8 @@ Build-Depends: debhelper (>= 8), libtool, automake1.11,
 	       libimlib2-dev, libtolua++5.1-dev, libcairo2-dev,
 	       libiw-dev [linux-any], libasound2-dev [linux-any],
 	       libkvm-dev [kfreebsd-any], libdevstat-dev [kfreebsd-any],
-	       libxnvctrl-dev [i386 amd64], libncurses5-dev
+	       libxnvctrl-dev [i386 amd64] | nvidia-settings [i386 amd64],
+	       libncurses5-dev
 Homepage: http://conky.sourceforge.net/
 Standards-Version: 3.9.2
 Vcs-Svn: svn://svn.debian.org/svn/collab-maint/deb-maint/conky/trunk

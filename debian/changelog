@@ -1,3 +1,13 @@
+conky (1.8.1-2) unstable; urgency=low
+
+  * Add build dependency on libxnvctrl-dev | nvidia-settings to keep Conky
+    in sync with Ubuntu.
+  * Add debian/patches/fix-curl-ftbfs.patch to fix FTBFS with curl 7.21.7.
+    (Closes: #636367)
+  * Add debian/patches/fix-kfreebsd-ftbfs.patch to fix FTBFS on kfreebsd.
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Fri, 05 Aug 2011 14:58:00 -0700
+
 conky (1.8.1-1) unstable; urgency=low
 
   * Adopt package. (Closes: #632655)
