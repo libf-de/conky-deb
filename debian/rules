@@ -17,7 +17,7 @@ LDFLAGS = -Wl,--as-needed
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
 else
-	CFLAGS += -O2
+	CFLAGS += -O3
 endif
 
 ifeq ($(DEB_HOST_ARCH_OS),linux)
@@ -42,7 +42,8 @@ COMMON_CONFIGURE_FLAGS = --host=$(DEB_HOST_GNU_TYPE) \
 		         --prefix=/usr --sysconfdir=/etc \
 	                 --mandir=\$${prefix}/share/man \
 			 --infodir=\$${prefix}/share/info \
-			 --srcdir=..
+			 --srcdir=.. \
+			 --disable-static
 
 configure: config-stamp
 
@@ -58,7 +59,11 @@ config-stamp:
 	mkdir build-std build-cli build-all
 
 	cd build-std && CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
-	../configure $(COMMON_CONFIGURE_FLAGS) $(LINUX_CONF_ARGS_STD)
+	../configure $(COMMON_CONFIGURE_FLAGS) \
+	--enable-imlib2 --enable-rss --enable-weather-xoap \
+	--enable-lua-cairo --enable-lua-imlib2 \
+	--enable-xmms2 --enable-audacious \
+	$(LINUX_CONF_ARGS_STD)
 
 	cd build-cli &&	CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	../configure $(COMMON_CONFIGURE_FLAGS) \
@@ -68,9 +73,9 @@ config-stamp:
 
 	cd build-all && CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	../configure $(COMMON_CONFIGURE_FLAGS) \
-        --enable-imlib2 --enable-rss --enable-weather-xoap \
+	--enable-imlib2 --enable-rss --enable-weather-xoap \
 	--enable-eve --enable-lua-cairo --enable-lua-imlib2 \
-	--disable-static --enable-argb \
+	--enable-xmms2 --enable-audacious \
 	$(LINUX_CONF_ARGS_ALL) $(ENABLE_NVIDIA)
 
 	touch $@

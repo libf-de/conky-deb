@@ -20,26 +20,24 @@ conky-std
 
 conky-std should be a good compromise for most users that do not need special
 features.
-At this time it includes the following support, which is enabled by default
-upstream:
+At this time it includes the following support:
 
-X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, ncurses
-wireless, ALSA mixer, apcupsd, I/O stats, argb and Lua.
+X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
+Weather, wireless, Imlib2, ALSA mixer, apcupsd, I/O stats, argb, Lua
+and the cairo and imlib2 lua bindings, Audacious, and XMMS2.
 
 conky-all
 ---------
 
 conky-all includes almost all of the available support:
 
-X11, XDamage, XDBE, Xft, MPD, MOC, OpenMP, math, hddtemp, portmon, RSS,
+X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
 Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
-apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings.
-
-These are all the available features minus those related to media players
-(at this time, audacious, xmms2 and bpmx).
+apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings,
+Audacious, and XMMS2.
 
 Please check upstream documentation and source files when updating this
 package, some features might be removed or changed, others added, so that
 any update will stick to this general philosophy.
 
- -- Cesare Tirabassi <norsetto@ubuntu.com>  Sun, 24 Jan 2010 21:10:43 +0100
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Wed, 10 Aug 2011 21:23:19 -0700

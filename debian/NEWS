@@ -1,3 +1,15 @@
+conky (1.8.1-3) unstable; urgency=low
+
+    conky-std now includes support for RSS, weather (both METAR and XOAP),
+    imlib2, and all Lua bindings. This is a compromise for users who do not
+    wish to have contrib enabled on their systems to install conky-all, yet
+    would like the most common features from the conky-all package.
+
+    Also, both conky-all and conky-std now include support for Audacious
+    and XMMS2.
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Wed, 10 Aug 2011 21:23:19 -0700
+
 conky (1.8.0-1) unstable; urgency=low
 
     Package maintenance moved back to Debian.

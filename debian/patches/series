@@ -1,4 +1,5 @@
 fix-curl-ftbfs.patch
 fix-kfreebsd-ftbfs.patch
+fix-xmms2-ftbfs.patch
 fix-race-condition.patch
 fix-acpitemp.patch

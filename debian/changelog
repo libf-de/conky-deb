@@ -1,3 +1,17 @@
+conky (1.8.1-3) unstable; urgency=low
+
+  * Enable xmms2 and audacious support in conky-all and conky-std;
+    thanks to Aron Xu for the patch. (Closes: #579893; LP: #647643)
+  * Enable support for RSS, weather (both METAR and XOAP), imlib2, and all
+    Lua bindings in conky-std.
+  * Add debian/patches/fix-xmms2-ftbfs.patch to build Conky with XMMS2 support
+    without FTBFS.
+  * Use -O3 by default.
+  * Update debian/NEWS and debian/README.source to reflect the changes to
+    Conky packaging in Debian.
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Wed, 10 Aug 2011 21:23:19 -0700
+
 conky (1.8.1-2) unstable; urgency=low
 
   * Add build dependency on libxnvctrl-dev | nvidia-settings to keep Conky
