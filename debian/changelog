@@ -1,3 +1,10 @@
+conky (1.8.1-4) unstable; urgency=low
+
+  * Install conky_no_x11.conf instead of the regular conky.conf config file
+    for use with conky-cli. (Closes: #639314)
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Sat, 27 Aug 2011 13:48:05 -0700
+
 conky (1.8.1-3) unstable; urgency=low
 
   * Enable xmms2 and audacious support in conky-all and conky-std;

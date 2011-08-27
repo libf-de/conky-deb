@@ -123,9 +123,17 @@ install: build
 	cd build-all && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-all
 
 	# Clean up cruft left upstream
-	rm -rf debian/conky-std/usr/lib debian/conky-cli/usr/lib \
+	rm -rf debian/conky-cli/usr/lib \
+	       debian/conky-std/usr/lib/conky/*.la \
+	       debian/conky-std/usr/lib/conky/*.so.? \
 	       debian/conky-all/usr/lib/conky/*.la \
 	       debian/conky-all/usr/lib/conky/*.so.?
+
+	# Install conky_no_x11.conf instead of the regular conky.conf config file
+	# for use with conky-cli
+	rm -f debian/conky-cli/etc/conky/conky.conf
+	mv -f debian/conky-cli/etc/conky/conky_no_x11.conf \
+	      debian/conky-cli/etc/conky/conky.conf
 
 binary-indep: build install
 
