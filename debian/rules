@@ -8,8 +8,6 @@
 # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
-DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
 CFLAGS = -Wall -g
 LDFLAGS = -Wl,--as-needed
@@ -22,19 +20,6 @@ endif
 
 ifeq ($(DEB_HOST_ARCH_OS),linux)
        LINUX_CONF_ARGS_STD=--enable-wlan
-       LINUX_CONF_ARGS_ALL=--enable-wlan --enable-ibm
-endif
-
-ifeq ($(DEB_HOST_ARCH),i386)
-ifeq ($(DEB_HOST_ARCH_OS),linux)
-       ENABLE_NVIDIA=--enable-nvidia
-endif
-endif
-
-ifeq ($(DEB_HOST_ARCH),amd64)
-ifeq ($(DEB_HOST_ARCH_OS),linux)
-       ENABLE_NVIDIA=--enable-nvidia
-endif
 endif
 
 COMMON_CONFIGURE_FLAGS = --host=$(DEB_HOST_GNU_TYPE) \
@@ -56,7 +41,7 @@ config-stamp:
 	ln -sf /usr/share/misc/config.sub .
 	ln -sf /usr/share/misc/config.guess .
 
-	mkdir build-std build-cli build-all
+	mkdir build-std build-cli
 
 	cd build-std && CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	../configure $(COMMON_CONFIGURE_FLAGS) \
@@ -71,13 +56,6 @@ config-stamp:
 	--disable-xdamage --disable-own-window --disable-xft \
 	--disable-hddtemp --disable-alsa --disable-portmon
 
-	cd build-all && CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
-	../configure $(COMMON_CONFIGURE_FLAGS) \
-	--enable-imlib2 --enable-rss --enable-weather-xoap \
-	--enable-eve --enable-lua-cairo --enable-lua-imlib2 \
-	--enable-xmms2 --enable-audacious \
-	$(LINUX_CONF_ARGS_ALL) $(ENABLE_NVIDIA)
-
 	touch $@
 
 build: build-arch build-indep
@@ -91,7 +69,6 @@ build-stamp: config-stamp
 
 	cd build-std && $(MAKE)
 	cd build-cli && $(MAKE)
-	cd build-all && $(MAKE)
 
 	touch $@
 
@@ -108,7 +85,7 @@ clean:
 	       aclocal.m4 m4/libtool.m4 m4/ltversion.m4 \
 	       m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4
 
-	rm -rf build-std build-cli build-all
+	rm -rf build-std build-cli
 	rm -f config.guess config.sub
 
 	dh_clean 
@@ -120,14 +97,11 @@ install: build
 
 	cd build-std && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-std
 	cd build-cli && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-cli
-	cd build-all && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-all
 
 	# Clean up cruft left upstream
 	rm -rf debian/conky-cli/usr/lib \
 	       debian/conky-std/usr/lib/conky/*.la \
-	       debian/conky-std/usr/lib/conky/*.so.? \
-	       debian/conky-all/usr/lib/conky/*.la \
-	       debian/conky-all/usr/lib/conky/*.so.?
+	       debian/conky-std/usr/lib/conky/*.so.?
 
 	# Install conky_no_x11.conf instead of the regular conky.conf config file
 	# for use with conky-cli

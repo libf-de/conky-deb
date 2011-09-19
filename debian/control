@@ -9,7 +9,6 @@ Build-Depends: debhelper (>= 8), libtool, automake1.11,
 	       libimlib2-dev, libtolua++5.1-dev, libcairo2-dev,
 	       libiw-dev [linux-any], libasound2-dev [linux-any],
 	       libkvm-dev [kfreebsd-any], libdevstat-dev [kfreebsd-any],
-	       libxnvctrl-dev [i386 amd64] | nvidia-settings [i386 amd64],
 	       libncurses5-dev, libxmmsclient-dev, audacious-dev
 Homepage: http://conky.sourceforge.net/
 Standards-Version: 3.9.2
@@ -49,7 +48,7 @@ Description: highly configurable system monitor (default version)
  .
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
  Weather, wireless, Imlib2, ALSA mixer, apcupsd, I/O stats, argb, Lua
- and the cairo and imlib2 lua bindings.
+ and the cairo and imlib2 lua bindings, Audacious, and XMMS2.
 
 Package: conky-cli
 Architecture: any
@@ -68,24 +67,3 @@ Description: highly configurable system monitor (basic version)
  It includes the following support:
  .
  MPD, MOC, math, apcupsd, ncurses and I/O stats.
-
-Package: conky-all
-Architecture: any
-Section: contrib/utils
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Suggests: apcupsd, moc, mpd, audacious, xmms2
-Conflicts: conky-std, conky-cli
-Replaces: conky, conky-std, conky-cli
-Description: highly configurable system monitor (all features enabled)
- Conky is a system monitor that can display just about anything,
- either on your root desktop or in its own window.
- Conky has many built-in objects, as well as the ability to execute
- external programs or scripts (either external or through built-in
- lua support). 
- .
- This is a full conky with most compile options enabled:
- .
- X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
- Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
- apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings,
- Audacious, and XMMS2.

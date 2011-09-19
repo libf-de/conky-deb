@@ -1,3 +1,16 @@
+conky (1.8.1-5~bpo60+1) squeeze-backports; urgency=low
+
+  * Backport conky for squeeze.
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Sun, 18 Sep 2011 17:13:05 -0700
+
+conky (1.8.1-5) unstable; urgency=low
+
+  * Move conky-all into a separate source package, and remove all contrib
+    components from build-depends. (Closes: #579102, #639778)
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Fri, 02 Sep 2011 21:43:36 -0700
+
 conky (1.8.1-4) unstable; urgency=low
 
   * Install conky_no_x11.conf instead of the regular conky.conf config file

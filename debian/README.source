@@ -1,7 +1,10 @@
-Please note that this source package will produce 3 different binary
-packages, with 3 different configuration, compilation and installation runs.
+Please note that this source package will produce 2 different binary
+packages, with 2 different configuration, compilation and installation runs.
 
-These packages are: conky-cli, conky-std and conky-all.
+These packages are: conky-cli and conky-std.
+
+Note that conky-all is built by a separate source package (conky-all); this
+was prompted by bugs #579102 and #639778 in the Debian BTS.
 
 conky-cli
 ---------
@@ -25,19 +28,5 @@ At this time it includes the following support:
 X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
 Weather, wireless, Imlib2, ALSA mixer, apcupsd, I/O stats, argb, Lua
 and the cairo and imlib2 lua bindings, Audacious, and XMMS2.
-
-conky-all
----------
-
-conky-all includes almost all of the available support:
-
-X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
-Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
-apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings,
-Audacious, and XMMS2.
-
-Please check upstream documentation and source files when updating this
-package, some features might be removed or changed, others added, so that
-any update will stick to this general philosophy.
 
  -- Vincent Cheng <Vincentc1208@gmail.com>  Wed, 10 Aug 2011 21:23:19 -0700
