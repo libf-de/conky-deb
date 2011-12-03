@@ -1,3 +1,16 @@
+conky (1.8.1-6) unstable; urgency=low
+
+  * debian/patches:
+    - Add fix-apcupsd.patch: fix apcupsd support. (LP: #897495)
+    - Add fix-update-interval.patch: use monotonic time when calculating the
+      update interval. (Closes: #474372, #473993)
+  * Fix various formatting issues in debian/copyright.
+  * Change transitional "conky" package's dependencies to
+    conky-std | conky-cli | conky-all.
+  * Add doc-base file for conky-cli and conky-std.
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Fri, 02 Dec 2011 16:52:23 -0800
+
 conky (1.8.1-5) unstable; urgency=low
 
   * Move conky-all into a separate source package, and remove all contrib

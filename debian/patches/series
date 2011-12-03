@@ -3,3 +3,5 @@ fix-kfreebsd-ftbfs.patch
 fix-xmms2-ftbfs.patch
 fix-race-condition.patch
 fix-acpitemp.patch
+fix-apcupsd.patch
+fix-update-interval.patch
