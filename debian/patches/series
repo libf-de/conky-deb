@@ -1,7 +1,2 @@
-fix-curl-ftbfs.patch
-fix-kfreebsd-ftbfs.patch
-fix-xmms2-ftbfs.patch
-fix-race-condition.patch
-fix-acpitemp.patch
+fix-CVE-2011-3616.patch
 fix-apcupsd.patch
-fix-update-interval.patch

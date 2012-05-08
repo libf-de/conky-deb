@@ -6,8 +6,8 @@ Forwarded: http://sourceforge.net/support/tracker.php?aid=3083859
 Bug-Ubuntu: https://bugs.launchpad.net/bugs/897495
 Last-Update: 2011-12-02
 
---- ./src/apcupsd.c.orig	2011-09-02 01:31:41.000000000 -0700
-+++ ./src/apcupsd.c	2010-03-25 13:27:32.000000000 -0700
+--- a/src/apcupsd.c
++++ b/src/apcupsd.c
 @@ -154,7 +154,7 @@
  //
  // Conky update function for apcupsd data
@@ -94,8 +94,8 @@ Last-Update: 2011-12-02
 -	return 0;
 +	return;
  }
---- ./src/apcupsd.h.orig	2011-09-02 01:31:33.000000000 -0700
-+++ ./src/apcupsd.h	2010-03-25 13:27:32.000000000 -0700
+--- a/src/apcupsd.h
++++ b/src/apcupsd.h
 @@ -49,6 +49,6 @@
  } APCUPSD_S, *PAPCUPSD_S;
  

@@ -1,6 +1,6 @@
 /*
 ** Lua binding: imlib2
-** Generated automatically by tolua++-1.0.92 on Mon Jan  4 18:45:07 2010.
+** Generated automatically by tolua++-1.0.93 on Thu May  3 14:52:34 2012.
 */
 
 #ifndef __cplusplus

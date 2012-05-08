@@ -466,8 +466,6 @@ int check_contains(char *f, char *s)
 	return ret;
 }
 
-#define SECRIT_MULTILINE_CHAR '\x02'
-
 int calc_text_width(const char *s)
 {
 	size_t slen = strlen(s);
@@ -606,7 +604,7 @@ void human_readable(long long num, char *buf, int size)
 		spaced_print(buf, size, "%d", 6, round_to_int(num));
 		return;
 	}
-	if (short_units || llabs(num) < 1000LL) {
+	if (short_units) {
 		width = 5;
 		format = "%.*f%.1s";
 	} else {
@@ -732,22 +730,6 @@ void parse_conky_vars(struct text_object *root, const char *txt,
 	generate_text_internal(p, p_max_size, *root, cur);
 }
 
-/* substitutes all occurrences of '\n' with SECRIT_MULTILINE_CHAR, which allows
- * multiline objects like $exec work with $align[rc] and friends
- */
-void substitute_newlines(char *p, long l)
-{
-	char *s = p;
-	if (l < 0) return;
-	while (p && *p && p < s + l) {
-		if (*p == '\n') {
-			/* only substitute if it's not the last newline */
-			*p = SECRIT_MULTILINE_CHAR;
-		}
-		p++;
-	}
-}
-
 void generate_text_internal(char *p, int p_max_size,
 		struct text_object root, struct information *cur)
 {
@@ -757,7 +739,6 @@ void generate_text_internal(char *p, int p_max_size,
 #endif /* X11 */
 
 	/* for the OBJ_top* handler */
-	struct process **needed = 0;
 
 #ifdef HAVE_ICONV
 	char buff_in[p_max_size];
@@ -769,7 +750,6 @@ void generate_text_internal(char *p, int p_max_size,
 	p[0] = 0;
 	obj = root.next;
 	while (obj && p_max_size > 0) {
-		needed = 0; /* reset for top stuff */
 
 /* IFBLOCK jumping algorithm
  *
@@ -902,12 +882,17 @@ void generate_text_internal(char *p, int p_max_size,
 			OBJ(cpu) {
 				if (cur->cpu_usage) {
 					if (obj->data.i > info.cpu_count) {
-						NORM_ERR("obj->data.i %i info.cpu_count %i",
-								obj->data.i, info.cpu_count);
-						CRIT_ERR(NULL, NULL, "attempting to use more CPUs than you have!");
-					}
-				    percent_print(p, p_max_size,
+						static bool warned = false;
+						if(!warned) {
+							NORM_ERR("obj->data.i %i info.cpu_count %i",
+									obj->data.i, info.cpu_count);
+							NORM_ERR("attempting to use more CPUs than you have!");
+							warned = true;
+						}
+					} else  {
+						percent_print(p, p_max_size,
 				              round_to_int(cur->cpu_usage[obj->data.i] * 100.0));
+					}
 				}
 			}
 			OBJ(cpugauge)
@@ -1945,6 +1930,8 @@ void generate_text_internal(char *p, int p_max_size,
 				print_mpd_artist(obj, p, p_max_size);
 			OBJ(mpd_album)
 				print_mpd_album(obj, p, p_max_size);
+			OBJ(mpd_date)
+				print_mpd_date(obj, p, p_max_size);
 			OBJ(mpd_random)
 				print_mpd_random(obj, p, p_max_size);
 			OBJ(mpd_repeat)
@@ -2072,9 +2059,11 @@ void generate_text_internal(char *p, int p_max_size,
 			OBJ(xmms2_percent) {
 				snprintf(p, p_max_size, "%2.0f", cur->xmms2.progress * 100);
 			}
+#ifdef X11
 			OBJ(xmms2_bar) {
 				new_bar(obj, p, p_max_size, (int) (cur->xmms2.progress * 255.0f));
 			}
+#endif /* X11 */
 			OBJ(xmms2_playlist) {
 				snprintf(p, p_max_size, "%s", cur->xmms2.playlist);
 			}
@@ -2150,6 +2139,7 @@ void generate_text_internal(char *p, int p_max_size,
 				snprintf(p, p_max_size, "%s",
 					cur->audacious.items[AUDACIOUS_MAIN_VOLUME]);
 			}
+#ifdef X11
 			OBJ(audacious_bar) {
 				double progress;
 
@@ -2158,6 +2148,7 @@ void generate_text_internal(char *p, int p_max_size,
 					atof(cur->audacious.items[AUDACIOUS_LENGTH_SECONDS]);
 				new_bar(obj, p, p_max_size, (int) (progress * 255.0f));
 			}
+#endif /* X11 */
 #endif /* AUDACIOUS */
 
 #ifdef BMPX
@@ -2383,14 +2374,6 @@ void generate_text_internal(char *p, int p_max_size,
 #ifdef HAVE_ICONV
 			iconv_convert(&a, buff_in, p, p_max_size);
 #endif /* HAVE_ICONV */
-			if (obj->type == OBJ_execp || obj->type == OBJ_execpi || obj->type
-					== OBJ_exec
-#ifdef HAVE_LUA
-					|| obj->type == OBJ_lua || obj->type == OBJ_lua_parse
-#endif /* HAVE_LUA */
-					) {
-				substitute_newlines(p, a - 2);
-			}
 			p += a;
 			p_max_size -= a;
 			(*p) = 0;
@@ -2520,9 +2503,6 @@ static int get_string_width_special(char *s, int special_index)
 				width += specials[special_index + idx].width;
 			}
 			idx++;
-		} else if (*p == SECRIT_MULTILINE_CHAR) {
-			*p = 0;
-			break;
 		} else {
 			p++;
 		}
@@ -2638,8 +2618,6 @@ static long current_color;
 static int text_size_updater(char *s, int special_index)
 {
 	int w = 0;
-	int lw;
-	int contain_SECRIT_MULTILINE_CHAR = 0;
 	char *p;
 
 	if ((output_methods & TO_X) == 0)
@@ -2687,24 +2665,12 @@ static int text_size_updater(char *s, int special_index)
 
 			special_index++;
 			s = p + 1;
-		} else if (*p == SECRIT_MULTILINE_CHAR) {
-			contain_SECRIT_MULTILINE_CHAR = 1;
-			*p = '\0';
-			lw = get_string_width(s);
-			*p = SECRIT_MULTILINE_CHAR;
-			s = p + 1;
-			w = lw > w ? lw : w;
-			text_height += last_font_height;
 		}
 		p++;
 	}
-	/* Check also last substring if string contains SECRIT_MULTILINE_CHAR */
-	if (contain_SECRIT_MULTILINE_CHAR) {
-		lw = get_string_width(s);
-		w = lw > w ? lw : w;
-	} else {
-		w += get_string_width(s);
-	}
+
+	w += get_string_width(s);
+
 	if (w > text_width) {
 		text_width = w;
 	}
@@ -2748,40 +2714,32 @@ static void draw_string(const char *s)
 	int i, i2, pos, width_of_s;
 	int max = 0;
 	int added;
-	char *s_with_newlines;
 
 	if (s[0] == '\0') {
 		return;
 	}
 
 	width_of_s = get_string_width(s);
-	s_with_newlines = strdup(s);
-	for(i = 0; i < (int) strlen(s_with_newlines); i++) {
-		if(s_with_newlines[i] == SECRIT_MULTILINE_CHAR) {
-			s_with_newlines[i] = '\n';
-		}
-	}
 	if ((output_methods & TO_STDOUT) && draw_mode == FG) {
-		printf("%s\n", s_with_newlines);
+		printf("%s\n", s);
 		if (extra_newline) fputc('\n', stdout);
 		fflush(stdout);	/* output immediately, don't buffer */
 	}
 	if ((output_methods & TO_STDERR) && draw_mode == FG) {
-		fprintf(stderr, "%s\n", s_with_newlines);
+		fprintf(stderr, "%s\n", s);
 		fflush(stderr);	/* output immediately, don't buffer */
 	}
 	if ((output_methods & OVERWRITE_FILE) && draw_mode == FG && overwrite_fpointer) {
-		fprintf(overwrite_fpointer, "%s\n", s_with_newlines);
+		fprintf(overwrite_fpointer, "%s\n", s);
 	}
 	if ((output_methods & APPEND_FILE) && draw_mode == FG && append_fpointer) {
-		fprintf(append_fpointer, "%s\n", s_with_newlines);
+		fprintf(append_fpointer, "%s\n", s);
 	}
 #ifdef NCURSES
 	if ((output_methods & TO_NCURSES) && draw_mode == FG) {
-		printw("%s", s_with_newlines);
+		printw("%s", s);
 	}
 #endif
-	free(s_with_newlines);
 	memset(tmpstring1, 0, text_buffer_size);
 	memset(tmpstring2, 0, text_buffer_size);
 	strncpy(tmpstring1, s, text_buffer_size - 1);
@@ -2865,9 +2823,7 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 	int font_h;
 	int cur_y_add = 0;
 #endif /* X11 */
-	char *recurse = 0;
 	char *p = s;
-	int last_special_needed = -1;
 	int orig_special_index = special_index;
 
 #ifdef X11
@@ -2879,12 +2835,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 #endif /* X11 */
 
 	while (*p) {
-		if (*p == SECRIT_MULTILINE_CHAR) {
-			/* special newline marker for multiline objects */
-			recurse = p + 1;
-			*p = '\0';
-			break;
-		}
 		if (*p == SPECIAL_CHAR || last_special_applied > -1) {
 #ifdef X11
 			int w = 0;
@@ -3043,6 +2993,10 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					w = specials[special_index].width;
 					if (w == 0) {
 						w = text_start_x + text_width - cur_x - 1;
+						specials[special_index].graph_width = w - 1;
+						if (specials[special_index].graph_width != specials[special_index].graph_allocated) {
+							w = specials[special_index].graph_allocated + 1;
+						}
 					}
 					if (w < 0) {
 						w = 0;
@@ -3056,54 +3010,71 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					XSetLineAttributes(display, window.gc, 1, LineSolid,
 						CapButt, JoinMiter);
 
-					if (specials[special_index].last_colour != 0
-							|| specials[special_index].first_colour != 0) {
-						tmpcolour = do_gradient(w - 1, specials[special_index].last_colour, specials[special_index].first_colour);
-					}
-					colour_idx = 0;
-					for (i = w - 2; i > -1; i--) {
+					/* in case we don't have a graph yet */
+					if (specials[special_index].graph) {
+
 						if (specials[special_index].last_colour != 0
 								|| specials[special_index].first_colour != 0) {
-							if (specials[special_index].tempgrad) {
+							tmpcolour = do_gradient(w - 1,
+									specials[special_index].last_colour,
+									specials[special_index].first_colour);
+						}
+						colour_idx = 0;
+
+						int og, g = -1; // dmr's here..
+
+						for (i = w - 2; i > -1; i--) {
+							if (specials[special_index].last_colour != 0
+									|| specials[special_index].first_colour != 0) {
+								if (specials[special_index].tempgrad) {
 #ifdef DEBUG_lol
-								assert(
-										(int)((float)(w - 2) - specials[special_index].graph[j] *
-											(w - 2) / (float)specials[special_index].graph_scale)
-										< w - 1
-									  );
-								assert(
-										(int)((float)(w - 2) - specials[special_index].graph[j] *
-											(w - 2) / (float)specials[special_index].graph_scale)
-										> -1
-									  );
-								if (specials[special_index].graph[j] == specials[special_index].graph_scale) {
 									assert(
 											(int)((float)(w - 2) - specials[special_index].graph[j] *
 												(w - 2) / (float)specials[special_index].graph_scale)
-											== 0
+											< w - 1
 										  );
-								}
+									assert(
+											(int)((float)(w - 2) - specials[special_index].graph[j] *
+												(w - 2) / (float)specials[special_index].graph_scale)
+											> -1
+										  );
+									if (specials[special_index].graph[j] == specials[special_index].graph_scale) {
+										assert(
+												(int)((float)(w - 2) - specials[special_index].graph[j] *
+													(w - 2) / (float)specials[special_index].graph_scale)
+												== 0
+											  );
+									}
 #endif /* DEBUG_lol */
-								XSetForeground(display, window.gc, tmpcolour[
-										(int)((float)(w - 2) - specials[special_index].graph[j] *
-											(w - 2) / (float)specials[special_index].graph_scale)
-										]);
-							} else {
-								XSetForeground(display, window.gc, tmpcolour[colour_idx++]);
+									set_foreground_color(tmpcolour[
+											(int)((float)(w - 2) -
+												specials[special_index].graph[j]
+												* (w - 2) /
+												(float)specials[special_index].graph_scale)
+											]);
+								} else {
+									set_foreground_color(tmpcolour[colour_idx++]);
+								}
 							}
+
+							og = g;
+							g = round_to_int((double)by + h - specials[special_index].graph[j] *
+											 (h - 1) / specials[special_index].graph_scale);
+
+							if (!~og) {
+								og = g;
+							}
+
+							/* this is mugfugly, but it works */
+							XDrawLine(display, window.drawable, window.gc,
+									  cur_x + i + 1,
+									  specials[special_index].dotgraph ? og : by + h,
+									  cur_x + i + 1,
+									  g);
+							++j;
 						}
-						/* this is mugfugly, but it works */
-						XDrawLine(display, window.drawable, window.gc,
-								cur_x + i + 1, by + h, cur_x + i + 1,
-								round_to_int((double)by + h - specials[special_index].graph[j] *
-									(h - 1) / specials[special_index].graph_scale));
-						if ((w - i) / ((float) (w - 2) /
-									(specials[special_index].graph_width)) > j
-								&& j < MAX_GRAPH_DEPTH - 3) {
-							j++;
-						}
+						if (tmpcolour) free(tmpcolour);
 					}
-					if (tmpcolour) free(tmpcolour);
 					if (h > cur_y_add
 							&& h > font_h) {
 						cur_y_add = h;
@@ -3232,7 +3203,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 
 				case OFFSET:
 					w += specials[special_index].arg;
-					last_special_needed = special_index;
 					break;
 
 				case VOFFSET:
@@ -3243,7 +3213,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					if (specials[special_index].arg >= 0) {
 						cur_x = (int) specials[special_index].arg;
 					}
-					last_special_needed = special_index;
 					break;
 
 				case TAB:
@@ -3255,7 +3224,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 						step = 10;
 					}
 					w = step - (cur_x - text_start_x - start) % step;
-					last_special_needed = special_index;
 					break;
 				}
 
@@ -3276,7 +3244,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					if (pos_x > specials[special_index].arg && pos_x > cur_x) {
 						cur_x = pos_x - specials[special_index].arg;
 					}
-					last_special_needed = special_index;
 					break;
 				}
 
@@ -3296,7 +3263,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					if (pos_x > specials[special_index].arg) {
 						w = pos_x - specials[special_index].arg;
 					}
-					last_special_needed = special_index;
 					break;
 				}
 #endif /* X11 */
@@ -3329,10 +3295,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 	if (output_methods & TO_X)
 		cur_y += font_descent();
 #endif /* X11 */
-	if (recurse && *recurse) {
-		special_index = draw_each_line_inner(recurse, special_index, last_special_needed);
-		*(recurse - 1) = SECRIT_MULTILINE_CHAR;
-	}
 	return special_index;
 }
 
@@ -5716,6 +5678,7 @@ void initialisation(int argc, char **argv) {
 			"kvm_open")) == NULL) {
 		CRIT_ERR(NULL, NULL, "cannot read kvm");
 	}
+	pthread_mutex_init(&kvm_proc_mutex, NULL);
 #endif
 
 	while (1) {
@@ -5999,6 +5962,7 @@ int main(int argc, char **argv)
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 	kvm_close(kd);
+	pthread_mutex_destroy(&kvm_proc_mutex);
 #endif
 
 	return 0;
@@ -6015,7 +5979,7 @@ static void signal_handler(int sig)
 {
 	/* signal handler is light as a feather, as it should be.
 	 * we will poll g_signal_pending with each loop of conky
-	 * and do any signal processing there, NOT here (except 
+	 * and do any signal processing there, NOT here (except
 	 * SIGALRM because this is caused when conky is hanging) */
 	if(sig == SIGALRM) {
 		alarm_handler();

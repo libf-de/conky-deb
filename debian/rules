@@ -1,134 +1,69 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+export DEB_LDFLAGS_MAINT_APPEND=-Wl,--as-needed
 
-# These are used for cross-compiling and for saving the configure script
-# from having to guess our platform (since we know it already)
+DEB_CFLAGS          ?= $(shell dpkg-buildflags --get CFLAGS)
+DEB_LDFLAGS         ?= $(shell dpkg-buildflags --get LDFLAGS)
+
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-
-CFLAGS = -Wall -g
-LDFLAGS = -Wl,--as-needed
-
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
-else
-	CFLAGS += -O3
-endif
+DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 
 ifeq ($(DEB_HOST_ARCH_OS),linux)
-       LINUX_CONF_ARGS_STD=--enable-wlan
+	LINUX_CONF_ARGS_STD=--enable-wlan
 endif
 
 COMMON_CONFIGURE_FLAGS = --host=$(DEB_HOST_GNU_TYPE) \
-			 --build=$(DEB_BUILD_GNU_TYPE) \
-		         --prefix=/usr --sysconfdir=/etc \
-	                 --mandir=\$${prefix}/share/man \
-			 --infodir=\$${prefix}/share/info \
-			 --srcdir=.. \
-			 --disable-static
+                         --build=$(DEB_BUILD_GNU_TYPE) \
+                         --prefix=/usr --sysconfdir=/etc \
+                         --mandir=\$${prefix}/share/man \
+                         --infodir=\$${prefix}/share/info \
+                         --srcdir=.. \
+                         --disable-static 
 
-configure: config-stamp
+%:
+	dh $@ --with autotools_dev
 
-config-stamp:
-	dh_testdir
+override_dh_clean:
+	rm -rf build-std build-cli
+	dh_clean
 
-	chmod +x ./autogen.sh
-	AUTOMAKE=automake-1.11 ./autogen.sh
-
-	ln -sf /usr/share/misc/config.sub .
-	ln -sf /usr/share/misc/config.guess .
-
-	mkdir build-std build-cli
-
-	cd build-std && CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
+override_dh_auto_configure:
+	mkdir -p build-std build-cli
+	
+	cd build-std && CFLAGS="$(DEB_CFLAGS)" LDFLAGS="$(DEB_LDFLAGS)" \
 	../configure $(COMMON_CONFIGURE_FLAGS) \
 	--enable-imlib2 --enable-rss --enable-weather-xoap \
 	--enable-lua-cairo --enable-lua-imlib2 \
 	--enable-xmms2 --enable-audacious \
 	$(LINUX_CONF_ARGS_STD)
-
-	cd build-cli &&	CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	
+	cd build-cli &&	CFLAGS="$(DEB_CFLAGS)" LDFLAGS="$(DEB_LDFLAGS)" \
 	../configure $(COMMON_CONFIGURE_FLAGS) \
 	--disable-lua --disable-double-buffer --disable-x11 \
 	--disable-xdamage --disable-own-window --disable-xft \
 	--disable-hddtemp --disable-alsa --disable-portmon
 
-	touch $@
-
-build: build-arch build-indep
-
-build-arch: build-stamp
-
-build-indep: build-stamp
-
-build-stamp: config-stamp
-	dh_testdir
-
+override_dh_auto_build:
 	cd build-std && $(MAKE)
 	cd build-cli && $(MAKE)
 
-	touch $@
-
-clean:
-	dh_testdir
-	dh_testroot
-
-	rm -f  build-stamp config-stamp
-
-	rm  -f configure.ac configure config.h.in src/config.h.in \
-	       src/defconfig.h compile install-sh missing ltmain.sh depcomp \
-	       Makefile.in doc/Makefile.in src/Makefile.in \
-	       data/Makefile.in lua/Makefile.in \
-	       aclocal.m4 m4/libtool.m4 m4/ltversion.m4 \
-	       m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4
-
-	rm -rf build-std build-cli
-	rm -f config.guess config.sub
-
-	dh_clean 
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_prep
-
+override_dh_auto_install:
 	cd build-std && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-std
 	cd build-cli && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-cli
-
+	
 	# Clean up cruft left upstream
 	rm -rf debian/conky-cli/usr/lib \
 	       debian/conky-std/usr/lib/conky/*.la \
 	       debian/conky-std/usr/lib/conky/*.so.?
-
+	
 	# Install conky_no_x11.conf instead of the regular conky.conf config file
-	# for use with conky-cli
+	# for use with conky-cli. See Debian BTS #639314.
 	rm -f debian/conky-cli/etc/conky/conky.conf
 	mv -f debian/conky-cli/etc/conky/conky_no_x11.conf \
 	      debian/conky-cli/etc/conky/conky.conf
 
-binary-indep: build install
-
-binary-arch: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs ChangeLog
-	dh_installdocs
-	dh_installmenu -a
-	dh_installman -a doc/conky.1
-	dh_install -a
-	dh_link -a
-	dh_strip -a
-	dh_compress
-	dh_fixperms
-	dh_installdeb -a
-	dh_shlibdeps -a
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-arch binary-indep
-
-.PHONY: configure build clean install binary binary-indep binary-arch
+override_dh_makeshlibs:
+	# Do not run ldconfig on private shared libraries in /usr/lib/conky
+	# This fixes lintian warning "postinst-has-useless-call-to-ldconfig"
+	dh_makeshlibs -X/usr/lib/conky

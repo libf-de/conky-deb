@@ -35,6 +35,7 @@
 #include "logging.h"
 #include "specials.h"
 #include <math.h>
+#include <ctype.h>
 
 /* maximum number of special things, e.g. fonts, offsets, aligns, etc. */
 int max_specials = MAX_SPECIALS_DEFAULT;
@@ -67,7 +68,7 @@ struct graph {
 	int width, height;
 	unsigned int first_colour, last_colour;
 	unsigned int scale, showaslog;
-	char tempgrad;
+	char tempgrad, dotgraph;
 };
 
 struct stippled_hr {
@@ -160,10 +161,14 @@ char *scan_graph(struct text_object *obj, const char *args, int defscale)
 	g->last_colour = 0;
 	g->scale = defscale;
 	g->tempgrad = FALSE;
+	g->dotgraph = FALSE;
 	g->showaslog = FALSE;
 	if (args) {
 		if (strstr(args, " "TEMPGRAD) || strncmp(args, TEMPGRAD, strlen(TEMPGRAD)) == 0) {
 			g->tempgrad = TRUE;
+		}
+		if (strstr(args, " "DOTGRAPH) || strncmp(args, DOTGRAPH, strlen(DOTGRAPH)) == 0) {
+			g->dotgraph = TRUE;
 		}
 		if (strstr(args, " "LOGGRAPH) || strncmp(args, LOGGRAPH, strlen(LOGGRAPH)) == 0) {
 			g->showaslog = TRUE;
@@ -215,20 +220,6 @@ char *scan_graph(struct text_object *obj, const char *args, int defscale)
 			sscanf(args, "%1023s %d,%d", buf, &g->height, &g->width);
 		}
 
-		/* escape quotes at end in case of execgraph */
-		if (*buf == '"') {
-			char *_ptr;
-			size_t _size;
-			if (_ptr = strrchr(args, '"')) {
-				_size = _ptr - args - 1;
-			}
-			_size = _size < 1024 ? _size : 1023;
-			strncpy(buf, args + 1, _size);
-			buf[_size] = 0;
-		}
-
-#undef g
-
 		return strndup(buf, text_buffer_size);
 	}
 
@@ -237,6 +228,45 @@ char *scan_graph(struct text_object *obj, const char *args, int defscale)
 	} else {
 		return strndup(buf, text_buffer_size);
 	}
+}
+
+// scan_graph is a mess and it does not work for execgraph, so i'll just rewrite it for this case
+char *scan_execgraph(struct text_object *obj, const char *arg)
+{
+	struct graph *g;
+
+	g = malloc(sizeof(struct graph));
+	memset(g, 0, sizeof(struct graph));
+	obj->special_data = g;
+
+	/* zero width means all space that is available */
+	g->width = default_graph_width;
+	g->height = default_graph_height;
+	g->first_colour = 0;
+	g->last_colour = 0;
+	g->scale = 100;
+	g->tempgrad = FALSE;
+	g->showaslog = FALSE;
+
+	while(arg && *arg) {
+		while(isspace(*arg)) ++arg;
+
+		if(strncmp(arg, TEMPGRAD, strlen(TEMPGRAD)) == 0 && !isalnum(arg[strlen(TEMPGRAD)])) {
+			g->tempgrad = TRUE;
+			arg += strlen(TEMPGRAD);
+			continue;
+		}
+
+		if(strncmp(arg, LOGGRAPH, strlen(LOGGRAPH)) == 0 && !isalnum(arg[strlen(LOGGRAPH)])) {
+			g->showaslog = TRUE;
+			arg += strlen(LOGGRAPH);
+			continue;
+		}
+
+		return strdup(arg);
+	}
+
+	return NULL;
 }
 #endif /* X11 */
 
@@ -327,6 +357,9 @@ static void graph_append(struct special_t *graph, double f, char showaslog)
 {
 	int i;
 
+	/* do nothing if we don't even have a graph yet */
+	if (!graph->graph) return;
+
 	if (showaslog) {
 #ifdef MATH
 		f = log10(f + 1);
@@ -338,7 +371,7 @@ static void graph_append(struct special_t *graph, double f, char showaslog)
 	}
 
 	/* shift all the data by 1 */
-	for (i = graph->graph_width - 1; i > 0; i--) {
+	for (i = graph->graph_allocated - 1; i > 0; i--) {
 		graph->graph[i] = graph->graph[i - 1];
 		if (graph->scaled && graph->graph[i - 1] > graph->graph_scale) {
 			/* check if we need to update the scale */
@@ -366,16 +399,25 @@ void new_graph(struct text_object *obj, char *buf, int buf_max_size, double val)
 	s = new_special(buf, GRAPH);
 
 	s->width = g->width;
-	if (s->graph == NULL) {
-		if (s->width > 0 && s->width < MAX_GRAPH_DEPTH) {
-			// subtract 2 for the box
-			s->graph_width = s->width /* - 2 */;
+	if (s->width) s->graph_width = s->width;
+
+	if (s->graph_width != s->graph_allocated) {
+		char *graph = realloc(s->graph, s->graph_width * sizeof(double));
+		DBGP("reallocing graph from %d to %d", s->graph_allocated, s->graph_width);
+		if (!s->graph) {
+			/* initialize */
+			memset(graph, 0, s->graph_width * sizeof(double));
+			s->graph_scale = 100;
 		} else {
-			s->graph_width = MAX_GRAPH_DEPTH - 2;
+			if (s->graph_width > s->graph_allocated) {
+				/* initialize the new region */
+				memset(graph + (s->graph_allocated * sizeof(double)), 0,
+						(s->graph_width - s->graph_allocated) *
+						sizeof(double));
+			}
 		}
-		s->graph = malloc(s->graph_width * sizeof(double));
-		memset(s->graph, 0, s->graph_width * sizeof(double));
-		s->graph_scale = 100;
+		s->graph = graph;
+		s->graph_allocated = s->graph_width;
 	}
 	s->height = g->height;
 	s->first_colour = adjust_colours(g->first_colour);
@@ -390,9 +432,7 @@ void new_graph(struct text_object *obj, char *buf, int buf_max_size, double val)
 		s->show_scale = 1;
 	}
 	s->tempgrad = g->tempgrad;
-	/* if (s->width) {
-		s->graph_width = s->width - 2;	// subtract 2 for rectangle around
-	} */
+	s->dotgraph = g->dotgraph;
 #ifdef MATH
 	if (g->showaslog) {
 		s->graph_scale = log10(s->graph_scale + 1);

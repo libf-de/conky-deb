@@ -1,3 +1,25 @@
+conky (1.9.0-1) unstable; urgency=low
+
+  * New upstream release.
+    - Fix execi when interval is larger than system uptime.
+      (Closes: #652336, #652536; LP: #996362)
+  * Remove debian/patches/fix-{curl,kfreebsd,xmms2}-ftbfs.patch,
+    fix-acpitemp.patch, and fix-update-interval.patch; applied upstream.
+    - Refresh remaining patches.
+    - Rename fix-race-condition.patch -> fix-CVE-2011-3616.patch; also
+      include a more detailed description.
+  * Change priority and section of transitional conky package to oldlibs/extra.
+  * Add build-depends on autotools-dev.
+  * Add build-depends on dpkg-dev (>= 1.15.7) due to use of dpkg-buildflags.
+  * Add alternative build-depends: automake1.11 | automake (>= 1:1.11),
+    libcurl4-gnutls-dev | libcurl4-dev.
+  * Update debian/rules to dh 7 "rules.tiny" style.
+  * Update debian/watch to look for both .gz and .bz2 tarballs.
+  * Update Standards version from 3.9.2 to 3.9.3, no changes required.
+  * Update debhelper compatibility level from 8 to 9.
+
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Tue, 08 May 2012 15:41:00 -0700
+
 conky (1.8.1-6) unstable; urgency=low
 
   * debian/patches:

@@ -1,4 +1,4 @@
-Format: http://anonscm.debian.org/viewvc/dep/web/deps/dep5.mdwn?revision=174
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: conky
 Upstream-Contact: Brenden Matthews <brenden@rty.ca>
 Source: http://sourceforge.net/projects/conky/files/
@@ -34,10 +34,10 @@ License: ISC
 
 Files: debian/*
 Copyright: 2005 Jason Tan <jtan325@gmail.com>
-Copyright: 2006 Steve Langasek, Laszlo Boszormenyi, Bartosz Fenski
-Copyright: 2007-2008 Kapil Hari Paranjape <kapil@debian.org>
-Copyright: 2009-2010 Cesare Tirabassi <norsetto@ubuntu.com>
-Copyright: 2011 Vincent Cheng <Vincentc1208@gmail.com>
+           2006 Steve Langasek, Laszlo Boszormenyi, Bartosz Fenski
+           2007-2008 Kapil Hari Paranjape <kapil@debian.org>
+           2009-2010 Cesare Tirabassi <norsetto@ubuntu.com>
+           2011-2012 Vincent Cheng <Vincentc1208@gmail.com>
 License: GPL-3.0+
 
 License: GPL-3.0+

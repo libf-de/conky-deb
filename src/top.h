@@ -1,4 +1,5 @@
 /* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -63,6 +64,7 @@
 #include <sys/time.h>
 
 #include <regex.h>
+#include <pwd.h>
 
 /******************************************
  * Defines								  *
@@ -86,6 +88,8 @@ enum top_field {
 	TOP_TIME,
 	TOP_MEM_RES,
 	TOP_MEM_VSIZE,
+	TOP_UID,
+	TOP_USER,
 #ifdef IOSTATS
 	TOP_READ_BYTES,
 	TOP_WRITE_BYTES,
@@ -103,6 +107,7 @@ struct process {
 
 	pid_t pid;
 	char *name;
+	uid_t uid;
 	float amount;
 	// User and kernel times are in hundredths of seconds
 	unsigned long user_time;
@@ -111,8 +116,8 @@ struct process {
 	unsigned long previous_user_time;
 	unsigned long previous_kernel_time;
 	unsigned long total_cpu_time;
-	unsigned int vsize;
-	unsigned int rss;
+	unsigned long long vsize;
+	unsigned long long rss;
 #ifdef IOSTATS
 	unsigned long long read_bytes;
 	unsigned long long previous_read_bytes;

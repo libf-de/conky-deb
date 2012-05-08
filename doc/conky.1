@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH conky 1 2010-10-05 "" ""
+.TH conky 1 2012-05-03 "" ""
 .SH NAME
 conky \- A system monitor for X originally based on the torsmo code, but more kickass. It just keeps on given'er. Yeah.
 .SH SYNOPSIS
@@ -1200,11 +1200,7 @@ default_graph_size config setting. Takes the switch '-t' to
 use a temperature gradient, which makes the gradient values
 change depending on the amplitude of a particular graph
 value (try it and see). If -t or -l is your first argument,
-you may need to preceed it by a space (' '). You may also use
-double-quotes around the exec argument should you need to execute a
-command with spaces. For example, ${execgraph "date +'%S'"} to execute
-`date +'%S'` and graph the result. Without quotes, it would simply
-print the result of `date`.
+you may need to preceed it by a space (' ').
 
 .TP 
 \fB\*(T<\fBexeci\fR\*(T> \fR\*(T<\fBinterval command\fR\*(T> 
@@ -1492,7 +1488,7 @@ everything between $if_empty and the matching $endif
 \fB\*(T<\fBif_existing\fR\*(T> \fR\*(T<\fBfile (string)\fR\*(T> 
 if FILE exists, display everything between
 if_existing and the matching $endif. The optional second
-paramater checks for FILE containing the specified string
+parameter checks for FILE containing the specified string
 and prints everything between $if_existing and the matching
 $endif. 
 
@@ -1527,7 +1523,7 @@ Valid operands are: '>', '<', '>=',
 \fB\*(T<\fBif_mixer_mute\fR\*(T> \fR\*(T<\fB(mixer)\fR\*(T> 
 If mixer exists, display everything between
 $if_mixer_mute and the matching $endif. If no mixer is
-specified, "Master" is used. 
+specified, "Vol" is used. 
 
 .TP 
 \fB\*(T<\fBif_mounted\fR\*(T> \fR\*(T<\fB(mountpoint)\fR\*(T> 
@@ -1761,10 +1757,14 @@ Percentage of memory in use
 .TP 
 \fB\*(T<\fBmixer\fR\*(T> \fR\*(T<\fB(device)\fR\*(T> 
 Prints the mixer value as reported by the OS.
-Default mixer is "Master", but you can specify one of the
-available ALSA Simple mixer controls.
-You can find the list of those available on your system
-using amixer.
+On Linux, this variable uses the OSS emulation, so you
+need the proper kernel module loaded.
+Default mixer is "Vol", but you can specify one of the
+available OSS controls: "Vol", "Bass", "Trebl", "Synth",
+"Pcm", "Spkr", "Line", "Mic", "CD", "Mix", "Pcm2 ", "Rec",
+"IGain", "OGain", "Line1", "Line2", "Line3", "Digital1",
+"Digital2", "Digital3", "PhoneIn", "PhoneOut", "Video",
+"Radio" and "Monitor".
 
 .TP 
 \fB\*(T<\fBmixerbar\fR\*(T> \fR\*(T<\fB(device)\fR\*(T> 
@@ -1863,6 +1863,10 @@ Bar of mpd's progress
 .TP 
 \fB\*(T<\fBmpd_bitrate\fR\*(T> \fR
 Bitrate of current song 
+
+.TP 
+\fB\*(T<\fBmpd_date\fR\*(T> \fR
+Date of current song
 
 .TP 
 \fB\*(T<\fBmpd_elapsed\fR\*(T> \fR
@@ -2515,7 +2519,7 @@ This takes arguments in the form:top (name)
 (number) Basically, processes are ranked from highest to
 lowest in terms of cpu usage, which is what (num)
 represents. The types are: "name", "pid", "cpu", "mem",
-"mem_res", "mem_vsize", "time", "io_perc", "io_read" and
+"mem_res", "mem_vsize", "time", "uid", "user", "io_perc", "io_read" and
 "io_write". There can be a max of 10 processes listed. 
 
 .TP 

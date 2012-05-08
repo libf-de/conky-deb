@@ -2,10 +2,10 @@
 #
 dnl major, minor and micro version macros.
 m4_define([conky_version_major], [1])
-m4_define([conky_version_minor], [8])
-m4_define([conky_version_micro], [1])
+m4_define([conky_version_minor], [9])
+m4_define([conky_version_micro], [0])
 m4_define([conky_version_tag]) dnl, [pre]) dnl [] for releases
-m4_define([conky_version_revision],[_rc1])
+m4_define([conky_version_revision],[_pre2415])
 m4_define([conky_version],
     [conky_version_major().conky_version_minor().conky_version_micro()ifelse(
       conky_version_tag(), [pre],
@@ -60,6 +60,7 @@ case $uname in
   FreeBSD*|GNU/kFreeBSD*)
     WANT_KVM=yes
     WANT_DEVSTAT=yes
+    WANT_OPTRESET=yes
     ;;
 #  NetBSD*)
 #    WANT_KVM=yes
@@ -135,6 +136,7 @@ AM_CONDITIONAL(BUILD_NCURSES, test x$want_ncurses = xyes)
 if test x$want_ncurses = xyes; then
       conky_LIBS="$conky_LIBS -lncurses"
       AC_DEFINE(NCURSES, 1, [Define for ncurses support])
+	  AC_CHECK_HEADERS([ncurses.h], [], AC_MSG_ERROR([required header(s) not found]))
 fi
 
 
@@ -198,7 +200,7 @@ AC_ARG_ENABLE([ibm],
 	      [want_ibm="$enableval"], [want_ibm=no])
 
 AM_CONDITIONAL(BUILD_IBM, test x$want_ibm = xyes)
-if test x$want_ibm = xyes; then
+if test "x$want_ibm" = xyes; then
 	if test x"$uname" != xLinux; then
 		AC_MSG_NOTICE([support for IBM/Lenovo notebooks not supported on $uname... disabling])
 		want_ibm="not supported on $uname"
@@ -218,7 +220,7 @@ AC_ARG_ENABLE([hddtemp],
               [want_hddtemp="$enableval"], [want_hddtemp=yes])
 
 AM_CONDITIONAL(BUILD_HDDTEMP, test x$want_hddtemp = xyes)
-if test x$want_hddtemp = xyes; then
+if test "x$want_hddtemp" = xyes; then
   if test x"$uname" != xLinux; then
       AC_MSG_NOTICE([hddtemp not supported on $uname... disabling])
       want_hddtemp="not supported on $uname"
@@ -237,15 +239,15 @@ AC_ARG_ENABLE([apcupsd],
                              [disable if you do not want apcupsd support @<:@default=yes@:>@]),
               [want_apcupsd="$enableval"], [want_apcupsd=yes])
 
-if test x$want_apcupsd = xyes; then
-  if test x"$uname" != xLinux; then
+if test "x$want_apcupsd" = xyes; then
+  if test x"$uname" != xLinux -a x"$uname" != xFreeBSD; then
       AC_MSG_NOTICE([apcupsd not supported on $uname... disabling])
       want_apcupsd="not supported on $uname"
   else
       AC_DEFINE(APCUPSD, 1, [Define if you want apcupsd support])
   fi
 fi
-AM_CONDITIONAL(BUILD_APCUPSD, test x$want_apcupsd = xyes)
+AM_CONDITIONAL(BUILD_APCUPSD, test "x$want_apcupsd" = xyes)
 
 
 dnl
@@ -257,8 +259,8 @@ AC_ARG_ENABLE([iostats],
                              [enable if you want support for per-task I/O statistics @<:@default=yes@:>@]),
               [want_iostats="$enableval"], [want_iostats=yes])
 
-if test x$want_iostats = xyes; then
-  if test x"$uname" != xLinux; then
+if test "x$want_iostats" = xyes; then
+  if test x"$uname" != xLinux -a x"$uname" != xFreeBSD; then
       AC_MSG_NOTICE([iostats not supported on $uname... disabling])
       want_iostats="not supported on $uname"
   else
@@ -732,6 +734,17 @@ if test x$WANT_KVM = xyes; then
 fi
 
 dnl
+dnl optreset
+dnl
+
+if test x$WANT_OPTRESET = xyes; then
+  AC_CHECK_LIB(bsd, optreset,
+    conky_LIBS="$conky_LIBS -lbsd",
+  AC_MSG_ERROR([Could not find optreset in -lbsd.])
+  )
+fi
+
+dnl
 dnl devstat
 dnl
 
@@ -790,7 +803,7 @@ AC_DEFINE(CONFIG_FILE, "$HOME/.conkyrc", [Configfile of the user])
 AC_DEFINE(MAX_SPECIALS_DEFAULT, 512, [Default maximum number of special things, e.g. fonts, offsets, aligns, etc.])
 AC_DEFINE(MAX_USER_TEXT_DEFAULT, 16384, [Default maximum size of config TEXT buffer, i.e. below TEXT line.])
 AC_DEFINE(DEFAULT_TEXT_BUFFER_SIZE, 256, [Default size used for temporary, static text buffers])
-AC_DEFINE(MAX_NET_INTERFACES, 16, [Maximum number of network devices])
+AC_DEFINE(MAX_NET_INTERFACES, 64, [Maximum number of network devices])
 
 dnl
 dnl Some functions
@@ -809,15 +822,6 @@ AC_CHECK_MEMBER([struct statfs.f_fstypename],
                  [AC_DEFINE(HAVE_STRUCT_STATFS_F_FSTYPENAME, 1, [Define if struct statfs has the f_fstypename member])],
                  [],
                  [#include <sys/statfs.h>])
-
-dnl
-dnl Check for zlib
-dnl
-
-AC_CHECK_HEADER(zlib.h,
-		[],
-		[AC_MSG_ERROR([zlib is missing; please install the headers first])])
-
 
 dnl
 dnl Check for OpenMP support
