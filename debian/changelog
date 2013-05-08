@@ -1,15 +1,12 @@
-conky (1.9.0-2+deb7u1) wheezy; urgency=medium
+conky (1.9.0-3) unstable; urgency=low
 
-  * Non-maintainer upload.
-  * Backport fix for #739245 from 1.9.0-4 to wheezy.
+  * Add debian/patches/fix-curl-related-crashes.patch to fix crash with
+    multiple weather objects in conkyrc. (Closes: #623106; LP: #780741,
+    LP: #1154741)
+  * Add debug package for each conky flavour.
+  * Update Standards version from 3.9.3 to 3.9.4, no changes required.
 
-  [ Vincent Cheng ]
-  * Declare Breaks+Replaces relationship against conky (<< 1.8.0-1, the
-    version in Debian where the conky package was first split into multiple
-    binary packages) to fix upgrade path from lenny -> squeeze -> wheezy.
-    (Closes: #739245)
-
- -- Andreas Beckmann <anbe@debian.org>  Sat, 17 Jan 2015 17:58:36 +0100
+ -- Vincent Cheng <Vincentc1208@gmail.com>  Wed, 08 May 2013 01:34:40 -0700
 
 conky (1.9.0-2) unstable; urgency=low
 

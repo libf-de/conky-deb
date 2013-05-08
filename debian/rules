@@ -63,6 +63,10 @@ override_dh_auto_install:
 	mv -f debian/conky-cli/etc/conky/conky_no_x11.conf \
 	      debian/conky-cli/etc/conky/conky.conf
 
+override_dh_strip:
+	dh_strip -p conky-std --dbg-package=conky-std-dbg
+	dh_strip -p conky-cli --dbg-package=conky-cli-dbg
+
 override_dh_makeshlibs:
 	# Do not run ldconfig on private shared libraries in /usr/lib/conky
 	# This fixes lintian warning "postinst-has-useless-call-to-ldconfig"
