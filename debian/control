@@ -1,7 +1,7 @@
 Source: conky
 Section: utils
 Priority: optional
-Maintainer: Vincent Cheng <Vincentc1208@gmail.com>
+Maintainer: Vincent Cheng <vcheng@debian.org>
 Build-Depends:
  audacious-dev,
  automake1.11 | automake (>= 1:1.11),
@@ -28,31 +28,17 @@ Build-Depends:
  libxmmsclient-dev,
  pkg-config (>= 0.19)
 Homepage: http://conky.sourceforge.net/
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 Vcs-Svn: svn://anonscm.debian.org/collab-maint/deb-maint/conky/trunk
 Vcs-Browser: http://anonscm.debian.org/viewvc/collab-maint/deb-maint/conky/trunk
-
-Package: conky
-Section: oldlibs
-Priority: extra
-Architecture: all
-Depends: conky-std | conky-cli | conky-all, ${misc:Depends}
-Description: highly configurable system monitor (transitional package)
- Conky is a system monitor that can display just about anything,
- either on your root desktop or in its own window.
- Conky has many built-in objects, as well as the ability to execute
- external programs or scripts (either external or through built-in
- lua support).
- .
- This is a dummy package to ease transition to the new packaging scheme.
- It may be safely removed after upgrade/installation.
 
 Package: conky-std
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, audacious, moc, mpd, xmms2
+Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-all, conky-cli
-Replaces: conky-all, conky-cli
+Replaces: conky-all, conky-cli, conky (<< 1.8.0-1)
 Description: highly configurable system monitor (default version)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
@@ -94,8 +80,9 @@ Package: conky-cli
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, moc, mpd
+Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-all, conky-std
-Replaces: conky-all, conky-std
+Replaces: conky-all, conky-std, conky (<< 1.8.0-1)
 Description: highly configurable system monitor (basic version)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
@@ -126,3 +113,18 @@ Description: highly configurable system monitor (basic version - debug)
  MPD, MOC, math, apcupsd, ncurses and I/O stats.
  .
  This package contains debugging symbols only.
+
+Package: conky
+Section: oldlibs
+Priority: extra
+Architecture: all
+Depends: conky-std | conky-cli | conky-all, ${misc:Depends}
+Description: highly configurable system monitor (transitional package)
+ Conky is a system monitor that can display just about anything,
+ either on your root desktop or in its own window.
+ Conky has many built-in objects, as well as the ability to execute
+ external programs or scripts (either external or through built-in
+ lua support).
+ .
+ This is a dummy package to ease transition to the new packaging scheme.
+ It may be safely removed after upgrade/installation.

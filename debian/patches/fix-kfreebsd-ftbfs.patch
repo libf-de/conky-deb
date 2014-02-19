@@ -1,7 +1,7 @@
 Description: Fix FTBFS on kfreebsd
  freebsd.c:287:11: error: 'struct kinfo_proc' has no member named 'kp_proc'
 Forwarded: https://sourceforge.net/support/tracker.php?aid=3525356
-Author: Vincent Cheng <Vincentc1208@gmail.com>
+Author: Vincent Cheng <vcheng@debian.org>
 Last-Update: 05-09-2012
 
 --- a/src/freebsd.c

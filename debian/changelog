@@ -1,3 +1,16 @@
+conky (1.9.0-4) unstable; urgency=medium
+
+  * Declare Breaks+Replaces relationship against conky (<< 1.8.0-1, the
+    version in Debian where the conky package was first split into multiple
+    binary packages) to fix upgrade path from lenny -> squeeze -> wheezy.
+    (Closes: #739245)
+  * Add debian/patches/fix-uninitialized-inotify_fd-value.patch.
+    (Closes: #720112)
+  * Update email address.
+  * Update Standards version from 3.9.4 to 3.9.5, no changes required.
+
+ -- Vincent Cheng <vcheng@debian.org>  Wed, 19 Feb 2014 01:41:42 -0800
+
 conky (1.9.0-3) unstable; urgency=low
 
   * Add debian/patches/fix-curl-related-crashes.patch to fix crash with

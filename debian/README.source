@@ -29,4 +29,4 @@ X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
 Weather, wireless, Imlib2, ALSA mixer, apcupsd, I/O stats, argb, Lua
 and the cairo and imlib2 lua bindings, Audacious, and XMMS2.
 
- -- Vincent Cheng <Vincentc1208@gmail.com>  Wed, 10 Aug 2011 21:23:19 -0700
+ -- Vincent Cheng <vcheng@debian.org>  Wed, 10 Aug 2011 21:23:19 -0700
