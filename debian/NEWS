@@ -1,3 +1,26 @@
+conky (1.9.0-5) unstable; urgency=medium
+
+    src:conky-all has been merged into src:conky, including all binary
+    packages built by the former (conky-all), now that libxnvctrl and
+    nvidia-settings has been moved to main; see [#747837] for background wrt
+    nvidia-settings, and [#579102] for rationale as to why the conky vs.
+    conky-all source package split was necessary in the first place.
+
+    For end users, this means that:
+    - Support for RSS, weather (both METAR and XOAP), imlib2, and all Lua
+      bindings are disabled in conky-std. These features (which are not
+      enabled by default upstream) are all enabled in conky-all instead.
+    - conky-all has been moved to main. You should install this package if
+      you need the above features.
+
+    This means that support for features in the various conky binary packages
+    are effectively the same as in versions prior to 1.8.1-3 before the split.
+
+    [#747837]: https://bugs.debian.org/747837
+    [#579102]: https://bugs.debian.org/579102
+
+ -- Vincent Cheng <vcheng@debian.org>  Sat, 30 Aug 2014 12:28:42 -0700
+
 conky (1.8.1-3) unstable; urgency=low
 
     conky-std now includes support for RSS, weather (both METAR and XOAP),

@@ -1,1 +1,3 @@
 debian/conky.py usr/share/apport/package-hooks/
+extras/vim/syntax/conkyrc.vim usr/share/vim/addons/syntax/
+extras/vim/ftdetect/conkyrc.vim usr/share/vim/addons/ftdetect/

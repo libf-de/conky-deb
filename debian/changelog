@@ -1,3 +1,20 @@
+conky (1.9.0-5) unstable; urgency=medium
+
+  * Merge src:conky-all into src:conky, including all binary packages built
+    by the former, now that libxnvctrl/nvidia-settings has been moved to main
+    (see #747837 for background).
+    - Disable support for RSS, weather (both METAR and XOAP), imlib2, and all
+      Lua bindings in conky-std. These features (which are not enabled by
+      default upstream) are all enabled in conky-all instead, which has been
+      moved to main. Also see debian/NEWS.
+    - This makes conky-all installable again. (Closes: #754600)
+  * Replace build-dep on audacious-dev with libaudclient-dev to fix FTBFS.
+    (Closes: #753705, #759887)
+  * Add debian/patches/fix_font_check.patch. (Closes: #746477)
+  * Install vim syntax rules for conkyrc config files.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sat, 30 Aug 2014 12:28:42 -0700
+
 conky (1.9.0-4) unstable; urgency=medium
 
   * Declare Breaks+Replaces relationship against conky (<< 1.8.0-1, the

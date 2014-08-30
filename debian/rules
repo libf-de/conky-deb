@@ -3,14 +3,29 @@
 export DEB_LDFLAGS_MAINT_APPEND=-Wl,--as-needed
 
 DEB_CFLAGS          ?= $(shell dpkg-buildflags --get CFLAGS)
+DEB_CPPFLAGS        ?= $(shell dpkg-buildflags --get CPPFLAGS)
 DEB_LDFLAGS         ?= $(shell dpkg-buildflags --get LDFLAGS)
 
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
 ifeq ($(DEB_HOST_ARCH_OS),linux)
-	LINUX_CONF_ARGS_STD=--enable-wlan
+       LINUX_CONF_ARGS_STD=--enable-wlan
+       LINUX_CONF_ARGS_ALL=--enable-wlan --enable-ibm
+endif
+
+ifeq ($(DEB_HOST_ARCH),i386)
+ifeq ($(DEB_HOST_ARCH_OS),linux)
+       ENABLE_NVIDIA=--enable-nvidia
+endif
+endif
+
+ifeq ($(DEB_HOST_ARCH),amd64)
+ifeq ($(DEB_HOST_ARCH_OS),linux)
+       ENABLE_NVIDIA=--enable-nvidia
+endif
 endif
 
 COMMON_CONFIGURE_FLAGS = --host=$(DEB_HOST_GNU_TYPE) \
@@ -25,40 +40,48 @@ COMMON_CONFIGURE_FLAGS = --host=$(DEB_HOST_GNU_TYPE) \
 	dh $@ --with autotools_dev
 
 override_dh_clean:
-	rm -rf build-std build-cli
+	rm -rf build-std build-cli build-all
 	dh_clean
 
 override_dh_auto_configure:
-	mkdir -p build-std build-cli
+	mkdir -p build-std build-cli build-all
 	
-	cd build-std && CFLAGS="$(DEB_CFLAGS)" LDFLAGS="$(DEB_LDFLAGS)" \
-	../configure $(COMMON_CONFIGURE_FLAGS) \
-	--enable-imlib2 --enable-rss --enable-weather-xoap \
-	--enable-lua-cairo --enable-lua-imlib2 \
-	--enable-xmms2 --enable-audacious \
+	cd build-std && CFLAGS="$(DEB_CFLAGS)" CPPFLAGS="$(DEB_CPPFLAGS)" \
+	LDFLAGS="$(DEB_LDFLAGS)" ../configure $(COMMON_CONFIGURE_FLAGS) \
 	$(LINUX_CONF_ARGS_STD)
 	
-	cd build-cli &&	CFLAGS="$(DEB_CFLAGS)" LDFLAGS="$(DEB_LDFLAGS)" \
-	../configure $(COMMON_CONFIGURE_FLAGS) \
+	cd build-cli && CFLAGS="$(DEB_CFLAGS)" CPPFLAGS="$(DEB_CPPFLAGS)" \
+	LDFLAGS="$(DEB_LDFLAGS)" ../configure $(COMMON_CONFIGURE_FLAGS) \
 	--disable-lua --disable-double-buffer --disable-x11 \
 	--disable-xdamage --disable-own-window --disable-xft \
 	--disable-hddtemp --disable-alsa --disable-portmon
+	
+	cd build-all && CFLAGS="$(DEB_CFLAGS)" CPPFLAGS="$(DEB_CPPFLAGS)" \
+	LDFLAGS="$(DEB_LDFLAGS)" ../configure $(COMMON_CONFIGURE_FLAGS) \
+	--enable-imlib2 --enable-rss --enable-weather-xoap \
+	--enable-eve --enable-lua-cairo --enable-lua-imlib2 \
+	--enable-xmms2 --enable-audacious \
+	$(LINUX_CONF_ARGS_ALL) $(ENABLE_NVIDIA)
 
 override_dh_auto_build:
 	cd build-std && $(MAKE)
 	cd build-cli && $(MAKE)
+	cd build-all && $(MAKE)
 
 override_dh_auto_install:
 	cd build-std && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-std
 	cd build-cli && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-cli
+	cd build-all && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-all
 	
 	# Clean up cruft left upstream
 	rm -rf debian/conky-cli/usr/lib \
 	       debian/conky-std/usr/lib/conky/*.la \
-	       debian/conky-std/usr/lib/conky/*.so.?
+	       debian/conky-std/usr/lib/conky/*.so.? \
+	       debian/conky-all/usr/lib/conky/*.la \
+	       debian/conky-all/usr/lib/conky/*.so.?
 	
-	# Install conky_no_x11.conf instead of the regular conky.conf config file
-	# for use with conky-cli. See Debian BTS #639314.
+	# Install conky_no_x11.conf instead of the regular conky.conf config
+	# file for use with conky-cli. See Debian BTS #639314.
 	rm -f debian/conky-cli/etc/conky/conky.conf
 	mv -f debian/conky-cli/etc/conky/conky_no_x11.conf \
 	      debian/conky-cli/etc/conky/conky.conf
@@ -66,6 +89,7 @@ override_dh_auto_install:
 override_dh_strip:
 	dh_strip -p conky-std --dbg-package=conky-std-dbg
 	dh_strip -p conky-cli --dbg-package=conky-cli-dbg
+	dh_strip -p conky-all --dbg-package=conky-all-dbg
 
 override_dh_makeshlibs:
 	# Do not run ldconfig on private shared libraries in /usr/lib/conky

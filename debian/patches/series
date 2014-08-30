@@ -3,3 +3,4 @@ fix-kfreebsd-ftbfs.patch
 fix-apcupsd.patch
 fix-curl-related-crashes.patch
 fix-uninitialized-inotify_fd-value.patch
+fix-font-check.patch
