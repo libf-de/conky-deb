@@ -3,6 +3,7 @@ Section: utils
 Priority: optional
 Maintainer: Vincent Cheng <vcheng@debian.org>
 Build-Depends:
+ audacious-dev,
  automake1.11 | automake (>= 1:1.11),
  autotools-dev,
  debhelper (>= 9),

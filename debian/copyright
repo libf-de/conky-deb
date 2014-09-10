@@ -3,7 +3,7 @@ Upstream-Name: conky
 Upstream-Contact: Brenden Matthews <brenden@rty.ca>
 Source: http://sourceforge.net/projects/conky/files/
 
-Files: autogen.sh src/*
+Files: *
 Copyright: 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
            2004 Hannu Saransaari, Lauri Hakkarainen
            2005 Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>

@@ -1,3 +1,9 @@
+conky (1.9.0-6) unstable; urgency=medium
+
+  * Re-add explicit dependency on audacious-dev.
+
+ -- Vincent Cheng <vcheng@debian.org>  Tue, 09 Sep 2014 23:26:45 -0700
+
 conky (1.9.0-5) unstable; urgency=medium
 
   * Merge src:conky-all into src:conky, including all binary packages built
