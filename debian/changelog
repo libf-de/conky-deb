@@ -1,3 +1,16 @@
+conky (1.9.0-2+deb7u1) wheezy; urgency=medium
+
+  * Non-maintainer upload.
+  * Backport fix for #739245 from 1.9.0-4 to wheezy.
+
+  [ Vincent Cheng ]
+  * Declare Breaks+Replaces relationship against conky (<< 1.8.0-1, the
+    version in Debian where the conky package was first split into multiple
+    binary packages) to fix upgrade path from lenny -> squeeze -> wheezy.
+    (Closes: #739245)
+
+ -- Andreas Beckmann <anbe@debian.org>  Sat, 17 Jan 2015 17:58:36 +0100
+
 conky (1.9.0-2) unstable; urgency=low
 
   * Add debian/patches/fix-kfreebsd-ftbfs.patch to fix FTBFS on kfreebsd.

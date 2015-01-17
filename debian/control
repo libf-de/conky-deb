@@ -51,8 +51,9 @@ Package: conky-std
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, audacious, moc, mpd, xmms2
+Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-all, conky-cli
-Replaces: conky-all, conky-cli
+Replaces: conky-all, conky-cli, conky (<< 1.8.0-1)
 Description: highly configurable system monitor (default version)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
@@ -72,8 +73,9 @@ Package: conky-cli
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, moc, mpd
+Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-all, conky-std
-Replaces: conky-all, conky-std
+Replaces: conky-all, conky-std, conky (<< 1.8.0-1)
 Description: highly configurable system monitor (basic version)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
