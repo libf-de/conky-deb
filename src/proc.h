@@ -10,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *   (see AUTHORS)
  * All rights reserved.
  *
@@ -27,6 +27,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+#ifndef CONKY_PROC_H
+#define CONKY_PROC_H
 
 #define PROCDIR	"/proc"
 #define READERR	"Can't read '%s'"
@@ -75,3 +78,5 @@ void print_pid_write(struct text_object *obj, char *p, int p_max_size);
 
 void scan_cmdline_to_pid_arg(struct text_object *obj, const char *arg, void* free_at_crash);
 void print_cmdline_to_pid(struct text_object *obj, char *p, int p_max_size);
+
+#endif /* CONKY_PROC_H */

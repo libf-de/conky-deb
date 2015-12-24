@@ -1,4 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -9,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -30,17 +31,14 @@
 #ifndef WEATHER_H_
 #define WEATHER_H_
 
-/* Prototypes */
-void weather_free_info(void);
-
-#ifdef XOAP
+#ifdef BUILD_WEATHER_XOAP
 void load_xoap_keys(void);
 void scan_weather_forecast_arg(struct text_object *, const char *, void *);
 void print_weather_forecast(struct text_object *, char *, int);
-#endif /* XOAP */
+#endif /* BUILD_WEATHER_XOAP */
 
 void scan_weather_arg(struct text_object *, const char *, void *);
 void print_weather(struct text_object *, char *, int);
 void free_weather(struct text_object *);
 
-#endif /*WEATHER_H_*/
+#endif /* WEATHER_H_ */

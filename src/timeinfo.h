@@ -10,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -30,9 +30,9 @@
 #ifndef _TIMEINFO_H
 #define _TIMEINFO_H
 
-/* for the times_in_seconds configuration variable and it's users */
-void set_times_in_seconds(char);
-char times_in_seconds(void);
+#include "setting.hh"
+
+extern conky::simple_config_setting<bool> times_in_seconds;
 
 /* since time and utime are quite equal, certain functions
  * are shared in between both text object types. */
@@ -45,11 +45,10 @@ void scan_tztime(struct text_object *, const char *);
 void print_time(struct text_object *, char *, int);
 void print_utime(struct text_object *, char *, int);
 void print_tztime(struct text_object *, char *, int);
+void print_format_time(struct text_object *obj, char *p, int p_max_size);
 
 /* free object data */
 void free_time(struct text_object *);
 void free_tztime(struct text_object *);
 
 #endif /* _TIMEINFO_H */
-
-void print_format_time(struct text_object *obj, char *p, int p_max_size);

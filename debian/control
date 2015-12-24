@@ -5,9 +5,14 @@ Maintainer: Vincent Cheng <vcheng@debian.org>
 Build-Depends:
  audacious-dev,
  automake1.11 | automake (>= 1:1.11),
- autotools-dev,
+ cmake (>= 2.6),
  debhelper (>= 9),
+ docbook-xml,
+ docbook-xsl,
+ docbook2x,
  dpkg-dev (>= 1.15.7),
+ gawk,
+ less,
  libasound2-dev [linux-any],
  libaudclient-dev,
  libcairo2-dev,
@@ -19,6 +24,7 @@ Build-Depends:
  libkvm-dev [kfreebsd-any],
  liblua5.1-0-dev,
  libncurses5-dev,
+ librsvg2-dev,
  libtolua++5.1-dev,
  libtool,
  libx11-dev,
@@ -30,7 +36,7 @@ Build-Depends:
  libxnvctrl-dev [i386 amd64] | nvidia-settings [i386 amd64],
  pkg-config (>= 0.19)
 Homepage: http://conky.sourceforge.net/
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Vcs-Svn: svn://anonscm.debian.org/collab-maint/deb-maint/conky/trunk
 Vcs-Browser: http://anonscm.debian.org/viewvc/collab-maint/deb-maint/conky/trunk
 
@@ -40,13 +46,13 @@ Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, audacious, moc, mpd, xmms2
 Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-all, conky-cli
-Replaces: conky-all, conky-cli, conky (<< 1.8.0-1)
+Replaces: conky (<< 1.8.0-1), conky-all, conky-cli
 Description: highly configurable system monitor (default version)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
  Conky has many built-in objects, as well as the ability to execute
  external programs or scripts (either external or through built-in
- lua support). 
+ lua support).
  .
  This package should be a good compromise for most users that do not
  need special features.
@@ -65,7 +71,7 @@ Description: highly configurable system monitor (default version - debug)
  either on your root desktop or in its own window.
  Conky has many built-in objects, as well as the ability to execute
  external programs or scripts (either external or through built-in
- lua support). 
+ lua support).
  .
  This package should be a good compromise for most users that do not
  need special features.
@@ -82,7 +88,7 @@ Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, moc, mpd
 Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-all, conky-std
-Replaces: conky-all, conky-std, conky (<< 1.8.0-1)
+Replaces: conky (<< 1.8.0-1), conky-all, conky-std
 Description: highly configurable system monitor (basic version)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
@@ -120,7 +126,7 @@ Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, audacious, moc, mpd, xmms2
 Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-cli, conky-std
-Replaces: conky-cli, conky-std, conky (<< 1.8.0-1)
+Replaces: conky (<< 1.8.0-1), conky-cli, conky-std
 Description: highly configurable system monitor (all features enabled)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.

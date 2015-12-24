@@ -5,5 +5,5 @@ Abstract: This manual describes the various configuration
 Section: System/Monitoring
 
 Format: HTML
-Index: /usr/share/doc/conky-cli/docs.html
-Files: /usr/share/doc/conky-cli/*.html
+Index: /usr/share/doc/conky-cli/html/docs.html
+Files: /usr/share/doc/conky-cli/html/*.html

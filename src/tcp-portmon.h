@@ -1,4 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * tcp-portmon.h - libtcp-portmon hooks protoypes
  *
@@ -15,8 +16,6 @@
  * GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * $Id$
  *
  */
 #ifndef _TCP_PORTMON_H
@@ -39,10 +38,9 @@ struct tcp_port_monitor_data {
 struct text_object;
 
 int tcp_portmon_init(struct text_object *, const char *);
-int tcp_portmon_action(struct text_object *, char *, int);
+void tcp_portmon_action(struct text_object *, char *, int);
 int tcp_portmon_update(void);
 int tcp_portmon_clear(void);
-int tcp_portmon_set_max_connections(int);
 void tcp_portmon_free(struct text_object *);
 
 #endif /* _TCP_PORTMON_H */

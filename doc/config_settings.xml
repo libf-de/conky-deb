@@ -2,18 +2,6 @@
     <varlistentry>
         <term>
             <command>
-                <option>TEXT</option>
-            </command>
-        </term>
-        <listitem>After this begins text to be formatted on screen.
-        Backslash (\) escapes newlines in the text section. This
-        can be useful for cleaning up config files where conky is
-        used to pipe input to dzen2. 
-        <para /></listitem>
-    </varlistentry>
-    <varlistentry>
-        <term>
-            <command>
                 <option>alignment</option>
             </command>
         </term>
@@ -78,10 +66,21 @@
                 <option>colorN</option>
             </command>
         </term>
-        <listitem>Predefine a color for use inside TEXT segments.
+        <listitem>Predefine a color for use inside conky.text segments.
         Substitute N by a digit between 0 and 9, inclusively. When
         specifying the color value in hex, omit the leading hash
         (#). 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>console_graph_ticks</option>
+            </command>
+        </term>
+        <listitem>A comma-separated list of strings to use as the bars of a graph output
+        to console/shell. The first list item is used for the minimum bar height and the
+        last item is used for the maximum. Example: " ,_,▁,▂,▃,▄,▅,▆,▇,█".
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -97,13 +96,21 @@
     <varlistentry>
         <term>
             <command>
-                <option>default_bar_size</option>
+                <option>default_bar_height</option>
             </command>
         </term>
-        <listitem>Specify a default width and height for bars.
-        Example: 'default_bar_size 0 6'. This is particularly
-        useful for execbar and execibar as they do not take size
-        arguments. 
+        <listitem>Specify a default height for bars.  This is particularly useful for execbar and
+        execibar as they do not take size arguments. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>default_bar_width</option>
+            </command>
+        </term>
+        <listitem>Specify a default width for bars.  This is particularly useful for execbar and
+        execibar as they do not take size arguments. 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -118,25 +125,41 @@
     <varlistentry>
         <term>
             <command>
-                <option>default_gauge_size</option>
+                <option>default_gauge_height</option>
             </command>
         </term>
-        <listitem>Specify a default width and height for gauges.
-        Example: 'default_gauge_size 25 25'. This is particularly
-        useful for execgauge and execigauge as they do not take
-        size arguments 
+        <listitem>Specify a default height for gauges.  This is particularly useful for execgauge
+        and execigauge as they do not take size arguments 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
         <term>
             <command>
-                <option>default_graph_size</option>
+                <option>default_gauge_width</option>
             </command>
         </term>
-        <listitem>Specify a default width and height for graphs.
-        Example: 'default_graph_size 0 25'. This is particularly
-        useful for execgraph and execigraph as they do not take
-        size arguments 
+        <listitem>Specify a default width for gauges.  This is particularly useful for execgauge
+        and execigauge as they do not take size arguments 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>default_graph_height</option>
+            </command>
+        </term>
+        <listitem>Specify a default height for graphs.  This is particularly useful for execgraph
+        and execigraph as they do not take size arguments 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>default_graph_width</option>
+            </command>
+        </term>
+        <listitem>Specify a default width for graphs.  This is particularly useful for execgraph
+        and execigraph as they do not take size arguments 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -308,6 +331,17 @@
     <varlistentry>
         <term>
             <command>
+                <option>http_refresh</option>
+            </command>
+        </term>
+        <listitem>When this is set the page generated with
+	out_to_http will automatically refresh each interval. Default
+	value is no.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>if_up_strictness</option>
             </command>
         </term>
@@ -456,16 +490,6 @@
     <varlistentry>
         <term>
             <command>
-                <option>max_specials</option>
-            </command>
-        </term>
-        <listitem>Maximum number of special things, e.g. fonts,
-        offsets, aligns, etc. (default is 512) 
-        <para /></listitem>
-    </varlistentry>
-    <varlistentry>
-        <term>
-            <command>
                 <option>max_text_width</option>
             </command>
             <option>width</option>
@@ -483,8 +507,8 @@
             </command>
             <option>bytes</option>
         </term>
-        <listitem>Maximum size of user text buffer, i.e. layout
-        below TEXT line in config file (default is 16384 bytes) 
+        <listitem>Maximum size of user text buffer, i.e. text inside
+	conky.text section in config file (default is 16384 bytes)
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -500,11 +524,21 @@
     <varlistentry>
         <term>
             <command>
-                <option>minimum_size</option>
+                <option>minimum_height</option>
             </command>
-            <option>width (height)</option>
+            <option>height</option>
         </term>
-        <listitem>Minimum size of window 
+        <listitem>Minimum height of the window 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>minimum_width</option>
+            </command>
+            <option>width</option>
+        </term>
+        <listitem>Minimum width of window 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -532,6 +566,52 @@
             </command>
         </term>
         <listitem>Port of MPD server 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>mysql_host</option>
+            </command>
+        </term>
+        <listitem>Host of MySQL server. Defaults to localhost
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>mysql_port</option>
+            </command>
+        </term>
+        <listitem>Port of MySQL server. Defaults to the default mysql port
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>mysql_user</option>
+            </command>
+        </term>
+        <listitem>MySQL user name to use when connecting to the server. Defaults to your username
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>mysql_password</option>
+            </command>
+        </term>
+        <listitem>Password of the MySQL user. Place it between "-chars. When this is not set there
+        is no password used
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>mysql_db</option>
+            </command>
+        </term>
+        <listitem>MySQL database to use. Defaults to mysql
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -580,6 +660,15 @@
             </command>
         </term>
         <listitem>Print text to stdout. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>out_to_http</option>
+            </command>
+        </term>
+        <listitem>Let conky act as a small http-server serving it's text.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -688,7 +777,7 @@
             </command>
         </term>
         <listitem>Manually set the window name. Defaults to
-        "&lt;hostname&gt; - conky". 
+        "conky (&lt;hostname&gt;)". 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -819,16 +908,16 @@
                 <option>templateN</option>
             </command>
         </term>
-        <listitem>Define a template for later use inside TEXT
+        <listitem>Define a template for later use inside conky.text
         segments. Substitute N by a digit between 0 and 9,
         inclusively. The value of the variable is being inserted
-        into the stuff below TEXT at the corresponding position,
+        into the stuff inside conky.text at the corresponding position,
         but before some substitutions are applied: 
         <simplelist>
             <member>'\n' -&gt; newline</member>
             <member>'\\' -&gt; backslash</member>
             <member>'\ ' -&gt; space</member>
-            <member>'\N' -&gt; template argument N</member>
+            <member>'\N' -&gt; template argument N (starting from 1)</member>
         </simplelist>
         <para /></listitem>
     </varlistentry>
@@ -868,6 +957,17 @@
         <listitem>If true, cpu in top will show usage of one
         processor's power. If false, cpu in top will show the usage
         of all processors' power combined. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>top_name_verbose</option>
+            </command>
+        </term>
+        <listitem>If true, top name shows the full command line of each
+        process, including arguments (whenever possible). Otherwise,
+        only the basename is displayed. Default value is false.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -951,15 +1051,6 @@
         </term>
         <listitem>Alpha of Xft font. Must be a value at or between
         1 and 0. 
-        <para /></listitem>
-    </varlistentry>
-    <varlistentry>
-        <term>
-            <command>
-                <option>xftfont</option>
-            </command>
-        </term>
-        <listitem>Xft font to use. 
         <para /></listitem>
     </varlistentry>
 </variablelist>

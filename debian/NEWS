@@ -1,3 +1,20 @@
+conky (1.10.0-1) unstable; urgency=medium
+
+    Conky 1.10.0 introduces a new Lua-based configuration format, which
+    supersedes the older free-form text format. An example can be found in
+    /usr/share/doc/conky-{std,cli,all}/conky.conf, and documented at [1][2].
+    You may attempt to convert your old conkyrc by using a Lua script that can
+    be found at /usr/share/doc/conky-{std,cli,all}/convert.lua.
+
+    Support for the older pre-1.10.0 conkyrc format will continue to be
+    enabled in the Debian packages for as long as it is supported and
+    maintained upstream.
+
+    [1] https://github.com/brndnmtthws/conky/wiki/Configuration-Settings
+    [2] https://github.com/brndnmtthws/conky/wiki/Configuration-Variables
+
+ -- Vincent Cheng <vcheng@debian.org>  Tue, 30 Jun 2015 21:35:43 -0700
+
 conky (1.9.0-5) unstable; urgency=medium
 
     src:conky-all has been merged into src:conky, including all binary

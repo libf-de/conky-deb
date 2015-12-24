@@ -1,5 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=c
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * audacious.h:  conky support for audacious music player
  *
@@ -25,44 +25,19 @@
 #ifndef AUDACIOUS_H
 #define AUDACIOUS_H
 
-#include "timed_thread.h"
+void print_audacious_status(struct text_object *, char *, int);
+void print_audacious_title(struct text_object *, char *, int);
+void print_audacious_length(struct text_object *, char *, int);
+void print_audacious_length_seconds(struct text_object *, char *, int);
+void print_audacious_position(struct text_object *, char *, int);
+void print_audacious_position_seconds(struct text_object *, char *, int);
+void print_audacious_bitrate(struct text_object *, char *, int);
+void print_audacious_frequency(struct text_object *, char *, int);
+void print_audacious_channels(struct text_object *, char *, int);
+void print_audacious_filename(struct text_object *, char *, int);
+void print_audacious_playlist_length(struct text_object *, char *, int);
+void print_audacious_playlist_position(struct text_object *, char *, int);
+void print_audacious_main_volume(struct text_object *, char *, int);
+double audacious_barval(struct text_object *);
 
-enum _audacious_items {
-	AUDACIOUS_STATUS = 0,
-	AUDACIOUS_TITLE,
-	AUDACIOUS_LENGTH,
-	AUDACIOUS_LENGTH_SECONDS,
-	AUDACIOUS_POSITION,
-	AUDACIOUS_POSITION_SECONDS,
-	AUDACIOUS_BITRATE,
-	AUDACIOUS_FREQUENCY,
-	AUDACIOUS_CHANNELS,
-	AUDACIOUS_FILENAME,
-	AUDACIOUS_PLAYLIST_LENGTH,
-	AUDACIOUS_PLAYLIST_POSITION,
-	AUDACIOUS_MAIN_VOLUME,
-};
-
-/* 12 slots for the audacious values */
-typedef char audacious_t[13][128];
-
-/* type for data exchange with main thread */
-typedef struct audacious_s {
-  audacious_t items;  /* e.g. items[AUDACIOUS_STATUS] */
-  int max_title_len;  /* e.g. ${audacious_title 50} */
-  timed_thread *p_timed_thread;
-} AUDACIOUS_S;
-
-/* create a worker thread for audacious media player status */
-int create_audacious_thread(void);
-
-/* destroy audacious media player worker thread */
-int destroy_audacious_thread(void);
-
-/* Service routine for the conky main thread */
-int update_audacious(void);
-
-/* Thread functions */
-void *audacious_thread_func(void *);
-
-#endif
+#endif /* AUDACIOUS_H */

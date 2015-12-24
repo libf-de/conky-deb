@@ -1,4 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -9,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -32,6 +33,8 @@
 unsigned int adjust_colours(unsigned int);
 unsigned long *do_gradient(int, unsigned long, unsigned long);
 
+long get_x11_color(const std::string &colour);
+// XXX: when everyone uses C++ strings, remove this C version
 long get_x11_color(const char *);
 
 #endif /* _COLOURS_H */

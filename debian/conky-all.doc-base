@@ -5,5 +5,5 @@ Abstract: This manual describes the various configuration
 Section: System/Monitoring
 
 Format: HTML
-Index: /usr/share/doc/conky-all/docs.html
-Files: /usr/share/doc/conky-all/*.html
+Index: /usr/share/doc/conky-all/html/docs.html
+Files: /usr/share/doc/conky-all/html/*.html

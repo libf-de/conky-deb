@@ -1,10 +1,11 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * Conky, a system monitor, based on torsmo
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -25,48 +26,60 @@
 #ifndef _CURL_THREAD_H_
 #define _CURL_THREAD_H_
 
-#include "timed_thread.h"
+#include <curl/curl.h>
 
+#include "update-cb.hh"
 
-/* curl thread lib exports begin */
+namespace priv {
+	// factored out stuff that does not depend on the template parameters
+	struct curl_internal {
+		std::string last_modified;
+		std::string etag;
+		std::string data;
+		CURL *curl;
 
-typedef struct _ccurl_location_t {
-	/* uri of location */
-	char *uri;
-	char *last_modified;
-	char *etag;
-	/* a pointer to some arbitrary data, will be freed by ccurl_free_info() if
-	 * non-null */
-	void *result;
-	/* internal thread pointer, destroyed by timed_thread.c */
-	timed_thread *p_timed_thread;
-	/* function to call when data is ready to be processed, the first argument
-	 * will be the result pointer, and the second argument is an internal
-	 * buffer that shouldn't be mangled */
-	void (*process_function)(void *, const char *);
-	/* internal list pointer, don't mess with this unless you don't know any
-	 * better */
-	struct _ccurl_location_t *next;
-} ccurl_location_t;
+		static size_t parse_header_cb(void *ptr, size_t size, size_t nmemb, void *data);
+		static size_t write_cb(void *ptr, size_t size, size_t nmemb, void *data);
 
-/* find an existing location for the uri specified */
-ccurl_location_t *ccurl_find_location(ccurl_location_t **locations_head, char *uri);
-/* free all locations (as well as location->uri and location->result if
- * non-null) */
-void ccurl_free_locations(ccurl_location_t **locations_head);
-/* initiates a curl thread at the location specified using the interval in
- * seconds */
-void ccurl_init_thread(ccurl_location_t *curloc, int interval);
+		void do_work();
 
-/* curl thread lib exports end */
+		// called by do_work() after downloading data from the uri
+		// it should populate the result variable
+		virtual void process_data() = 0;
+
+		curl_internal(const std::string &url);
+		virtual ~curl_internal() { if(curl) curl_easy_cleanup(curl); }
+	};
+}
+
+/*
+ * Curl callback class template
+ * the key is an url
+ */
+template<typename Result, typename... Keys>
+class curl_callback: public conky::callback<Result, std::string, Keys...>,
+			   protected priv::curl_internal {
+	typedef conky::callback<Result, std::string, Keys...> Base1;
+	typedef priv::curl_internal Base2;
+
+protected:
+	virtual void work()
+	{
+		DBGP("reading curl data from '%s'", std::get<0>(Base1::tuple).c_str());
+		do_work();
+	}
+
+public:
+	curl_callback(uint32_t period, const typename Base1::Tuple &tuple)
+		: Base1(period, false, tuple), Base2(std::get<0>(tuple))
+	{}
+};
 
 
 /* $curl exports begin */
 
-/* for $curl, free internal list pointer */
-void ccurl_free_info(void);
 /* runs instance of $curl */
-void ccurl_process_info(char *p, int p_max_size, char *uri, int interval);
+void ccurl_process_info(char *p, int p_max_size, const std::string &uri, int interval);
 
 void curl_parse_arg(struct text_object *, const char *);
 void curl_print(struct text_object *, char *, int);

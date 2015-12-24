@@ -1,3 +1,32 @@
+conky (1.10.1-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fix segfault on kernels without ipv6 support. (Closes: #806983)
+    - Drop all patches; applied upstream or obsolete.
+
+ -- Vincent Cheng <vcheng@debian.org>  Thu, 24 Dec 2015 00:08:45 -0800
+
+conky (1.10.0-1) unstable; urgency=medium
+
+  * New upstream release.
+    - This release introduces a new Lua-based conkyrc configuration format.
+      See debian/NEWS for further information.
+    - Patches applied upstream, removed: fix-curl-related-crashes.patch,
+      fix-CVE-2011-3616.patch, fix-font-check.patch, fix-kfreebsd-ftbfs.patch
+      fix-uninitialized-inotify_fd-value.patch
+    - Patches that are obsolete, removed: fix-apcupsd.patch
+    - Patches added: cmake_c_flags.patch, db2x_manxml_ascii.patch, 
+      build_docs_offline.patch
+  * Switch build system from autotools to cmake.
+    - Add build-dep on cmake (>= 2.6); drop build-dep on autotools-dev.
+  * Add build-deps on gawk, less, librsvg2-dev, docbook2x, docbook-xml,
+    docbook-xsl; build documentation from source.
+  * Update debian/copyright.
+  * Update Standards version from 3.9.5 to 3.9.6, no changes required.
+  * Update watch file.
+
+ -- Vincent Cheng <vcheng@debian.org>  Tue, 30 Jun 2015 21:35:43 -0700
+
 conky (1.9.0-6) unstable; urgency=medium
 
   * Re-add explicit dependency on audacious-dev.

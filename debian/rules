@@ -4,87 +4,75 @@ export DEB_LDFLAGS_MAINT_APPEND=-Wl,--as-needed
 
 DEB_CFLAGS          ?= $(shell dpkg-buildflags --get CFLAGS)
 DEB_CPPFLAGS        ?= $(shell dpkg-buildflags --get CPPFLAGS)
-DEB_LDFLAGS         ?= $(shell dpkg-buildflags --get LDFLAGS)
+DEB_CXXFLAGS        ?= $(shell dpkg-buildflags --get CXXFLAGS)
 
-DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
+COMMON_CONF_ARGS=-DCMAKE_BUILD_TYPE=None -DCMAKE_INSTALL_PREFIX=/usr \
+                 -DMAINTAINER_MODE=ON -DRELEASE=True \
+                 -DCMAKE_C_FLAGS="$(DEB_CFLAGS) $(DEB_CPPFLAGS)" \
+                 -DCMAKE_CXX_FLAGS="$(DEB_CXXFLAGS) $(DEB_CPPFLAGS)"
+
 ifeq ($(DEB_HOST_ARCH_OS),linux)
-       LINUX_CONF_ARGS_STD=--enable-wlan
-       LINUX_CONF_ARGS_ALL=--enable-wlan --enable-ibm
+       LINUX_CONF_ARGS=-DBUILD_WLAN=ON
 endif
 
 ifeq ($(DEB_HOST_ARCH),i386)
 ifeq ($(DEB_HOST_ARCH_OS),linux)
-       ENABLE_NVIDIA=--enable-nvidia
+       ENABLE_NVIDIA=-DBUILD_NVIDIA=ON
 endif
 endif
 
 ifeq ($(DEB_HOST_ARCH),amd64)
 ifeq ($(DEB_HOST_ARCH_OS),linux)
-       ENABLE_NVIDIA=--enable-nvidia
+       ENABLE_NVIDIA=-DBUILD_NVIDIA=ON
 endif
 endif
-
-COMMON_CONFIGURE_FLAGS = --host=$(DEB_HOST_GNU_TYPE) \
-                         --build=$(DEB_BUILD_GNU_TYPE) \
-                         --prefix=/usr --sysconfdir=/etc \
-                         --mandir=\$${prefix}/share/man \
-                         --infodir=\$${prefix}/share/info \
-                         --srcdir=.. \
-                         --disable-static 
 
 %:
-	dh $@ --with autotools_dev
+	dh $@ --buildsystem=cmake
 
-override_dh_clean:
-	rm -rf build-std build-cli build-all
-	dh_clean
+override_dh_auto_clean:
+	rm -rf $(CURDIR)/README $(CURDIR)/doc/*.html $(CURDIR)/doc/*.1
+	dh_auto_clean --builddirectory build-std
+	dh_auto_clean --builddirectory build-cli
+	dh_auto_clean --builddirectory build-all
 
 override_dh_auto_configure:
-	mkdir -p build-std build-cli build-all
+	dh_auto_configure --builddirectory build-std -- \
+	-DDOC_PATH=/usr/share/doc/conky-std \
+	$(COMMON_CONF_ARGS) $(LINUX_CONF_ARGS) -DBUILD_XDBE=ON
 	
-	cd build-std && CFLAGS="$(DEB_CFLAGS)" CPPFLAGS="$(DEB_CPPFLAGS)" \
-	LDFLAGS="$(DEB_LDFLAGS)" ../configure $(COMMON_CONFIGURE_FLAGS) \
-	$(LINUX_CONF_ARGS_STD)
+	dh_auto_configure --builddirectory build-cli -- \
+	-DDOC_PATH=/usr/share/doc/conky-cli \
+	$(COMMON_CONF_ARGS) -DBUILD_X11=OFF
 	
-	cd build-cli && CFLAGS="$(DEB_CFLAGS)" CPPFLAGS="$(DEB_CPPFLAGS)" \
-	LDFLAGS="$(DEB_LDFLAGS)" ../configure $(COMMON_CONFIGURE_FLAGS) \
-	--disable-lua --disable-double-buffer --disable-x11 \
-	--disable-xdamage --disable-own-window --disable-xft \
-	--disable-hddtemp --disable-alsa --disable-portmon
-	
-	cd build-all && CFLAGS="$(DEB_CFLAGS)" CPPFLAGS="$(DEB_CPPFLAGS)" \
-	LDFLAGS="$(DEB_LDFLAGS)" ../configure $(COMMON_CONFIGURE_FLAGS) \
-	--enable-imlib2 --enable-rss --enable-weather-xoap \
-	--enable-eve --enable-lua-cairo --enable-lua-imlib2 \
-	--enable-xmms2 --enable-audacious \
-	$(LINUX_CONF_ARGS_ALL) $(ENABLE_NVIDIA)
+	dh_auto_configure --builddirectory build-all -- \
+	-DDOC_PATH=/usr/share/doc/conky-all \
+	$(COMMON_CONF_ARGS) $(LINUX_CONF_ARGS) $(ENABLE_NVIDIA) \
+	-DBUILD_XDBE=ON -DBUILD_CURL=ON -DBUILD_IMLIB2=ON -DBUILD_RSS=ON \
+	-DBUILD_WEATHER_METAR=ON -DBUILD_WEATHER_XOAP=ON -DBUILD_LUA_CAIRO=ON \
+	-DBUILD_LUA_IMLIB2=ON -DBUILD_LUA_RSVG=ON -DBUILD_AUDACIOUS=ON \
+	-DBUILD_XMMS2=ON -DBUILD_EVE=ON
 
 override_dh_auto_build:
-	cd build-std && $(MAKE)
-	cd build-cli && $(MAKE)
-	cd build-all && $(MAKE)
+	dh_auto_build --builddirectory build-std
+	dh_auto_build --builddirectory build-cli
+	dh_auto_build --builddirectory build-all
+
+override_dh_auto_test:
+	dh_auto_test --builddirectory build-std
+	dh_auto_test --builddirectory build-cli
+	dh_auto_test --builddirectory build-all
 
 override_dh_auto_install:
-	cd build-std && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-std
-	cd build-cli && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-cli
-	cd build-all && $(MAKE) install DESTDIR=$(CURDIR)/debian/conky-all
-	
-	# Clean up cruft left upstream
-	rm -rf debian/conky-cli/usr/lib \
-	       debian/conky-std/usr/lib/conky/*.la \
-	       debian/conky-std/usr/lib/conky/*.so.? \
-	       debian/conky-all/usr/lib/conky/*.la \
-	       debian/conky-all/usr/lib/conky/*.so.?
-	
-	# Install conky_no_x11.conf instead of the regular conky.conf config
-	# file for use with conky-cli. See Debian BTS #639314.
-	rm -f debian/conky-cli/etc/conky/conky.conf
-	mv -f debian/conky-cli/etc/conky/conky_no_x11.conf \
-	      debian/conky-cli/etc/conky/conky.conf
+	dh_auto_install --builddirectory build-std --destdir debian/conky-std
+	dh_auto_install --builddirectory build-cli --destdir debian/conky-cli
+	dh_auto_install --builddirectory build-all --destdir debian/conky-all
+
+override_dh_compress:
+	dh_compress -Xconvert.lua
 
 override_dh_strip:
 	dh_strip -p conky-std --dbg-package=conky-std-dbg

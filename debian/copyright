@@ -15,21 +15,32 @@ Copyright: 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
            2009 Yeon-Hyeong Yang <lbird94@gmail.com>
 License: GPL-3.0+
 
-Files: src/smapi.c src/temphelper.c
+Files: src/smapi.cc
+       src/smapi.h
+       src/temphelper.cc
+       src/temphelper.h
 Copyright: 2007 Phil Sutter <Phil@nwl.cc>
 License: GPL-2.0+
 
-Files: src/libtcp-portmon.c src/audacious.c src/timed_thread.c src/apcupsd.c
+Files: src/libtcp-portmon.cc
+       src/libtcp-portmon.h
+       src/audacious.cc
+       src/audacious.h
+       src/apcupsd.cc
+       src/apcupsd.h
 Copyright: 2005-2007 Philip Kovacs <pkovacs@users.sourceforge.net>
-	       2009 Jaromir Smrcek <jaromir.smrcek@zoner.com>
+	   2009 Jaromir Smrcek <jaromir.smrcek@zoner.com>
 License: LGPL-2.1+
 
-Files: src/libmpdclient.c
+Files: src/libmpdclient.cc
+       src/libmpdclient.h
 Copyright: 2003-2006 Warren Dukes <warren.dukes@gmail.com>
 License: BSD-3-clause
 
-Files: src/prss.c
+Files: src/prss.cc
+       src/prss.h
 Copyright: 2007 Mikko Sysikaski <mikko.sysikaski@gmail.com>
+           2007 Toni Spets <toni.spets@gmail.com>
 License: ISC
 
 Files: debian/*

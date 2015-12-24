@@ -1,5 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=c
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -33,6 +33,15 @@
 
 #include <sys/socket.h>	/* struct sockaddr */
 
+#ifdef BUILD_IPV6
+struct v6addr {
+	struct in6_addr addr;
+	unsigned int netmask;
+	char scope;
+	struct v6addr *next;
+};
+#endif /* BUILD_IPV6 */
+
 struct net_stat {
         char *dev;
         int up;
@@ -40,12 +49,19 @@ struct net_stat {
         long long recv, trans;
         double recv_speed, trans_speed;
         struct sockaddr addr;
+#ifdef BUILD_IPV6
+        struct v6addr *v6addrs;
+	bool v6show_nm;
+	bool v6show_sc;
+#endif /* BUILD_IPV6 */
 #if defined(__linux__)
         char addrs[17 * MAX_NET_INTERFACES + 1];
 #endif /* __linux__ */
         double net_rec[15], net_trans[15];
         // wireless extensions
         char essid[32];
+        int channel;
+        char freq[16];
         char bitrate[16];
         char mode[16];
         int link_qual;
@@ -68,24 +84,27 @@ void print_totalup(struct text_object *, char *, int);
 void print_addr(struct text_object *, char *, int);
 #ifdef __linux__
 void print_addrs(struct text_object *, char *, int);
+#ifdef BUILD_IPV6
+void print_v6addrs(struct text_object *, char *, int);
+#endif /* BUILD_IPV6 */
 #endif /* __linux__ */
-#ifdef X11
+#ifdef BUILD_X11
 void parse_net_stat_graph_arg(struct text_object *, const char *, void *);
-void print_downspeedgraph(struct text_object *, char *, int);
-void print_upspeedgraph(struct text_object *, char *, int);
-#endif /* X11 */
-#ifdef __linux__
-#ifdef HAVE_IWLIB
+double downspeedgraphval(struct text_object *);
+double upspeedgraphval(struct text_object *);
+#endif /* BUILD_X11 */
+#ifdef BUILD_WLAN
 void print_wireless_essid(struct text_object *, char *, int);
+void print_wireless_channel(struct text_object *, char *, int);
+void print_wireless_frequency(struct text_object *, char *, int);
 void print_wireless_mode(struct text_object *, char *, int);
 void print_wireless_bitrate(struct text_object *, char *, int);
 void print_wireless_ap(struct text_object *, char *, int);
 void print_wireless_link_qual(struct text_object *, char *, int);
 void print_wireless_link_qual_max(struct text_object *, char *, int);
 void print_wireless_link_qual_perc(struct text_object *, char *, int);
-void print_wireless_link_bar(struct text_object *, char *, int);
-#endif /* HAVE_IWLIB */
-#endif /* __linux__ */
+double wireless_link_barval(struct text_object *);
+#endif /* BUILD_WLAN */
 
 void clear_net_stats(void);
 
@@ -93,7 +112,7 @@ void parse_if_up_arg(struct text_object *, const char *);
 int interface_up(struct text_object *);
 void free_if_up(struct text_object *);
 
-void free_dns_data(void);
+void free_dns_data(struct text_object *);
 int update_dns_data(void);
 void parse_nameserver_arg(struct text_object *, const char *);
 void print_nameserver(struct text_object *, char *, int);
