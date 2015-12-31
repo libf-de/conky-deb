@@ -1,3 +1,15 @@
+conky (1.10.1-2~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Vincent Cheng <vcheng@debian.org>  Wed, 30 Dec 2015 23:28:43 -0800
+
+conky (1.10.1-2) unstable; urgency=medium
+
+  * Add cmake_compat.patch to fix FTBFS with older (<= 3.3) versions of cmake.
+
+ -- Vincent Cheng <vcheng@debian.org>  Thu, 24 Dec 2015 17:02:27 -0800
+
 conky (1.10.1-1) unstable; urgency=medium
 
   * New upstream release.
