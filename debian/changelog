@@ -1,9 +1,3 @@
-conky (1.10.1-3~bpo8+1) jessie-backports; urgency=medium
-
-  * Rebuild for jessie-backports.
-
- -- Vincent Cheng <vcheng@debian.org>  Tue, 12 Jan 2016 10:04:14 -0800
-
 conky (1.10.1-3) unstable; urgency=medium
 
   * Add fix_build_math.patch to fix BUILD_MATH flag, in order to fix broken
