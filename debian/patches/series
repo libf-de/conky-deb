@@ -1,1 +1,2 @@
 cmake_compat.patch
+fix_build_math.patch
