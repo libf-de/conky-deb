@@ -122,8 +122,11 @@ int update_uname(void)
 double get_time(void)
 {
 	struct timespec tv;
-
+#ifdef _POSIX_MONOTONIC_CLOCK
 	clock_gettime(CLOCK_MONOTONIC, &tv);
+#else
+	clock_gettime(CLOCK_REALTIME, &tv);
+#endif
 	return tv.tv_sec + (tv.tv_nsec * 1e-9);
 }
 
@@ -275,15 +278,13 @@ conky::simple_config_setting<bool> no_buffers("no_buffers", true, true);
 
 void update_stuff(void)
 {
-	int i;
-
 	/* clear speeds, addresses and up status in case device was removed and
 	 *  doesn't get updated */
 
 	#ifdef HAVE_OPENMP
 	#pragma omp parallel for schedule(dynamic,10)
 	#endif /* HAVE_OPENMP */
-	for (i = 0; i < MAX_NET_INTERFACES; i++) {
+	for (int i = 0; i < MAX_NET_INTERFACES; ++i) {
 		if (netstats[i].dev) {
 			netstats[i].up = 0;
 			netstats[i].recv_speed = 0.0;
@@ -295,8 +296,10 @@ void update_stuff(void)
 		}
 	}
 
+	/* this is a stub on all platforms except solaris */
 	prepare_update();
 
+	/* if you registered a callback with conky::register_cb, this will run it */
 	conky::run_all_callbacks();
 
 	/* XXX: move the following into the update_meminfo() functions? */
@@ -733,16 +736,16 @@ void free_stock(struct text_object *obj)
 void print_to_bytes(struct text_object *obj, char *p, int p_max_size)
 {
 	std::vector<char> buf(max_user_text.get(*state));
-	long long bytes;
+	long double bytes;
 	char unit[16];	// 16 because we can also have long names (like mega-bytes)
 
 	generate_text_internal(&(buf[0]), max_user_text.get(*state), *obj->sub);
-	if(sscanf(&(buf[0]), "%lli%s", &bytes, unit) == 2 && strlen(unit) < 16){
-		if(strncasecmp("b", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%lli", bytes);
-		else if(strncasecmp("k", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%lli", bytes * 1024);
-		else if(strncasecmp("m", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%lli", bytes * 1024 * 1024);
-		else if(strncasecmp("g", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%lli", bytes * 1024 * 1024 * 1024);
-		else if(strncasecmp("t", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%lli", bytes * 1024 * 1024 * 1024 * 1024);
+	if(sscanf(&(buf[0]), "%Lf%s", &bytes, unit) == 2 && strlen(unit) < 16){
+		if(strncasecmp("b", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%Lf", bytes);
+		else if(strncasecmp("k", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%Lf", bytes * 1024);
+		else if(strncasecmp("m", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%Lf", bytes * 1024 * 1024);
+		else if(strncasecmp("g", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%Lf", bytes * 1024 * 1024 * 1024);
+		else if(strncasecmp("t", unit, 1) == 0) snprintf(&(buf[0]), max_user_text.get(*state), "%Lf", bytes * 1024 * 1024 * 1024 * 1024);
 	}
 	snprintf(p, p_max_size, "%s", &(buf[0]));
 }

@@ -192,7 +192,7 @@ int top_io;
 #endif
 int top_running;
 static conky::simple_config_setting<bool> extra_newline("extra_newline", false, false);
-static volatile int g_signal_pending;
+static volatile sig_atomic_t g_sigterm_pending, g_sighup_pending;
 
 /* Update interval */
 conky::range_config_setting<double> update_interval("update_interval", 0.0,
@@ -281,7 +281,7 @@ static void print_version(void)
 #endif /* BUILD_MYSQL */
 #ifdef BUILD_WEATHER_METAR
                 << _("  * Weather (METAR)\n")
-#endif /* BUILD_WEATHER_METAR */                
+#endif /* BUILD_WEATHER_METAR */
 #ifdef BUILD_WEATHER_XOAP
                 << _("  * Weather (XOAP)\n")
 #endif /* BUILD_WEATHER_XOAP */
@@ -909,19 +909,17 @@ static void generate_text(void)
 {
 	char *p;
 	unsigned int i, j, k;
-
 	special_count = 0;
-
-	/* update info */
 
 	current_update_time = get_time();
 
+	/* clears netstats info, calls conky::run_all_callbacks(), and changes
+	 * some info.mem entries */
 	update_stuff();
 
-	/* add things to the buffer */
-
-	/* generate text */
-
+	/* populate the text buffer; generate_text_internal() iterates through
+	 * global_root_object (an instance of the text_object struct) and calls
+	 * any callbacks that were set on startup by construct_text_object(). */
 	p = text_buffer;
 
 	generate_text_internal(p, max_user_text.get(*state), global_root_object);
@@ -955,12 +953,11 @@ static void generate_text(void)
 	}
 
 	double ui = active_update_interval();
+	double time = get_time();
 	next_update_time += ui;
-	if (next_update_time < get_time()) {
-		next_update_time = get_time() + ui;
-	} else if (next_update_time > get_time() + ui) {
-		next_update_time = get_time() + ui;
-	}
+	if (next_update_time < time ||
+		next_update_time > time + ui)
+		next_update_time = time - fmod(time, ui) + ui;
 	last_update_time = current_update_time;
 	total_updates++;
 }
@@ -1501,10 +1498,10 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 				{
 					int h, by = 0;
 					unsigned long last_colour = current_color;
-#ifdef MATH
+#ifdef BUILD_MATH
 					float angle, px, py;
 					double usage, scale;
-#endif /* MATH */
+#endif /* BUILD_MATH */
 
 					if (cur_x - text_start_x > mw && mw > 0) {
 						break;
@@ -1530,7 +1527,7 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					XDrawArc(display, window.drawable, window.gc,
 							cur_x, by, w, h * 2, 0, 180*64);
 
-#ifdef MATH
+#ifdef BUILD_MATH
 					usage = current->arg;
 					scale = current->scale;
 					angle = M_PI * usage / scale;
@@ -1539,7 +1536,7 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 
 					XDrawLine(display, window.drawable, window.gc,
 							cur_x + (w/2.), by+(h), (int)(px), (int)(py));
-#endif /* MATH */
+#endif /* BUILD_MATH */
 
 					if (h > cur_y_add
 							&& h > font_h) {
@@ -1683,16 +1680,15 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 						cur_x = tmp_x;
 						cur_y = tmp_y;
 					}
-#ifdef MATH
+#ifdef BUILD_MATH
 					if (show_graph_scale.get(*state) && (current->show_scale == 1)) {
 						int tmp_x = cur_x;
 						int tmp_y = cur_y;
 						char *tmp_str;
 						cur_x += font_ascent() / 2;
 						cur_y += font_h / 2;
-						tmp_str = (char *)
-							calloc(log10(floor(current->scale)) + 4,
-									sizeof(char));
+						const int tmp_str_len = 64;
+						tmp_str = (char *) calloc(tmp_str_len, sizeof(char));
 						sprintf(tmp_str, "%.1f", current->scale);
 						draw_string(tmp_str);
 						free(tmp_str);
@@ -2007,7 +2003,7 @@ static void clear_text(int exposures)
 		/* there is some extra space for borders and outlines */
 		int border_total = get_border_total();
 
-		XClearArea(display, window.window, text_start_x - border_total, 
+		XClearArea(display, window.window, text_start_x - border_total,
 			text_start_y - border_total, text_width + 2*border_total,
 			text_height + 2*border_total, exposures ? True : 0);
 	}
@@ -2058,7 +2054,7 @@ static void main_loop(void)
 #endif
 
 	last_update_time = 0.0;
-	next_update_time = get_time();
+	next_update_time = get_time() - fmod(get_time(), active_update_interval());
 	info.looped = 0;
 	while (terminate == 0
 			&& (total_run_times.get(*state) == 0 || info.looped < total_run_times.get(*state))) {
@@ -2142,7 +2138,7 @@ static void main_loop(void)
 							XFreePixmap(display, window.back_buffer);
 							window.back_buffer = XCreatePixmap(display,
 								window.window, window.width, window.height, DefaultDepth(display, screen));
-						
+
 							if (window.back_buffer != None) {
 								window.drawable = window.back_buffer;
 							} else {
@@ -2246,6 +2242,18 @@ static void main_loop(void)
 						if ( ev.xproperty.state == PropertyNewValue ) {
 							get_x11_desktop_info( ev.xproperty.display, ev.xproperty.atom );
 						}
+#ifdef USE_ARGB
+						if (!have_argb_visual) {
+#endif
+							if ( ev.xproperty.atom == ATOM(_XROOTPMAP_ID)
+									|| ev.xproperty.atom == ATOM(_XROOTMAP_ID)) {
+								draw_stuff();
+								next_update_time = get_time();
+								need_to_update = 1;
+							}
+#ifdef USE_ARGB
+						}
+#endif
 						break;
 					}
 
@@ -2419,38 +2427,27 @@ static void main_loop(void)
 		}
 #endif
 
-		switch (g_signal_pending) {
-			case SIGHUP:
-			case SIGUSR1:
-				NORM_ERR("received SIGHUP or SIGUSR1. reloading the config file.");
-				reload_config();
-				break;
-			case SIGINT:
-			case SIGTERM:
-				NORM_ERR("received SIGINT or SIGTERM to terminate. bye!");
-				terminate = 1;
+		if (g_sighup_pending) {
+			g_sighup_pending = false;
+			NORM_ERR("received SIGHUP or SIGUSR1. reloading the config file.");
+			reload_config();
+		}
+
+		if (g_sigterm_pending) {
+			g_sigterm_pending = false;
+			NORM_ERR("received SIGINT or SIGTERM to terminate. bye!");
+			terminate = 1;
 #ifdef BUILD_X11
-				if (out_to_x.get(*state)) {
-					XDestroyRegion(x11_stuff.region);
-					x11_stuff.region = NULL;
+			if (out_to_x.get(*state)) {
+				XDestroyRegion(x11_stuff.region);
+				x11_stuff.region = NULL;
 #ifdef BUILD_XDAMAGE
-					XDamageDestroy(display, x11_stuff.damage);
-					XFixesDestroyRegion(display, x11_stuff.region2);
-					XFixesDestroyRegion(display, x11_stuff.part);
+				XDamageDestroy(display, x11_stuff.damage);
+				XFixesDestroyRegion(display, x11_stuff.region2);
+				XFixesDestroyRegion(display, x11_stuff.part);
 #endif /* BUILD_XDAMAGE */
-				}
+			}
 #endif /* BUILD_X11 */
-				break;
-			default:
-				/* Reaching here means someone set a signal
-				 * (SIGXXXX, signal_handler), but didn't write any code
-				 * to deal with it.
-				 * If you don't want to handle a signal, don't set a handler on
-				 * it in the first place. */
-				if (g_signal_pending) {
-					NORM_ERR("ignoring signal (%d)", g_signal_pending);
-				}
-				break;
 		}
 #ifdef HAVE_SYS_INOTIFY_H
 		if (!disable_auto_reload.get(*state) && inotify_fd != -1
@@ -2504,7 +2501,6 @@ static void main_loop(void)
 #endif /* HAVE_SYS_INOTIFY_H */
 
 		llua_update_info(&info, active_update_interval());
-		g_signal_pending = 0;
 	}
 	clean_up(NULL, NULL);
 
@@ -2721,7 +2717,7 @@ void load_config_file()
 	l.replace(-2);
 	if(l.type(-1) != lua::TSTRING)
 		throw conky::error(_("missing text block in configuration"));
-	
+
 	/* Remove \\-\n. */
 	l.gsub(l.tocstring(-1), "\\\n", "");
 	l.replace(-2);
@@ -2878,6 +2874,7 @@ void set_current_config() {
 void initialisation(int argc, char **argv) {
 	struct sigaction act, oact;
 
+	clear_net_stats();
 	set_default_configurations();
 
 	set_current_config();
@@ -3062,8 +3059,8 @@ int main(int argc, char **argv)
 #endif
 	argc_copy = argc;
 	argv_copy = argv;
-	g_signal_pending = 0;
-	clear_net_stats();
+	g_sigterm_pending = false;
+	g_sighup_pending = false;
 
 #ifdef BUILD_CURL
 	struct curl_global_initializer {
@@ -3182,5 +3179,23 @@ static void signal_handler(int sig)
 	 * we will poll g_signal_pending with each loop of conky
 	 * and do any signal processing there, NOT here */
 
-	g_signal_pending = sig;
+	switch (sig) {
+		case SIGINT:
+		case SIGTERM:
+			g_sigterm_pending = true;
+			break;
+		case SIGHUP:
+		case SIGUSR1:
+			g_sighup_pending = true;
+			break;
+		default:
+			/* Reaching here means someone set a signal
+			 * (SIGXXXX, signal_handler), but didn't write any code
+			 * to deal with it.
+			 * If you don't want to handle a signal, don't set a handler on
+			 * it in the first place.
+			 * We cannot print debug messages from a sighandler, so simply ignore.
+			 */
+			break;
+	}
 }

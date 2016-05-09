@@ -1,3 +1,20 @@
+conky (1.10.2-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sun, 08 May 2016 18:13:32 -0700
+
+conky (1.10.2-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Drop all existing patches; applied upstream.
+    - Add debian/patches/fix-build-nvidia-ftbfs.patch to fix FTBFS when built
+      with -DBUILD_NVIDIA=ON.
+  * Remove debian/menu files as per tech-ctte decision in #741573.
+  * Update Standards version from 3.9.6 to 3.9.8.
+
+ -- Vincent Cheng <vcheng@debian.org>  Tue, 03 May 2016 16:25:15 -0700
+
 conky (1.10.1-3) unstable; urgency=medium
 
   * Add fix_build_math.patch to fix BUILD_MATH flag, in order to fix broken

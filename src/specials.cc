@@ -57,7 +57,7 @@ namespace {
 										std::numeric_limits<int>::max(), 0, false);
 	conky::range_config_setting<int> default_graph_height("default_graph_height", 0,
 										std::numeric_limits<int>::max(), 25, false);
-	
+
 	conky::range_config_setting<int> default_gauge_width("default_gauge_width", 0,
 										std::numeric_limits<int>::max(), 40, false);
 	conky::range_config_setting<int> default_gauge_height("default_gauge_height", 0,
@@ -178,13 +178,25 @@ void scan_font(struct text_object *obj, const char *args)
 		obj->data.s = strndup(args, DEFAULT_TEXT_BUFFER_SIZE);
 }
 
+/**
+ * parses for [height,width] [color1 color2] [scale] [-t] [-l]
+ *
+ * -l will set the showlog flag, enabling logarithmic graph scales
+ * -t will set the tempgrad member to true, enabling temperature gradient colors
+ *
+ * @param[out] obj  struct in which to save width, height and other options
+ * @param[in]  args argument string to parse
+ * @param[in]  defscale default scale if no scale argument given
+ * @return string to the command argument, NULL if argument didn't start with
+ *         a string, but a number or if invalid argument string
+ **/
 char *scan_graph(struct text_object *obj, const char *args, double defscale)
 {
-	struct graph *g;
-	char buf[1024];
-	memset(buf, 0, 1024);
+	char quoted_cmd[1024] = { '\0' };	/* double-quoted execgraph command */
+	char argstr[1024]     = { '\0' };	/* args minus quoted_cmd */
+	char buf[1024]        = { '\0' };	/* first unquoted string argument in argstr */
 
-	g = (struct graph *)malloc(sizeof(struct graph));
+	struct graph *g = (struct graph *)malloc(sizeof(struct graph));
 	memset(g, 0, sizeof(struct graph));
 	obj->special_data = g;
 
@@ -196,81 +208,107 @@ char *scan_graph(struct text_object *obj, const char *args, double defscale)
 	g->scale = defscale;
 	g->tempgrad = FALSE;
 	if (args) {
-		if (strstr(args, " " TEMPGRAD) || strncmp(args, TEMPGRAD, strlen(TEMPGRAD)) == 0) {
+		/* extract double-quoted command in case of execgraph */
+		if (*args == '"') {
+			char *_ptr;
+			size_t _size;
+			if ((_ptr = const_cast<char*>(strrchr(args, '"'))) && _ptr != args) {
+				_size = _ptr - args - 1;
+			} else {
+				NORM_ERR("mismatched double-quote in execgraph object");
+				return NULL;
+			}
+
+			_size = _size < 1024 ? _size : 1023;
+			strncpy(quoted_cmd, args + 1, _size);
+			quoted_cmd[_size] = '\0';
+
+			/* copy everything after the last quote into argstr */
+			if (_size + 2 < strlen(args)) {
+				strncpy(argstr, args + _size + 2, 1023);
+			}
+		} else {
+			/* redundant, but simplifies the code below */
+			strncpy(argstr, args, 1023);
+		}
+
+		/* set tempgrad to true, if '-t' specified.
+		 * It doesn#t matter where the argument is exactly. */
+		if (strstr(argstr, " " TEMPGRAD) || strncmp(argstr, TEMPGRAD, strlen(TEMPGRAD)) == 0) {
 			g->tempgrad = TRUE;
 		}
-		if (strstr(args, " " LOGGRAPH) || strncmp(args, LOGGRAPH, strlen(LOGGRAPH)) == 0) {
+		/* set showlog-flag, if '-l' specified
+		 * It doesn#t matter where the argument is exactly. */
+		if (strstr(argstr, " " LOGGRAPH) || strncmp(argstr, LOGGRAPH, strlen(LOGGRAPH)) == 0) {
 			g->flags |= SF_SHOWLOG;
 		}
-		if (sscanf(args, "%d,%d %x %x %lf", &g->height, &g->width, &g->first_colour, &g->last_colour, &g->scale) == 5) {
-			return NULL;
+
+		/* all the following functions try to interpret the beginning of a
+		 * a string with different formaters. If successfuly the return from
+		 * this whole function */
+
+		/* interpret the beginning(!) of the argument string as:
+		 * '[height],[width] [color1] [color2] [scale]'
+		 * This means parameters like -t and -l may not be in the beginning */
+		if (sscanf(argstr, "%d,%d %x %x %lf", &g->height, &g->width, &g->first_colour, &g->last_colour, &g->scale) == 5) {
+			return *quoted_cmd ? strndup(quoted_cmd, text_buffer_size.get(*state)) : NULL;
 		}
+		/* [height],[width] [color1] [color2] */
 		g->scale = defscale;
-		if (sscanf(args, "%d,%d %x %x", &g->height, &g->width, &g->first_colour, &g->last_colour) == 4) {
-			return NULL;
+		if (sscanf(argstr, "%d,%d %x %x", &g->height, &g->width, &g->first_colour, &g->last_colour) == 4) {
+			return *quoted_cmd ? strndup(quoted_cmd, text_buffer_size.get(*state)) : NULL;
 		}
-		if (sscanf(args, "%1023s %d,%d %x %x %lf", buf, &g->height, &g->width, &g->first_colour, &g->last_colour, &g->scale) == 6) {
+		/* [command] [height],[width] [color1] [color2] [scale] */
+		if (sscanf(argstr, "%1023s %d,%d %x %x %lf", buf, &g->height, &g->width, &g->first_colour, &g->last_colour, &g->scale) == 6) {
 			return strndup(buf, text_buffer_size.get(*state));
 		}
 		g->scale = defscale;
-		if (sscanf(args, "%1023s %d,%d %x %x", buf, &g->height, &g->width, &g->first_colour, &g->last_colour) == 5) {
+		if (sscanf(argstr, "%1023s %d,%d %x %x", buf, &g->height, &g->width, &g->first_colour, &g->last_colour) == 5) {
 			return strndup(buf, text_buffer_size.get(*state));
 		}
+
 		buf[0] = '\0';
-		g->height = 25;
-		g->width = 0;
-		if (sscanf(args, "%x %x %lf", &g->first_colour, &g->last_colour, &g->scale) == 3) {
-			return NULL;
+		g->height = default_graph_height.get(*state);
+		g->width = default_graph_width.get(*state);
+		if (sscanf(argstr, "%x %x %lf", &g->first_colour, &g->last_colour, &g->scale) == 3) {
+			return *quoted_cmd ? strndup(quoted_cmd, text_buffer_size.get(*state)) : NULL;
 		}
 		g->scale = defscale;
-		if (sscanf(args, "%x %x", &g->first_colour, &g->last_colour) == 2) {
-			return NULL;
+		if (sscanf(argstr, "%x %x", &g->first_colour, &g->last_colour) == 2) {
+			return *quoted_cmd ? strndup(quoted_cmd, text_buffer_size.get(*state)) : NULL;
 		}
-		if (sscanf(args, "%1023s %x %x %lf", buf, &g->first_colour, &g->last_colour, &g->scale) == 4) {
+		if (sscanf(argstr, "%1023s %x %x %lf", buf, &g->first_colour, &g->last_colour, &g->scale) == 4) {
 			return strndup(buf, text_buffer_size.get(*state));
 		}
 		g->scale = defscale;
-		if (sscanf(args, "%1023s %x %x", buf, &g->first_colour, &g->last_colour) == 3) {
+		if (sscanf(argstr, "%1023s %x %x", buf, &g->first_colour, &g->last_colour) == 3) {
 			return strndup(buf, text_buffer_size.get(*state));
 		}
+
 		buf[0] = '\0';
 		g->first_colour = 0;
 		g->last_colour = 0;
-		if (sscanf(args, "%d,%d %lf", &g->height, &g->width, &g->scale) == 3) {
-			return NULL;
+		if (sscanf(argstr, "%d,%d %lf", &g->height, &g->width, &g->scale) == 3) {
+			return *quoted_cmd ? strndup(quoted_cmd, text_buffer_size.get(*state)) : NULL;
 		}
 		g->scale = defscale;
-		if (sscanf(args, "%d,%d", &g->height, &g->width) == 2) {
-			return NULL;
+		if (sscanf(argstr, "%d,%d", &g->height, &g->width) == 2) {
+			return *quoted_cmd ? strndup(quoted_cmd, text_buffer_size.get(*state)) : NULL;
 		}
-		if (sscanf(args, "%1023s %d,%d %lf", buf, &g->height, &g->width, &g->scale) < 4) {
+		if (sscanf(argstr, "%1023s %d,%d %lf", buf, &g->height, &g->width, &g->scale) < 4) {
 			g->scale = defscale;
 			//TODO: check the return value and throw an error?
-			sscanf(args, "%1023s %d,%d", buf, &g->height, &g->width);
+			sscanf(argstr, "%1023s %d,%d", buf, &g->height, &g->width);
 		}
 
-		/* escape quotes at end in case of execgraph */
-		if (*buf == '"') {
-			char *_ptr;
-			size_t _size;
-			if ((_ptr = const_cast<char*>(strrchr(args, '"')))) {
-				_size = _ptr - args - 1;
-			}
-			_size = _size < 1024 ? _size : 1023;
-			strncpy(buf, args + 1, _size);
-			buf[_size] = 0;
+		if (!*quoted_cmd && !*buf) {
+			return NULL;
+		} else {
+			return strndup(*quoted_cmd ? quoted_cmd : buf, text_buffer_size.get(*state));
 		}
-
-#undef g
-
-		return strndup(buf, text_buffer_size.get(*state));
 	}
 
-	if (buf[0] == '\0') {
-		return NULL;
-	} else {
-		return strndup(buf, text_buffer_size.get(*state));
-	}
+	return NULL;
 }
 #endif /* BUILD_X11 */
 
@@ -286,6 +324,14 @@ struct special_t *new_special_t_node()
 	return newnode;
 }
 
+/**
+ * expands the current global linked list specials to special_count elements
+ *
+ * increases special_count
+ * @param[out] buf is set to "\x01\x00" not sure why ???
+ * @param[in]  t   special type enum, e.g. alignc, alignr, fg, bg, ...
+ * @return pointer to the newly inserted special of type t
+ **/
 struct special_t *new_special(char *buf, enum special_types t)
 {
 	special_t* current;
@@ -295,6 +341,7 @@ struct special_t *new_special(char *buf, enum special_types t)
 	if(!specials)
 		specials = new_special_t_node();
 	current = specials;
+	/* allocate special_count linked list elements */
 	for(int i=0; i < special_count; i++) {
 		if(current->next == NULL)
 			current->next = new_special_t_node();
@@ -380,6 +427,9 @@ void new_font(struct text_object *obj, char *p, int p_max_size)
 	}
 }
 
+/**
+ * Adds value f to graph possibly truncating and scaling the graph
+ **/
 static void graph_append(struct special_t *graph, double f, char showaslog)
 {
 	int i;
@@ -388,7 +438,7 @@ static void graph_append(struct special_t *graph, double f, char showaslog)
 	if (!graph->graph) return;
 
 	if (showaslog) {
-#ifdef MATH
+#ifdef BUILD_MATH
 		f = log10(f + 1);
 #endif
 	}
@@ -402,7 +452,7 @@ static void graph_append(struct special_t *graph, double f, char showaslog)
 		graph->graph[i] = graph->graph[i - 1];
 	}
 	graph->graph[0] = f;	/* add new data */
-	
+
 	if(graph->scaled) {
 		graph->scale = *std::max_element(graph->graph + 0, graph->graph + graph->graph_width);
 		if(graph->scale < 1e-47) {
@@ -442,6 +492,14 @@ graph_buf_end:
 	*p = '\0';
 }
 
+/**
+ * Creates a visual graph and/or appends val to the graph / plot
+ *
+ * @param[in] obj struct containing all relevant flags like width, height, ...
+ * @param[in] buf buffer for ascii art graph in console
+ * @param[in] buf_max_size maximum length of buf
+ * @param[in] val value to plot i.e. to add to plot
+ **/
 void new_graph(struct text_object *obj, char *buf, int buf_max_size, double val)
 {
 	struct special_t *s = 0;
@@ -452,6 +510,7 @@ void new_graph(struct text_object *obj, char *buf, int buf_max_size, double val)
 
 	s = new_special(buf, GRAPH);
 
+	/* set graph (special) width to width in obj */
 	s->width = g->width;
 	if (s->width) s->graph_width = s->width;
 
@@ -486,12 +545,12 @@ void new_graph(struct text_object *obj, char *buf, int buf_max_size, double val)
 		s->show_scale = 1;
 	}
 	s->tempgrad = g->tempgrad;
-#ifdef MATH
+#ifdef BUILD_MATH
 	if (g->flags & SF_SHOWLOG) {
 		s->scale = log10(s->scale + 1);
 	}
 #endif
-	graph_append(s, val, g->flags & SF_SHOWLOG);
+	graph_append(s, val, g->flags);
 
 	if (not out_to_x.get(*state))
 		new_graph_in_shell(s, buf, buf_max_size);
