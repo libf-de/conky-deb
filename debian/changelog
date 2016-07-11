@@ -1,3 +1,19 @@
+conky (1.10.3-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sun, 10 Jul 2016 19:36:32 -0700
+
+conky (1.10.3-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fixes segfault on single core CPUs. (Closes: #828640)
+    - Drop all existing patches; applied upstream.
+    - Add debian/patches/fix-kfreebsd-ftbfs.patch to fix FTBFS on kfreebsd.
+      (Closes: #815347)
+
+ -- Vincent Cheng <vcheng@debian.org>  Sat, 02 Jul 2016 17:50:17 -0700
+
 conky (1.10.2-1) unstable; urgency=medium
 
   * New upstream release.

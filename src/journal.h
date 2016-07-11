@@ -9,7 +9,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2008 Markus Meissner
+ * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
  * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
@@ -28,13 +28,11 @@
  *
  */
 
+#ifndef _JOURNAL_H
+#define _JOURNAL_H
 
-#ifndef NVIDIA_CONKY_H
-#define NVIDIA_CONKY_H
+void free_journal(struct text_object *);
+void init_journal(const char *, const char *, struct text_object *, void *);
+void print_journal(struct text_object *, char *, int);
 
-int set_nvidia_query(struct text_object *, const char *, unsigned int);
-void print_nvidia_value(struct text_object *, char *, int);
-double get_nvidia_barval(struct text_object *);
-void free_nvidia(struct text_object *);
-
-#endif
+#endif /* _JOURNAL_H */
