@@ -1,3 +1,16 @@
+conky (1.10.5-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sun, 09 Oct 2016 17:44:28 -0700
+
+conky (1.10.5-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Drop all existing patches; applied upstream.
+
+ -- Vincent Cheng <vcheng@debian.org>  Tue, 04 Oct 2016 21:01:32 -0700
+
 conky (1.10.4-1) unstable; urgency=medium
 
   * New upstream release.
