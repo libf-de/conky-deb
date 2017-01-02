@@ -13,7 +13,6 @@ Build-Depends:
  dpkg-dev (>= 1.15.7),
  gawk,
  less,
- libasound2-dev [linux-any],
  libaudclient-dev,
  libcairo2-dev,
  libcurl4-gnutls-dev | libcurl4-dev,
@@ -24,6 +23,7 @@ Build-Depends:
  libkvm-dev [kfreebsd-any],
  liblua5.1-0-dev,
  libncurses5-dev,
+ libpulse-dev,
  librsvg2-dev,
  libtolua++5.1-dev,
  libtool,
@@ -59,7 +59,7 @@ Description: highly configurable system monitor (default version)
  It includes the following support:
  .
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
- wireless, ncurses, ALSA mixer, apcupsd, I/O stats, argb and Lua.
+ wireless, ncurses, apcupsd, I/O stats, argb and Lua.
 
 Package: conky-std-dbg
 Section: debug
@@ -78,7 +78,7 @@ Description: highly configurable system monitor (default version - debug)
  It includes the following support:
  .
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
- wireless, ncurses, ALSA mixer, apcupsd, I/O stats, argb and Lua.
+ wireless, ncurses, apcupsd, I/O stats, argb and Lua.
  .
  This package contains debugging symbols only.
 
@@ -137,9 +137,9 @@ Description: highly configurable system monitor (all features enabled)
  This is a full conky with most compile options enabled:
  .
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
- Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
+ Weather, wireless, IBM, nvidia, eve-online, Imlib2,
  apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings,
- Audacious, and XMMS2.
+ Audacious, XMMS2, and PulseAudio.
 
 Package: conky-all-dbg
 Section: debug
@@ -156,9 +156,9 @@ Description: highly configurable system monitor (all features enabled - debug)
  This is a full conky with most compile options enabled:
  .
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
- Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
+ Weather, wireless, IBM, nvidia, eve-online, Imlib2,
  apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings,
- Audacious, and XMMS2.
+ Audacious, XMMS2, and PulseAudio.
  .
  This package contains debugging symbols only.
 

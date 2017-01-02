@@ -1,3 +1,20 @@
+conky (1.10.6-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sun, 01 Jan 2017 23:10:32 -0800
+
+conky (1.10.6-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Enable pulseaudio support in conky-all. (Closes: #841198)
+    - Add build-dep on libpulse-dev.
+  * Drop build-dep on libasound2-dev and remove references to ALSA mixer
+    support in package descriptions; this has not been supported since 2010.
+    (Refer to #726637)
+
+ -- Vincent Cheng <vcheng@debian.org>  Thu, 08 Dec 2016 23:46:09 -0800
+
 conky (1.10.5-1) unstable; urgency=medium
 
   * New upstream release.
