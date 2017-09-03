@@ -1,3 +1,10 @@
+conky (1.10.6-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix FTBFS with gcc 7. (Closes: #853353)
+
+ -- Adrian Bunk <bunk@debian.org>  Sun, 03 Sep 2017 18:12:29 +0300
+
 conky (1.10.6-1) unstable; urgency=medium
 
   * New upstream release.
