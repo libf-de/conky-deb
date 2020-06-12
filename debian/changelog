@@ -1,3 +1,11 @@
+conky (1.10.8-1.1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * debian/control: Build-depends on libdbus-glib-1-dev.
+    (Closes: #962330)
+
+ -- Boyuan Yang <byang@debian.org>  Fri, 12 Jun 2020 06:26:48 -0400
+
 conky (1.10.8-1) unstable; urgency=medium
 
   * Acknowledge NMU, thanks to Adrian Bunk!
