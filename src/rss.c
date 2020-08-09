@@ -23,12 +23,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: rss.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: rss.c 1164 2008-06-19 06:17:53Z IQgryn $ */
 
 #include "conky.h"
 #include "prss.h"
-#include <stdio.h>
-#include <string.h>
 #include <time.h>
 #include <assert.h>
 #include <curl/curl.h>
@@ -65,7 +63,7 @@ size_t WriteMemoryCallback(void *ptr, size_t size, size_t nmemb, void *data)
 	return realsize;
 }
 
-int rss_delay(int *wait, int delay)
+int rss_delay(int *wait_time, int delay)
 {
 	time_t now = time(NULL);
 
@@ -75,13 +73,13 @@ int rss_delay(int *wait, int delay)
 	}
 	delay *= 60;
 
-	if (!*wait) {
-		*wait = now + delay;
+	if (!*wait_time) {
+		*wait_time = now + delay;
 		return 1;
 	}
 
-	if (now >= *wait + delay) {
-		*wait = now + delay;
+	if (now >= *wait_time + delay) {
+		*wait_time = now + delay;
 		return 1;
 	}
 
@@ -143,7 +141,7 @@ PRSS *get_rss_info(char *uri, int delay)
 			return NULL;
 		}
 		curfeed = &feeds[num_feeds];
-		curfeed->uri = strdup(uri);
+		curfeed->uri = strndup(uri, text_buffer_size);
 		num_feeds++;
 	}
 

@@ -1,11 +1,11 @@
-.\" -*- coding: us-ascii -*-
+'\" -*- coding: us-ascii -*-
 .if \n(.g .ds T< \\FC
 .if \n(.g .ds T> \\F[\n[.fam]]
 .de URL
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH conky 1 2008-03-31 "" ""
+.TH conky 1 2008-05-06 "" ""
 .SH NAME
 conky \- A system monitor for X originally based on the torsmo code, but more kickass. It just keeps on given'er. Yeah.
 .SH SYNOPSIS
@@ -21,22 +21,32 @@ conky \- A system monitor for X originally based on the torsmo code, but more ki
 'hy
 .SH DESCRIPTION
 Conky is a system monitor for X originally based on torsmo.
-Since it's conception, Conky has changed significantly from it's predecessor.
-Conky can display just about anything, either on your root desktop or in it's own window.
-Conky has many built-in objects, as well as the ability to execute programs and scripts,
-then display the output from stdout.
+Since its inception, Conky has changed significantly from its predecessor, while maintaining
+simplicity and configurability. Conky can display just about anything, either
+on your root desktop or in its own window. Not only does Conky have many
+built-in objects, it can also display just about any piece of information by
+using scripts and other external programs.
 .PP
-We are always looking for help, and anyone interested in becoming a developer is welcome.
-Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches.
+Conky has more than 250 built in objects, including support for
+a plethora of OS stats (uname, uptime, CPU usage, mem usage, disk
+usage, "top" like process stats, and network monitoring, just to name a few),
+built in IMAP and POP3 support, built in support for many popular
+music players (MPD, XMMS2, BMPx, Audacious), and much much more.
+Conky can display this info either as text, or using simple progress
+bars and graph widgets, with different fonts and colours.
+.PP
+We are always looking for help, whether its reporting bugs, writing patches, or writing docs.
+Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches,
+or stop by #conky on irc.freenode.net if you have questions or want to contribute.
 .PP
 Thanks for your interest in Conky.
 .SH COMPILING
 For users compiling from source on a binary distro, make sure you have the X development
-libraries installed. This should be a package along the lines of "libx11-dev" or 
+libraries installed. This should be a package along the lines of "libx11-dev" or
 "xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
 on your configure options).
 .PP
-Conky has (for some time) been available in the repositories of most popular distributions. 
+Conky has (for some time) been available in the repositories of most popular distributions.
 Here are some installation instructions for a few:
 .PP
 Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
@@ -69,12 +79,16 @@ Saves you the trouble of having to kill and then restart. You can now also do th
 .SH OPTIONS
 Command line options override configurations defined in configuration file.
 .TP 
-\fB\*(T<\fB\-v | \-V | \-\-verbose\fR\*(T>\fR
+\fB\*(T<\fB\-v | \-V | \-\-version\fR\*(T>\fR
 Prints version and exits
 
 .TP 
+\fB\*(T<\fB\-q | \-\-quiet\fR\*(T>\fR
+Run Conky in 'quiet mode' (ie. no output)
+
+.TP 
 \fB\*(T<\fB\-a | \-\-alignment=\fR\*(T>\fR\*(T<\fBALIGNMENT\fR\*(T>
-Text alignment on screen, {top,bottom}_{left,right} or none
+Text alignment on screen, {top,bottom,middle}_{left,right,middle} or none
 
 .TP 
 \fB\*(T<\fB\-b | \-\-double\-buffer\fR\*(T>\fR
@@ -120,8 +134,12 @@ X position
 \fB\*(T<\fB\-y \fR\*(T>\fR\*(T<\fBY_COORDINATE\fR\*(T>
 Y position
 
+.TP 
+\fB\*(T<\fB\-i \fR\*(T>\fR\*(T<\fBCOUNT\fR\*(T>
+Number of times to update Conky (and quit)
+
 .SH "CONFIGURATION SETTINGS"
-Default configuration file location is $HOME/.conkyrc or 
+Default configuration file location is $HOME/.conkyrc or
 ${sysconfdir}/conky/conky.conf. On most systems, sysconfdir is /etc,
 and you can find the sample config file there (/etc/conky/conky.conf).
 .PP
@@ -144,44 +162,8 @@ Border margin in pixels
 Border width in pixels
 
 .TP 
-\fB\*(T<\fBcolor0\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor1\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor2\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor3\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor4\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor5\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor6\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor7\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor8\fR\*(T>\fR
-A color variable for use inside TEXT segments
-
-.TP 
-\fB\*(T<\fBcolor9\fR\*(T>\fR
-A color variable for use inside TEXT segments
+\fB\*(T<\fBcolorN\fR\*(T>\fR
+Predefine a color for use inside TEXT segments. Substitute N by a digit between 0 and 9, inclusively. When specifying the color value in hex, omit the leading hash (#).
 
 .TP 
 \fB\*(T<\fBcpu_avg_samples\fR\*(T>\fR
@@ -238,6 +220,10 @@ Gap, in pixels, between top or bottom border of screen, same as passing -y at co
 e.g. gap_y 10.
 
 .TP 
+\fB\*(T<\fBif_up_strictness\fR\*(T>\fR
+How strict should if_up be when testing an interface for being up? The value is one of up, link or address, to check for the interface being solely up, being up and having link or being up, having link and an assigned IP address.
+
+.TP 
 \fB\*(T<\fBimap\fR\*(T>\fR
 Default global IMAP server. Arguments are: "host user pass [-i interval] [-f folder] [-p port] [-e command]". Default port is 143, default folder is 'INBOX', default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 
@@ -260,7 +246,7 @@ Maximum size of user text buffer, i.e. layout below TEXT line in config file
 
 .TP 
 \fB\*(T<\fBtext_buffer_size\fR\*(T>\fR \*(T<\fBbytes\fR\*(T> 
-Size of the standard text buffer (default is 128 bytes). This buffer is used for intermediary text, such as individual lines, output from $exec vars, and various other variables. Increasing the size of this buffer can drastically reduce Conky's performance, but will allow for more text display per variable. The size of this buffer cannot be smaller than the default value of 128 bytes.
+Size of the standard text buffer (default is 256 bytes). This buffer is used for intermediary text, such as individual lines, output from $exec vars, and various other variables. Increasing the size of this buffer can drastically reduce Conky's performance, but will allow for more text display per variable. The size of this buffer cannot be smaller than the default value of 256 bytes.
 
 .TP 
 \fB\*(T<\fBmaximum_width\fR\*(T>\fR \*(T<\fBpixels\fR\*(T> 
@@ -326,7 +312,7 @@ Boolean, set pseudo-transparency?
 
 .TP 
 \fB\*(T<\fBown_window_type\fR\*(T>\fR
-if own_window is yes, you may specify type normal, desktop or override (default: normal).
+if own_window is yes, you may specify type normal, desktop, dock or override (default: normal).
 Desktop windows are special windows that have no window decorations; are always visible
 on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
 Override windows are not under the control of the window manager. Hints are ignored. This type
@@ -347,6 +333,14 @@ Default global POP3 server. Arguments are: "host user pass [-i interval] [-p por
 .TP 
 \fB\*(T<\fBshort_units\fR\*(T>\fR
 Shortens units to a single character (kiB->k, GiB->G, etc.). Default is off.
+
+.TP 
+\fB\*(T<\fBshow_graph_scale\fR\*(T>\fR
+Shows the maximum value in scaled graphs.
+
+.TP 
+\fB\*(T<\fBshow_graph_range\fR\*(T>\fR
+Shows the time range covered by a graph.
 
 .TP 
 \fB\*(T<\fBstippled_borders\fR\*(T>\fR
@@ -390,7 +384,7 @@ Colors are parsed using XParsecolor(), there might be a list of them:
 Color can be also in #rrggbb format (hex).
 .TP 
 \fB\*(T<\fBaddr\fR\*(T>\fR \*(T<\fBinterface\fR\*(T> 
-IP address for an interface
+IP address for an interface, or "No Address" if no address is assigned.
 
 .TP 
 \fB\*(T<\fBaddrs\fR\*(T>\fR \*(T<\fBinterface\fR\*(T> 
@@ -546,44 +540,8 @@ Amount of memory cached
 Change drawing color to color
 
 .TP 
-\fB\*(T<\fBcolor0\fR\*(T>\fR 
-Change drawing color to color0 configuration option
-
-.TP 
-\fB\*(T<\fBcolor1\fR\*(T>\fR 
-Change drawing color to color1 configuration option
-
-.TP 
-\fB\*(T<\fBcolor2\fR\*(T>\fR 
-Change drawing color to color2 configuration option
-
-.TP 
-\fB\*(T<\fBcolor3\fR\*(T>\fR 
-Change drawing color to color3 configuration option
-
-.TP 
-\fB\*(T<\fBcolor4\fR\*(T>\fR 
-Change drawing color to color4 configuration option
-
-.TP 
-\fB\*(T<\fBcolor5\fR\*(T>\fR 
-Change drawing color to color5 configuration option
-
-.TP 
-\fB\*(T<\fBcolor6\fR\*(T>\fR 
-Change drawing color to color6 configuration option
-
-.TP 
-\fB\*(T<\fBcolor7\fR\*(T>\fR 
-Change drawing color to color7 configuration option
-
-.TP 
-\fB\*(T<\fBcolor8\fR\*(T>\fR 
-Change drawing color to color8 configuration option
-
-.TP 
-\fB\*(T<\fBcolor9\fR\*(T>\fR 
-Change drawing color to color9 configuration option
+\fB\*(T<\fBcolorN\fR\*(T>\fR
+Change drawing color to colorN configuration option, where N is a digit between 0 and 9, inclusively.
 
 .TP 
 \fB\*(T<\fBconky_version\fR\*(T>\fR 
@@ -606,32 +564,32 @@ CPU usage in percents. For SMP machines, the CPU number can be provided as an ar
 Bar that shows CPU usage, height is bar's height in pixels. See $cpu for more info on SMP.
 
 .TP 
-\fB\*(T<\fBcpugraph\fR\*(T>\fR \*(T<\fB(cpu number) (height),(width) (gradient colour 1) (gradient colour 2)\fR\*(T> 
-CPU usage graph, with optional colours in hex, minus the #. See $cpu for more info on SMP.
+\fB\*(T<\fBcpugraph\fR\*(T>\fR \*(T<\fBnormal|log (cpu number) (height),(width) (gradient colour 1) (gradient colour 2)\fR\*(T> 
+CPU usage graph, with optional colours in hex, minus the #. See $cpu for more info on SMP. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
 \fB\*(T<\fBdiskio\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
 Displays current disk IO. Device is optional, and takes the form of sda for /dev/sda. Individual partitions are allowed.
 
 .TP 
-\fB\*(T<\fBdiskiograph\fR\*(T>\fR \*(T<\fB(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
-Disk IO graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
+\fB\*(T<\fBdiskiograph\fR\*(T>\fR \*(T<\fBnormal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+Disk IO graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
 \fB\*(T<\fBdiskio_read\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
 Displays current disk IO for reads. Device as in diskio.
 
 .TP 
-\fB\*(T<\fBdiskiograph_read\fR\*(T>\fR \*(T<\fB(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
-Disk IO graph for reads, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Device as in diskio.
+\fB\*(T<\fBdiskiograph_read\fR\*(T>\fR \*(T<\fBnormal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+Disk IO graph for reads, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
 \fB\*(T<\fBdiskio_write\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
 Displays current disk IO for writes. Device as in diskio.
 
 .TP 
-\fB\*(T<\fBdiskiograph_write\fR\*(T>\fR \*(T<\fB(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
-Disk IO graph for writes, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Device as in diskio.
+\fB\*(T<\fBdiskiograph_write\fR\*(T>\fR \*(T<\fBnormal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+Disk IO graph for writes, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
 \fB\*(T<\fBdisk_protect\fR\*(T>\fR \*(T<\fBdevice\fR\*(T> 
@@ -639,15 +597,15 @@ Disk protection status, if supported (needs kernel-patch). Prints either "frozen
 
 .TP 
 \fB\*(T<\fBdownspeed\fR\*(T>\fR \*(T<\fBnet\fR\*(T> 
-Download speed in kilobytes
+Download speed in KiB
 
 .TP 
 \fB\*(T<\fBdownspeedf\fR\*(T>\fR \*(T<\fBnet\fR\*(T> 
-Download speed in kilobytes with one decimal
+Download speed in KiB with one decimal
 
 .TP 
-\fB\*(T<\fBdownspeedgraph\fR\*(T>\fR \*(T<\fBnet (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
-Download speed graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
+\fB\*(T<\fBdownspeedgraph\fR\*(T>\fR \*(T<\fBnormal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+Download speed graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
 \fB\*(T<\fBelse\fR\*(T>\fR 
@@ -674,8 +632,8 @@ Executes a shell command and displays the output in conky. warning: this takes a
 Same as exec, except if the first value return is a value between 0-100, it will use that number for a bar. The size for the bar is currently fixed, but that may change in the future.
 
 .TP 
-\fB\*(T<\fBexecgraph\fR\*(T>\fR \*(T<\fBcommand\fR\*(T> 
-Same as execbar, but graphs values.
+\fB\*(T<\fBexecgraph\fR\*(T>\fR \*(T<\fB(normal|log) command\fR\*(T> 
+Same as execbar, but graphs values. Uses a logaritmic scale when the log option is given (to see small numbers). Values still have to be between 0 and 100.
 
 .TP 
 \fB\*(T<\fBexeci\fR\*(T>\fR \*(T<\fBinterval command\fR\*(T> 
@@ -704,23 +662,19 @@ Specify a different font. This new font will apply to the current line and every
 
 .TP 
 \fB\*(T<\fBfreq\fR\*(T>\fR \*(T<\fB(n)\fR\*(T> 
-Returns CPU #n's frequency in MHz. CPUs are
-counted from 1. If omitted, the parameter
-defaults to 1.
+Returns CPU #n's frequency in MHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 
 .TP 
 \fB\*(T<\fBfreq_g\fR\*(T>\fR \*(T<\fB(n)\fR\*(T> 
-Returns CPU #n's frequency in GHz. CPUs are
-counted from 1. If omitted, the parameter
-defaults to 1.
+Returns CPU #n's frequency in GHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 
 .TP 
-\fB\*(T<\fBfreq_dyn\fR\*(T>\fR 
-Returns CPU frequency in MHz, but is calculated by counting to clock cycles to complete an instruction. Only available for x86/amd64.
+\fB\*(T<\fBfreq_dyn\fR\*(T>\fR \*(T<\fB(n)\fR\*(T> 
+Returns CPU #n's frequency in MHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction. Only available for x86/amd64.
 
 .TP 
-\fB\*(T<\fBfreq_dyn_g\fR\*(T>\fR 
-Returns CPU frequency in GHz, but is calculated by counting to clock cycles to complete an instruction. Only available for x86/amd64.
+\fB\*(T<\fBfreq_dyn_g\fR\*(T>\fR \*(T<\fB(n)\fR\*(T> 
+Returns CPU #n's frequency in GHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction. Only available for x86/amd64.
 
 .TP 
 \fB\*(T<\fBfs_bar\fR\*(T>\fR \*(T<\fB(height),(width) fs\fR\*(T> 
@@ -904,6 +858,14 @@ The value of /proc/sys/vm/laptop_mode
 (1,2,3)> System load average, 1 is for past 1 minute, 2 for past 5 minutes and 3 for past 15 minutes.
 
 .TP 
+\fB\*(T<\fBloadgraph\fR\*(T>\fR \*(T<\fBnormal|log (height),(width) (gradient colour 1) (gradient colour 2)\fR\*(T> 
+Load1 average graph, similar to xload, with optional colours in hex, minus the #. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
+
+.TP 
+\fB\*(T<\fBlines\fR\*(T>\fR \*(T<\fBtextfile\fR\*(T> 
+Displays the number of lines in the given file
+
+.TP 
 \fB\*(T<\fBmachine\fR\*(T>\fR 
 Machine, i686 for example
 
@@ -927,12 +889,32 @@ Amount of memory in use
 Bar that shows amount of memory in use
 
 .TP 
+\fB\*(T<\fBmemgraph\fR\*(T>\fR \*(T<\fBnormal|log (height),(width) (gradient colour 1) (gradient colour 2)\fR\*(T> 
+Memory usage graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
+
+.TP 
+\fB\*(T<\fBmemeasyfree\fR\*(T>\fR 
+Amount of free memory including the memory that is very easily freed (buffers/cache)
+
+.TP 
+\fB\*(T<\fBmemfree\fR\*(T>\fR 
+Amount of free memory
+
+.TP 
 \fB\*(T<\fBmemmax\fR\*(T>\fR 
 Total amount of memory
 
 .TP 
 \fB\*(T<\fBmemperc\fR\*(T>\fR 
 Percentage of memory in use
+
+.TP 
+\fB\*(T<\fBmonitor\fR\*(T>\fR 
+Number of the monitor on which conky is running
+
+.TP 
+\fB\*(T<\fBmonitor_number\fR\*(T>\fR 
+Number of monitors
 
 .TP 
 \fB\*(T<\fBmpd_artist\fR\*(T>\fR 
@@ -1012,6 +994,16 @@ not. Both mbox and maildir type mailboxes are supported.
 Hostname
 
 .TP 
+\fB\*(T<\fBnvidia\fR\*(T>\fR \*(T<\fBthreshold\fR\*(T> \*(T<\fBtemp\fR\*(T> \*(T<\fBgpufreq\fR\*(T> \*(T<\fBmemfreq\fR\*(T> \*(T<\fBimagequality\fR\*(T> 
+Nvidia graficcard support for the XNVCtrl library.
+Each option gives back one integer value:
+(threshold): the thresholdtemperature at which the gpu slows down
+(temp): gives the gpu current temperature
+(gpufreq): gives the current gpu frequency
+(memfreq): gives the current mem frequency
+(imagequality): which imagequality should be choosen by OpenGL applications
+
+.TP 
 \fB\*(T<\fBoutlinecolor\fR\*(T>\fR \*(T<\fB(color)\fR\*(T> 
 Change outline color
 
@@ -1064,6 +1056,10 @@ Total processes (sleeping and running)
 Running processes (not sleeping), requires Linux 2.6
 
 .TP 
+\fB\*(T<\fBscroll\fR\*(T>\fR \*(T<\fBlength text\fR\*(T> 
+Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
+
+.TP 
 \fB\*(T<\fBshadecolor\fR\*(T>\fR \*(T<\fB(color)\fR\*(T> 
 Change shading color
 
@@ -1072,12 +1068,20 @@ Change shading color
 when using smapi, display contents of the /sys/devices/platform/smapi directory. ARGS are either '(FILENAME)' or 'bat (INDEX) (FILENAME)' to display the corresponding files' content. This is a very raw method of accessing the smapi values. When available, better use one of the smapi_* variables instead.
 
 .TP 
+\fB\*(T<\fBsmapi_bat_bar\fR\*(T>\fR \*(T<\fB(INDEX),(height),(width)\fR\*(T> 
+when using smapi, display the remaining capacity of the battery with index INDEX as a bar.
+
+.TP 
 \fB\*(T<\fBsmapi_bat_perc\fR\*(T>\fR \*(T<\fB(INDEX)\fR\*(T> 
 when using smapi, display the remaining capacity in percent of the battery with index INDEX. This is a separate variable because it supports the 'use_spacer' configuration option.
 
 .TP 
-\fB\*(T<\fBsmapi_bat_bar\fR\*(T>\fR \*(T<\fB(INDEX),(height),(width)\fR\*(T> 
-when using smapi, display the remaining capacity of the battery with index INDEX as a bar.
+\fB\*(T<\fBsmapi_bat_power\fR\*(T>\fR \*(T<\fBINDEX\fR\*(T> 
+when using smapi, display the current power of the battery with index INDEX in watt. This is a separate variable because the original read out value is being converted from mW. The sign of the output reflects charging (positive) or discharging (negative) state.
+
+.TP 
+\fB\*(T<\fBsmapi_bat_temp\fR\*(T>\fR \*(T<\fBINDEX\fR\*(T> 
+when using smapi, display the current temperature of the battery with index INDEX in degree Celsius. This is a separate variable because the original read out value is being converted from milli degree Celsius.
 
 .TP 
 \fB\*(T<\fBstippled_hr\fR\*(T>\fR \*(T<\fB(space)\fR\*(T> 
@@ -1202,15 +1206,15 @@ for debugging
 
 .TP 
 \fB\*(T<\fBupspeed\fR\*(T>\fR \*(T<\fBnet\fR\*(T> 
-Upload speed in kilobytes
+Upload speed in KiB
 
 .TP 
 \fB\*(T<\fBupspeedf\fR\*(T>\fR \*(T<\fBnet\fR\*(T> 
-Upload speed in kilobytes with one decimal
+Upload speed in KiB with one decimal
 
 .TP 
-\fB\*(T<\fBupspeedgraph\fR\*(T>\fR \*(T<\fBnet (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
-Upload speed graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
+\fB\*(T<\fBupspeedgraph\fR\*(T>\fR \*(T<\fBnormal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+Upload speed graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
 \fB\*(T<\fBuptime\fR\*(T>\fR 
@@ -1285,6 +1289,10 @@ Wireless link quality in percents (Linux only)
 Wireless link quality bar (Linux only)
 
 .TP 
+\fB\*(T<\fBwords\fR\*(T>\fR \*(T<\fBtextfile\fR\*(T> 
+Displays the number of words in the given file
+
+.TP 
 \fB\*(T<\fBxmms2_artist\fR\*(T>\fR 
 Artist in current XMMS2 song
 
@@ -1355,6 +1363,10 @@ Bar of XMMS2's progress
 .TP 
 \fB\*(T<\fBxmms2_smart\fR\*(T>\fR 
 Prints the song name in either the form "artist - title" or file name, depending on whats available
+
+.TP 
+\fB\*(T<\fBeve\fR\*(T>\fR \*(T<\fBapi_userid api_key character_id\fR\*(T> 
+Fetches your currently training skill from the Eve Online API servers (http://www.eve-online.com/) and displays the skill along with the remaining training time.
 
 .SH EXAMPLES
 .TP 

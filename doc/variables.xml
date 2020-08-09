@@ -5,7 +5,7 @@
 			<option>interface</option>
 		</term>
 		<listitem>
-			IP address for an interface
+			IP address for an interface, or "No Address" if no address is assigned.
 			<para></para></listitem>
 	</varlistentry>
 
@@ -364,92 +364,9 @@
 	</varlistentry>
 
 	<varlistentry>
-		<term>
-			<command><option>color0</option></command>
-		</term>
+		<term><command><option>colorN</option></command></term>
 		<listitem>
-			Change drawing color to color0 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color1</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color1 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color2</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color2 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color3</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color3 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color4</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color4 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color5</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color5 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color6</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color6 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color7</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color7 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color8</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color8 configuration option
-			<para></para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-		<term>
-			<command><option>color9</option></command>
-		</term>
-		<listitem>
-			Change drawing color to color9 configuration option
+			Change drawing color to colorN configuration option, where N is a digit between 0 and 9, inclusively.
 			<para></para></listitem>
 	</varlistentry>
 
@@ -503,10 +420,10 @@
 	<varlistentry>
 		<term>
 			<command><option>cpugraph</option></command>
-			<option>(cpu number) (height),(width) (gradient colour 1) (gradient colour 2)</option>
+			<option>normal|log (cpu number) (height),(width) (gradient colour 1) (gradient colour 2)</option>
 		</term>
 		<listitem>
-			CPU usage graph, with optional colours in hex, minus the #.  See $cpu for more info on SMP.
+			CPU usage graph, with optional colours in hex, minus the #.  See $cpu for more info on SMP. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<para></para></listitem>
 	</varlistentry>
 
@@ -523,10 +440,10 @@
 	<varlistentry>
 		<term>
 			<command><option>diskiograph</option></command>
-			<option>(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+			<option>normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
 		</term>
 		<listitem>
-			Disk IO graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+			Disk IO graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<para></para></listitem>
 	</varlistentry>
 
@@ -543,10 +460,10 @@
 	<varlistentry>
 		<term>
 			<command><option>diskiograph_read</option></command>
-			<option>(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+			<option>normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
 		</term>
 		<listitem>
-			Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio.
+			Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<para></para></listitem>
 	</varlistentry>
 
@@ -563,10 +480,10 @@
 	<varlistentry>
 		<term>
 			<command><option>diskiograph_write</option></command>
-			<option>(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+			<option>normal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
 		</term>
 		<listitem>
-			Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio.
+			Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.  Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<para></para></listitem>
 	</varlistentry>
 
@@ -586,7 +503,7 @@
 			<option>net</option>
 		</term>
 		<listitem>
-			Download speed in kilobytes
+			Download speed in KiB
 			<para></para></listitem>
 	</varlistentry>
 
@@ -596,17 +513,17 @@
 			<option>net</option>
 		</term>
 		<listitem>
-			Download speed in kilobytes with one decimal
+			Download speed in KiB with one decimal
 			<para></para></listitem>
 	</varlistentry>
 
 	<varlistentry>
 		<term>
 			<command><option>downspeedgraph</option></command>
-			<option>net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+			<option>normal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
 		</term>
 		<listitem>
-			Download speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+			Download speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<para></para></listitem>
 	</varlistentry>
 
@@ -670,10 +587,10 @@
 	<varlistentry>
 		<term>
 			<command><option>execgraph</option></command>
-			<option>command</option>
+			<option>(normal|log) command</option>
 		</term>
 		<listitem>
-			Same as execbar, but graphs values.
+			Same as execbar, but graphs values. Uses a logaritmic scale when the log option is given (to see small numbers). Values still have to be between 0 and 100.
 			<para></para></listitem>
 	</varlistentry>
 
@@ -744,9 +661,7 @@
 			<option>(n)</option>
 		</term>
 		<listitem>
-			Returns CPU #n's frequency in MHz. CPUs are
-			counted from 1. If omitted, the parameter
-			defaults to 1.
+			Returns CPU #n's frequency in MHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 			<para></para></listitem>
 	</varlistentry>
 	<varlistentry>
@@ -755,27 +670,27 @@
 			<option>(n)</option>
 		</term>
 		<listitem>
-			Returns CPU #n's frequency in GHz. CPUs are
-			counted from 1. If omitted, the parameter
-			defaults to 1.
+			Returns CPU #n's frequency in GHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 			<para></para></listitem>
 	</varlistentry>
 
 	<varlistentry>
 		<term>
 			<command><option>freq_dyn</option></command>
+			<option>(n)</option>
 		</term>
 		<listitem>
-			Returns CPU frequency in MHz, but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
+			Returns CPU #n's frequency in MHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
 			<para></para></listitem>
 	</varlistentry>
 
 	<varlistentry>
 		<term>
 			<command><option>freq_dyn_g</option></command>
+			<option>(n)</option>
 		</term>
 		<listitem>
-			Returns CPU frequency in GHz, but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
+			Returns CPU #n's frequency in GHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
 			<para></para></listitem>
 	</varlistentry>
 
@@ -1217,6 +1132,26 @@
 
 	<varlistentry>
 		<term>
+			<command><option>loadgraph</option></command>
+			<option>normal|log (height),(width) (gradient colour 1) (gradient colour 2)</option>
+		</term>
+		<listitem>
+			Load1 average graph, similar to xload, with optional colours in hex, minus the #. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
+			<command><option>lines</option></command>
+			<option>textfile</option>
+		</term>
+		<listitem>
+			Displays the number of lines in the given file
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
 			<command><option>machine</option></command>
 		</term>
 		<listitem>
@@ -1269,6 +1204,34 @@
 
 	<varlistentry>
 		<term>
+			<command><option>memgraph</option></command>
+			<option>normal|log (height),(width) (gradient colour 1) (gradient colour 2)</option>
+		</term>
+		<listitem>
+			Memory usage graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
+			<command><option>memeasyfree</option></command>
+		</term>
+		<listitem>
+			Amount of free memory including the memory that is very easily freed (buffers/cache)
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
+			<command><option>memfree</option></command>
+		</term>
+		<listitem>
+			Amount of free memory
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
 			<command><option>memmax</option></command>
 		</term>
 		<listitem>
@@ -1282,6 +1245,24 @@
 		</term>
 		<listitem>
 			Percentage of memory in use
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
+			<command><option>monitor</option></command>
+		</term>
+		<listitem>
+			Number of the monitor on which conky is running
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
+			<command><option>monitor_number</option></command>
+		</term>
+		<listitem>
+			Number of monitors
 			<para></para></listitem>
 	</varlistentry>
 
@@ -1464,6 +1445,27 @@
 
 	<varlistentry>
 		<term>
+			<command><option>nvidia</option></command>
+			<option>threshold</option>
+			<option>temp</option>
+			<option>gpufreq</option>
+			<option>memfreq</option>
+			<option>imagequality</option>
+		</term>
+		<listitem>
+			Nvidia graficcard support for the XNVCtrl library.
+			Each option gives back one integer value:
+			(threshold): the thresholdtemperature at which the gpu slows down
+			(temp): gives the gpu current temperature
+			(gpufreq): gives the current gpu frequency
+			(memfreq): gives the current mem frequency
+			(imagequality): which imagequality should be choosen by OpenGL applications
+			<para></para>
+		</listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
 			<command><option>outlinecolor</option></command>
 			<option>(color)</option>
 		</term>
@@ -1566,6 +1568,16 @@
 
 	<varlistentry>
 		<term>
+			<command><option>scroll</option></command>
+			<option>length text</option>
+		</term>
+		<listitem>
+			Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and "    foobar" can both generate "barfoo" but "foobar    " will keep the spaces like this "bar    foo").
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
 			<command><option>shadecolor</option></command>
 			<option>(color)</option>
 		</term>
@@ -1586,6 +1598,16 @@
 
 	<varlistentry>
 		<term>
+			<command><option>smapi_bat_bar</option></command>
+			<option>(INDEX),(height),(width)</option>
+		</term>
+		<listitem>
+			when using smapi, display the remaining capacity of the battery with index INDEX as a bar.
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
 			<command><option>smapi_bat_perc</option></command>
 			<option>(INDEX)</option>
 		</term>
@@ -1596,11 +1618,21 @@
 
 	<varlistentry>
 		<term>
-			<command><option>smapi_bat_bar</option></command>
-			<option>(INDEX),(height),(width)</option>
+			<command><option>smapi_bat_power</option></command>
+			<option>INDEX</option>
 		</term>
 		<listitem>
-			when using smapi, display the remaining capacity of the battery with index INDEX as a bar.
+			when using smapi, display the current power of the battery with index INDEX in watt. This is a separate variable because the original read out value is being converted from mW. The sign of the output reflects charging (positive) or discharging (negative) state.
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
+			<command><option>smapi_bat_temp</option></command>
+			<option>INDEX</option>
+		</term>
+		<listitem>
+			when using smapi, display the current temperature of the battery with index INDEX in degree Celsius. This is a separate variable because the original read out value is being converted from milli degree Celsius.
 			<para></para></listitem>
 	</varlistentry>
 
@@ -1842,7 +1874,7 @@
 			<option>net</option>
 		</term>
 		<listitem>
-			Upload speed in kilobytes
+			Upload speed in KiB
 			<para></para></listitem>
 	</varlistentry>
 
@@ -1852,17 +1884,17 @@
 			<option>net</option>
 		</term>
 		<listitem>
-			Upload speed in kilobytes with one decimal
+			Upload speed in KiB with one decimal
 			<para></para></listitem>
 	</varlistentry>
 
 	<varlistentry>
 		<term>
 			<command><option>upspeedgraph</option></command>
-			<option>net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+			<option>normal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
 		</term>
 		<listitem>
-			Upload speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+			Upload speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 			<para></para></listitem>
 	</varlistentry>
 
@@ -2036,6 +2068,16 @@
 
 	<varlistentry>
 		<term>
+			<command><option>words</option></command>
+			<option>textfile</option>
+		</term>
+		<listitem>
+			Displays the number of words in the given file
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
 			<command><option>xmms2_artist</option></command>
 		</term>
 		<listitem>
@@ -2194,6 +2236,16 @@
 		</term>
 		<listitem>
 			Prints the song name in either the form "artist - title" or file name, depending on whats available
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term>
+			<command><option>eve</option></command>
+			<option>api_userid api_key character_id</option>
+		</term>
+		<listitem>
+         Fetches your currently training skill from the Eve Online API servers (http://www.eve-online.com/) and displays the skill along with the remaining training time.
 			<para></para></listitem>
 	</varlistentry>
 

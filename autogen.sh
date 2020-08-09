@@ -24,7 +24,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: autogen.sh 1007 2008-02-20 20:30:45Z IQgryn $
+# $Id: autogen.sh 1218 2008-07-07 20:09:37Z pkovacs $
 #
 # optional $1 = optional directory containing build tree or svn working copy
 

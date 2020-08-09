@@ -23,16 +23,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: common.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: common.c 1193 2008-06-21 20:37:58Z ngarofil $ */
 
 #include "conky.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <errno.h>
 #include <sys/time.h>
 #include <pthread.h>
+
+#ifndef HAVE_STRNDUP
+// use our own strndup() if it's not available
+char *strndup(const char *s, size_t n)
+{
+	if (strlen(s) + 1 > n) {
+		char *ret = malloc(n);
+		strncpy(ret, s, n);
+		return ret;
+	} else {
+		return strdup(s);
+	}
+}
+#endif /* HAVE_STRNDUP */
 
 void update_uname(void)
 {
@@ -143,7 +154,7 @@ struct net_stat *get_net_stat(const char *dev)
 	if (i == 16) {
 		for (i = 0; i < 16; i++) {
 			if (netstats[i].dev == 0) {
-				netstats[i].dev = strdup(dev);
+				netstats[i].dev = strndup(dev, text_buffer_size);
 				return &netstats[i];
 			}
 		}
@@ -189,39 +200,56 @@ void update_dns_data(void)
 	if ((fp = fopen("/etc/resolv.conf", "r")) == NULL)
 		return;
 	while(!feof(fp)) {
-		if (fgets(line, 255, fp) == NULL)
-			goto OUT;
+		if (fgets(line, 255, fp) == NULL) {
+			break;
+		}
 		if (!strncmp(line, "nameserver ", 11)) {
 			line[strlen(line) - 1] = '\0';	// remove trailing newline
 			data->nscount++;
 			data->ns_list = realloc(data->ns_list, data->nscount * sizeof(char *));
-			data->ns_list[data->nscount - 1] = strdup(line + 11);
+			data->ns_list[data->nscount - 1] = strndup(line + 11, text_buffer_size);
 		}
 	}
-OUT:
 	fclose(fp);
 }
 
-void format_seconds(char *buf, unsigned int n, long t)
+void format_seconds(char *buf, unsigned int n, long seconds)
 {
-	if (t >= 24 * 60 * 60) {	/* hours necessary when there are days? */
-		snprintf(buf, n, "%ldd %ldh %ldm", t / 60 / 60 / 24, (t / 60 / 60) % 24,
-			(t / 60) % 60);
-	} else if (t >= 60 * 60) {
-		snprintf(buf, n, "%ldh %ldm", (t / 60 / 60) % 24, (t / 60) % 60);
+	long days;
+	int hours, minutes;
+
+	days = seconds / 86400;
+	seconds %= 86400;
+	hours = seconds / 3600;
+	seconds %= 3600;
+	minutes = seconds / 60;
+	seconds %= 60;
+
+	if (days > 0) {
+		snprintf(buf, n, "%ldd %dh %dm", days, hours, minutes);
 	} else {
-		snprintf(buf, n, "%ldm %lds", t / 60, t % 60);
+		snprintf(buf, n, "%dh %dm %lds", hours, minutes, seconds);
 	}
 }
 
-void format_seconds_short(char *buf, unsigned int n, long t)
+void format_seconds_short(char *buf, unsigned int n, long seconds)
 {
-	if (t >= 24 * 60 * 60) {
-		snprintf(buf, n, "%ldd %ldh", t / 60 / 60 / 24, (t / 60 / 60) % 24);
-	} else if (t >= 60 * 60) {
-		snprintf(buf, n, "%ldh %ldm", (t / 60 / 60) % 24, (t / 60) % 60);
+	long days;
+	int hours, minutes;
+
+	days = seconds / 86400;
+	seconds %= 86400;
+	hours = seconds / 3600;
+	seconds %= 3600;
+	minutes = seconds / 60;
+	seconds %= 60;
+
+	if (days > 0) {
+		snprintf(buf, n, "%ldd %dh", days, hours);
+	} else if (hours > 0) {
+		snprintf(buf, n, "%dh %dm", hours, minutes);
 	} else {
-		snprintf(buf, n, "%ldm", t / 60);
+		snprintf(buf, n, "%dm %lds", minutes, seconds);
 	}
 }
 
@@ -287,15 +315,15 @@ void update_stuff(void)
 
 #ifdef MPD
 	if (NEED(INFO_MPD)) {
-		if (!mpd_timed_thread) {
-			init_mpd_stats(&info);
-			mpd_timed_thread = timed_thread_create(&update_mpd,
-				(void *) NULL, info.music_player_interval * 1000000);
-			if (!mpd_timed_thread) {
+		if (!info.mpd.timed_thread) {
+			init_mpd_stats(&info.mpd);
+			info.mpd.timed_thread = timed_thread_create(&update_mpd,
+				(void *) &info.mpd, info.music_player_interval * 1000000);
+			if (!info.mpd.timed_thread) {
 				ERR("Failed to create MPD timed thread");
 			}
-			timed_thread_register(mpd_timed_thread, &mpd_timed_thread);
-			if (timed_thread_run(mpd_timed_thread)) {
+			timed_thread_register(info.mpd.timed_thread, &info.mpd.timed_thread);
+			if (timed_thread_run(info.mpd.timed_thread)) {
 				ERR("Failed to run MPD timed thread");
 			}
 		}
@@ -329,9 +357,16 @@ void update_stuff(void)
 		update_meminfo();
 		if (no_buffers) {
 			info.mem -= info.bufmem;
+			info.memeasyfree += info.bufmem;
 		}
 		last_meminfo_update = current_update_time;
 	}
+	
+#ifdef X11
+	if (NEED(INFO_X11)) {
+		update_x11info();
+	}
+#endif
 
 	if (NEED(INFO_TOP)) {
 		update_top();
@@ -350,12 +385,14 @@ void update_stuff(void)
 	if (NEED(INFO_ENTROPY)) {
 		update_entropy();
 	}
+#if defined(__linux__)
 	if (NEED(INFO_USERS)) {
 		update_users();
 	}
 	if (NEED(INFO_GW)) {
 		update_gateway_info();
 	}
+#endif /* __linux__ */
 	if (NEED(INFO_DNS)) {
 		update_dns_data();
 	}

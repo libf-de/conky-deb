@@ -1,7 +1,7 @@
 /* smapi.h:  conky support for IBM Thinkpad smapi
  *
  * Copyright (C) 2007 Phil Sutter <Phil@nwl.cc>
- * 
+ *
  * This library is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -17,12 +17,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
  * USA.
  *
- * $Id: smapi.h 1073 2008-03-29 10:13:25Z n0-1 $
+ * $Id: smapi.h 1156 2008-06-15 18:38:33Z IQgryn $
  *
  */
 
 #ifndef SMAPI_H
 #define SMAPI_H
+
+#include "conky.h"
+#include <sys/stat.h>
 
 int smapi_bat_installed(int);
 

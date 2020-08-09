@@ -22,7 +22,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: freebsd.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: freebsd.c 1215 2008-07-06 09:25:28Z mirrorbox $ */
 
 #include <sys/dkstat.h>
 #include <sys/param.h>
@@ -45,9 +45,6 @@
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #include <dev/wi/if_wavelan_ieee.h>
@@ -149,25 +146,26 @@ int check_mount(char *s)
 
 void update_meminfo()
 {
-	unsigned long total_pages, inactive_pages, free_pages;
+	u_int total_pages, inactive_pages, free_pages;
 	unsigned long swap_avail, swap_free;
 
 	int pagesize = getpagesize();
 
 	if (GETSYSCTL("vm.stats.vm.v_page_count", total_pages)) {
-		fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_page_count\"");
+		fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_page_count\"\n");
 	}
 
 	if (GETSYSCTL("vm.stats.vm.v_free_count", free_pages)) {
-		fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_free_count\"");
+		fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_free_count\"\n");
 	}
 
 	if (GETSYSCTL("vm.stats.vm.v_inactive_count", inactive_pages)) {
-		fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_inactive_count\"");
+		fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_inactive_count\"\n");
 	}
 
 	info.memmax = total_pages * (pagesize >> 10);
 	info.mem = (total_pages - free_pages - inactive_pages) * (pagesize >> 10);
+	info.memeasyfree = info.memfree = info.memmax - info.mem;
 
 	if ((swapmode(&swap_avail, &swap_free)) >= 0) {
 		info.swapmax = swap_avail;
@@ -519,7 +517,7 @@ __inline__ unsigned long long int rdtsc()
 
 /* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
 void get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
-		char *p_format, int divisor)
+		const char *p_format, int divisor)
 {
 #if  defined(__i386) || defined(__x86_64)
 	struct timezone tz;
@@ -549,7 +547,7 @@ void get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
 }
 
 /* void */
-char get_freq(char *p_client_buffer, size_t client_buffer_size, char *p_format,
+char get_freq(char *p_client_buffer, size_t client_buffer_size, const char *p_format,
 		int divisor, unsigned int cpu)
 {
 	int freq;
@@ -607,7 +605,8 @@ void update_wifi_stats()
 		bzero(&ifmr, sizeof(ifmr));
 		strlcpy(ifmr.ifm_name, ifa->ifa_name, IFNAMSIZ);
 		if (ioctl(s, SIOCGIFMEDIA, (caddr_t) &ifmr) < 0) {
-			goto cleanup;
+			close(s);
+			return;
 		}
 
 		/* We can monitor only wireless interfaces
@@ -707,13 +706,17 @@ void update_diskio()
 	 *  That's why it is better to return 0 first time; */
 	if (diskio_setup == 0) {
 		diskio_setup = 1;
-		diskio_value = 0;
+		info.diskio_value = 0;
 	} else {
-		diskio_value = (unsigned int) ((diskio_current - diskio_prev) / 1024);
+		info.diskio_value = (unsigned int) ((diskio_current - diskio_prev) / 1024);
 	}
 	diskio_prev = diskio_current;
 
 	free(statinfo_cur.dinfo);
+}
+
+void clear_diskio_stats()
+{
 }
 
 /* While topless is obviously better, top is also not bad. */
@@ -760,7 +763,7 @@ inline void proc_find_top(struct process **cpu, struct process **mem)
 	for (i = 0; i < n_processes; i++) {
 		if (!((p[i].ki_flag & P_SYSTEM)) && p[i].ki_comm != NULL) {
 			processes[j].pid = p[i].ki_pid;
-			processes[j].name = strdup(p[i].ki_comm);
+			processes[j].name = strndup(p[i].ki_comm, text_buffer_size);
 			processes[j].amount = 100.0 * p[i].ki_pctcpu / FSCALE;
 			processes[j].totalmem = (float) (p[i].ki_rssize /
 				(float) total_pages) * 100.0;
@@ -778,7 +781,7 @@ inline void proc_find_top(struct process **cpu, struct process **mem)
 		tmp->pid = processes[i].pid;
 		tmp->amount = processes[i].amount;
 		tmp->totalmem = processes[i].totalmem;
-		tmp->name = strdup(processes[i].name);
+		tmp->name = strndup(processes[i].name, text_buffer_size);
 		tmp->rss = processes[i].rss;
 		tmp->vsize = processes[i].vsize;
 
@@ -798,7 +801,7 @@ inline void proc_find_top(struct process **cpu, struct process **mem)
 		tmp->pid = processes[i].pid;
 		tmp->amount = processes[i].amount;
 		tmp->totalmem = processes[i].totalmem;
-		tmp->name = strdup(processes[i].name);
+		tmp->name = strndup(processes[i].name, text_buffer_size);
 		tmp->rss = processes[i].rss;
 		tmp->vsize = processes[i].vsize;
 

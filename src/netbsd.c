@@ -23,38 +23,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: netbsd.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: netbsd.c 1193 2008-06-21 20:37:58Z ngarofil $ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <time.h>
-#include <unistd.h>
-#include <err.h>
-#include <limits.h>
-#include <paths.h>
-
-#include <kvm.h>
-#include <nlist.h>
-
-#include <sys/time.h>
-#include <sys/param.h>
-#include <sys/sysctl.h>
-#include <sys/types.h>
-#include <sys/user.h>
-#include <sys/socket.h>
-#include <sys/swap.h>
-#include <sys/sched.h>
-#include <sys/envsys.h>
-
-#include <net/if.h>
-
-#include <uvm/uvm_extern.h>
-
-#include <machine/param.h>
-
-#include "conky.h"
+#include "netbsd.h"
 
 static kvm_t *kd = NULL;
 int kd_init = 0, nkd_init = 0;
@@ -148,9 +119,6 @@ void update_meminfo()
 	struct uvmexp_sysctl uvmexp;
 	size_t size = sizeof(uvmexp);
 
-	info.memmax = info.mem = 0;
-	info.swapmax = info.swap = 0;
-
 	if (sysctl(mib, 2, &uvmexp, &size, NULL, 0) < 0) {
 		warn("could not get memory info");
 		return;
@@ -162,6 +130,7 @@ void update_meminfo()
 
 	info.memmax = (total_pages * pagesize) >> 10;
 	info.mem = ((total_pages - free_pages - inactive_pages) * pagesize) >> 10;
+	info.memeasyfree = info.memfree = info.memmax - info.mem;
 
 	if (swapmode(&swap_avail, &swap_free) >= 0) {
 		info.swapmax = swap_avail;

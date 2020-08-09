@@ -23,14 +23,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: mixer.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: mixer.c 1154 2008-06-14 18:41:12Z IQgryn $ */
 
 #include "conky.h"
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
 
 
 #ifdef HAVE_LINUX_SOUNDCARD_H

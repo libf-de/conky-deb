@@ -23,15 +23,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: mboxscan.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ * $Id: mboxscan.c 1154 2008-06-14 18:41:12Z IQgryn $ */
 
 #include "conky.h"
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "mboxscan.h"
 
 #define FROM_WIDTH 10
@@ -124,7 +121,7 @@ void mbox_scan(char *args, char *output, size_t max_len)
 			start[(long) (strrchr(mbox_mail_spool, '"') - start)] = '\0';
 			strncpy(mbox_mail_spool, start, DEFAULT_TEXT_BUFFER_SIZE);
 		} else {
-			char *copy_args = strdup(args);
+			char *copy_args = strndup(args, text_buffer_size);
 			char *tmp = strtok(copy_args, " ");
 			char *start = tmp;
 

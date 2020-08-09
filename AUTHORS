@@ -1,4 +1,4 @@
-# $Id: AUTHORS 1084 2008-03-30 07:04:25Z brenden1 $
+# $Id: AUTHORS 1197 2008-06-28 20:14:04Z brenden1 $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -19,6 +19,12 @@ affinity <affy at users dot sourceforge dot net>
 akash <akash at users dot sourceforge dot net>
   battery_percent and battery_bar
 
+Asbjørn Zweidorff Kjær <bunjiboys at users dot sourceforge dot net>
+  support for EVE-Online skill monitoring
+
+Aseem Mohanty <amohanty at myrealbox dot com>
+  if_up patch
+
 Ben Kibbey <benkibbey at users dot sourceforge dot net>
   $tail fifo patch
   multiple mailbox patch
@@ -28,6 +34,9 @@ Blondak <blondak_nesercz at users dot sourceforge dot net>
 
 Bobby Beckmann <bbeckmann at users dot sourceforge dot net>
   Interface IP and Wireless Quality patch
+
+Byron Clark <byron_clark at users dot sourceforge dot net>
+  sysfs AC adapter support patch
 
 David Carter <boojit at pundo dot com>
   CPU usage being reported incorrectly by top
@@ -58,6 +67,9 @@ Dave Clark <clarkd at skynet dot ca>
 
 David McCabe
   utime
+
+garo <nikolas at garofil dot be>
+  developer
 
 Ram Yalamanchili
   tztime
@@ -152,6 +164,7 @@ Kapil Hari Paranjape <kapil@imsc.res.in>
   kFreeBSD support patch
   realtime clock patch
   sysfs battery patch
+  mail_spool patch
 
 Kevin Lyles <kevinlyles at gmail dot com>
   add long options patch
@@ -166,9 +179,12 @@ Kevin Lyles <kevinlyles at gmail dot com>
 killfire
   fs_used_perc and fs_bar_free patch
 
+Lars Kotthoff <larsko at users dot sourceforge dot net>
+  $loadgraph, show_graph_scale patch
+
 Lassi Selander <sleipner at users dot sourceforge dot net>
   XMMS2 patch
-  XMMS2 fixes patch
+  XMMS2 fixes
 
 Lauri Hakkarainen <b10nik at users dot sourceforge dot net>
   Some translating, web and other stuff
@@ -184,14 +200,23 @@ Lucas Brutschy <lbrutschy at users dot sourceforge dot net>
 Marcus Huesgen <marcus dot huesgen at googlemail dot com>
   battery_bar fix
 
+Markus Meissner <meissna at users dot sourceforge dot net>
+  NVIDIA Graficcard support with libXNVCtrl patch
+
 Michal Januszewski <spock at gentoo dot org>
   hddtemp support
+
+Michal Ziabkowski <mziab at o2 dot pl>
+  $if_up memleak fix
 
 Miroslav Lichvar <lichvarm at gmail dot com>
   move audacious thread init to update_audacious() patch
 
 Moncelier Camille <pixdamix at users dot sourceforge dot net>
   METAR patch
+
+Morgan Veyret <patzy at appart dot kicks-ass dot net>
+  own_window_type dock patch
 
 Nattfodd <Nattfodd@gmail.com>
   Fixed top_mem dupes
@@ -201,6 +226,9 @@ nathanj439 <nathanj439 at users dot sourceforge dot net>
 
 Nikos Ntarmos <ntarmos at users dot sourceforge dot net>
   FreeBSD total memory patch
+
+norsetto <norsetto at ubuntu dot com>
+  fix SIGUSR1/SIGHUP segfault
 
 Pascal Eberhard <pascal dor eberhard at gmail dot com>
   graph and bar fix for right alignment
@@ -216,7 +244,7 @@ Petr Holub <hopet@users.sourceforge.net>
 
 Philip Kovacs <pkovacs at users dot sourceforge dot net>
   tcp port monitor with hashing functionality
-  
+
   Audacious, Xmms, BMP, Infopipe stuff
   Various Xlib changes, e.g. own_window hints, etc.
 
@@ -252,6 +280,9 @@ Ryan Twitchell <tryan2 at rochester dot rr dot com>
 Mikko Sysikaski <sisu at users dot sourceforge dot net>
   prss.c and prss.h
 
+Sceptik <sceptik at users dot sourceforge dot net>
+  --quiet patch
+
 Stepan Zastupov <redchrom at gmail dot com>
   WiFi signal level detection support on FreeBSD
 
@@ -284,6 +315,9 @@ Warren Dukes <warren dot dukes at gmail dot com>
 
 warudemaru <warudemaru at users dot sourceforge dot net>
   rss and vsize for top
+
+wedge <wedgeant at users dot sourceforge dot net>
+  battery time fix for 2.6.24
 
 William DiPlacido <bimbasaari at yahoo dot com>
   Frequency from /proc/cpuinfo
