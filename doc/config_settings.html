@@ -1,0 +1,252 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>~/.conkyrc settings</title>
+</head>
+<body bgcolor="#FFFFFF"><table cellpadding="3">
+<tr bgcolor="#eecfa1">
+<th>Variable</th>
+<th>Explanation</th>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">alignment</td>
+<td>
+		Aligned position on screen, may be top_left, top_right, bottom_left, bottom_right, or none
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">background</td>
+<td>
+		Boolean value, if true, Conky will be forked to background when started
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">on_bottom</td>
+<td>
+		Set conky on the bottom of all other applications
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">border_margin</td>
+<td>
+		Border margin in pixels
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">border_width</td>
+<td>
+		Border width in pixels
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">cpu_avg_samples</td>
+<td>
+		The number of samples to average for CPU monitoring
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">default_color</td>
+<td>
+		Default color and border color
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">default_shade_color</td>
+<td>
+		Default shading color and border's shading color
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">default_outline_color</td>
+<td>
+		Default outline color
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">double_buffer</td>
+<td>
+		Use the Xdbe extension? (eliminates flicker) It is highly recommended to use own window with this one so double buffer won't be so big.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">draw_borders</td>
+<td>
+		Draw borders around text?
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">draw_shades</td>
+<td>
+		Draw shades?
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">draw_outline</td>
+<td>
+		Draw outlines?
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">font</td>
+<td>
+		Font name in X, xfontsel can be used to get a nice font
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">gap_x</td>
+<td>
+		Gap between right or left border of screen, same as passing -x at command line
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">gap_y</td>
+<td>
+		Gap between top or bottom border of screen, same as passing -y at command line
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">no_buffers</td>
+<td>
+		Substract (file system) buffers from used memory?
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mail_spool</td>
+<td>
+		Mail spool for mail checking
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">maximum_width</td>
+<td>
+		Maximum width of window
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">minimum_size</td>
+<td>
+		Minimum size of window
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mldonkey_hostname</td>
+<td>
+		Hostname for mldonkey stuff, defaults to localhost
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mldonkey_port</td>
+<td>
+		Mldonkey port, 4001 default
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mldonkey_login</td>
+<td>
+		Mldonkey login, default none
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mldonkey_password</td>
+<td>
+		Mldonkey password, default none
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_host</td>
+<td>
+		Host of MPD server
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mpd_port</td>
+<td>
+		Port of MPD server
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_password</td>
+<td>
+		MPD server password
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">net_avg_samples</td>
+<td>
+		The number of samples to average for net data
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">override_utf8_locale</td>
+<td>
+		Force UTF8? requires XFT
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">own_window</td>
+<td>
+		Boolean, create own window to draw?
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">own_window_transparent</td>
+<td>
+		Boolean, set pseudo-transparency?
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">own_window_colour</td>
+<td>
+		If own_window_transparent no, set a specified background colour (defaults to black).  Takes either a hex value (#ffffff) or a valid RGB name (see /usr/lib/X11/rgb.txt)
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">pad_percents</td>
+<td>
+		Pad percentages to this many decimals (0 = no padding)
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">stippled_borders</td>
+<td>
+		Border stippling (dashing) in pixels
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">total_run_times</td>
+<td>
+		Total number of times for Conky to update before quitting. Zero makes Conky run forever
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">update_interval</td>
+<td>
+		Update interval in seconds
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">uppercase</td>
+<td>
+		Boolean value, if true, text is rendered in upper case
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">use_spacer</td>
+<td>
+		Adds spaces after certain objects to stop them from moving other things around. Note that this only helps if you are using a mono font, such as Bitstream Vera Sans Mono.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">use_xft</td>
+<td>
+		Use Xft (anti-aliased font and stuff)
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">TEXT</td>
+<td>
+		After this begins text to be formatted on screen
+	</td>
+</tr>
+</table></body>
+</html>

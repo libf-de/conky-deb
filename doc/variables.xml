@@ -1,0 +1,1128 @@
+<variablelist>
+<varlistentry>
+	<term>
+		<command><option>addr</option></command>
+	<option>interface</option>
+	</term>
+	<listitem>
+		IP address for an interface
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>acpiacadapter</option></command>
+	</term>
+	<listitem>
+		ACPI ac adapter state.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>acpifan</option></command>
+	</term>
+	<listitem>
+		ACPI fan state
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>acpitemp</option></command>
+	</term>
+	<listitem>
+		ACPI temperature in C.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>acpitempf</option></command>
+	</term>
+	<listitem>
+		ACPI temperature in F.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>adt746xcpu</option></command>
+	</term>
+	<listitem>
+		CPU temperature from therm_adt746x
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>adt746xfan</option></command>
+	</term>
+	<listitem>
+		Fan speed from therm_adt746x
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>alignr</option></command>
+	<option>(num)</option>
+	</term>
+	<listitem>
+		Right-justify text, with space of N
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>alignc</option></command>
+	<option>(num)</option>
+	</term>
+	<listitem>
+		Align text to centre
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>apm_adapter</option></command>
+	</term>
+	<listitem>
+		Display APM AC adapter status (FreeBSD only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>apm_battery_life</option></command>
+	</term>
+	<listitem>
+		Display APM battery life in percent (FreeBSD only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+        <term>
+                <command><option>apm_battery_time</option></command>
+        </term>
+        <listitem>
+		Display remaining APM battery life in hh:mm:ss or "unknown" if
+	        AC adapterstatus is on-line or charging (FreeBSD only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>battery</option></command>
+	<option>(num)</option>
+	</term>
+	<listitem>
+		Remaining capacity in ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>buffers</option></command>
+	</term>
+	<listitem>
+		Amount of memory buffered
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>cached</option></command>
+	</term>
+	<listitem>
+		Amount of memory cached
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color</option></command>
+	<option>(color)</option>
+	</term>
+	<listitem>
+		Change drawing color to color
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>cpu</option></command>
+		<option>(cpuN)</option>
+	</term>
+	<listitem>
+		CPU usage in percents.  For SMP machines, the CPU number can be provided as an argument.  cpu0 is the total usage, and >=cpu1 are individual CPUs. 
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>cpubar</option></command>
+		<option>(cpu number) (height),(width)</option>
+	</term>
+	<listitem>
+		Bar that shows CPU usage, height is bar's height in pixels.  See $cpu for more info on SMP.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>cpugraph</option></command>
+	<option>(cpu number) (height),(width) (gradient colour 1) (gradient colour 2)</option>
+	</term>
+	<listitem>
+		CPU usage graph, with optional colours in hex, minus the #.  See $cpu for more info on SMP.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>diskio</option></command>
+	</term>
+	<listitem>
+		Displays current disk IO.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>diskiograph</option></command>
+		<option>(height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+	</term>
+	<listitem>
+		Disk IO graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>downspeed</option></command>
+	<option>net</option>
+	</term>
+	<listitem>
+		Download speed in kilobytes
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>downspeedf</option></command>
+	<option>net</option>
+	</term>
+	<listitem>
+		Download speed in kilobytes with one decimal
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>downspeedgraph</option></command>
+		<option>net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+	</term>
+	<listitem>
+		Download speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>else</option></command>
+	</term>
+	<listitem>
+		Text to show if any of the above are not true
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>exec</option></command>
+	<option>command</option>
+	</term>
+	<listitem>
+		Executes a shell command and displays the output in conky. warning: this takes a lot more resources than other variables. I'd recommend coding wanted behaviour in C and posting a patch.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>execbar</option></command>
+	<option>command</option>
+	</term>
+	<listitem>
+		Same as exec, except if the first value return is a value between 0-100, it will use that number for a bar. The size for the bar is currently fixed, but that may change in the future.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>execgraph</option></command>
+	<option>command</option>
+	</term>
+	<listitem>
+		Same as execbar, but graphs values.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>execi</option></command>
+		<option>interval command</option>
+	</term>
+	<listitem>
+		Same as exec but with specific interval. Interval can't be less than update_interval in configuration. See also $texeci
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>execibar</option></command>
+		<option>interval command</option>
+	</term>
+	<listitem>
+		Same as execbar, except with an interval
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>execigraph</option></command>
+		<option>interval command</option>
+	</term>
+	<listitem>
+		Same as execigraph, but takes an interval arg graphs values
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>font</option></command>
+	<option>font</option>
+	</term>
+	<listitem>
+		Specify a different font. Only applies to one line.
+	<para></para></listitem>
+</varlistentry>
+
+	
+	<varlistentry>
+		<term>
+			<command><option>freq</option></command>
+		</term>
+		<listitem>
+			Returns CPU frequency in MHz
+			<para></para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>
+			<command><option>freq_g</option></command>
+		</term>
+		<listitem>
+			Returns CPU frequency in GHz
+			<para></para></listitem>
+	</varlistentry>
+	
+	<varlistentry>
+		<term>
+			<command><option>freq_dyn</option></command>
+		</term>
+		<listitem>
+			Returns CPU frequency in MHz, but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
+			<para></para></listitem>
+	</varlistentry>
+	<varlistentry>
+		<term>
+			<command><option>freq_dyn_g</option></command>
+		</term>
+		<listitem>
+			Returns CPU frequency in GHz, but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
+			<para></para></listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	<term>
+		<command><option>fs_bar</option></command>
+	<option>(height),(width) fs</option>
+	</term>
+	<listitem>
+		Bar that shows how much space is used on a file system. height is the height in pixels. fs is any file on that file system.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>fs_free</option></command>
+	<option>(fs)</option>
+	</term>
+	<listitem>
+		Free space on a file system available for users.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>fs_free_perc</option></command>
+	<option>(fs)</option>
+	</term>
+	<listitem>
+		Free percentage of space on a file system available for users.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>fs_size</option></command>
+	<option>(fs)</option>
+	</term>
+	<listitem>
+		File system size
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>fs_used</option></command>
+	<option>(fs)</option>
+	</term>
+	<listitem>
+		File system used space
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>head</option></command>
+		<option>logfile lines (interval)</option>
+	</term>
+	<listitem>
+		Displays first N lines of supplied text text file. If interval is not supplied, Conky assumes 2x Conky's interval. Max of 30 lines can be displayed, or until the text buffer is filled.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>hr</option></command>
+	<option>(height)</option>
+	</term>
+	<listitem>
+		Horizontal line, height is the height in pixels
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i2c</option></command>
+	<option>(dev), type, n</option>
+	</term>
+	<listitem>
+		I2C sensor from sysfs (Linux 2.6). dev may be omitted if you have only one I2C device. type is either in (or vol) meaning voltage, fan meaning fan or temp/tempf (first in C, second in F) meaning temperature. n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_ac_status</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays whether ac power is on, as listed in /proc/i8k (translated to human-readable). Beware that this is by default not enabled by i8k itself.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_bios</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the bios version as listed in /proc/i8k.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_buttons_status</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the volume buttons status as listed in /proc/i8k.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_cpu_temp</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in celsius, as reported by /proc/i8k.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_cpu_tempf</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in farenheit, as reported by /proc/i8k.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_left_fan_rpm</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the left fan's rate of rotation, in revolutions per minute as listed in /proc/i8k. Beware, some laptops i8k reports these fans in reverse order.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_left_fan_status</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the left fan status as listed in /proc/i8k (translated to human-readable). Beware, some laptops i8k reports these fans in reverse order.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_right_fan_rpm</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the right fan's rate of rotation, in revolutions per minute as listed in /proc/i8k. Beware, some laptops i8k reports these fans in reverse order.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_right_fan_status</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the right fan status as listed in /proc/i8k (translated to human-readable). Beware, some laptops i8k reports these fans in reverse order.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_serial</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays your laptop serial number as listed in /proc/i8k.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>i8k_version</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		If running the i8k kernel driver for Inspiron laptops, displays the version formatting of /proc/i8k.
+	<para></para></listitem>
+</varlistentry>
+
+
+<varlistentry>
+	<term>
+		<command><option>if_running</option></command>
+	<option>(process)</option>
+	</term>
+	<listitem>
+		if PROCESS is running, display everything if_running and the matching $endif
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>if_existing</option></command>
+	<option>(file)</option>
+	</term>
+	<listitem>
+		if FILE exists, display everything between if_existing and the matching $endif
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>if_mounted</option></command>
+	<option>(mountpoint)</option>
+	</term>
+	<listitem>
+		if MOUNTPOINT is mounted, display everything between if_mounted and the matching $endif
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>kernel</option></command>
+	</term>
+	<listitem>
+		Kernel version
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>linkstatus</option></command>
+	<option>interface</option>
+	</term>
+	<listitem>
+		Get the link status for wireless connections
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>loadavg</option></command>
+	</term>
+	<listitem>
+		(1,2,3)> System load average, 1 is for past 1 minute, 2 for past 5 minutes and 3 for past 15 minutes.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>machine</option></command>
+	</term>
+	<listitem>
+		Machine, i686 for example
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mails</option></command>
+	</term>
+	<listitem>
+		Mail count in mail spool. You can use program like fetchmail to get mails from some server using your favourite protocol. See also new_mails.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mem</option></command>
+	</term>
+	<listitem>
+		Amount of memory in use
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>membar</option></command>
+	<option>(height),(width)</option>
+	</term>
+	<listitem>
+		Bar that shows amount of memory in use
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>memmax</option></command>
+	</term>
+	<listitem>
+		Total amount of memory
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>memperc</option></command>
+	</term>
+	<listitem>
+		Percentage of memory in use
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_upload_counter</option></command>
+	</term>
+	<listitem>
+		total session upload in mb
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_download_counter</option></command>
+	</term>
+	<listitem>
+		total session download in mb
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_nshared_files</option></command>
+	</term>
+	<listitem>
+		number of shared files
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_shared_counter</option></command>
+	</term>
+	<listitem>
+		total session shared in mb, buggy in some mldonkey versions
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_tcp_upload_rate</option></command>
+	</term>
+	<listitem>
+		tcp upload rate in kb/s
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_tcp_download_rate</option></command>
+	</term>
+	<listitem>
+		tcp download rate in kb/s
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_udp_upload_rate</option></command>
+	</term>
+	<listitem>
+		udp upload rate in kb/s
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_udp_download_rate</option></command>
+	</term>
+	<listitem>
+		udp download rate in kb/s
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_ndownloaded_files</option></command>
+	</term>
+	<listitem>
+		number of completed files
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ml_ndownloading_files</option></command>
+	</term>
+	<listitem>
+		number of downloading files
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_artist</option></command>
+	</term>
+	<listitem>
+		Artist in current MPD song must be enabled at compile
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_album</option></command>
+	</term>
+	<listitem>
+		Album in current MPD song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_bar</option></command>
+	<option>(height),(width)</option>
+	</term>
+	<listitem>
+		Bar of mpd's progress
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_bitrate</option></command>
+	</term>
+	<listitem>
+		Bitrate of current song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_status</option></command>
+	</term>
+	<listitem>
+		Playing, stopped, et cetera.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_title</option></command>
+	</term>
+	<listitem>
+		Title of current MPD song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_vol</option></command>
+	</term>
+	<listitem>
+		MPD's volume
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_elapsed</option></command>
+	</term>
+	<listitem>
+		Song's elapsed time
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_length</option></command>
+	</term>
+	<listitem>
+		Song's length
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mpd_percent</option></command>
+	</term>
+	<listitem>
+		Percent of song's progress
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>new_mails</option></command>
+	</term>
+	<listitem>
+		Unread mail count in mail spool.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>nodename</option></command>
+	</term>
+	<listitem>
+		Hostname
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>outlinecolor</option></command>
+	<option>(color)</option>
+	</term>
+	<listitem>
+		Change outline color
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>pre_exec</option></command>
+	<option>shell command</option>
+	</term>
+	<listitem>
+		Executes a shell command one time before conky displays anything and puts output as text.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>processes</option></command>
+	</term>
+	<listitem>
+		Total processes (sleeping and running)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>running_processes</option></command>
+	</term>
+	<listitem>
+		Running processes (not sleeping), requires Linux 2.6
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>shadecolor</option></command>
+	<option>(color)</option>
+	</term>
+	<listitem>
+		Change shading color
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>stippled_hr</option></command>
+	<option>(space)</option>
+	</term>
+	<listitem>
+		Stippled (dashed) horizontal line
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>swapbar</option></command>
+	<option>(height),(width)</option>
+	</term>
+	<listitem>
+		Bar that shows amount of swap in use
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>swap</option></command>
+	</term>
+	<listitem>
+		Amount of swap in use
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>swapmax</option></command>
+	</term>
+	<listitem>
+		Total amount of swap
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>swapperc</option></command>
+	</term>
+	<listitem>
+		Percentage of swap in use
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>sysname</option></command>
+	</term>
+	<listitem>
+		System name, Linux for example
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>texeci</option></command>
+		<option>interval command</option>
+	</term>
+	<listitem>
+		Runs a command at an interval inside a thread and displays the output.  Same as $execi, except the command is run inside a thread.  Use this if you have a slow script to keep Conky updating.  You should make the interval slightly longer then the time it takes your script to execute.  For example, if you have a script that take 5 seconds to execute, you should make the interval at least 6 seconds. See also $execi.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>offset</option></command>
+		<option>(pixels)</option>
+	</term>
+	<listitem>
+		Move text over by N pixels.  See also $voffset.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>tail</option></command>
+		<option>logfile lines (interval)</option>
+	</term>
+	<listitem>
+		Displays last N lines of supplied text text file. If interval is not supplied, Conky assumes 2x Conky's interval. Max of 30 lines can be displayed, or until the text buffer is filled.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>time</option></command>
+	<option>(format)</option>
+	</term>
+	<listitem>
+		Local time, see man strftime to get more information about format
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>totaldown</option></command>
+	<option>net</option>
+	</term>
+	<listitem>
+		Total download, overflows at 4 GB on Linux with 32-bit arch and there doesn't seem to be a way to know how many times it has already done that before conky has started.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>top</option></command>
+	<option>type, num</option>
+	</term>
+	<listitem>
+		This takes arguments in the form:top (name) (number) Basically, processes are ranked from highest to lowest in terms of cpu usage, which is what (num) represents. The types are: "name", "pid", "cpu", and mem". There can be a max of 10 processes listed.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>top_mem</option></command>
+	<option>type, num</option>
+	</term>
+	<listitem>
+		Same as top, except sorted by mem usage instead of cpu
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>totalup</option></command>
+	<option>net</option>
+	</term>
+	<listitem>
+		Total upload, this one too, may overflow
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>updates</option></command>
+	<option>Number of updates</option>
+	</term>
+	<listitem>
+		for debugging
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>upspeed</option></command>
+	<option>net</option>
+	</term>
+	<listitem>
+		Upload speed in kilobytes
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>upspeedf</option></command>
+	<option>net</option>
+	</term>
+	<listitem>
+		Upload speed in kilobytes with one decimal
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>upspeedgraph</option></command>
+		<option>net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+	</term>
+	<listitem>
+		Upload speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>uptime</option></command>
+	</term>
+	<listitem>
+		Uptime
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>uptime_short</option></command>
+	</term>
+	<listitem>
+		Uptime in a shorter format
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>seti_prog</option></command>
+	</term>
+	<listitem>
+		Seti@home current progress
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>seti_progbar</option></command>
+	<option>(height),(width)</option>
+	</term>
+	<listitem>
+		Seti@home current progress bar
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>seti_credit</option></command>
+	</term>
+	<listitem>
+		Seti@home total user credit
+	<para></para></listitem>
+</varlistentry>
+<varlistentry>
+	<term>
+		<command><option>voffset</option></command>
+		<option>(pixels)</option>
+	</term>
+	<listitem>
+		Change verticle offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
+		<para></para></listitem>
+</varlistentry>
+
+
+</variablelist>

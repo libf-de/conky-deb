@@ -1,0 +1,840 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Conky Variables</title>
+</head>
+<body bgcolor="#FFFFFF"><table cellpadding="3">
+<tr bgcolor="#eecfa1">
+<th>Variable</th>
+<th>Arguments () = optional</th>
+<th>Explanation</th>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">addr</td>
+<td align="center">interface</td>
+<td>
+		IP address for an interface
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">acpiacadapter</td>
+<td align="center"></td>
+<td>
+		ACPI ac adapter state.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">acpifan</td>
+<td align="center"></td>
+<td>
+		ACPI fan state
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">acpitemp</td>
+<td align="center"></td>
+<td>
+		ACPI temperature in C.
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">acpitempf</td>
+<td align="center"></td>
+<td>
+		ACPI temperature in F.
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">adt746xcpu</td>
+<td align="center"></td>
+<td>
+		CPU temperature from therm_adt746x
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">adt746xfan</td>
+<td align="center"></td>
+<td>
+		Fan speed from therm_adt746x
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">alignr</td>
+<td align="center">(num)</td>
+<td>
+		Right-justify text, with space of N
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">alignc</td>
+<td align="center">(num)</td>
+<td>
+		Align text to centre
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">apm_adapter</td>
+<td align="center"></td>
+<td>
+		Display APM AC adapter status (FreeBSD only)
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">apm_battery_life</td>
+<td align="center"></td>
+<td>
+		Display APM battery life in percent (FreeBSD only)
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">apm_battery_time</td>
+<td align="center"></td>
+<td>
+		Display remaining APM battery life in hh:mm:ss or "unknown" if
+	        AC adapterstatus is on-line or charging (FreeBSD only)
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">battery</td>
+<td align="center">(num)</td>
+<td>
+		Remaining capacity in ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">buffers</td>
+<td align="center"></td>
+<td>
+		Amount of memory buffered
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">cached</td>
+<td align="center"></td>
+<td>
+		Amount of memory cached
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">color</td>
+<td align="center">(color)</td>
+<td>
+		Change drawing color to color
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">cpu</td>
+<td align="center">(cpuN)</td>
+<td>
+		CPU usage in percents.  For SMP machines, the CPU number can be provided as an argument.  cpu0 is the total usage, and &gt;=cpu1 are individual CPUs. 
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">cpubar</td>
+<td align="center">(cpu number) (height),(width)</td>
+<td>
+		Bar that shows CPU usage, height is bar's height in pixels.  See $cpu for more info on SMP.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">cpugraph</td>
+<td align="center">(cpu number) (height),(width) (gradient colour 1) (gradient colour 2)</td>
+<td>
+		CPU usage graph, with optional colours in hex, minus the #.  See $cpu for more info on SMP.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">diskio</td>
+<td align="center"></td>
+<td>
+		Displays current disk IO.
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">diskiograph</td>
+<td align="center">(height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
+<td>
+		Disk IO graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">downspeed</td>
+<td align="center">net</td>
+<td>
+		Download speed in kilobytes
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">downspeedf</td>
+<td align="center">net</td>
+<td>
+		Download speed in kilobytes with one decimal
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">downspeedgraph</td>
+<td align="center">net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
+<td>
+		Download speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">else</td>
+<td align="center"></td>
+<td>
+		Text to show if any of the above are not true
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">exec</td>
+<td align="center">command</td>
+<td>
+		Executes a shell command and displays the output in conky. warning: this takes a lot more resources than other variables. I'd recommend coding wanted behaviour in C and posting a patch.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">execbar</td>
+<td align="center">command</td>
+<td>
+		Same as exec, except if the first value return is a value between 0-100, it will use that number for a bar. The size for the bar is currently fixed, but that may change in the future.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">execgraph</td>
+<td align="center">command</td>
+<td>
+		Same as execbar, but graphs values.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">execi</td>
+<td align="center">interval command</td>
+<td>
+		Same as exec but with specific interval. Interval can't be less than update_interval in configuration. See also $texeci
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">execibar</td>
+<td align="center">interval command</td>
+<td>
+		Same as execbar, except with an interval
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">execigraph</td>
+<td align="center">interval command</td>
+<td>
+		Same as execigraph, but takes an interval arg graphs values
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">font</td>
+<td align="center">font</td>
+<td>
+		Specify a different font. Only applies to one line.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">freq</td>
+<td align="center"></td>
+<td>
+			Returns CPU frequency in MHz
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">freq_g</td>
+<td align="center"></td>
+<td>
+			Returns CPU frequency in GHz
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">freq_dyn</td>
+<td align="center"></td>
+<td>
+			Returns CPU frequency in MHz, but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
+			</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">freq_dyn_g</td>
+<td align="center"></td>
+<td>
+			Returns CPU frequency in GHz, but is calculated by counting to clock cycles to complete an instruction.  Only available for x86/amd64.
+			</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">fs_bar</td>
+<td align="center">(height),(width) fs</td>
+<td>
+		Bar that shows how much space is used on a file system. height is the height in pixels. fs is any file on that file system.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">fs_free</td>
+<td align="center">(fs)</td>
+<td>
+		Free space on a file system available for users.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">fs_free_perc</td>
+<td align="center">(fs)</td>
+<td>
+		Free percentage of space on a file system available for users.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">fs_size</td>
+<td align="center">(fs)</td>
+<td>
+		File system size
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">fs_used</td>
+<td align="center">(fs)</td>
+<td>
+		File system used space
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">head</td>
+<td align="center">logfile lines (interval)</td>
+<td>
+		Displays first N lines of supplied text text file. If interval is not supplied, Conky assumes 2x Conky's interval. Max of 30 lines can be displayed, or until the text buffer is filled.
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">hr</td>
+<td align="center">(height)</td>
+<td>
+		Horizontal line, height is the height in pixels
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">i2c</td>
+<td align="center">(dev), type, n</td>
+<td>
+		I2C sensor from sysfs (Linux 2.6). dev may be omitted if you have only one I2C device. type is either in (or vol) meaning voltage, fan meaning fan or temp/tempf (first in C, second in F) meaning temperature. n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">i8k_ac_status</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays whether ac power is on, as listed in /proc/i8k (translated to human-readable). Beware that this is by default not enabled by i8k itself.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">i8k_bios</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the bios version as listed in /proc/i8k.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">i8k_buttons_status</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the volume buttons status as listed in /proc/i8k.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">i8k_cpu_temp</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in celsius, as reported by /proc/i8k.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">i8k_cpu_tempf</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in farenheit, as reported by /proc/i8k.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">i8k_left_fan_rpm</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the left fan's rate of rotation, in revolutions per minute as listed in /proc/i8k. Beware, some laptops i8k reports these fans in reverse order.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">i8k_left_fan_status</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the left fan status as listed in /proc/i8k (translated to human-readable). Beware, some laptops i8k reports these fans in reverse order.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">i8k_right_fan_rpm</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the right fan's rate of rotation, in revolutions per minute as listed in /proc/i8k. Beware, some laptops i8k reports these fans in reverse order.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">i8k_right_fan_status</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the right fan status as listed in /proc/i8k (translated to human-readable). Beware, some laptops i8k reports these fans in reverse order.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">i8k_serial</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays your laptop serial number as listed in /proc/i8k.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">i8k_version</td>
+<td align="center"></td>
+<td>
+		If running the i8k kernel driver for Inspiron laptops, displays the version formatting of /proc/i8k.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">if_running</td>
+<td align="center">(process)</td>
+<td>
+		if PROCESS is running, display everything if_running and the matching $endif
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">if_existing</td>
+<td align="center">(file)</td>
+<td>
+		if FILE exists, display everything between if_existing and the matching $endif
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">if_mounted</td>
+<td align="center">(mountpoint)</td>
+<td>
+		if MOUNTPOINT is mounted, display everything between if_mounted and the matching $endif
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">kernel</td>
+<td align="center"></td>
+<td>
+		Kernel version
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">linkstatus</td>
+<td align="center">interface</td>
+<td>
+		Get the link status for wireless connections
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">loadavg</td>
+<td align="center"></td>
+<td>
+		(1,2,3)&gt; System load average, 1 is for past 1 minute, 2 for past 5 minutes and 3 for past 15 minutes.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">machine</td>
+<td align="center"></td>
+<td>
+		Machine, i686 for example
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mails</td>
+<td align="center"></td>
+<td>
+		Mail count in mail spool. You can use program like fetchmail to get mails from some server using your favourite protocol. See also new_mails.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mem</td>
+<td align="center"></td>
+<td>
+		Amount of memory in use
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">membar</td>
+<td align="center">(height),(width)</td>
+<td>
+		Bar that shows amount of memory in use
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">memmax</td>
+<td align="center"></td>
+<td>
+		Total amount of memory
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">memperc</td>
+<td align="center"></td>
+<td>
+		Percentage of memory in use
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">ml_upload_counter</td>
+<td align="center"></td>
+<td>
+		total session upload in mb
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">ml_download_counter</td>
+<td align="center"></td>
+<td>
+		total session download in mb
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">ml_nshared_files</td>
+<td align="center"></td>
+<td>
+		number of shared files
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">ml_shared_counter</td>
+<td align="center"></td>
+<td>
+		total session shared in mb, buggy in some mldonkey versions
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">ml_tcp_upload_rate</td>
+<td align="center"></td>
+<td>
+		tcp upload rate in kb/s
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">ml_tcp_download_rate</td>
+<td align="center"></td>
+<td>
+		tcp download rate in kb/s
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">ml_udp_upload_rate</td>
+<td align="center"></td>
+<td>
+		udp upload rate in kb/s
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">ml_udp_download_rate</td>
+<td align="center"></td>
+<td>
+		udp download rate in kb/s
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">ml_ndownloaded_files</td>
+<td align="center"></td>
+<td>
+		number of completed files
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">ml_ndownloading_files</td>
+<td align="center"></td>
+<td>
+		number of downloading files
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mpd_artist</td>
+<td align="center"></td>
+<td>
+		Artist in current MPD song must be enabled at compile
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_album</td>
+<td align="center"></td>
+<td>
+		Album in current MPD song
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mpd_bar</td>
+<td align="center">(height),(width)</td>
+<td>
+		Bar of mpd's progress
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_bitrate</td>
+<td align="center"></td>
+<td>
+		Bitrate of current song
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mpd_status</td>
+<td align="center"></td>
+<td>
+		Playing, stopped, et cetera.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_title</td>
+<td align="center"></td>
+<td>
+		Title of current MPD song
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mpd_vol</td>
+<td align="center"></td>
+<td>
+		MPD's volume
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_elapsed</td>
+<td align="center"></td>
+<td>
+		Song's elapsed time
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mpd_length</td>
+<td align="center"></td>
+<td>
+		Song's length
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_percent</td>
+<td align="center"></td>
+<td>
+		Percent of song's progress
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">new_mails</td>
+<td align="center"></td>
+<td>
+		Unread mail count in mail spool.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">nodename</td>
+<td align="center"></td>
+<td>
+		Hostname
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">outlinecolor</td>
+<td align="center">(color)</td>
+<td>
+		Change outline color
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">pre_exec</td>
+<td align="center">shell command</td>
+<td>
+		Executes a shell command one time before conky displays anything and puts output as text.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">processes</td>
+<td align="center"></td>
+<td>
+		Total processes (sleeping and running)
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">running_processes</td>
+<td align="center"></td>
+<td>
+		Running processes (not sleeping), requires Linux 2.6
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">shadecolor</td>
+<td align="center">(color)</td>
+<td>
+		Change shading color
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">stippled_hr</td>
+<td align="center">(space)</td>
+<td>
+		Stippled (dashed) horizontal line
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">swapbar</td>
+<td align="center">(height),(width)</td>
+<td>
+		Bar that shows amount of swap in use
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">swap</td>
+<td align="center"></td>
+<td>
+		Amount of swap in use
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">swapmax</td>
+<td align="center"></td>
+<td>
+		Total amount of swap
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">swapperc</td>
+<td align="center"></td>
+<td>
+		Percentage of swap in use
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">sysname</td>
+<td align="center"></td>
+<td>
+		System name, Linux for example
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">texeci</td>
+<td align="center">interval command</td>
+<td>
+		Runs a command at an interval inside a thread and displays the output.  Same as $execi, except the command is run inside a thread.  Use this if you have a slow script to keep Conky updating.  You should make the interval slightly longer then the time it takes your script to execute.  For example, if you have a script that take 5 seconds to execute, you should make the interval at least 6 seconds. See also $execi.
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">offset</td>
+<td align="center">(pixels)</td>
+<td>
+		Move text over by N pixels.  See also $voffset.
+		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">tail</td>
+<td align="center">logfile lines (interval)</td>
+<td>
+		Displays last N lines of supplied text text file. If interval is not supplied, Conky assumes 2x Conky's interval. Max of 30 lines can be displayed, or until the text buffer is filled.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">time</td>
+<td align="center">(format)</td>
+<td>
+		Local time, see man strftime to get more information about format
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">totaldown</td>
+<td align="center">net</td>
+<td>
+		Total download, overflows at 4 GB on Linux with 32-bit arch and there doesn't seem to be a way to know how many times it has already done that before conky has started.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">top</td>
+<td align="center">type, num</td>
+<td>
+		This takes arguments in the form:top (name) (number) Basically, processes are ranked from highest to lowest in terms of cpu usage, which is what (num) represents. The types are: "name", "pid", "cpu", and mem". There can be a max of 10 processes listed.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">top_mem</td>
+<td align="center">type, num</td>
+<td>
+		Same as top, except sorted by mem usage instead of cpu
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">totalup</td>
+<td align="center">net</td>
+<td>
+		Total upload, this one too, may overflow
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">updates</td>
+<td align="center">Number of updates</td>
+<td>
+		for debugging
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">upspeed</td>
+<td align="center">net</td>
+<td>
+		Upload speed in kilobytes
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">upspeedf</td>
+<td align="center">net</td>
+<td>
+		Upload speed in kilobytes with one decimal
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">upspeedgraph</td>
+<td align="center">net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
+<td>
+		Upload speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">uptime</td>
+<td align="center"></td>
+<td>
+		Uptime
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">uptime_short</td>
+<td align="center"></td>
+<td>
+		Uptime in a shorter format
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">seti_prog</td>
+<td align="center"></td>
+<td>
+		Seti@home current progress
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">seti_progbar</td>
+<td align="center">(height),(width)</td>
+<td>
+		Seti@home current progress bar
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">seti_credit</td>
+<td align="center"></td>
+<td>
+		Seti@home total user credit
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">voffset</td>
+<td align="center">(pixels)</td>
+<td>
+		Change verticle offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
+		</td>
+</tr>
+</table></body>
+</html>
