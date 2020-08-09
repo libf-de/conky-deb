@@ -2,7 +2,7 @@
  * bmpx.c
  * BMPx client
  *
- * $Id: bmpx.c 629 2006-05-12 12:41:18Z mirrorbox $
+ * $Id: bmpx.c 687 2006-08-12 05:28:27Z mirrorbox $
  */
 
 #include <bmp/dbus.h>

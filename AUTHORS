@@ -1,4 +1,4 @@
-# $Id: AUTHORS 631 2006-05-13 19:51:26Z brenden1 $
+# $Id: AUTHORS 716 2006-11-03 21:24:13Z pkovacs $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -33,6 +33,9 @@ dan-h <dan-h at users dot sourceforge dot net>
 
 David McCabe
   utime
+
+Ram Yalamanchili
+  tztime
 
 Daniel Thiele <dthiele at gmx dot net>
   APM support for FreeBSD
@@ -123,6 +126,9 @@ Lucas Brutschy <lbrutschy at users dot sourceforge dot net>
   MLDonkey patch
   if constructs patch
 
+Michal Januszewski <spock at gentoo dot org>
+  hddtemp support
+
 Moncelier Camille <pixdamix at users dot sourceforge dot net>
   METAR patch
 
@@ -137,6 +143,8 @@ Pascal Eberhard <pascal dor eberhard at gmail dot com>
 
 Peter Tarjan <ptarjan at citromail dot hu>
   IBM acpi support patch
+  SMP support for freq stuff
+  CPU voltage patch
   
 Petr Holub <hopet@users.sourceforge.net>  
   fix autotools on FreeBSD in autogen.sh
@@ -144,6 +152,8 @@ Petr Holub <hopet@users.sourceforge.net>
 
 Philip Kovacs <pkovacs at users dot sourceforge dot net>
   tcp port monitor with hashing functionality
+  Audacious, Xmms, BMP, Infopipe stuff
+  Various Xlib changes, e.g. own_window hints, etc.
 
 roiban adi <adiroiban at users dot sourceforge dot net>
   hex colour patch
@@ -154,6 +164,9 @@ Rui Paulo <rpaulo at netbsd-pt dot org>
 Roman Bogorodskiy <novel at clublife dot ru>
   FreeBSD support
   BMPx support
+
+Stepan Zastupov <redchrom at gmail dot com>
+  WiFi signal level detection support on FreeBSD
 
 Szymon Boniecki
   Reads current LC_TIME

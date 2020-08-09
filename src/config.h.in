@@ -1,16 +1,10 @@
-/* src/config.h.in.  Generated from configure.in by autoheader.  */
+/* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define for Audacious support */
 #undef AUDACIOUS
 
-/* Define for Beep Media Player support */
-#undef BMP
-
 /* Define if you want BMPx support */
 #undef BMPX
-
-/* Define if you want support for the DBE extension */
-#undef DOUBLE_BUFFER
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
@@ -20,9 +14,6 @@
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
-
-/* Define to 1 if you have the `dlopen' function. */
-#undef HAVE_DLOPEN
 
 /* Define if you have getloadavg */
 #undef HAVE_GETLOADAVG
@@ -35,6 +26,9 @@
 
 /* Define if you have kstat (Solaris) */
 #undef HAVE_KSTAT
+
+/* Define to 1 if you have the `X11' library (-lX11). */
+#undef HAVE_LIBX11
 
 /* Define to 1 if you have the <linux/soundcard.h> header file. */
 #undef HAVE_LINUX_SOUNDCARD_H
@@ -99,20 +93,17 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define if you have X11 */
-#undef HAVE_X11
+/* Define for X11 Xdamage extension */
+#undef HAVE_XDAMAGE
 
-/* Xdbe */
+/* Define for X11 double-buffering */
 #undef HAVE_XDBE
+
+/* Define if you want hddtemp support */
+#undef HDDTEMP
 
 /* Define as const if the declaration of iconv() needs const. */
 #undef ICONV_CONST
-
-/* Define for InfoPipe support */
-#undef INFOPIPE
-
-/* Define if you want MLDonkey support */
-#undef MLDONKEY
 
 /* Define if you want MPD support */
 #undef MPD
@@ -141,9 +132,6 @@
 /* Define if you want to use /proc/uptime for uptime */
 #undef PROC_UPTIME
 
-/* Define if you want SETI at Home stats */
-#undef SETI
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -156,11 +144,8 @@
 /* Define if you want to use X11 */
 #undef X11
 
-/* Define if you are using Xft */
+/* Define for Xft support */
 #undef XFT
-
-/* Define for XMMS Ver. 1 support */
-#undef XMMS
 
 /* Define if you want XMMS2 support */
 #undef XMMS2

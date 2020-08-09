@@ -2,7 +2,7 @@
  * freebsd.c
  * Contains FreeBSD specific stuff
  *
- * $Id: freebsd.c 613 2006-03-26 01:47:55Z brenden1 $
+ * $Id: freebsd.c 758 2006-11-12 14:17:31Z mirrorbox $
  */
 
 #include <sys/dkstat.h>
@@ -14,9 +14,13 @@
 #include <sys/types.h>
 #include <sys/vmmeter.h>
 #include <sys/user.h>
+#include <sys/ioctl.h>
 
 #include <net/if.h>
 #include <net/if_mib.h>
+#include <net/if_media.h>
+#include <net/if_var.h>
+#include <netinet/in.h>
 
 #include <devstat.h>
 #include <fcntl.h>
@@ -26,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <dev/wi/if_wavelan_ieee.h>
 
 #include "conky.h"
 
@@ -283,7 +289,8 @@ update_cpu_usage()
 	long cp_time[CPUSTATES];
 	size_t len = sizeof (cp_time);
 
-	if (cpu_setup == 0) {
+	/* add check for !info.cpu_usage since that mem is freed on a SIGUSR1 */
+	if ((cpu_setup == 0) || (!info.cpu_usage)) {
 		get_cpu_count();
 		cpu_setup = 1;
 	}
@@ -495,22 +502,32 @@ get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
 #endif
 }
 
-/* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
-void
+/*void*/
+char
 get_freq(char *p_client_buffer, size_t client_buffer_size,
-		char *p_format, int divisor)
+		char *p_format, int divisor, unsigned int cpu)
 {
 	int freq;
+	char *freq_sysctl;
 
+	freq_sysctl = (char *)calloc(16, sizeof(char));
+	if (freq_sysctl == NULL)
+		exit(-1);
+
+	snprintf(freq_sysctl, 16, "dev.cpu.%d.freq", cpu);
+	
 	if (!p_client_buffer || client_buffer_size <= 0 ||
 			!p_format || divisor <= 0)
-		return;
+		return 0;
 
-	if (GETSYSCTL("dev.cpu.0.freq", freq) == 0)
+	if (GETSYSCTL(freq_sysctl, freq) == 0)
 		snprintf(p_client_buffer, client_buffer_size,
-				p_format, freq/divisor);
+				p_format, (float)freq/divisor);
 	else
 		snprintf(p_client_buffer, client_buffer_size, p_format, 0.0f);
+
+	free(freq_sysctl);
+	return 1;
 }
 
 void
@@ -522,7 +539,58 @@ update_top()
 void
 update_wifi_stats()
 {
-	/* XXX */
+	struct ifreq ifr;		/* interface stats */
+	struct wi_req wireq;
+	struct net_stat * ns;
+	struct ifaddrs *ifap, *ifa;
+	struct ifmediareq ifmr;
+	int s;
+
+	/*
+	 * Get iface table
+	 */
+	if (getifaddrs(&ifap) < 0)
+		return;
+
+	for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+		ns = get_net_stat((const char *) ifa->ifa_name);
+
+		s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+		/* Get media type */
+		bzero(&ifmr, sizeof(ifmr));
+		strlcpy(ifmr.ifm_name, ifa->ifa_name, IFNAMSIZ);
+		if (ioctl(s, SIOCGIFMEDIA, (caddr_t) &ifmr) < 0)
+			goto cleanup;
+		
+		/*
+		 * We can monitor only wireless interfaces
+		 * which not in hostap mode
+		 */
+		if ((ifmr.ifm_active & IFM_IEEE80211) &&
+				!(ifmr.ifm_active & IFM_IEEE80211_HOSTAP)) {
+			/* Get wi status */
+			bzero(&ifr, sizeof(ifr));
+			strlcpy(ifr.ifr_name, ifa->ifa_name, IFNAMSIZ);
+			wireq.wi_type	= WI_RID_COMMS_QUALITY;
+			wireq.wi_len	= WI_MAX_DATALEN;
+			ifr.ifr_data	= (void *) &wireq;
+
+			if (ioctl(s, SIOCGWAVELAN, (caddr_t) &ifr) < 0) {
+				perror("ioctl (getting wi status)");
+				exit(1);
+			}
+
+			/*
+			 * wi_val[0] = quality
+			 * wi_val[1] = signal
+			 * wi_val[2] = noise
+			 */
+			ns->linkstatus = (int) wireq.wi_val[1];
+		}
+cleanup:
+		close(s);
+	}
 }
 void
 update_diskio()

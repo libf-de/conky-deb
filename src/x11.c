@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: x11.c 575 2006-03-09 18:51:57Z pkovacs $
+ *  $Id: x11.c 757 2006-11-12 06:38:21Z mirrorbox $
  */
 
 
@@ -18,9 +18,7 @@
 #include <X11/Xft/Xft.h>
 #endif
 
-#include <stdio.h>
-
-#ifdef XDBE
+#ifdef HAVE_XDBE
 int use_xdbe;
 #endif
 
@@ -446,7 +444,7 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour, c
 	/* Drawable is same as window. This may be changed by double buffering. */
 	window.drawable = window.window;
 
-#ifdef XDBE
+#ifdef HAVE_XDBE
 	if (use_xdbe) {
 		int major, minor;
 		if (!XdbeQueryExtension(display, &major, &minor)) {

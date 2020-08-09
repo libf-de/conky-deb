@@ -1,7 +1,7 @@
 /* linux.c
  * Contains linux specific code
  *
- *  $Id: linux.c 623 2006-04-23 21:37:59Z brenden1 $
+ *  $Id: linux.c 738 2006-11-08 03:06:42Z pkovacs $
  */
 
 
@@ -364,6 +364,9 @@ void determine_longstat(char * buf) {
 
 void get_cpu_count()
 {
+	if (info.cpu_usage) {
+		return;
+	}
 	char buf[256];
 	if (stat_fp == NULL)
 		stat_fp = open_file("/proc/stat", &rep);
@@ -386,7 +389,6 @@ void get_cpu_count()
 		}
 	}
 	info.cpu_usage = malloc((info.cpu_count + 1) * sizeof(float));
-
 }
 
 #define TMPL_LONGSTAT "%*s %llu %llu %llu %llu %llu %llu %llu %llu"
@@ -403,7 +405,8 @@ inline static void update_stat()
 	unsigned int malloc_cpu_size=0;
 	
 
-	if (!cpu_setup) {
+	/* add check for !info.cpu_usage since that mem is freed on a SIGUSR1 */
+	if (!cpu_setup || !info.cpu_usage) {
 		get_cpu_count();
 		cpu_setup = 1;
 	}
@@ -834,25 +837,37 @@ void get_freq_dynamic( char * p_client_buffer, size_t client_buffer_size, char *
 	snprintf( p_client_buffer, client_buffer_size, p_format, (float)((cycles[1] - cycles[0]) / microseconds) / divisor );
 	return;
 #else
-	get_freq( p_client_buffer, client_buffer_size, p_format, divisor );
+/* FIXME: hardwired: get freq for first cpu!
+   this whole function needs to be rethought and redone for
+   multi-cpu/multi-core/multi-threaded environments and 
+   arbitrary combinations thereof 
+*/
+	get_freq( p_client_buffer, client_buffer_size, p_format, divisor, 1 );
 	return;
 #endif
 }
 
-#define CPUFREQ_CURRENT "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+
+#define CPUFREQ_PREFIX "/sys/devices/system/cpu"
+#define CPUFREQ_POSTFIX "cpufreq/scaling_cur_freq"
 
 /* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
-void get_freq( char * p_client_buffer, size_t client_buffer_size, char * p_format, int divisor )
+char get_freq( char * p_client_buffer, size_t client_buffer_size, char * p_format, int divisor, unsigned int cpu )
 {
 	FILE *f;
 	char frequency[32];
 	char s[256];
 	double freq = 0;
+	char current_freq_file[128];
+	
+	cpu--;
+	snprintf(current_freq_file, 127, "%s/cpu%d/%s",
+		 CPUFREQ_PREFIX, cpu, CPUFREQ_POSTFIX);
 
 	if ( !p_client_buffer || client_buffer_size <= 0 || !p_format || divisor <= 0 )
-		return;
-
-	f = fopen(CPUFREQ_CURRENT, "r");
+		return 0;
+	
+	f = fopen(current_freq_file, "r");
 	if (f) {
 		/* if there's a cpufreq /sys node, read the current frequency from this node;
 		 * divide by 1000 to get Mhz. */
@@ -862,21 +877,25 @@ void get_freq( char * p_client_buffer, size_t client_buffer_size, char * p_forma
 		}
 		fclose(f);
 		snprintf( p_client_buffer, client_buffer_size, p_format, (freq/1000)/divisor );
-		return;
+		return 1;
 	}
 	
+	cpu++;
 	f = fopen("/proc/cpuinfo", "r");		//open the CPU information file
-	if (!f)
-	    return;
+	if (!f) {
+		perror("Conky: Failed to access '/proc/cpuinfo' at get_freq()");
+		return 0;
+	}
 
 	while (fgets(s, sizeof(s), f) != NULL){		//read the file
+
 #if defined(__i386) || defined(__x86_64)
-		if (strncmp(s, "cpu MHz", 7) == 0) {	//and search for the cpu mhz
+		if (strncmp(s, "cpu MHz", 7) == 0 && cpu == 0) {	//and search for the cpu mhz
 #else
 #if defined(__alpha)
-		if (strncmp(s, "cycle frequency [Hz]", 20) == 0) {		// different on alpha
+		if (strncmp(s, "cycle frequency [Hz]", 20) == 0 && cpu == 0) {		// different on alpha
 #else
-		if (strncmp(s, "clock", 5) == 0) {	// this is different on ppc for some reason
+		if (strncmp(s, "clock", 5) == 0 && cpu == 0) {	// this is different on ppc for some reason
 #endif // defined(__alpha)
 #endif // defined(__i386) || defined(__x86_64)
 
@@ -890,13 +909,95 @@ void get_freq( char * p_client_buffer, size_t client_buffer_size, char * p_forma
 #endif
 		break;
 		}
+		if (strncmp(s, "processor", 9) == 0) {
+		    cpu--; 
+		    continue;
+		}
+		
 	}
 	
 	fclose(f);
 	snprintf( p_client_buffer, client_buffer_size, p_format, (float)freq/divisor );
-	return;
+	return 1;
 }
 
+#define CPUFREQ_VOLTAGE "cpufreq/scaling_voltages"
+
+/* return cpu voltage in mV (use divisor=1) or V (use divisor=1000) */
+char get_voltage( char * p_client_buffer, size_t client_buffer_size, char * p_format, int divisor, unsigned int cpu )
+{
+/* /sys/devices/system/cpu/cpu0/cpufreq/scaling_voltages looks 
+   something like this:
+# frequency voltage
+1800000 1340
+1600000 1292
+1400000 1100
+1200000 988
+1000000 1116
+800000 1004
+600000 988
+*/
+
+/* Peter Tarjan (ptarjan@citromail.hu) */
+	FILE *f;
+	char s[256];
+	int freq = 0;
+	int voltage = 0;
+	char current_freq_file[128];
+	int freq_comp = 0;
+	
+
+/* build the voltage file name */
+	cpu--;
+	snprintf(current_freq_file, 127, "%s/cpu%d/%s",
+		 CPUFREQ_PREFIX, cpu, CPUFREQ_POSTFIX);
+
+	if ( !p_client_buffer || client_buffer_size <= 0 || !p_format || divisor <= 0 )
+		return 0;
+
+	/* read the current cpu frequency from the /sys node */
+	f = fopen(current_freq_file, "r");
+	if (f) {
+	    if (fgets(s, sizeof(s), f)) {
+		s[strlen(s)-1] = '\0';
+		freq = strtod(s, NULL);
+	    }
+	    fclose(f);
+	} else {
+		fprintf(stderr, "Conky: Failed to access '%s' at ", current_freq_file);
+		perror("get_voltage()");
+		if (f) {
+			fclose(f);
+		}
+		return 0;
+	    }
+
+	snprintf(current_freq_file, 127, "%s/cpu%d/%s",
+		 CPUFREQ_PREFIX, cpu, CPUFREQ_VOLTAGE);
+
+/* use the current cpu frequency to find the corresponding voltage */
+	f = fopen(current_freq_file, "r");
+
+	if (f) {
+		while (!feof(f)) {
+			char line[256];
+			if (fgets(line, 255, f) == NULL) break;
+			sscanf(line, "%d %d", &freq_comp, &voltage);
+			if(freq_comp == freq) break;
+		}
+		fclose(f);
+	} else {
+		fprintf(stderr, "Conky: Failed to access '%s' at ", current_freq_file);
+		perror("get_voltage()");
+		if (f) {
+			fclose(f);
+		}
+		return 0;
+	}
+	snprintf( p_client_buffer, client_buffer_size, p_format, (float)voltage/divisor );
+	return 1;
+
+}
 
 #define ACPI_FAN_DIR "/proc/acpi/fan/"
 
@@ -1117,6 +1218,7 @@ void get_battery_stuff(char *buf, unsigned int n, const char *bat)
 		int present_rate = -1;
 		int remaining_capacity = -1;
 		char charging_state[64];
+		char present[4];
 
 		/* read last full capacity if it's zero */
 		if (acpi_last_full == 0) {
@@ -1150,7 +1252,9 @@ void get_battery_stuff(char *buf, unsigned int n, const char *bat)
 				break;
 
 			/* let's just hope units are ok */
-			if (buf[0] == 'c')
+			if (buf[0] == 'p') {
+				sscanf(buf, "present: %4s", present);
+			} else if (buf[0] == 'c')
 				sscanf(buf, "charging state: %63s",
 				       charging_state);
 			else if (buf[0] == 'p')
@@ -1160,51 +1264,59 @@ void get_battery_stuff(char *buf, unsigned int n, const char *bat)
 				sscanf(buf, "remaining capacity: %d",
 				       &remaining_capacity);
 		}
-
+		
+		/* not present */
+		if (strcmp(present, "no") == 0) {
+			strncpy(last_battery_str, "not present", 64);
+		}
 		/* charging */
-		if (strcmp(charging_state, "charging") == 0) {
+		else if (strcmp(charging_state, "charging") == 0) {
 			if (acpi_last_full != 0 && present_rate > 0) {
-				strcpy(last_battery_str, "charging ");
-				format_seconds(last_battery_str + 9,
-					       63 - 9,
+				snprintf(last_battery_str, 63, "charging %i%% ", (int) (remaining_capacity / acpi_last_full) * 100);
+				format_seconds(last_battery_str + 14,
+					       63 - 14,
 					       (acpi_last_full -
 						remaining_capacity) * 60 *
 					       60 / present_rate);
 			} else if (acpi_last_full != 0
 				   && present_rate <= 0) {
-				sprintf(last_battery_str, "charging %d%%",
+				snprintf(last_battery_str, 64, "charging %d%%",
 					remaining_capacity * 100 /
 					acpi_last_full);
 			} else {
-				strcpy(last_battery_str, "charging");
+				strncpy(last_battery_str, "charging", 63);
 			}
 		}
 		/* discharging */
-		else if (strcmp(charging_state, "discharging") == 0) {
-			if (present_rate > 0)
-				format_seconds(last_battery_str, 63,
+		else if (strncmp(charging_state, "discharging", 64) == 0) {
+			if (present_rate > 0) {
+				snprintf(last_battery_str, 63, "discharging %i%% ", (int)(remaining_capacity / acpi_last_full) * 100);
+				format_seconds(last_battery_str + 17, 63 - 17,
 					       (remaining_capacity * 60 *
 						60) / present_rate);
-			else
-				sprintf(last_battery_str,
+			} else if (present_rate == 0) { /* Thanks to Nexox for this one */
+				snprintf(last_battery_str, 64, "full");
+			} else {
+				snprintf(last_battery_str, 64,
 					"discharging %d%%",
 					remaining_capacity * 100 /
 					acpi_last_full);
+			}
 		}
 		/* charged */
 		/* thanks to Lukas Zapletal <lzap@seznam.cz> */
-		else if (strcmp(charging_state, "charged") == 0) {
+		else if (strncmp(charging_state, "charged", 64) == 0) {
 				strcpy(last_battery_str, "charged");
-		}
+		} 
 		/* unknown, probably full / AC */
 		else {
 			if (acpi_last_full != 0
 			    && remaining_capacity != acpi_last_full)
-				sprintf(last_battery_str, "unknown %d%%",
+				snprintf(last_battery_str, 64, "unknown %d%%",
 					remaining_capacity * 100 /
 					acpi_last_full);
 			else
-				strcpy(last_battery_str, "AC");
+				strncpy(last_battery_str, "AC", 64);
 		}
 	} else {
 		/* APM */

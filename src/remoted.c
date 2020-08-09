@@ -3,7 +3,7 @@
 *
 * This program is licensed under BSD license, read COPYING
 *
-*  $Id: remoted.c 188 2005-08-26 03:26:23Z brenden1 $
+*  $Id: remoted.c 699 2006-09-01 17:11:14Z pkovacs $
 */
 
 #include <pthread.h>
@@ -48,7 +48,7 @@ void *daemon_loop()
 	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct sockaddr_in my_addr;    // my address information
 	struct sockaddr_in their_addr; // connector's address information
-	int sin_size;
+	socklen_t  sin_size;
 	struct sigaction sa;
 	int yes=1;
 

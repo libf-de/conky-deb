@@ -1,0 +1,494 @@
+AC_INIT([Conky],[1.4.4],[brenden1@users.sourceforge.net])
+
+AM_INIT_AUTOMAKE(conky, 1.4.4)
+AM_CONFIG_HEADER(src/config.h)
+dnl
+dnl C Compiler
+dnl
+
+dnl prevent libtool setting LTCFLAGS to default of -g -O2 when CFLAGS unset.
+dnl libtool must be deleted with make distclean to see this fix.
+if test x"$CFLAGS" = x""; then
+    AC_SUBST(CFLAGS, [ ])
+fi
+
+AC_PROG_CC
+AC_PROG_LIBTOOL
+PKG_PROG_PKG_CONFIG([0.17.2])
+
+
+AC_CONFIG_FILES(
+	Makefile
+	doc/Makefile
+	src/Makefile
+	src/build.h
+	)
+
+uname=`uname`
+
+case $uname in
+  Linux*)
+    WANT_SYSINFO=yes
+    ;;
+  FreeBSD*)
+    WANT_KVM=yes
+    WANT_DEVSTAT=yes
+    ;;
+#  NetBSD*)
+#    WANT_KVM=yes
+#    WANT_OSSLIB=yes
+#    ;;
+
+#  OpenBSD*)
+#    WANT_KVM=yes
+#    WANT_OSSLIB=yes
+#    ;;
+
+# Solaris doesn't work at all right now
+#  SunOS*)
+#    WANT_KSTAT=yes
+#    ;;
+
+  *)
+    echo "Your operating system $uname isn't supported"
+    echo "Feel free to help. :P"
+    exit 1
+    ;;
+esac
+
+AM_CONDITIONAL(BUILD_LINUX, test x$uname = xLinux)
+#AM_CONDITIONAL(BUILD_SOLARIS, test x$uname = xSunOS)
+AM_CONDITIONAL(BUILD_FREEBSD, test x$uname = xFreeBSD)
+#AM_CONDITIONAL(BUILD_NETBSD, test x$uname = xNetBSD)
+# AM_CONDITIONAL(BUILD_OPENBSD, test x$uname = xOpenBSD)
+
+BUILD_DATE=$(LANG=en_US LC_ALL=en_US LOCALE=en_US date)
+BUILD_ARCH="$(uname -sr) ($(uname -m))"
+AC_SUBST(BUILD_DATE)
+AC_SUBST(BUILD_ARCH)
+
+
+dnl
+dnl OWN_WINDOW option
+dnl
+
+AC_ARG_ENABLE([own_window],
+    AC_HELP_STRING([--enable-own-window], [enable if you want support for creating own window [[default=yes]]]),
+    [dah="$enableval"], [dah=yes])
+
+if test $dah != "no"; then
+  AC_DEFINE(OWN_WINDOW, 1, [Define if you want support for window creating])
+fi
+
+dnl
+dnl PROC_UPTIME option
+dnl
+
+AC_ARG_ENABLE([proc_uptime],
+    AC_HELP_STRING([--enable-proc-uptime], [enable using /proc/uptime for uptime [[default=yes]]]),
+    [dah="$enableval"], [dah=yes])
+
+if test $dah = "yes"; then
+  AC_DEFINE(PROC_UPTIME, 1, [Define if you want to use /proc/uptime for uptime])
+fi
+
+
+dnl
+dnl Audacious Media Player
+dnl
+
+AC_ARG_ENABLE([audacious],
+    AC_HELP_STRING([--enable-audacious], [enable audacious player support [[default=no]]]),
+    [want_audacious="$enableval"], [want_audacious=no])
+
+AM_CONDITIONAL(BUILD_AUDACIOUS, test x$want_audacious = xyes)
+if test x$want_audacious = xyes; then
+	PKG_CHECK_MODULES([AUDACIOUS], [audacious >= 0.1])
+    	CFLAGS="$CFLAGS $AUDACIOUS_CFLAGS"
+    	LIBS="$LIBS $AUDACIOUS_LIBS"
+    	AC_DEFINE(AUDACIOUS, 1, [Define for Audacious support])
+fi
+
+
+dnl
+dnl BMPx
+dnl
+
+AC_ARG_ENABLE([bmpx],
+    AC_HELP_STRING([--enable-bmpx], [enable if you want BMPx support [[default=no]]]),
+    [want_bmpx="$enableval"], [want_bmpx=no])
+
+AM_CONDITIONAL(BUILD_BMPX, test x$want_bmpx = xyes)
+if test x$want_bmpx = xyes; then
+	PKG_CHECK_MODULES([BMPX], [bmp-2.0 >= 0.14.0])
+	CFLAGS="$CFLAGS $BMPX_CFLAGS"
+	LIBS="$LIBS $BMPX_LIBS"
+	AC_DEFINE(BMPX, 1, [Define if you want BMPx support])
+fi
+
+
+dnl
+dnl Hddtemp
+dnl
+
+AC_ARG_ENABLE([hddtemp],
+    AC_HELP_STRING([--enable-hddtemp], [enable if you want hddtemp support [[default=yes]]]),
+    [want_hddtemp="$enableval"], [want_hddtemp=yes])
+
+AM_CONDITIONAL(BUILD_HDDTEMP, test x$want_hddtemp = xyes)
+if test x$want_hddtemp = xyes; then
+  AC_DEFINE(HDDTEMP, 1, [Define if you want hddtemp support])
+fi
+
+dnl
+dnl MPD
+dnl
+
+AC_ARG_ENABLE([mpd],
+    AC_HELP_STRING([--enable-mpd], [enable if you want MPD support [[default=yes]]]),
+    [want_mpd="$enableval"], [want_mpd=yes])
+
+AM_CONDITIONAL(BUILD_MPD, test x$want_mpd = xyes)
+if test x$want_mpd = xyes; then
+  AC_DEFINE(MPD, 1, [Define if you want MPD support])
+fi
+
+dnl
+dnl XMMS2
+dnl
+
+AC_ARG_ENABLE([xmms2],
+    AC_HELP_STRING([--enable-xmms2], [enable if you want XMMS2 support [[default=no]]]),
+    [want_xmms2="$enableval"], [want_xmms2=no])
+
+AM_CONDITIONAL(BUILD_XMMS2, test x$want_xmms2 = xyes)
+if test x$want_xmms2 = xyes; then
+	PKG_CHECK_MODULES([XMMS2], [xmms2-client])
+  	CFLAGS="$CFLAGS $XMMS2_CFLAGS"
+  	LIBS="$LIBS $XMMS2_LIBS"
+  	AC_DEFINE(XMMS2, 1, [Define if you want XMMS2 support])
+fi
+
+
+dnl
+dnl IMLIB2
+dnl
+
+dnl --commented out until brenden finishes it --
+dnl AC_ARG_ENABLE([imlib2],
+dnl    AC_HELP_STRING([--enable-imlib2], [enable if you want Imlib2 support [[default=no]]]),
+dnl    [want_imlib2="$enableval"], [want_imlib2=no])
+dnl
+dnl AM_CONDITIONAL(BUILD_IMLIB2, test x$want_imlib2 = xyes)
+dnl if test x$want_imlib2 = xyes; then
+dnl	PKG_CHECK_MODULES([Imlib2], [imlib2])
+dnl	CFLAGS="$CFLAGS $Imlib2_CFLAGS"
+dnl	LIBS="$LIBS $Imlib2_LIBS"
+dnl	AC_DEFINE(IMLIB2, 1, [Define if you want Imlib2 support])
+dnl fi
+
+dnl
+dnl PORT_MONITORS
+dnl
+
+AC_ARG_ENABLE([portmon],
+    AC_HELP_STRING([--enable-portmon], [enable if you want tcp (ip4) port monitoring [[default=yes]]]),
+    [want_portmon="$enableval"], [want_portmon=yes])
+
+AM_CONDITIONAL(BUILD_PORT_MONITORS, test x$want_portmon = xyes)
+if test x$want_portmon = xyes; then
+  	AC_CHECK_HEADERS([netdb.h netinet/in.h netinet/tcp.h sys/socket.h arpa/inet.h], [], 
+			 [PORT_MONITORS_MISSING=yes])
+  	if test "x$PORT_MONITORS_MISSING" = xyes; then
+            AC_MSG_ERROR([missing a needed network header for port monitoring])
+  	fi
+  	AC_DEFINE(TCP_PORT_MONITOR, 1, [Define if you want tcp port monitoring support])
+fi
+
+
+dnl
+dnl ICONV
+dnl
+
+AM_ICONV
+if test "$am_cv_func_iconv" != yes; then
+	AC_MSG_WARN([Could not find libiconv])
+else
+	LIBS="$LIBS $LIBICONV"
+fi
+
+dnl
+dnl debug
+dnl
+
+AC_ARG_ENABLE([debug], 
+    AC_HELP_STRING([--enable-debug], [compile with debug symbols [[default=no]]]),
+    [want_debug="$enableval"], [want_debug=no])
+
+if test "x$want_debug" = "xyes" -a $ac_cv_c_compiler_gnu != no; then
+	CFLAGS="$CFLAGS -g3"
+fi
+
+dnl
+dnl X11
+dnl
+
+AC_ARG_ENABLE([x11],
+    AC_HELP_STRING([--enable-x11], [enable if you want X11 support [[default=yes]]]),
+    [want_x11="$enableval"], [want_x11=yes])
+
+AM_CONDITIONAL(BUILD_X11, test x$want_x11 = xyes)
+if test "x$want_x11" = "xyes"; then
+    if $PKG_CONFIG --exists x11; then
+    	PKG_CHECK_MODULES([X11], [x11])
+    	CFLAGS="$CFLAGS $X11_CFLAGS"
+    	LIBS="$LIBS $X11_LIBS"
+    else
+	dnl non-modular X11 installations
+	AC_PATH_X
+	AC_PATH_XTRA
+	CFLAGS="$CFLAGS $X_CFLAGS"
+	LIBS="$LIBS $X_LIBS"
+	LDFLAGS="$LDFLAGS $LIBS $X_PRE_LIBS"
+	if test "x$no_x" = "xyes"; then
+	    AC_MSG_ERROR([Can't locate your X11 installation])
+	fi
+	AC_CHECK_LIB([X11], [XOpenDisplay], [], AC_MSG_ERROR([Could not find XOpenDisplay in -lX11]))
+    fi
+    AC_DEFINE(X11, 1, [Define if you want to use X11])
+fi
+	
+
+dnl
+dnl Xext Double-buffering Extension
+dnl
+
+AC_ARG_ENABLE([double_buffer],
+    AC_HELP_STRING([--enable-double-buffer], [enable for flicker-free operation [[default=yes]]]),
+    [want_double_buffer="$enableval"], [want_double_buffer=yes])
+
+if test "x$want_double_buffer" = "xyes"; then
+    if test "x$want_x11" != "xyes"; then
+	    AC_MSG_ERROR([--enable-x11 is required for double-buffering])
+    fi
+    if $PKG_CONFIG --exists xext; then
+    	PKG_CHECK_MODULES([XEXT],[xext])
+    	CFLAGS="$CFLAGS $XEXT_CFLAGS"
+    	LIBS="$LIBS $XEXT_LIBS"
+    else
+	dnl non-modular X11 installation
+	AC_CHECK_LIB([Xext], [XdbeQueryExtension], [LIBS="$LIBS -lXext"], 
+		     AC_MSG_ERROR([Could not find XdbeQueryExtension in -lXext]))
+    fi
+    AC_DEFINE(HAVE_XDBE, 1, [Define for X11 double-buffering])
+fi
+
+
+dnl
+dnl Xdamage Extension
+dnl
+
+AC_ARG_ENABLE([xdamage],
+    AC_HELP_STRING([--enable-xdamage], [enable if you want Xdamage support [[default=yes]]]),
+    [want_xdamage="$enableval"], [want_xdamage=yes])
+
+if test "x$want_xdamage" = "xyes"; then
+    if test "x$want_x11" != "xyes"; then
+	    AC_MSG_ERROR([--enable-x11 is required for xdamage])
+    fi
+    if $PKG_CONFIG --exists xdamage; then
+    	PKG_CHECK_MODULES([XDAMAGE],[xdamage])
+    	CFLAGS="$CFLAGS $XDAMAGE_CFLAGS"
+    	LIBS="$LIBS $XDAMAGE_LIBS"
+    else
+	dnl non-modular X11 installation
+	AC_CHECK_LIB([Xdamage], [XDamageQueryExtension], [LIBS="$LIBS -lXdamage"],
+		     AC_MSG_ERROR([Could not find XDamageQueryExtension in -lXdamage]))
+    fi
+    AC_DEFINE(HAVE_XDAMAGE, 1, [Define for X11 Xdamage extension])
+fi
+
+
+dnl
+dnl Xft
+dnl
+
+AC_ARG_ENABLE([xft],
+    AC_HELP_STRING([--enable-xft], [enable if you want to use Xft [[default=yes]]]),
+    [want_xft="$enableval"], [want_xft=yes])
+
+if test x$want_xft = "xyes"; then
+    if test "x$want_x11" != "xyes"; then
+	    AC_MSG_ERROR([--enable-x11 is required for xft])
+    fi
+    PKG_CHECK_MODULES(XFT, [xft])
+    CFLAGS="$CFLAGS $XFT_CFLAGS"
+    LIBS="$LIBS $XFT_LIBS"
+    AC_DEFINE(XFT, 1, [Define for Xft support])
+fi
+
+
+dnl
+dnl KVM
+dnl
+
+if test x$WANT_KVM = xyes; then
+  AC_CHECK_LIB(kvm, kvm_open,
+  	LIBS="$LIBS -lkvm",
+	AC_MSG_ERROR([Could not find kvm_open in -lkvm.])
+  )
+fi
+
+dnl
+dnl devstat
+dnl
+
+if test x$WANT_DEVSTAT = xyes; then
+	AC_CHECK_LIB(devstat, devstat_getversion,
+		     LIBS="$LIBS -ldevstat",
+		     AC_MSG_ERROR([Cound not find devstat_getversion in -ldevstat.])
+	)
+fi
+
+dnl
+dnl OSSLIB for NetBSD/OpenBSD
+dnl
+
+if test x$WANT_OSSLIB = xyes; then
+    AC_CHECK_LIB(ossaudio, _oss_ioctl,
+	LIBS="$LIBS -lossaudio",
+	AC_MSG_ERROR([Could not find oss_ioctl in -lossaudio.])
+    )
+fi
+
+dnl
+dnl Some random headers
+dnl
+
+
+AC_CHECK_HEADERS([signal.h unistd.h sys/utsname.h sys/stat.h linux/soundcard.h dirent.h mcheck.h])
+AC_CHECK_HEADERS([sys/statfs.h sys/param.h])
+AC_CHECK_HEADERS([sys/mount.h], [], [],
+		 [#ifdef HAVE_SYS_PARAM_H
+		  #include <sys/param.h>
+		  #endif
+])
+
+dnl
+dnl Check doc stuff
+dnl
+
+AC_CHECK_PROGS(db2x_xsltproc_cmd, db2x_xsltproc)
+AC_CHECK_PROGS(db2x_manxml_cmd, db2x_manxml)
+AC_CHECK_PROGS(xsltproc_cmd, xsltproc)
+if test x$db2x_xsltproc_cmd = "x" -o x$xsltproc_cmd = "x"; then
+	AM_CONDITIONAL(HAVE_DOCSTUFF, false)
+else
+	AM_CONDITIONAL(HAVE_DOCSTUFF, true)
+fi
+
+dnl
+dnl Check sysinfo()
+dnl
+
+if test x$WANT_SYSINFO = xyes; then
+  dah=no
+  AC_MSG_CHECKING(for sysinfo)
+  AC_TRY_COMPILE(
+    [#include <sys/types.h>
+     #include <sys/sysinfo.h>],
+    [struct sysinfo s; sysinfo(&s); (void) s.uptime; ],
+    [AC_MSG_RESULT(yes); dah=yes],
+    [AC_MSG_RESULT(not usable); dah=no])
+
+  if test x$dah = xyes; then
+    AC_DEFINE(HAVE_SYSINFO, 1, [Define if you have sysinfo (Linux)])
+  fi
+fi
+
+dnl
+dnl kstat in Solaris
+dnl
+
+if test x$WANT_KSTAT = xyes; then
+  dah=no
+  AC_CHECK_LIB([kstat], [kstat_open], [dah=yes], [])
+
+  if test x$dah = xyes; then
+    AC_DEFINE(HAVE_KSTAT, 1, [Define if you have kstat (Solaris)])
+    LDFLAGS="$LDFLAGS -lkstat"
+  fi
+fi
+
+AC_DEFUN([AM_LANGINFO_CODESET],
+[
+  AC_CACHE_CHECK([for nl_langinfo and CODESET], am_cv_langinfo_codeset,
+    [AC_TRY_LINK([#include <langinfo.h>],
+      [char* cs = nl_langinfo(CODESET);],
+      am_cv_langinfo_codeset=yes,
+      am_cv_langinfo_codeset=no)
+    ])
+  if test $am_cv_langinfo_codeset = yes; then
+    AC_DEFINE(HAVE_LANGINFO_CODESET, 1,
+      [Define if you have <langinfo.h> and nl_langinfo(CODESET).])
+  fi
+])
+
+dnl
+dnl Check getloadavg
+dnl
+
+AC_MSG_CHECKING(for getloadavg)
+AC_TRY_COMPILE(
+  [#include <stdlib.h>],
+  [double v[3]; getloadavg(v, 3);],
+  [AC_MSG_RESULT(yes)
+   AC_DEFINE(HAVE_GETLOADAVG, 1, [Define if you have getloadavg])],
+  [AC_MSG_RESULT(no)])
+
+dnl
+dnl Check popen
+dnl
+
+AC_CHECK_FUNCS(popen)
+
+dnl
+dnl Da.
+dnl
+
+CFLAGS="$CFLAGS -Wall -W"
+
+AC_SUBST(CFLAGS)
+AC_SUBST(X11_LIBS)
+
+AC_OUTPUT
+
+dnl
+dnl Print summary
+dnl
+cat << EOF
+
+$PACKAGE $VERSION configured successfully:
+
+ Installing into:	$prefix
+ C compiler flags:	$CFLAGS
+ Linker flags:		$LDFLAGS
+ Libraries:		$LIBS
+
+ * x11:
+  x11 support:		$want_x11
+  xdamage support:	$want_xdamage
+  xdbe support:		$want_double_buffer
+  xft support:          $want_xft
+
+ * music detection:
+  audacious:		$want_audacious
+  bmpx:			$want_bmpx
+  mpd:			$want_mpd
+  xmms2:                $want_xmms2
+
+ * general:
+  hddtemp:              $want_hddtemp
+  portmon:		$want_portmon  
+
+EOF

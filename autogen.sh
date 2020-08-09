@@ -1,0 +1,14 @@
+#!/bin/sh
+# $Id: autogen.sh 610 2006-03-25 14:28:40Z mirrorbox $
+
+AUTOCONF=${AUTOCONF:-autoconf}
+AUTOMAKE=${AUTOMAKE:-automake}
+ACLOCAL=${ACLOCAL:-aclocal}
+AUTOHEADER=${AUTOHEADER:-autoheader}
+LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
+
+$ACLOCAL
+$LIBTOOLIZE --force
+$AUTOHEADER
+$AUTOMAKE -a
+$AUTOCONF

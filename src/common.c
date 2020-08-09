@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: common.c 612 2006-03-25 21:21:07Z brenden1 $
+ *  $Id: common.c 727 2006-11-05 00:23:18Z pkovacs $
  */
 
 #include "conky.h"
@@ -212,16 +212,6 @@ void update_stuff()
 		update_i8k();
 #endif /* __linux__ */
 	
-#ifdef MLDONKEY
-	if (NEED(INFO_MLDONKEY))
-		get_mldonkey_status(&mlconfig, &mlinfo);
-#endif
-
-#ifdef SETI
-	if (NEED(INFO_SETI))
-		update_seti();
-#endif
-
 #ifdef MPD
 	if (NEED(INFO_MPD))
 		update_mpd();
@@ -232,10 +222,11 @@ void update_stuff()
 		update_xmms2();
 #endif
 
-#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
-	if (NEED(INFO_XMMS))
-		update_xmms();
+#ifdef AUDACIOUS
+	if (NEED(INFO_AUDACIOUS))
+		update_audacious();
 #endif
+
 #ifdef BMPX
 	if (NEED(INFO_BMPX))
                 update_bmpx();

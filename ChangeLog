@@ -1,4 +1,104 @@
-# $Id: ChangeLog 640 2006-05-16 03:50:53Z brenden1 $
+# $Id: ChangeLog 761 2006-11-13 00:10:29Z pkovacs $
+
+2006-11-12
+	* Fix freebsd build error.
+	r Minor changes to syntax files.
+	* Conky 1.4.4 released.
+
+2006-11-11
+	* Add max_user_text to documentation.
+	* Fixed BadWindow bugs (#1568366, #1588384).
+
+2006-11-10
+	* Remove on_bottom and xmms_player completely.
+	* Closed ibm_temps bug #1591609.
+	* Conky 1.4.3 released.
+
+2006-11-09
+	* Updated vim and nano syntax coloring scripts.
+	* Added extras/ dir with syntax stuff to distribution tarball.
+
+2006-11-08
+	* Added new config item 'max_user_text' with default 16384,
+	twice as large as previous hard-coded default of 8192 bytes.
+	Increase as needed to accomodate large config files with a
+	great deal of text.  This closes SF bug #1574523.
+
+2006-11-07
+	* Changes to configure.ac for pkg-config on x11/xext/xdamage,
+	with fallback to conventional checks.
+	* Fixed segmentation fault on SUGUSR1 bug.
+	* Commented out Imlib2 from configure.ac since it's only partially
+	implemented.
+
+2006-11-04
+	* Removed broken mldonkey and seti support.
+	* Added Hellf[i]re's nano syntax coloring script to svn.
+
+2006-11-03
+	* Removed support for Xmms, BMP and Infopipe from conky.  
+	The Xmms and Bmp players are projects are dead and distros such 
+	as Gentoo are slating them for removal.  
+	* Added support for Audacious using new audacious vars.
+
+2006-10-18
+	* Implement WiFi signal level detection on FreeBSD (patch
+	by Stepan Zastupov)
+
+2006-10-04
+	* Fix buffer overflow in parsing LC_ALL, LC_CTYPE and LANG
+	environment variables and fix crash for users with locale
+	name longer than 10 chars (repored by Michael Schwendt)
+
+2006-09-30
+	* --enable-debug added.
+	* prevent libtool from adding its default CFLAGS
+
+2006-09-28
+	* Use pkg-config instead of xft-config.
+	* Fix last line bug which had required padding text with extra blank line 
+	to see text on last line.
+
+2006-09-01
+	* Fix type-punning and "differ in signedness" warnings seen with
+	gcc-4.1 -O2.
+
+2006-08-27
+	* Fix compilation errors when building with --diable-x11; bug #1547164
+
+2006-08-12
+	* Make configure script print summary info
+	* Make `conky -v` show compiled-in features
+
+2006-08-10
+	* Added Spock's patches, adding hddtemp, goto and tab variables.
+
+2006-07-13
+	* Added tztime patch to show time in arbitrary time zones (thanks Ram
+	Yalamanchili)
+
+2006-06-07
+	* Small battery fix (thanks Nexox, sf.net patch 1500014)
+	* Fixed order of variables/objects in docs (thanks Peter Tarjan)
+
+2006-05-27
+	* Fixed a bug with $font
+
+2006-05-24
+	* Xdamage support for composite and pals
+
+2006-05-23
+	* CPU voltage support via $voltage_mv and $voltage_v (thanks to Peter
+	Tarjan for the patch)
+
+2006-05-21
+	* SMP support for $freq and $freq_g (thanks to Peter Tarjan for the
+	patch)
+
+2006-05-17
+	* Fixed issue with graphs not reaching all the way to the borders
+	(sf.net bug 1470480)
+	* Cleaned up units
 
 2006-05-15
 	* Conky 1.4.2 released
