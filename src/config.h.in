@@ -6,8 +6,20 @@
 /* Define if you want BMPx support */
 #undef BMPX
 
+/* Define for debugging */
+#undef DEBUG
+
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
+
+/* Define to 1 if you have the <assert.h> header file. */
+#undef HAVE_ASSERT_H
+
+/* Define to 1 if you have the `calloc' function. */
+#undef HAVE_CALLOC
+
+/* Define if you have clock_gettime() */
+#undef HAVE_CLOCK_GETTIME
 
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
@@ -15,14 +27,29 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
-/* Define if you have getloadavg */
+/* Define to 1 if you have the <errno.h> header file. */
+#undef HAVE_ERRNO_H
+
+/* Define to 1 if you have the `free' function. */
+#undef HAVE_FREE
+
+/* Define to 1 if you have the `getloadavg' function. */
 #undef HAVE_GETLOADAVG
+
+/* Define to 1 if you have the `gettimeofday' function. */
+#undef HAVE_GETTIMEOFDAY
 
 /* Define if you have the iconv() function. */
 #undef HAVE_ICONV
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define if you want wireless support */
+#undef HAVE_IWLIB
+
+/* Define to 1 if you have the <iwlib.h> header file. */
+#undef HAVE_IWLIB_H
 
 /* Define if you have kstat (Solaris) */
 #undef HAVE_KSTAT
@@ -33,11 +60,17 @@
 /* Define to 1 if you have the <linux/soundcard.h> header file. */
 #undef HAVE_LINUX_SOUNDCARD_H
 
+/* Define to 1 if you have the `malloc' function. */
+#undef HAVE_MALLOC
+
 /* Define to 1 if you have the <mcheck.h> header file. */
 #undef HAVE_MCHECK_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `memrchr' function. */
+#undef HAVE_MEMRCHR
 
 /* Define to 1 if you have the <netdb.h> header file. */
 #undef HAVE_NETDB_H
@@ -50,6 +83,9 @@
 
 /* Define to 1 if you have the `popen' function. */
 #undef HAVE_POPEN
+
+/* Define to 1 if you have the <pthread.h> header file. */
+#undef HAVE_PTHREAD_H
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
@@ -66,7 +102,7 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define if you have sysinfo (Linux) */
+/* Define to 1 if you have the `sysinfo' function. */
 #undef HAVE_SYSINFO
 
 /* Define to 1 if you have the <sys/mount.h> header file. */
@@ -89,6 +125,9 @@
 
 /* Define to 1 if you have the <sys/utsname.h> header file. */
 #undef HAVE_SYS_UTSNAME_H
+
+/* Define to 1 if you have the <time.h> header file. */
+#undef HAVE_TIME_H
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
@@ -129,8 +168,8 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define if you want to use /proc/uptime for uptime */
-#undef PROC_UPTIME
+/* Define if you want rss support */
+#undef RSS
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
@@ -152,3 +191,6 @@
 
 /* Define to 1 if the X Window System is missing or not being used. */
 #undef X_DISPLAY_MISSING
+
+/* Define for GNU source and extensions */
+#undef _GNU_SOURCE

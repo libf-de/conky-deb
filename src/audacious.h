@@ -1,9 +1,9 @@
-/* -------------------------------------------------------------------------
+/* $Id: audacious.h 905 2007-08-10 20:09:43Z pkovacs $ */
+
+/* 
  * audacious.h:  conky support for audacious music player
  * 
- * Copyright (C) 2005  Philip Kovacs kovacsp3@comcast.net
- *
- * $Id: audacious.h 717 2006-11-03 22:33:27Z pkovacs $
+ * Copyright (C) 2005-2007 Philip Kovacs pkovacs@users.sourceforge.net
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,8 +17,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- * --------------------------------------------------------------------------- */
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
+ * USA.
+ *
+ */
 
 #ifndef AUDACIOUS_H
 #define AUDACIOUS_H

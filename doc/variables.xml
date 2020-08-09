@@ -223,9 +223,10 @@
 <varlistentry>
 	<term>
 		<command><option>audacious_title</option></command>
+		<option>(max length)</option>
 	</term>
 	<listitem>
-		Title of current tune
+		Title of current tune with optional maximum length specifier
 	<para></para></listitem>
 </varlistentry>
 
@@ -235,7 +236,37 @@
 	<option>(num)</option>
 	</term>
 	<listitem>
-		Remaining capacity in ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+		Battery status and remaining percentage capacity of ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>battery_bar</option></command>
+	<option>(height),(width) (num)</option>
+	</term>
+	<listitem>
+		Battery percentage remaining of ACPI battery in a bar.  ACPI battery number can be given as argument (default is BAT0).
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>battery_percent</option></command>
+	<option>(num)</option>
+	</term>
+	<listitem>
+		Battery percentage remaining for ACPI battery.  ACPI battery number can be given as argument (default is BAT0).
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>battery_time</option></command>
+	<option>(num)</option>
+	</term>
+	<listitem>
+		Battery charge/discharge time remaining of ACPI battery.  ACPI battery number can be given as argument (default is BAT0).
 	<para></para></listitem>
 </varlistentry>
 
@@ -323,11 +354,101 @@
 
 <varlistentry>
 	<term>
+		<command><option>color0</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color0 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color1</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color1 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color2</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color2 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color3</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color3 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color4</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color4 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color5</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color5 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color6</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color6 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color7</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color7 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color8</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color8 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>color9</option></command>
+	</term>
+	<listitem>
+		Change drawing color to color9 configuration option
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
 		<command><option>cpu</option></command>
 		<option>(cpuN)</option>
 	</term>
 	<listitem>
-		CPU usage in percents.  For SMP machines, the CPU number can be provided as an argument.  ${cpu 0} is the total usage, and ${cpu X} (X >= 1) are individual CPUs. 
+		CPU usage in percents.  For SMP machines, the CPU number can be provided as an argument.  ${cpu cpu0} is the total usage, and ${cpu cpuX} (X >= 1) are individual CPUs.
 	<para></para></listitem>
 </varlistentry>
 
@@ -372,6 +493,44 @@
 
 <varlistentry>
 	<term>
+		<command><option>diskio_read</option></command>
+	</term>
+	<listitem>
+		Displays current disk IO for reads.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>diskio_readgraph</option></command>
+		<option>(height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+	</term>
+	<listitem>
+		Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>diskio_write</option></command>
+	</term>
+	<listitem>
+		Displays current disk IO for writes.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>diskio_writegraph</option></command>
+		<option>(height),(width) (gradient colour 1) (gradient colour 2) (scale)</option>
+	</term>
+	<listitem>
+		Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
 		<command><option>downspeed</option></command>
 	<option>net</option>
 	</term>
@@ -408,6 +567,35 @@
 		Text to show if any of the above are not true
 	<para></para></listitem>
 </varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>entropy_avail</option></command>
+	</term>
+	<listitem>
+		Current entropy available for crypto freaks
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>entropy_bar</option></command>
+		<option>(height),(width)</option>
+	</term>
+	<listitem>
+		Normalized bar of available entropy for crypto freaks
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>entropy_poolsize</option></command>
+	</term>
+	<listitem>
+		Total size of system entropy pool for crypto freaks
+	<para></para></listitem>
+</varlistentry>
+
 
 <varlistentry>
 	<term>
@@ -612,6 +800,16 @@
 </varlistentry>
 
 <varlistentry>
+  <term>
+    <command><option>hwmon</option></command>
+  <option>(dev) type n</option>
+  </term>
+  <listitem>
+    Hwmon sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one hwmon device. Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/class/hwmon/ on your local computer.
+  <para></para></listitem>
+</varlistentry>
+
+<varlistentry>
 	<term>
 		<command><option>iconv_start</option></command>
 	<option>codeset_from codeset_to</option>
@@ -637,7 +835,7 @@
 	<option>(dev) type n</option>
 	</term>
 	<listitem>
-		I2C sensor from sysfs (Linux 2.6). dev may be omitted if you have only one I2C device. type is either in (or vol) meaning voltage, fan meaning fan or temp/tempf (first in C, second in F) meaning temperature. n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
+		I2C sensor from sysfs (Linux 2.6).  Parameter dev may be omitted if you have only one I2C device.  Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature.  Parameter n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
 	<para></para></listitem>
 </varlistentry>
 
@@ -687,7 +885,7 @@
 	<option></option>
 	</term>
 	<listitem>
-		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Farenheit, as reported by /proc/i8k.
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Fahrenheit, as reported by /proc/i8k.
 	<para></para></listitem>
 </varlistentry>
 
@@ -792,6 +990,15 @@
 	<para></para></listitem>
 </varlistentry>
 
+<varlistentry>
+	<term>
+		<command><option>if_empty</option></command>
+	<option>(var)</option>
+	</term>
+	<listitem>
+		if conky variable VAR is empty, display everything between $if_empty and the matching $endif
+	<para></para></listitem>
+</varlistentry>
 
 <varlistentry>
 	<term>
@@ -799,17 +1006,17 @@
 	<option>(process)</option>
 	</term>
 	<listitem>
-		if PROCESS is running, display everything if_running and the matching $endif
+		if PROCESS is running, display everything $if_running and the matching $endif
 	<para></para></listitem>
 </varlistentry>
 
 <varlistentry>
 	<term>
 		<command><option>if_existing</option></command>
-	<option>(file)</option>
+	<option>file (string)</option>
 	</term>
 	<listitem>
-		if FILE exists, display everything between if_existing and the matching $endif
+		if FILE exists, display everything between if_existing and the matching $endif.  The optional second paramater checks for FILE containing the specified string and prints everything between $if_existing and the matching $endif.
 	<para></para></listitem>
 </varlistentry>
 
@@ -819,7 +1026,7 @@
 	<option>(mountpoint)</option>
 	</term>
 	<listitem>
-		if MOUNTPOINT is mounted, display everything between if_mounted and the matching $endif
+		if MOUNTPOINT is mounted, display everything between $if_mounted and the matching $endif
 	<para></para></listitem>
 </varlistentry>
 
@@ -829,7 +1036,7 @@
 	<option>(args)</option>
 	</term>
 	<listitem>
-		Displays the number of messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+		Displays the number of messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 143, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<para></para></listitem>
 </varlistentry>
 
@@ -839,7 +1046,7 @@
 	<option>(args)</option>
 	</term>
 	<listitem>
-		Displays the number of unseen messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+		Displays the number of unseen messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 143, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<para></para></listitem>
 </varlistentry>
 
@@ -849,16 +1056,6 @@
 	</term>
 	<listitem>
 		Kernel version
-	<para></para></listitem>
-</varlistentry>
-
-<varlistentry>
-	<term>
-		<command><option>linkstatus</option></command>
-	<option>interface</option>
-	</term>
-	<listitem>
-		Get the link status for wireless connections
 	<para></para></listitem>
 </varlistentry>
 
@@ -886,6 +1083,16 @@
 	</term>
 	<listitem>
 		Mail count in mail spool. You can use program like fetchmail to get mails from some server using your favourite protocol. See also new_mails.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>mboxscan</option></command>
+		<option>(-n number of messages to print) (-fw from width) (-sw subject width) mbox</option>
+	</term>
+	<listitem>
+		Print a summary of recent messages in an mbox format mailbox.  mbox parameter is the filename of the mailbox (can be encapsulated using '"', ie. ${mboxscan -n 10 "/home/brenden/some box"}
 	<para></para></listitem>
 </varlistentry>
 
@@ -975,6 +1182,7 @@
 <varlistentry>
 	<term>
 		<command><option>mpd_title</option></command>
+	<option>(max length)</option>
 	</term>
 	<listitem>
 		Title of current MPD song
@@ -1129,6 +1337,16 @@
                         </member>
                 </simplelist>
 	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+  <term>
+    <command><option>platform</option></command>
+  <option>(dev) type n</option>
+  </term>
+  <listitem>
+    Platform sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one platform device. Platform type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/bus/platform/devices/ on your local computer.
+  <para></para></listitem>
 </varlistentry>
 
 <varlistentry>
@@ -1315,6 +1533,16 @@
 
 <varlistentry>
 	<term>
+		<command><option>rss</option></command>
+		<option>url delay_in_minutes action item_num</option>
+	</term>
+	<listitem>
+		Download and parse RSS feeds. Action may be one of the following: feed_title, item_title (with num par), item_desc (with num par) and item_titles.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
 		<command><option>tab</option></command>
 		<option>(width, (start))</option>
 	</term>
@@ -1494,5 +1722,248 @@
 		defaults to 1.
 		<para></para></listitem>
 </varlistentry>
-		
+
+<varlistentry>
+	<term>
+		<command><option>wireless_essid</option></command>
+		<option>net</option>
+	</term>
+	<listitem>
+		Wireless access point ESSID (Linux only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>wireless_mode</option></command>
+		<option>net</option>
+	</term>
+	<listitem>
+		Wireless mode (Managed/Ad-Hoc/Master) (Linux only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>wireless_bitrate</option></command>
+		<option>net</option>
+	</term>
+	<listitem>
+		Wireless bitrate (ie 11 Mb/s) (Linux only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>wireless_ap</option></command>
+		<option>net</option>
+	</term>
+	<listitem>
+		Wireless access point MAC address (Linux only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>wireless_link_qual</option></command>
+		<option>net</option>
+	</term>
+	<listitem>
+		Wireless link quality (Linux only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>wireless_link_qual_max</option></command>
+		<option>net</option>
+	</term>
+	<listitem>
+		Wireless link quality maximum value (Linux only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>wireless_link_qual_perc</option></command>
+		<option>net</option>
+	</term>
+	<listitem>
+		Wireless link quality in percents (Linux only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>wireless_link_bar</option></command>
+		<option>(height), (width) net</option>
+	</term>
+	<listitem>
+		Wireless link quality bar (Linux only)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_artist</option></command>
+	</term>
+	<listitem>
+		Artist in current XMMS2 song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_album</option></command>
+	</term>
+	<listitem>
+		Album in current XMMS2 song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_title</option></command>
+	</term>
+	<listitem>
+		Title in current XMMS2 song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_genre</option></command>
+	</term>
+	<listitem>
+		Genre in current XMMS2 song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_comment</option></command>
+	</term>
+	<listitem>
+		Comment in current XMMS2 song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_decoder</option></command>
+	</term>
+	<listitem>
+		Decoder plugin used
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_transport</option></command>
+	</term>
+	<listitem>
+		Transport plugin used
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_url</option></command>
+	</term>
+	<listitem>
+		Full path to current song
+<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_tracknr</option></command>
+	</term>
+	<listitem>
+		Track number in current XMMS2 song
+<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_bitrate</option></command>
+	</term>
+	<listitem>
+	Bitrate of current song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_id</option></command>
+	</term>
+	<listitem>
+		XMMS2 id of current song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_duration</option></command>
+	</term>
+	<listitem>
+		Duration of current song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_elapsed</option></command>
+	</term>
+	<listitem>
+		Song's elapsed time
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_size</option></command>
+	</term>
+	<listitem>
+	Size of current song
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_percent</option></command>
+	</term>
+	<listitem>
+		Percent of song's progress
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_status</option></command>
+	</term>
+	<listitem>
+		XMMS2 status (Playing, Paused, Stopped, or Disconnected)
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_bar</option></command>
+	<option>(height),(width)</option>
+	</term>
+	<listitem>
+		Bar of XMMS2's progress
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>xmms2_smart</option></command>
+	</term>
+	<listitem>
+		Prints the song name in either the form "artist - title" or file name, depending on whats available
+	<para></para></listitem>
+</varlistentry>
+
 </variablelist>

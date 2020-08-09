@@ -1,9 +1,30 @@
 /*
  * Conky, a system monitor, based on torsmo
  *
- * This program is licensed under BSD license, read COPYING
+ * Any original torsmo code is licensed under the BSD license
  *
- *  $Id: top.c 431 2005-11-27 06:56:35Z boojit $
+ * All code written since the fork of torsmo is licensed under the GPL
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2005 Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>,
+ *                    Dave Clark <clarkd@skynet.ca>
+ * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *
+ *  $Id: top.c 904 2007-08-10 19:53:44Z brenden1 $
  */
 
 #include "top.h"
@@ -103,7 +124,7 @@ static int process_parse_stat(struct process *process)
 {
 	struct information *cur;
 	cur = &info;
-	char line[BUFFER_LEN], filename[BUFFER_LEN], procname[BUFFER_LEN];
+	char line[BUFFER_LEN] = { 0 }, filename[BUFFER_LEN], procname[BUFFER_LEN];
 	int ps;
 	unsigned long user_time = 0;
 	unsigned long kernel_time = 0;
@@ -356,7 +377,7 @@ static unsigned long long calc_cpu_total()
 	unsigned long long t = 0;
 	int rc;
 	int ps;
-	char line[BUFFER_LEN];
+	char line[BUFFER_LEN] = { 0 };
 	unsigned long long cpu = 0;
 	unsigned long long nice = 0;
 	unsigned long long system = 0;

@@ -7,6 +7,7 @@
  *
  * Please see COPYING for details
  *
+ * Copyright (c) 2007 Toni Spets
  * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
  * All rights reserved.
  *
@@ -22,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  *
- *  $Id: freebsd.c 925 2007-08-22 05:11:06Z mirrorbox $
+ *  $Id: openbsd.c 914 2007-08-10 21:14:06Z spets $
  */
 
 #include <sys/dkstat.h>
@@ -35,14 +36,17 @@
 #include <sys/vmmeter.h>
 #include <sys/user.h>
 #include <sys/ioctl.h>
+#include <sys/sensors.h>
+#include <sys/malloc.h>
+#include <sys/swap.h>
+#include <kvm.h>
 
 #include <net/if.h>
-#include <net/if_mib.h>
 #include <net/if_media.h>
-#include <net/if_var.h>
 #include <netinet/in.h>
 
-#include <devstat.h>
+#include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <limits.h>
@@ -50,69 +54,83 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <machine/apmvar.h>
 
-#include <dev/wi/if_wavelan_ieee.h>
+#include <net80211/ieee80211.h>
+#include <net80211/ieee80211_ioctl.h>
 
 #include "conky.h"
 
-#define	GETSYSCTL(name, var)	getsysctl(name, &(var), sizeof (var))
-#define	KELVTOC(x)		((x - 2732) / 10.0)
 #define	MAXSHOWDEVS		16
 
-#if 0
-#define	FREEBSD_DEBUG
-#endif
+#define LOG1024			10
+#define pagetok(size) ((size) << pageshift)
 
 inline void proc_find_top(struct process **cpu, struct process **mem);
 
-u_int64_t diskio_prev = 0;
 static short cpu_setup = 0;
-static short diskio_setup = 0;
-
-static int getsysctl(char *name, void *ptr, size_t len)
-{
-	size_t nlen = len;
-	if (sysctlbyname(name, ptr, &nlen, NULL, 0) == -1) {
-		return (-1);
-	}
-
-	if (nlen != len) {
-		return (-1);
-	}
-
-	return (0);
-}
+static kvm_t *kd = 0;
 
 struct ifmibdata *data = NULL;
 size_t len = 0;
 
-static int swapmode(int *retavail, int *retfree)
+int init_kvm = 0;
+int init_sensors = 0;
+
+static int kvm_init()
 {
-	int n;
-	int pagesize = getpagesize();
-	struct kvm_swap swapary[1];
+	if(init_kvm)
+		return 1;
 
-	*retavail = 0;
-	*retfree = 0;
+	kd = kvm_open(NULL, NULL, NULL, KVM_NO_FILES, NULL);
+	if(kd == NULL)
+		ERR("error opening kvm");
+	else	init_kvm = 1;
 
-#define	CONVERT(v)	((quad_t)(v) * pagesize / 1024)
-
-	n = kvm_getswapinfo(kd, swapary, 1, 0);
-	if (n < 0 || swapary[0].ksw_total == 0)
-		return (0);
-
-	*retavail = CONVERT(swapary[0].ksw_total);
-	*retfree = CONVERT(swapary[0].ksw_total - swapary[0].ksw_used);
-
-	n = (int) ((double) swapary[0].ksw_used * 100.0 /
-		(double) swapary[0].ksw_total);
-
-	return (n);
+	return 1;
 }
 
-void
-prepare_update()
+/* note: swapmode taken from 'top' source */
+/*
+ * swapmode is rewritten by Tobias Weingartner <weingart@openbsd.org>
+ * to be based on the new swapctl(2) system call.
+ */
+static int
+swapmode(int *used, int *total)
 {
+	struct swapent *swdev;
+	int nswap, rnswap, i;
+
+	nswap = swapctl(SWAP_NSWAP, 0, 0);
+	if (nswap == 0)
+		return 0;
+
+	swdev = malloc(nswap * sizeof(*swdev));
+	if (swdev == NULL)
+		return 0;
+
+	rnswap = swapctl(SWAP_STATS, swdev, nswap);
+	if (rnswap == -1)
+		return 0;
+
+	/* if rnswap != nswap, then what? */
+
+	/* Total things up */
+	*total = *used = 0;
+	for (i = 0; i < nswap; i++) {
+		if (swdev[i].se_flags & SWF_ENABLE) {
+			*used += (swdev[i].se_inuse / (1024 / DEV_BSIZE));
+			*total += (swdev[i].se_nblks / (1024 / DEV_BSIZE));
+		}
+	}
+	free(swdev);
+	return 1;
+}
+
+int check_mount(char *s)
+{
+	/* stub */
+	return 0;
 }
 
 void
@@ -128,52 +146,42 @@ update_uptime()
 		time(&now);
 		info.uptime = now - boottime.tv_sec;
 	} else {
-		fprintf(stderr, "Could not get uptime\n");
+		ERR("Could not get uptime");
 		info.uptime = 0;
 	}
-}
-
-int check_mount(char *s)
-{
-	struct statfs *mntbuf;
-	int i, mntsize;
-
-	mntsize = getmntinfo(&mntbuf, MNT_NOWAIT);
-	for (i = mntsize - 1; i >= 0; i--)
-		if (strcmp(mntbuf[i].f_mntonname, s) == 0)
-			return 1;
-
-	return 0;
 }
 
 void
 update_meminfo()
 {
-	int total_pages, inactive_pages, free_pages;
-	int swap_avail, swap_free;
+	static int mib[2] = {CTL_VM, VM_METER};
+	struct vmtotal vmtotal;
+	size_t size;
+	int pagesize, pageshift, swap_avail, swap_used;
 
-	int pagesize = getpagesize();
+	pagesize = getpagesize();
+	pageshift = 0;
+	while (pagesize > 1) {
+		pageshift++;
+		pagesize >>= 1;
+	}
 
-	if (GETSYSCTL("vm.stats.vm.v_page_count", total_pages))
-		fprintf(stderr,
-			"Cannot read sysctl \"vm.stats.vm.v_page_count\"");
+	/* we only need the amount of log(2)1024 for our conversion */
+	pageshift -= LOG1024;
 
-	if (GETSYSCTL("vm.stats.vm.v_free_count", free_pages))
-		fprintf(stderr,
-			"Cannot read sysctl \"vm.stats.vm.v_free_count\"");
+	/* get total -- systemwide main memory usage structure */
+	size = sizeof(vmtotal);
+	if (sysctl(mib, 2, &vmtotal, &size, NULL, 0) < 0) {
+		warn("sysctl failed");
+		bzero(&vmtotal, sizeof(vmtotal));
+	}
 
-	if (GETSYSCTL("vm.stats.vm.v_inactive_count", inactive_pages))
-		fprintf(stderr,
-			"Cannot read sysctl \"vm.stats.vm.v_inactive_count\"");
+	info.memmax =  pagetok(vmtotal.t_rm) + pagetok(vmtotal.t_free);
+	info.mem = pagetok(vmtotal.t_rm);
 
-	info.memmax = (total_pages * pagesize) >> 10;
-	info.mem =
-	    ((total_pages - free_pages - inactive_pages) * pagesize) >> 10;
-
-
-	if ((swapmode(&swap_avail, &swap_free)) >= 0) {
+	if ((swapmode(&swap_used, &swap_avail)) >= 0) {
 		info.swapmax = swap_avail;
-		info.swap = (swap_avail - swap_free);
+		info.swap = swap_used;
 	} else {
 		info.swapmax = 0;
 		info.swap = 0;
@@ -256,7 +264,8 @@ update_total_processes()
 {
 	int n_processes;
 
-	kvm_getprocs(kd, KERN_PROC_ALL, 0, &n_processes);
+	kvm_init();
+	kvm_getprocs(kd, KERN_PROC_ALL, 0, &n_processes); 
 
 	info.procs = n_processes;
 }
@@ -264,17 +273,15 @@ update_total_processes()
 void
 update_running_processes()
 {
-	struct kinfo_proc *p;
+	struct kinfo_proc2 *p;
 	int n_processes;
 	int i, cnt = 0;
 
-	p = kvm_getprocs(kd, KERN_PROC_ALL, 0, &n_processes);
+	kvm_init();
+	int max_size = sizeof(struct kinfo_proc2);
+	p = kvm_getproc2(kd, KERN_PROC_ALL, 0, max_size, &n_processes);
 	for (i = 0; i < n_processes; i++) {
-#if __FreeBSD__ < 5
-		if (p[i].kp_proc.p_stat == SRUN)
-#else
-		if (p[i].ki_stat == SRUN)
-#endif
+		if (p[i].p_stat == SRUN)
 			cnt++;
 	}
 
@@ -291,31 +298,28 @@ long cpu_used, oldtotal, oldused;
 void
 get_cpu_count()
 {
-	/* int cpu_count = 0; */
-
 	/*
-	 * XXX
-	 * FreeBSD doesn't allow to get per CPU load stats
-	 * on SMP machines. It's possible to get a CPU count,
-	 * but as we fulfil only info.cpu_usage[0], it's better
-	 * to report there's only one CPU. It should fix some bugs
-	 * (e.g. cpugraph)
+	 * FIXME: is it possible to get per cpu stats with openbsd?
 	 */
 #if 0
-	if (GETSYSCTL("hw.ncpu", cpu_count) == 0)
+	int cpu_count = 0;
+	int mib[2] = { CTL_HW, HW_NCPU };
+	size_t len = sizeof(cpu_count);
+	if (sysctl(mib, 2, &cpu_count, &len, NULL, 0) == 0)
 		info.cpu_count = cpu_count;
+	else	/* last resort, 1 cpu */
 #endif
-	info.cpu_count = 1;
+		info.cpu_count = 1;
 
 	info.cpu_usage = malloc(info.cpu_count * sizeof (float));
 	if (info.cpu_usage == NULL)
 		CRIT_ERR("malloc");
 }
 
-/* XXX: SMP support */
 void
 update_cpu_usage()
 {
+	int mib[2] = { CTL_KERN, KERN_CPTIME };
 	long used, total;
 	long cp_time[CPUSTATES];
 	size_t len = sizeof (cp_time);
@@ -326,8 +330,8 @@ update_cpu_usage()
 		cpu_setup = 1;
 	}
 
-	if (sysctlbyname("kern.cp_time", &cp_time, &len, NULL, 0) < 0) {
-		(void) fprintf(stderr, "Cannot get kern.cp_time");
+	if (sysctl(mib, 2, &cp_time, &len, NULL, 0) < 0) {
+		ERR("Cannot get kern.cp_time");
 	}
 
 	fresh.load[0] = cp_time[CP_USER];
@@ -351,12 +355,6 @@ update_cpu_usage()
 	oldtotal = total;
 }
 
-double
-get_sysfs_info(int *fd, int arg, char *devtype, char *type)
-{
-	return (0);
-}
-
 void
 update_load_average()
 {
@@ -368,170 +366,95 @@ update_load_average()
 	info.loadavg[2] = (float) v[2];
 }
 
-double
-get_acpi_temperature(int fd)
+/* read sensors from sysctl */
+void update_obsd_sensors()
 {
-	int temp;
+	int sensor_cnt, dev, numt, mib[5] = { CTL_HW, HW_SENSORS, 0, 0, 0 };
+	struct sensor sensor;
+	struct sensordev sensordev;
+	size_t slen,sdlen;
+	enum sensor_type type;
 
-	if (GETSYSCTL("hw.acpi.thermal.tz0.temperature", temp)) {
-		fprintf(stderr,
-		"Cannot read sysctl \"hw.acpi.thermal.tz0.temperature\"\n");
-		return (0.0);
-	}
+	slen = sizeof(sensor);
+	sdlen = sizeof(sensordev);
 
-	return (KELVTOC(temp));
-}
+	sensor_cnt = 0;
 
-void
-get_battery_stuff(char *buf, unsigned int n, const char *bat, int item)
-{
-	int battime, batcapacity, batstate, ac;
-	char battery_status[64];
-	char battery_time[64];
+	dev = obsd_sensors.device; // FIXME: read more than one device
 
-	if (GETSYSCTL("hw.acpi.battery.time", battime))
-		(void) fprintf(stderr,
-			"Cannot read sysctl \"hw.acpi.battery.time\"\n");
-	if (GETSYSCTL("hw.acpi.battery.life", batcapacity))
-		(void) fprintf(stderr,
-					   "Cannot read sysctl \"hw.acpi.battery.life\"\n");
-
-	if (GETSYSCTL("hw.acpi.battery.state", batstate))
-		(void) fprintf(stderr,
-					   "Cannot read sysctl \"hw.acpi.battery.state\"\n");
-
-	if (GETSYSCTL("hw.acpi.acline", ac))
-		(void) fprintf(stderr,
-					   "Cannot read sysctl \"hw.acpi.acline\"\n");
-
-	if (batstate == 1) {
-		if (battime != -1) {
-			snprintf (battery_status, sizeof(battery_status)-1,
-				  "remaining %d%%", batcapacity);
-			snprintf (battery_time, sizeof(battery_time)-1,
-				  "%d:%2.2d", battime / 60, battime % 60);
-			/*
-			snprintf(buf, n, "remaining %d%% (%d:%2.2d)",
-					batcapacity, battime / 60, battime % 60);
-			*/
+	/* for (dev = 0; dev < MAXSENSORDEVICES; dev++) { */
+		mib[2] = dev;
+		if(sysctl(mib, 3, &sensordev, &sdlen, NULL, 0) == -1) {
+			if (errno != ENOENT)
+				warn("sysctl");
+			return;
+			//continue;
 		}
-		else
-			/* no time estimate available yet */
-			snprintf(battery_status, sizeof(battery_status)-1,
-				 "remaining %d%%", batcapacity);
-			/*
-			snprintf(buf, n, "remaining %d%%",
-					batcapacity);
-			*/
-		if (ac == 1)
-			(void) fprintf(stderr, "Discharging while on AC!\n");
+		for (type = 0; type < SENSOR_MAX_TYPES; type++) {
+			mib[3] = type;
+			for (numt = 0; numt < sensordev.maxnumt[type]; numt++) {
+				mib[4] = numt;
+				if (sysctl(mib, 5, &sensor, &slen, NULL, 0)
+				    == -1) {
+					if (errno != ENOENT)
+						warn("sysctl");
+					continue;
+				}
+				if (sensor.flags & SENSOR_FINVALID)
+					continue;
+
+				switch (type) {
+					case SENSOR_TEMP:
+						obsd_sensors.temp[dev][sensor.numt] = (sensor.value - 273150000) / 1000000.0;
+						break;
+					case SENSOR_FANRPM:
+						obsd_sensors.fan[dev][sensor.numt] = sensor.value;
+						break;
+					case SENSOR_VOLTS_DC:
+						obsd_sensors.volt[dev][sensor.numt] = sensor.value/1000000.0;
+						break;
+					default:
+						break;
+				}
+
+				sensor_cnt++;
+			}
+		}
+	/* } */
+
+	init_sensors = 1;
+}
+
+/* chipset vendor */
+void get_obsd_vendor(char *buf, size_t client_buffer_size)
+{
+	int mib[2];
+	mib[0] = CTL_HW;
+	mib[1] = HW_VENDOR;
+	char vendor[64];
+	size_t size = sizeof(vendor);
+	if(sysctl(mib, 2, vendor, &size, NULL, 0) == -1) {
+		ERR("error reading vendor");
+		snprintf(buf, client_buffer_size, "unknown");
 	} else {
-		snprintf (battery_status, sizeof(battery_status)-1,
-			  batstate == 2 ? "charging (%d%%)" : "charged (%d%%)", batcapacity);
-		/*
-		snprintf(buf, n, batstate == 2 ? "charging (%d%%)" : "charged (%d%%)", batcapacity);
-		*/
-		if (batstate != 2 && batstate != 0)
-			(void) fprintf(stderr, "Unknown battery state %d!\n", batstate);
-		if (ac == 0)
-			(void) fprintf(stderr, "Charging while not on AC!\n");
+		snprintf(buf, client_buffer_size, "%s", vendor);
 	}
-
-	switch (item) {
-        case BATTERY_STATUS:
-                {
-                        snprintf(buf, n, "%s", battery_status);
-                        break;
-                }
-        case BATTERY_TIME:
-                {
-                        snprintf(buf, n, "%s", battery_time);
-                        break;
-                }
-        default:
-                        break;
-        }
-        return;
 }
 
-int
-get_battery_perct(const char *bat)
+/* chipset name */
+void get_obsd_product(char *buf, size_t client_buffer_size)
 {
-	/* not implemented */
-	return (0);
-}
-
-int
-get_battery_perct_bar(const char *bar)
-{
-	/* not implemented */
-	return (0);
-}
-
-int
-open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n, int *div, char *devtype)
-{
-	return (0);
-}
-
-int
-open_acpi_temperature(const char *name)
-{
-	return (0);
-}
-
-void
-get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size)
-{
-	int state;
-
-	if (!p_client_buffer || client_buffer_size <= 0)
-		return;
-
-	if (GETSYSCTL("hw.acpi.acline", state)) {
-		fprintf(stderr,
-			"Cannot read sysctl \"hw.acpi.acline\"\n");
-		return;
+	int mib[2];
+	mib[0] = CTL_HW;
+	mib[1] = HW_PRODUCT;
+	char product[64];
+	size_t size = sizeof(product);
+	if(sysctl(mib, 2, product, &size, NULL, 0) == -1) {
+		ERR("error reading product");
+		snprintf(buf, client_buffer_size, "unknown");
+	} else {
+		snprintf(buf, client_buffer_size, "%s", product);
 	}
-
-
-	if (state)
-		strncpy(p_client_buffer, "Running on AC Power",
-				client_buffer_size);
-	else
-		strncpy(p_client_buffer, "Running on battery",
-				client_buffer_size);
-
-}
-
-void
-get_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
-{
-	if (!p_client_buffer || client_buffer_size <= 0)
-		return;
-
-	/* not implemented */
-	memset(p_client_buffer, 0, client_buffer_size);
-}
-
-void
-get_adt746x_cpu(char *p_client_buffer, size_t client_buffer_size)
-{
-	if (!p_client_buffer || client_buffer_size <= 0)
-		return;
-
-	/* not implemented */
-	memset(p_client_buffer, 0, client_buffer_size);
-}
-
-void
-get_adt746x_fan(char *p_client_buffer, size_t client_buffer_size)
-{
-	if (!p_client_buffer || client_buffer_size <= 0)
-		return;
-
-	/* not implemented */
-	memset(p_client_buffer, 0, client_buffer_size);
 }
 
 /* rdtsc() and get_freq_dynamic() copied from linux.c */
@@ -551,7 +474,7 @@ void
 get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
 		char *p_format, int divisor)
 {
-#if  defined(__i386) || defined(__x86_64)
+#if  defined(__i386) || defined(__x86_64) 
 	struct timezone tz;
 	struct timeval tvstart, tvstop;
 	unsigned long long cycles[2];	/* gotta be 64 bit */
@@ -574,7 +497,7 @@ get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
 	snprintf(p_client_buffer, client_buffer_size, p_format,
 		(float)((cycles[1] - cycles[0]) / microseconds) / divisor);
 #else
-	get_freq(p_client_buffer, client_buffer_size, p_format, divisor, 1);
+	get_freq(p_client_buffer, client_buffer_size, p_format, divisor);
 #endif
 }
 
@@ -583,26 +506,20 @@ char
 get_freq(char *p_client_buffer, size_t client_buffer_size,
 		char *p_format, int divisor, unsigned int cpu)
 {
-	int freq;
-	char *freq_sysctl;
-
-	freq_sysctl = (char *)calloc(16, sizeof(char));
-	if (freq_sysctl == NULL)
-		exit(-1);
-
-	snprintf(freq_sysctl, 16, "dev.cpu.%d.freq", (cpu - 1));
+	int freq = cpu;
+	int mib[2] = { CTL_HW, HW_CPUSPEED };
 	
 	if (!p_client_buffer || client_buffer_size <= 0 ||
 			!p_format || divisor <= 0)
 		return 0;
 
-	if (GETSYSCTL(freq_sysctl, freq) == 0)
+	size_t size = sizeof(freq);
+	if(sysctl(mib, 2, &freq, &size, NULL, 0) == 0)
 		snprintf(p_client_buffer, client_buffer_size,
 				p_format, (float)freq/divisor);
 	else
 		snprintf(p_client_buffer, client_buffer_size, p_format, 0.0f);
 
-	free(freq_sysctl);
 	return 1;
 }
 
@@ -613,15 +530,16 @@ update_top()
 }
 
 #if 0
+/* deprecated, will rewrite this soon in update_net_stats() -hifi */
 void
 update_wifi_stats()
 {
-	struct ifreq ifr;		/* interface stats */
-	struct wi_req wireq;
 	struct net_stat * ns;
 	struct ifaddrs *ifap, *ifa;
 	struct ifmediareq ifmr;
-	int s;
+	struct ieee80211_nodereq nr;
+	struct ieee80211_bssid bssid;
+	int s,ibssid;
 
 	/*
 	 * Get iface table
@@ -647,23 +565,17 @@ update_wifi_stats()
 		if ((ifmr.ifm_active & IFM_IEEE80211) &&
 				!(ifmr.ifm_active & IFM_IEEE80211_HOSTAP)) {
 			/* Get wi status */
-			bzero(&ifr, sizeof(ifr));
-			strlcpy(ifr.ifr_name, ifa->ifa_name, IFNAMSIZ);
-			wireq.wi_type	= WI_RID_COMMS_QUALITY;
-			wireq.wi_len	= WI_MAX_DATALEN;
-			ifr.ifr_data	= (void *) &wireq;
 
-			if (ioctl(s, SIOCGWAVELAN, (caddr_t) &ifr) < 0) {
-				perror("ioctl (getting wi status)");
-				exit(1);
-			}
+			memset(&bssid, 0, sizeof(bssid));
+			strlcpy(bssid.i_name, ifa->ifa_name, sizeof(bssid.i_name));
+			ibssid = ioctl(s, SIOCG80211BSSID, &bssid);
 
-			/*
-			 * wi_val[0] = quality
-			 * wi_val[1] = signal
-			 * wi_val[2] = noise
-			 */
-			ns->linkstatus = (int) wireq.wi_val[1];
+			bzero(&nr, sizeof(nr));
+			bcopy(bssid.i_bssid, &nr.nr_macaddr, sizeof(nr.nr_macaddr));
+			strlcpy(nr.nr_ifname, ifa->ifa_name, sizeof(nr.nr_ifname));
+
+			if (ioctl(s, SIOCG80211NODE, &nr) == 0 && nr.nr_rssi)
+				ns->linkstatus = nr.nr_rssi;
 		}
 cleanup:
 		close(s);
@@ -674,56 +586,7 @@ cleanup:
 void
 update_diskio()
 {
-	int devs_count,
-	    num_selected,
-	    num_selections;
-	struct device_selection *dev_select = NULL;
-	long select_generation;
-	int dn;
-	static struct statinfo  statinfo_cur;
-	u_int64_t diskio_current = 0;
-
-	bzero(&statinfo_cur, sizeof (statinfo_cur));
-	statinfo_cur.dinfo = (struct devinfo *)malloc(sizeof (struct devinfo));
-	bzero(statinfo_cur.dinfo, sizeof (struct devinfo));
-
-	if (devstat_getdevs(NULL, &statinfo_cur) < 0)
-		return;
-
-	devs_count = statinfo_cur.dinfo->numdevs;
-	if (devstat_selectdevs(&dev_select, &num_selected, &num_selections,
-			&select_generation, statinfo_cur.dinfo->generation,
-			statinfo_cur.dinfo->devices, devs_count, NULL, 0,
-			NULL, 0, DS_SELECT_ONLY, MAXSHOWDEVS, 1) >= 0) {
-		for (dn = 0; dn < devs_count; ++dn) {
-			int di;
-			struct devstat  *dev;
-
-			di = dev_select[dn].position;
-			dev = &statinfo_cur.dinfo->devices[di];
-
-			diskio_current += dev->bytes[DEVSTAT_READ] +
-				dev->bytes[DEVSTAT_WRITE];
-		}
-
-		free(dev_select);
-	}
-
-	/*
-	 * Since we return (diskio_total_current - diskio_total_old), first
-	 * frame will be way too high (it will be equal to
-	 * diskio_total_current, i.e. all disk I/O since boot). That's why
-	 * it is better to return 0 first time;
-	 */
-	if (diskio_setup == 0) {
-		diskio_setup = 1;
-		diskio_value = 0;
-	} else
-		diskio_value = (unsigned int)((diskio_current - diskio_prev)/
-				1024);
-	diskio_prev = diskio_current;
-
-	free(statinfo_cur.dinfo);
+	return; /* XXX implement? hifi: not sure how */
 }
 
 /*
@@ -757,36 +620,42 @@ comparemem(const void *a, const void *b)
 inline void
 proc_find_top(struct process **cpu, struct process **mem)
 {
-	struct kinfo_proc *p;
+	struct kinfo_proc2 *p;
 	int n_processes;
 	int i, j = 0;
 	struct process *processes;
+	int mib[2];
 
 	int total_pages;
+	int pagesize = getpagesize();
 
 	/* we get total pages count again to be sure it is up to date */
-	if (GETSYSCTL("vm.stats.vm.v_page_count", total_pages) != 0)
-		CRIT_ERR("Cannot read sysctl"
-			"\"vm.stats.vm.v_page_count\"");
+	mib[0] = CTL_HW;
+	mib[1] = HW_USERMEM;
+	size_t size = sizeof(total_pages);
+	if(sysctl(mib, 2, &total_pages, &size, NULL, 0) == -1)
+		ERR("error reading nmempages");
 
-	p = kvm_getprocs(kd, KERN_PROC_PROC, 0, &n_processes);
+	int max_size = sizeof(struct kinfo_proc2);
+	p = kvm_getproc2(kd, KERN_PROC_ALL, 0, max_size, &n_processes);
 	processes = malloc(n_processes * sizeof (struct process));
 
+
 	for (i = 0; i < n_processes; i++) {
-		if (!((p[i].ki_flag & P_SYSTEM)) &&
-				p[i].ki_comm != NULL) {
-			processes[j].pid = p[i].ki_pid;
-			processes[j].name =  strdup(p[i].ki_comm);
+		if (!((p[i].p_flag & P_SYSTEM)) &&
+				p[i].p_comm != NULL) {
+			processes[j].pid = p[i].p_pid;
+			processes[j].name =  strdup(p[i].p_comm);
 			processes[j].amount = 100.0 *
-				p[i].ki_pctcpu / FSCALE;
-			processes[j].totalmem = (float)(p[i].ki_rssize /
+				p[i].p_pctcpu / FSCALE;
+			processes[j].totalmem = (float)(p[i].p_vm_rssize * pagesize /
 					(float)total_pages) * 100.0;
 			j++;
 		}
 	}
 
 	qsort(processes, j - 1, sizeof (struct process), comparemem);
-	for (i = 0; i < 10 && i < n_processes; i++) {
+	for (i = 0; i < 10; i++) {
 		struct process *tmp, *ttmp;
 
 		tmp = malloc(sizeof (struct process));
@@ -804,7 +673,7 @@ proc_find_top(struct process **cpu, struct process **mem)
 	}
 
 	qsort(processes, j - 1, sizeof (struct process), comparecpu);
-	for (i = 0; i < 10 && i < n_processes; i++) {
+	for (i = 0; i < 10; i++) {
 		struct process *tmp, *ttmp;
 
 		tmp = malloc(sizeof (struct process));
@@ -821,26 +690,18 @@ proc_find_top(struct process **cpu, struct process **mem)
 		}
 	}
 
-#if defined(FREEBSD_DEBUG)
-	printf("=====\nmem\n");
-	for (i = 0; i < 10; i++) {
-		printf("%d: %s(%d) %.2f\n", i, mem[i]->name,
-				mem[i]->pid, mem[i]->totalmem);
-	}
-#endif
-
 	for (i = 0; i < j; free(processes[i++].name));
 	free(processes);
 }
 
-#if	defined(i386) || defined(__i386__)
+#if	defined(i386) || defined(__i386__) 
 #define	APMDEV		"/dev/apm"
 #define	APM_UNKNOWN	255
 
 int
 apm_getinfo(int fd, apm_info_t aip)
 {
-	if (ioctl(fd, APMIO_GETINFO, aip) == -1)
+	if (ioctl(fd, APM_IOC_GETPOWER, aip) == -1)
 		return (-1);
 
 	return (0);
@@ -850,10 +711,10 @@ char
 *get_apm_adapter()
 {
 	int fd;
-	struct apm_info info;
+	struct apm_power_info info;
 	char *out;
 
-	out = (char *)calloc(16, sizeof (char));
+	out  = (char *)calloc(16, sizeof (char));
 
 	fd = open(APMDEV, O_RDONLY);
 	if (fd < 0) {
@@ -868,13 +729,13 @@ char
 	}
 	close(fd);
 
-	switch (info.ai_acline) {
-		case 0:
+	switch (info.ac_state) {
+		case APM_AC_OFF:
 			strncpy(out, "off-line", 16);
 			return (out);
 			break;
-		case 1:
-			if (info.ai_batt_stat == 3) {
+		case APM_AC_ON:
+			if (info.battery_state == APM_BATT_CHARGING) {
 				strncpy(out, "charging", 16);
 				return (out);
 			} else {
@@ -894,7 +755,7 @@ char
 {
 	int fd;
 	u_int batt_life;
-	struct apm_info info;
+	struct apm_power_info info;
 	char *out;
 
 	out = (char *)calloc(16, sizeof (char));
@@ -912,10 +773,8 @@ char
 	}
 	close(fd);
 
-	batt_life = info.ai_batt_life;
-	if (batt_life == APM_UNKNOWN)
-		strncpy(out, "unknown", 16);
-	else if (batt_life <= 100) {
+	batt_life = info.battery_life;
+	if (batt_life <= 100) {
 		snprintf(out, 16, "%d%%", batt_life);
 		return (out);
 	} else
@@ -929,8 +788,8 @@ char
 {
 	int fd;
 	int batt_time;
-	int h, m, s;
-	struct apm_info info;
+	int h, m;
+	struct apm_power_info info;
 	char *out;
 
 	out = (char *)calloc(16, sizeof (char));
@@ -948,17 +807,14 @@ char
 	}
 	close(fd);
 
-	batt_time = info.ai_batt_time;
+	batt_time = info.minutes_left;
 
 	if (batt_time == -1)
 		strncpy(out, "unknown", 16);
 	else {
-		h = batt_time;
-		s = h % 60;
-		h /= 60;
-		m = h % 60;
-		h /= 60;
-		snprintf(out, 16, "%2d:%02d:%02d", h, m, s);
+		h = batt_time / 60;
+		m = batt_time % 60;
+		snprintf(out, 16, "%2d:%02d", h, m);
 	}
 
 	return (out);
@@ -966,13 +822,20 @@ char
 
 #endif
 
-void update_entropy (void)
+/* empty stubs so conky links */
+void
+prepare_update()
 {
-     /* mirrorbox: can you do anything equivalent in freebsd? -drphibes. */
+	return;
 }
 
-/* empty stub so conky links */
+void update_entropy (void)
+{
+	return;
+}
+
 void
 free_all_processes(void)
 {
+	return;
 }

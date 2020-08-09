@@ -7,6 +7,7 @@
  *
  * Please see COPYING for details
  *
+ * Copyright (c) 2006 Marco Candrian <mac@calmar.ws>
  * Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
  * All rights reserved.
  *
@@ -22,64 +23,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  *
- *  $Id: solaris.c 904 2007-08-10 19:53:44Z brenden1 $
+ *  $Id: mboxscan.h 904 2007-08-10 19:53:44Z brenden1 $
  */
 
-/* doesn't work, feel free to finish this */
-#include "conky.h"
-#include <kstat.h>
+#ifndef _MBOXSCAN_H_
+#define _MBOXSCAN_H_
 
-static kstat_ctl_t *kstat;
-static int kstat_updated;
+void mbox_scan(char *args, char *output, size_t max_len);
 
-static void update_kstat()
-{
-	if (kstat == NULL) {
-		kstat = kstat_open();
-		if (kstat == NULL) {
-			ERR("can't open kstat: %s", strerror(errno));
-		}
-	}
-
-	if (kstat_chain_update(kstat) == -1) {
-		perror("kstat_chain_update");
-		return;
-	}
-}
-
-void prepare_update()
-{
-	kstat_updated = 0;
-}
-
-double get_uptime()
-{
-	kstat_t *ksp;
-
-	update_kstat();
-
-	ksp = kstat_lookup(kstat, "unix", -1, "system_misc");
-	if (ksp != NULL) {
-		if (kstat_read(kstat, ksp, NULL) >= 0) {
-			kstat_named_t *knp;
-			knp =
-			    (kstat_named_t *) kstat_data_lookup(ksp,
-								"boot_time");
-			if (knp != NULL) {
-				return get_time() -
-				    (double) knp->value.ui32;
-			}
-		}
-	}
-}
-
-void update_meminfo()
-{
-	/* TODO */
-}
-
-int check_mount(char *s)
-{
-	/* stub */
-	return 0;
-}
+#endif /* _MBOXSCAN_H_ */
