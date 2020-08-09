@@ -70,6 +70,9 @@
 #ifdef XOAP
 #include <libxml/parser.h>
 #endif /* XOAP */
+#ifdef HAVE_CURL
+#include <curl/curl.h>
+#endif
 
 /* local headers */
 #include "core.h"
@@ -166,9 +169,7 @@ int top_cpu, top_mem, top_time;
 #ifdef IOSTATS
 int top_io;
 #endif
-#ifdef __linux__
 int top_running;
-#endif
 int output_methods;
 static int extra_newline;
 enum x_initialiser_state x_initialised = NO;
@@ -269,9 +270,6 @@ static void print_version(void)
 #ifdef IMLIB2
 		   "  * Imlib2\n"
 #endif /* IMLIB2 */
-#ifdef MIXER_IS_ALSA
-		   "  * ALSA mixer support\n"
-#endif /* MIXER_IS_ALSA */
 #ifdef APCUPSD
 		   "  * apcupsd\n"
 #endif /* APCUPSD */
@@ -463,7 +461,7 @@ int check_contains(char *f, char *s)
 		}
 		fclose(where);
 	} else {
-		NORM_ERR("Could not open the file");
+		NORM_ERR("Could not open the file '%s'", f);
 	}
 	return ret;
 }
@@ -512,6 +510,7 @@ static inline void for_each_line(char *b, int f(char *, int))
 	char *ps, *pe;
 	int special_index = 0; /* specials index */
 
+	if(! b) return;
 	for (ps = b, pe = b; *pe; pe++) {
 		if (*pe == '\n') {
 			*pe = '\0';
@@ -607,7 +606,7 @@ void human_readable(long long num, char *buf, int size)
 		spaced_print(buf, size, "%d", 6, round_to_int(num));
 		return;
 	}
-	if (short_units) {
+	if (short_units || llabs(num) < 1000LL) {
 		width = 5;
 		format = "%.*f%.1s";
 	} else {
@@ -634,11 +633,11 @@ void human_readable(long long num, char *buf, int size)
 	 * adjusting the decimal part of the number. Sample output:
 	 *  123MiB
 	 * 23.4GiB
-	 * 5.12B   
+	 * 5.12B
 	 * so the point of alignment resides between number and unit. The
 	 * upside of this is that there is minimal padding necessary, though
 	 * there should be a way to make alignment take place at the decimal
-	 * dot (then with fixed width decimal part). 
+	 * dot (then with fixed width decimal part).
 	 *
 	 * Note the repdigits below: when given a precision value, printf()
 	 * rounds the float to it, not just cuts off the remaining digits. So
@@ -764,6 +763,8 @@ void generate_text_internal(char *p, int p_max_size,
 	char buff_in[p_max_size];
 	buff_in[0] = 0;
 #endif /* HAVE_ICONV */
+
+	if(! p) return;
 
 	p[0] = 0;
 	obj = root.next;
@@ -1330,7 +1331,7 @@ void generate_text_internal(char *p, int p_max_size,
 					DO_JUMP;
 				} else if (spc) {
 					*spc = '\0';
-					if (check_contains(obj->data.s, spc + 1))
+					if (!check_contains(obj->data.s, spc + 1))
 						DO_JUMP;
 					*spc = ' ';
 				}
@@ -1502,6 +1503,15 @@ void generate_text_internal(char *p, int p_max_size,
 			}
 			OBJ(nodename) {
 				snprintf(p, p_max_size, "%s", cur->uname_s.nodename);
+			}
+			OBJ(nodename_short) {
+				char *pos;
+				pos = strstr(cur->uname_s.nodename, ".");
+				if(pos != NULL) {
+					snprintf(p, MIN(pos-cur->uname_s.nodename+1, p_max_size), "%s", cur->uname_s.nodename);
+				} else {
+					snprintf(p, p_max_size, "%s", cur->uname_s.nodename);
+				}
 			}
 			OBJ(outlinecolor) {
 				new_outline(p, obj->data.l);
@@ -2173,7 +2183,6 @@ void generate_text_internal(char *p, int p_max_size,
 			/* we have four different types of top (top, top_mem,
 			 * top_time and top_io). To avoid having almost-same code four
 			 * times, we have this special handler. */
-#ifdef __linux__
 			break;
 			case OBJ_top:
 			case OBJ_top_mem:
@@ -2182,7 +2191,6 @@ void generate_text_internal(char *p, int p_max_size,
 			case OBJ_top_io:
 #endif
 				print_top(obj, p, p_max_size);
-#endif /* __linux__ */
 			OBJ(tail) {
 				print_tailhead("tail", obj, p, p_max_size);
 			}
@@ -2295,7 +2303,7 @@ void generate_text_internal(char *p, int p_max_size,
 			}
 #ifdef NVIDIA
 			OBJ(nvidia) {
-				print_nvidia_value(obj, display, p, p_max_size);
+				print_nvidia_value(obj, p, p_max_size);
 			}
 #endif /* NVIDIA */
 #ifdef APCUPSD
@@ -2375,9 +2383,10 @@ void generate_text_internal(char *p, int p_max_size,
 #ifdef HAVE_ICONV
 			iconv_convert(&a, buff_in, p, p_max_size);
 #endif /* HAVE_ICONV */
-			if (obj->type != OBJ_text && obj->type != OBJ_execp && obj->type != OBJ_execpi
+			if (obj->type == OBJ_execp || obj->type == OBJ_execpi || obj->type
+					== OBJ_exec
 #ifdef HAVE_LUA
-					&& obj->type != OBJ_lua && obj->type != OBJ_lua_parse
+					|| obj->type == OBJ_lua || obj->type == OBJ_lua_parse
 #endif /* HAVE_LUA */
 					) {
 				substitute_newlines(p, a - 2);
@@ -3119,36 +3128,49 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 						if (seconds != 0) {
 							timeunits = seconds / 86400; seconds %= 86400;
 							if (timeunits > 0) {
-								asprintf(&tmp_day_str, "%dd", timeunits);
+								if (asprintf(&tmp_day_str, "%dd", timeunits) < 0) {
+									tmp_day_str = 0;
+								}
 							} else {
 								tmp_day_str = strdup("");
 							}
 							timeunits = seconds / 3600; seconds %= 3600;
 							if (timeunits > 0) {
-								asprintf(&tmp_hour_str, "%dh", timeunits);
+								if (asprintf(&tmp_hour_str, "%dh", timeunits) < 0) {
+									tmp_day_str = 0;
+								}
 							} else {
 								tmp_hour_str = strdup("");
 							}
 							timeunits = seconds / 60; seconds %= 60;
 							if (timeunits > 0) {
-								asprintf(&tmp_min_str, "%dm", timeunits);
+								if (asprintf(&tmp_min_str, "%dm", timeunits) < 0) {
+									tmp_min_str = 0;
+								}
 							} else {
 								tmp_min_str = strdup("");
 							}
 							if (seconds > 0) {
-								asprintf(&tmp_sec_str, "%ds", seconds);
+								if (asprintf(&tmp_sec_str, "%ds", seconds) < 0) {
+									tmp_sec_str = 0;
+								}
 							} else {
 								tmp_sec_str = strdup("");
 							}
-							asprintf(&tmp_str, "%s%s%s%s", tmp_day_str, tmp_hour_str, tmp_min_str, tmp_sec_str);
-							free(tmp_day_str); free(tmp_hour_str); free(tmp_min_str); free(tmp_sec_str);
+							if (asprintf(&tmp_str, "%s%s%s%s", tmp_day_str,
+										tmp_hour_str, tmp_min_str, tmp_sec_str) < 0) {
+								tmp_str = 0;
+							}
+#define FREE(a) if ((a)) free((a));
+							FREE(tmp_day_str); FREE(tmp_hour_str); FREE(tmp_min_str); FREE(tmp_sec_str);
 						} else {
-							asprintf(&tmp_str, "Range not possible"); // should never happen, but better safe then sorry
+							tmp_str = strdup("Range not possible"); /* should never happen, but better safe then sorry */
 						}
 						cur_x += (w / 2) - (font_ascent() * (strlen(tmp_str) / 2));
 						cur_y += font_h / 2;
 						draw_string(tmp_str);
-						free(tmp_str);
+						FREE(tmp_str);
+#undef FREE
 						cur_x = tmp_x;
 						cur_y = tmp_y;
 					}
@@ -3974,11 +3996,40 @@ static void reload_config(void)
 	initialisation(argc_copy, argv_copy);
 }
 
-void clean_up(void *memtofree1, void* memtofree2)
+#ifdef X11
+void clean_up_x11(void)
 {
-	int i;
+	if(window_created == 1) {
+		XClearArea(display, window.window, text_start_x - window.border_inner_margin - window.border_outer_margin - window.border_width,
+			text_start_y - window.border_inner_margin - window.border_outer_margin - window.border_width,
+			text_width + window.border_inner_margin * 2 + window.border_outer_margin * 2 + window.border_width * 2,
+			text_height + window.border_inner_margin * 2 + window.border_outer_margin * 2 + window.border_width * 2, 0);
+	}
+	destroy_window();
+	free_fonts();
+	fonts = NULL;
+	if(x11_stuff.region) {
+		XDestroyRegion(x11_stuff.region);
+		x11_stuff.region = NULL;
+	}
+	if(display) {
+		XCloseDisplay(display);
+		display = NULL;
+	}
+	if(info.x11.desktop.all_names) {
+		free(info.x11.desktop.all_names);
+		info.x11.desktop.all_names = NULL;
+	}
+	if (info.x11.desktop.name) {
+		free(info.x11.desktop.name);
+		info.x11.desktop.name = NULL;
+	}
+	x_initialised = NO;
+}
+#endif
 
-	free_update_callbacks();
+void clean_up_without_threads(void *memtofree1, void* memtofree2) {
+	int i;
 
 #ifdef NCURSES
 	if(output_methods & TO_NCURSES) {
@@ -4001,34 +4052,15 @@ void clean_up(void *memtofree1, void* memtofree2)
 	}
 #ifdef X11
 	if (x_initialised == YES) {
-		if(window_created == 1) {
-			XClearArea(display, window.window, text_start_x - window.border_inner_margin - window.border_outer_margin - window.border_width,
-				text_start_y - window.border_inner_margin - window.border_outer_margin - window.border_width,
-				text_width + window.border_inner_margin * 2 + window.border_outer_margin * 2 + window.border_width * 2,
-				text_height + window.border_inner_margin * 2 + window.border_outer_margin * 2 + window.border_width * 2, 0);
-		}
-		destroy_window();
-		free_fonts();
-		if(x11_stuff.region) {
-			XDestroyRegion(x11_stuff.region);
-			x11_stuff.region = NULL;
-		}
-		XCloseDisplay(display);
-		display = NULL;
-		if(info.x11.desktop.all_names) {
-			free(info.x11.desktop.all_names);
-			info.x11.desktop.all_names = NULL;
-		}
-		if (info.x11.desktop.name) {
-			free(info.x11.desktop.name);
-			info.x11.desktop.name = NULL;
-		}
-		x_initialised = NO;
+		clean_up_x11();
 	}else{
 		free(fonts);	//in set_default_configurations a font is set but not loaded
 		font_count = -1;
 	}
 
+#ifdef NVIDIA
+	set_nvidia_display(NULL);
+#endif
 #endif /* X11 */
 
 	free_templates();
@@ -4095,6 +4127,12 @@ void clean_up(void *memtofree1, void* memtofree2)
 		free(global_cpu);
 		global_cpu = NULL;
 	}
+}
+
+void clean_up(void *memtofree1, void* memtofree2)
+{
+	free_update_callbacks();
+	clean_up_without_threads(memtofree1, memtofree2);
 }
 
 static int string_to_bool(const char *s)
@@ -4200,9 +4238,7 @@ static void set_default_configurations(void)
 #ifdef IOSTATS
 	top_io = 0;
 #endif
-#ifdef __linux__
 	top_running = 0;
-#endif
 #ifdef MPD
 	mpd_env_host = getenv("MPD_HOST");
 	mpd_env_port = getenv("MPD_PORT");
@@ -4252,6 +4288,9 @@ static void set_default_configurations(void)
 	output_methods = TO_STDOUT;
 #endif
 #ifdef X11
+#ifdef BUILD_XFT
+	use_xft = 0;
+#endif
 	show_graph_scale = 0;
 	show_graph_range = 0;
 	draw_shades = 1;
@@ -4282,11 +4321,11 @@ static void set_default_configurations(void)
 	text_alignment = BOTTOM_LEFT;
 	info.x11.monitor.number = 1;
 	info.x11.monitor.current = 0;
-	info.x11.desktop.current = 1; 
+	info.x11.desktop.current = 1;
 	info.x11.desktop.number = 1;
 	info.x11.desktop.nitems = 0;
-	info.x11.desktop.all_names = NULL; 
-	info.x11.desktop.name = NULL; 
+	info.x11.desktop.all_names = NULL;
+	info.x11.desktop.name = NULL;
 #endif /* X11 */
 
 	free_templates();
@@ -4518,13 +4557,13 @@ void setalignment(int* ltext_alignment, unsigned int windowtype, const char* val
 		int a = string_to_alignment(value);
 
 		if (a <= 0) {
-			if(setbyconffile == true) {
+			if (setbyconffile) {
 				CONF_ERR;
 			} else NORM_ERR("'%s' is not a alignment setting", value);
 		} else {
 			*ltext_alignment = a;
 		}
-	} else if(setbyconffile == true) {
+	} else if (setbyconffile) {
 		CONF_ERR;
 	}
 }
@@ -4552,15 +4591,12 @@ char load_config_file(const char *f)
 
 #ifdef X11
 		CONF2("out_to_x") {
-			/* don't listen if X is already initialised or
-			 * if we already know we don't want it */
-			if(x_initialised != YES) {
-				if (string_to_bool(value)) {
-					output_methods &= TO_X;
-				} else {
-					output_methods &= ~TO_X;
-					x_initialised = NEVER;
-				}
+			if (string_to_bool(value)) {
+				output_methods &= TO_X;
+			} else {
+				clean_up_x11();
+				output_methods &= ~TO_X;
+				x_initialised = NEVER;
 			}
 		}
 		CONF("display") {
@@ -4572,8 +4608,14 @@ char load_config_file(const char *f)
 				disp = strdup(value);
 			}
 		}
+#ifdef NVIDIA
+		CONF("nvidia_display") {
+			if(value)
+				set_nvidia_display(value);
+		}
+#endif
 		CONF("alignment") {
-			setalignment(&text_alignment, window.type, value, f, line, true);
+			setalignment(&text_alignment, window.type, value, f, line, 1);
 		}
 		CONF("background") {
 			fork_to_background = string_to_bool(value);
@@ -4609,7 +4651,7 @@ char load_config_file(const char *f)
 		CONF("border_width") {
 			if (value) {
 				window.border_width = strtol(value, 0, 0);
-				if (window.border_width < 0) window.border_width = 0;
+				if (window.border_width < 1) window.border_width = 1;
 			} else {
 				CONF_ERR;
 			}
@@ -5696,7 +5738,7 @@ void initialisation(int argc, char **argv) {
 				set_first_font(optarg);
 				break;
 			case 'a':
-				setalignment(&text_alignment, window.type, optarg, NULL, 0, false);
+				setalignment(&text_alignment, window.type, optarg, NULL, 0, 0);
 				break;
 
 #ifdef OWN_WINDOW
@@ -5855,6 +5897,11 @@ int main(int argc, char **argv)
 	tcp_portmon_set_max_connections(0);
 #endif
 
+#ifdef HAVE_CURL
+	if(curl_global_init(CURL_GLOBAL_ALL))
+		NORM_ERR("curl_global_init() failed, you may not be able to use curl variables");
+#endif
+
 	/* handle command line parameters that don't change configs */
 #ifdef X11
 	if (((s = getenv("LC_ALL")) && *s) || ((s = getenv("LC_CTYPE")) && *s)
@@ -5895,7 +5942,9 @@ int main(int argc, char **argv)
 				current_config = strndup(optarg, max_user_text);
 				break;
 			case 'q':
-				freopen("/dev/null", "w", stderr);
+				if (!freopen("/dev/null", "w", stderr)) {
+					NORM_ERR("unable to redirect stderr to /dev/null");
+				}
 				break;
 			case 'h':
 				print_help(argv[0]);
@@ -5929,7 +5978,13 @@ int main(int argc, char **argv)
 #endif /* XOAP */
 
 #ifdef HAVE_SYS_INOTIFY_H
-	inotify_fd = inotify_init1(IN_NONBLOCK);
+	inotify_fd = inotify_init();
+	if(inotify_fd != -1) {
+		int fl;
+
+		fl = fcntl(inotify_fd, F_GETFL);
+		fcntl(inotify_fd, F_SETFL, fl | O_NONBLOCK);
+	}
 #endif /* HAVE_SYS_INOTIFY_H */
 
 	initialisation(argc, argv);
@@ -5937,6 +5992,10 @@ int main(int argc, char **argv)
 	first_pass = 0; /* don't ever call fork() again */
 
 	main_loop();
+
+#ifdef HAVE_CURL
+	curl_global_cleanup();
+#endif
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 	kvm_close(kd);

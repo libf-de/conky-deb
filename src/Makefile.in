@@ -108,22 +108,21 @@ PROGRAMS = $(bin_PROGRAMS)
 am__conky_SOURCES_DIST = defconfig.h conf_cookie.c conf_cookie.h \
 	audacious.c audacious.h bmpx.c bmpx.h ibm.c ibm.h smapi.c \
 	smapi.h mpd.c mpd.h libmpdclient.c libmpdclient.h moc.c moc.h \
-	xmms2.c xmms2.h linux.c linux.h top.c top.h users.c sony.c \
-	sony.h i8k.c i8k.h freebsd.c freebsd.h openbsd.c openbsd.h \
-	libtcp-portmon.c libtcp-portmon.h tcp-portmon.c tcp-portmon.h \
-	x11.c x11.h fonts.c fonts.h hddtemp.c hddtemp.h eve.c eve.h \
-	ccurl_thread.c ccurl_thread.h rss.c rss.h prss.c prss.h \
-	weather.c weather.h llua.c llua.h nvidia.c nvidia.h imlib2.c \
-	imlib2.h apcupsd.c apcupsd.h iconv_tools.c iconv_tools.h \
-	colours.c colours.h combine.c combine.h common.c common.h \
-	conky.c conky.h core.c core.h diskio.c diskio.h entropy.c \
-	entropy.h exec.c exec.h fs.c fs.h logging.h mail.c mail.h \
-	mixer.c mixer.h net_stat.c net_stat.h template.c template.h \
-	timed_thread.c timed_thread.h mboxscan.c mboxscan.h read_tcp.c \
-	read_tcp.h scroll.c scroll.h specials.c specials.h tailhead.c \
-	tailhead.h temphelper.c temphelper.h text_object.c \
-	text_object.h timeinfo.c timeinfo.h algebra.c algebra.h proc.c \
-	proc.h user.c user.h
+	xmms2.c xmms2.h linux.c linux.h users.c sony.c sony.h i8k.c \
+	i8k.h freebsd.c freebsd.h openbsd.c openbsd.h libtcp-portmon.c \
+	libtcp-portmon.h tcp-portmon.c tcp-portmon.h x11.c x11.h \
+	fonts.c fonts.h hddtemp.c hddtemp.h eve.c eve.h ccurl_thread.c \
+	ccurl_thread.h rss.c rss.h prss.c prss.h weather.c weather.h \
+	llua.c llua.h nvidia.c nvidia.h imlib2.c imlib2.h apcupsd.c \
+	apcupsd.h iconv_tools.c iconv_tools.h colours.c colours.h \
+	combine.c combine.h common.c common.h conky.c conky.h core.c \
+	core.h diskio.c diskio.h entropy.c entropy.h exec.c exec.h \
+	fs.c fs.h logging.h mail.c mail.h mixer.c mixer.h net_stat.c \
+	net_stat.h template.c template.h timed_thread.c timed_thread.h \
+	mboxscan.c mboxscan.h read_tcp.c read_tcp.h scroll.c scroll.h \
+	specials.c specials.h tailhead.c tailhead.h temphelper.c \
+	temphelper.h text_object.c text_object.h timeinfo.c timeinfo.h \
+	algebra.c algebra.h proc.c proc.h user.c user.h top.c top.h
 am__objects_1 =
 @BUILD_CONFIG_OUTPUT_TRUE@am__objects_2 = conky-conf_cookie.$(OBJEXT)
 am__objects_3 = conky-audacious.$(OBJEXT)
@@ -138,8 +137,8 @@ am__objects_11 = conky-moc.$(OBJEXT)
 @BUILD_MOC_TRUE@am__objects_12 = $(am__objects_11)
 am__objects_13 = conky-xmms2.$(OBJEXT)
 @BUILD_XMMS2_TRUE@am__objects_14 = $(am__objects_13)
-am__objects_15 = conky-linux.$(OBJEXT) conky-top.$(OBJEXT) \
-	conky-users.$(OBJEXT) conky-sony.$(OBJEXT) conky-i8k.$(OBJEXT)
+am__objects_15 = conky-linux.$(OBJEXT) conky-users.$(OBJEXT) \
+	conky-sony.$(OBJEXT) conky-i8k.$(OBJEXT)
 @BUILD_LINUX_TRUE@am__objects_16 = $(am__objects_15)
 am__objects_17 = conky-freebsd.$(OBJEXT)
 @BUILD_FREEBSD_TRUE@am__objects_18 = $(am__objects_17)
@@ -188,7 +187,7 @@ am__objects_46 = conky-colours.$(OBJEXT) conky-combine.$(OBJEXT) \
 	conky-specials.$(OBJEXT) conky-tailhead.$(OBJEXT) \
 	conky-temphelper.$(OBJEXT) conky-text_object.$(OBJEXT) \
 	conky-timeinfo.$(OBJEXT) conky-algebra.$(OBJEXT) \
-	conky-proc.$(OBJEXT) conky-user.$(OBJEXT)
+	conky-proc.$(OBJEXT) conky-user.$(OBJEXT) conky-top.$(OBJEXT)
 am_conky_OBJECTS = $(am__objects_1) $(am__objects_2) $(am__objects_45) \
 	$(am__objects_46)
 conky_OBJECTS = $(am_conky_OBJECTS)
@@ -391,7 +390,7 @@ mandatory_sources = colours.c colours.h combine.c combine.h common.c common.h \
 		mboxscan.h read_tcp.c read_tcp.h scroll.c scroll.h specials.c \
 		specials.h tailhead.c tailhead.h temphelper.c temphelper.h \
 		text_object.c text_object.h timeinfo.c timeinfo.h algebra.c \
-		algebra.h proc.c proc.h user.c user.h
+		algebra.h proc.c proc.h user.c user.h top.c top.h
 
 
 # source files only needed when the apropriate option is enabled
@@ -401,7 +400,7 @@ ibm = ibm.c ibm.h smapi.c smapi.h
 mpd = mpd.c mpd.h libmpdclient.c libmpdclient.h
 moc = moc.c moc.h
 xmms2 = xmms2.c xmms2.h
-linux = linux.c linux.h top.c top.h users.c sony.c sony.h i8k.c i8k.h
+linux = linux.c linux.h users.c sony.c sony.h i8k.c i8k.h
 solaris = solaris.c
 freebsd = freebsd.c freebsd.h
 netbsd = netbsd.c netbsd.h
@@ -768,20 +767,6 @@ conky-linux.obj: linux.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='linux.c' object='conky-linux.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -c -o conky-linux.obj `if test -f 'linux.c'; then $(CYGPATH_W) 'linux.c'; else $(CYGPATH_W) '$(srcdir)/linux.c'; fi`
-
-conky-top.o: top.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -MT conky-top.o -MD -MP -MF $(DEPDIR)/conky-top.Tpo -c -o conky-top.o `test -f 'top.c' || echo '$(srcdir)/'`top.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/conky-top.Tpo $(DEPDIR)/conky-top.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='top.c' object='conky-top.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -c -o conky-top.o `test -f 'top.c' || echo '$(srcdir)/'`top.c
-
-conky-top.obj: top.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -MT conky-top.obj -MD -MP -MF $(DEPDIR)/conky-top.Tpo -c -o conky-top.obj `if test -f 'top.c'; then $(CYGPATH_W) 'top.c'; else $(CYGPATH_W) '$(srcdir)/top.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/conky-top.Tpo $(DEPDIR)/conky-top.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='top.c' object='conky-top.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -c -o conky-top.obj `if test -f 'top.c'; then $(CYGPATH_W) 'top.c'; else $(CYGPATH_W) '$(srcdir)/top.c'; fi`
 
 conky-users.o: users.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -MT conky-users.o -MD -MP -MF $(DEPDIR)/conky-users.Tpo -c -o conky-users.o `test -f 'users.c' || echo '$(srcdir)/'`users.c
@@ -1412,6 +1397,20 @@ conky-user.obj: user.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='user.c' object='conky-user.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -c -o conky-user.obj `if test -f 'user.c'; then $(CYGPATH_W) 'user.c'; else $(CYGPATH_W) '$(srcdir)/user.c'; fi`
+
+conky-top.o: top.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -MT conky-top.o -MD -MP -MF $(DEPDIR)/conky-top.Tpo -c -o conky-top.o `test -f 'top.c' || echo '$(srcdir)/'`top.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/conky-top.Tpo $(DEPDIR)/conky-top.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='top.c' object='conky-top.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -c -o conky-top.o `test -f 'top.c' || echo '$(srcdir)/'`top.c
+
+conky-top.obj: top.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -MT conky-top.obj -MD -MP -MF $(DEPDIR)/conky-top.Tpo -c -o conky-top.obj `if test -f 'top.c'; then $(CYGPATH_W) 'top.c'; else $(CYGPATH_W) '$(srcdir)/top.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/conky-top.Tpo $(DEPDIR)/conky-top.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='top.c' object='conky-top.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(conky_CFLAGS) $(CFLAGS) -c -o conky-top.obj `if test -f 'top.c'; then $(CYGPATH_W) 'top.c'; else $(CYGPATH_W) '$(srcdir)/top.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

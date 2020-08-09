@@ -1,6 +1,6 @@
 /*
 ** Lua binding: cairo
-** Generated automatically by tolua++-1.0.93 on Thu Mar 25 13:31:24 2010.
+** Generated automatically by tolua++-1.0.93 on Tue Oct  5 14:29:51 2010.
 */
 
 #ifndef __cplusplus

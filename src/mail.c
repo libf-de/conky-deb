@@ -61,6 +61,8 @@
 #define POP3_TYPE 1
 #define IMAP_TYPE 2
 
+#define MAXSIZE 1024
+
 struct mail_s {			// for imap and pop3
 	unsigned long unseen;
 	unsigned long messages;
@@ -70,11 +72,11 @@ struct mail_s {			// for imap and pop3
 	unsigned int retries;
 	float interval;
 	double last_update;
-	char host[128];
-	char user[128];
-	char pass[128];
-	char command[1024];
-	char folder[128];
+	char host[MAXSIZE];
+	char user[MAXSIZE];
+	char pass[MAXSIZE];
+	char command[MAXSIZE];
+	char folder[MAXSIZE];
 	timed_thread *p_timed_thread;
 	char secure;
 };
@@ -413,7 +415,8 @@ struct mail_s *parse_mail_args(char type, const char *arg)
 	mail = malloc(sizeof(struct mail_s));
 	memset(mail, 0, sizeof(struct mail_s));
 
-	if (sscanf(arg, "%128s %128s %128s", mail->host, mail->user, mail->pass)
+#define lenstr "%1023s"
+	if (sscanf(arg, lenstr " " lenstr " " lenstr, mail->host, mail->user, mail->pass)
 			!= 3) {
 		if (type == POP3_TYPE) {
 			NORM_ERR("Scanning POP3 args failed");
@@ -431,7 +434,8 @@ struct mail_s *parse_mail_args(char type, const char *arg)
 		term.c_lflag &= ~ECHO;
 		tcsetattr(fp, TCSANOW, &term);
 		printf("Enter mailbox password (%s@%s): ", mail->user, mail->host);
-		scanf("%128s", mail->pass);
+		scanf(lenstr, mail->pass);
+#undef lenstr
 		printf("\n");
 		term.c_lflag |= ECHO;
 		tcsetattr(fp, TCSANOW, &term);
@@ -465,34 +469,36 @@ struct mail_s *parse_mail_args(char type, const char *arg)
 	if (type == IMAP_TYPE) {
 		tmp = strstr(arg, "-f ");
 		if (tmp) {
-			int len = 1024;
+			int len = MAXSIZE - 1;
 			tmp += 3;
 			if (tmp[0] == '\'') {
-				len = strstr(tmp + 1, "'") - tmp - 1;
-				if (len > 1024) {
-					len = 1024;
+				len = strstr(tmp + 1, "'") - tmp;
+				if (len > MAXSIZE) {
+					len = MAXSIZE;
 				}
 			}
-			strncpy(mail->folder, tmp + 1, len);
+			strncpy(mail->folder, tmp + 1, len - 1);
 		} else {
-			strncpy(mail->folder, "INBOX", 128);	// default imap inbox
+			strncpy(mail->folder, "INBOX", MAXSIZE - 1);	// default imap inbox
 		}
 	}
 	tmp = strstr(arg, "-e ");
 	if (tmp) {
-		int len = 1024;
+		int len = MAXSIZE - 1;
 		tmp += 3;
 
 		if (tmp[0] == '\'') {
-			len = strstr(tmp + 1, "'") - tmp - 1;
-			if (len > 1024) {
-				len = 1024;
+			len = strstr(tmp + 1, "'") - tmp;
+			if (len > MAXSIZE) {
+				len = MAXSIZE;
 			}
 		}
-		strncpy(mail->command, tmp + 1, len);
+		strncpy(mail->command, tmp + 1, len - 1);
 	} else {
 		mail->command[0] = '\0';
 	}
+	DBGP("mail args parsed: folder: '%s' command: '%s' user: '%s' host: '%s'\n",
+			mail->folder, mail->command, mail->user, mail->host);
 	mail->p_timed_thread = NULL;
 	return mail;
 }
@@ -653,57 +659,55 @@ static void *imap_thread(void *arg)
 	unsigned long old_unseen = ULONG_MAX;
 	unsigned long old_messages = ULONG_MAX;
 	struct stat stat_buf;
-	struct hostent he, *he_res = 0;
-	int he_errno;
-	char hostbuff[2048];
-	struct sockaddr_in their_addr;	// connector's address information
 	struct mail_s *mail = (struct mail_s *)arg;
 	int has_idle = 0;
 	int threadfd = timed_thread_readfd(mail->p_timed_thread);
 	char resolved_host = 0;
+	struct addrinfo hints;
+	struct addrinfo *ai = 0, *rp;
+	char portbuf[8];
 
 	while (fail < mail->retries) {
 		struct timeval fetchtimeout;
 		int res;
 		fd_set fdset;
 
-		if (!resolved_host) {
-#ifdef HAVE_GETHOSTBYNAME_R
-			if (gethostbyname_r(mail->host, &he, hostbuff, sizeof(hostbuff), &he_res, &he_errno)) {	// get the host info
-				NORM_ERR("IMAP gethostbyname_r: %s", hstrerror(h_errno));
-				fail++;
-				break;
-			}
-#else /* HAVE_GETHOSTBYNAME_R */
-			if ((he_res = gethostbyname(mail->host)) == NULL) {	// get the host info
-				herror("gethostbyname");
-				fail++;
-				break;
-			}
-#endif /* HAVE_GETHOSTBYNAME_R */
-			resolved_host = 1;
-		}
 		if (fail > 0) {
 			NORM_ERR("Trying IMAP connection again for %s@%s (try %u/%u)",
 					mail->user, mail->host, fail + 1, mail->retries);
+			resolved_host = 0; /* force us to resolve the hostname again */
+			sleep(fail); /* sleep more for the more failures we have */
 		}
-		do {
-			if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-				perror("socket");
+		if (!resolved_host) {
+			memset(&hints, 0, sizeof(struct addrinfo));
+			hints.ai_family = AF_UNSPEC;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_flags = 0;
+			hints.ai_protocol = 0;
+			snprintf(portbuf, 8, "%lu", mail->port);
+
+			res = getaddrinfo(mail->host, portbuf, &hints, &ai);
+			if (res != 0) {
+				NORM_ERR("IMAP getaddrinfo: %s", gai_strerror(res));
 				fail++;
 				break;
 			}
-
-			// host byte order
-			their_addr.sin_family = AF_INET;
-			// short, network byte order
-			their_addr.sin_port = htons(mail->port);
-			their_addr.sin_addr = *((struct in_addr *) he_res->h_addr);
-			// zero the rest of the struct
-			memset(&(their_addr.sin_zero), '\0', 8);
-
-			if (connect(sockfd, (struct sockaddr *) &their_addr,
-						sizeof(struct sockaddr)) == -1) {
+			resolved_host = 1;
+		}
+		do {
+			for (rp = ai; rp != NULL; rp = rp->ai_next) {
+				sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+				if (sockfd == -1) {
+					continue;
+				}
+				if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) != -1) {
+					break;
+				}
+				close(sockfd);
+			}
+			freeaddrinfo(ai);
+			ai = 0;
+			if (rp == NULL) {
 				perror("connect");
 				fail++;
 				break;
@@ -788,15 +792,17 @@ static void *imap_thread(void *arg)
 				while (1) {
 					/*
 					 * RFC 2177 says we have to re-idle every 29 minutes.
-					 * We'll do it every 20 minutes to be safe.
+					 * We'll do it every 10 minutes to be safe.
 					 */
-					fetchtimeout.tv_sec = 1200;
+					fetchtimeout.tv_sec = 600;
 					fetchtimeout.tv_usec = 0;
-					DBGP2("idling...");
+					DBGP("idling...");
 					FD_ZERO(&fdset);
 					FD_SET(sockfd, &fdset);
 					FD_SET(threadfd, &fdset);
-					res = select(MAX(sockfd + 1, threadfd + 1), &fdset, NULL, NULL, &fetchtimeout);
+					res = select(MAX(sockfd + 1, threadfd + 1), &fdset, NULL,
+							NULL, &fetchtimeout);
+					DBGP("done idling");
 					if (timed_thread_test(mail->p_timed_thread, 1) || (res == -1 && errno == EINTR) || FD_ISSET(threadfd, &fdset)) {
 						if ((fstat(sockfd, &stat_buf) == 0) && S_ISSOCK(stat_buf.st_mode)) {
 							/* if a valid socket, close it */
@@ -809,9 +815,6 @@ static void *imap_thread(void *arg)
 							fail++;
 							break;
 						}
-					} else {
-						fail++;
-						break;
 					}
 					recvbuf[numbytes] = '\0';
 					DBGP2("imap_thread() received: %s", recvbuf);
@@ -832,7 +835,6 @@ static void *imap_thread(void *arg)
 								timed_thread_lock(mail->p_timed_thread);
 								if (mail->messages != messages) {
 									force_check = 1;
-									mail->messages = messages;
 								}
 								timed_thread_unlock(mail->p_timed_thread);
 							}
@@ -1008,54 +1010,53 @@ static void *pop3_thread(void *arg)
 	unsigned int fail = 0;
 	unsigned long old_unseen = ULONG_MAX;
 	struct stat stat_buf;
-	struct hostent he, *he_res = 0;
-	int he_errno;
-	char hostbuff[2048];
-	struct sockaddr_in their_addr;	// connector's address information
 	struct mail_s *mail = (struct mail_s *)arg;
 	char resolved_host = 0;
+	struct addrinfo hints;
+	struct addrinfo *ai = 0, *rp;
+	char portbuf[8];
 
 	while (fail < mail->retries) {
 		struct timeval fetchtimeout;
 		int res;
 		fd_set fdset;
-		if (!resolved_host) {
-#ifdef HAVE_GETHOSTBYNAME_R
-			if (gethostbyname_r(mail->host, &he, hostbuff, sizeof(hostbuff), &he_res, &he_errno)) {	// get the host info
-				NORM_ERR("POP3 gethostbyname_r: %s", hstrerror(h_errno));
-				fail++;
-				break;
-			}
-#else /* HAVE_GETHOSTBYNAME_R */
-			if ((he_res = gethostbyname(mail->host)) == NULL) {	// get the host info
-				herror("gethostbyname");
-		fail++;
-		break;
-	}
-#endif /* HAVE_GETHOSTBYNAME_R */
-	resolved_host = 1;
-}
+
 		if (fail > 0) {
 			NORM_ERR("Trying POP3 connection again for %s@%s (try %u/%u)",
 					mail->user, mail->host, fail + 1, mail->retries);
+			resolved_host = 0; /* force us to resolve the hostname again */
+			sleep(fail); /* sleep more for the more failures we have */
 		}
-		do {
-			if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-				perror("socket");
+		if (!resolved_host) {
+			memset(&hints, 0, sizeof(struct addrinfo));
+			hints.ai_family = AF_UNSPEC;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_flags = 0;
+			hints.ai_protocol = 0;
+			snprintf(portbuf, 8, "%lu", mail->port);
+
+			res = getaddrinfo(mail->host, portbuf, &hints, &ai);
+			if (res != 0) {
+				NORM_ERR("POP3 getaddrinfo: %s", gai_strerror(res));
 				fail++;
 				break;
 			}
-
-			// host byte order
-			their_addr.sin_family = AF_INET;
-			// short, network byte order
-			their_addr.sin_port = htons(mail->port);
-			their_addr.sin_addr = *((struct in_addr *) he_res->h_addr);
-			// zero the rest of the struct
-			memset(&(their_addr.sin_zero), '\0', 8);
-
-			if (connect(sockfd, (struct sockaddr *) &their_addr,
-						sizeof(struct sockaddr)) == -1) {
+			resolved_host = 1;
+		}
+		do {
+			for (rp = ai; rp != NULL; rp = rp->ai_next) {
+				sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+				if (sockfd == -1) {
+					continue;
+				}
+				if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) != -1) {
+					break;
+				}
+				close(sockfd);
+			}
+			freeaddrinfo(ai);
+			ai = 0;
+			if (rp == NULL) {
 				perror("connect");
 				fail++;
 				break;
