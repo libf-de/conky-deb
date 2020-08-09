@@ -1,5 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=c
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -11,7 +11,7 @@
  *
  * Copyright (c) 2005 Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>,
  *					  Dave Clark <clarkd@skynet.ca>
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -66,6 +66,7 @@
 #include <regex.h>
 #include <pwd.h>
 
+
 /******************************************
  * Defines								  *
  ******************************************/
@@ -74,28 +75,7 @@
  * and it'll take me a while to write a replacement. */
 #define BUFFER_LEN 1024
 
-#define PROCFS_TEMPLATE "/proc/%d/stat"
-#define PROCFS_TEMPLATE_MEM "/proc/%d/statm"
-#define PROCFS_TEMPLATE_IO "/proc/%d/io"
-#define PROCFS_CMDLINE_TEMPLATE "/proc/%d/cmdline"
 #define MAX_SP 10	// number of elements to sort
-
-enum top_field {
-	TOP_CPU,
-	TOP_NAME,
-	TOP_PID,
-	TOP_MEM,
-	TOP_TIME,
-	TOP_MEM_RES,
-	TOP_MEM_VSIZE,
-	TOP_UID,
-	TOP_USER,
-#ifdef IOSTATS
-	TOP_READ_BYTES,
-	TOP_WRITE_BYTES,
-	TOP_IO_PERC
-#endif
-};
 
 /******************************************
  * Process class						  *
@@ -118,7 +98,7 @@ struct process {
 	unsigned long total_cpu_time;
 	unsigned long long vsize;
 	unsigned long long rss;
-#ifdef IOSTATS
+#ifdef BUILD_IOSTATS
 	unsigned long long read_bytes;
 	unsigned long long previous_read_bytes;
 	unsigned long long write_bytes;
@@ -136,22 +116,18 @@ struct sorted_process {
 	struct process *proc;
 };
 
-/* Pointer to head of process list */
-void process_find_top(struct process **, struct process **, struct process **
-#ifdef IOSTATS
-		, struct process **
-#endif
-		);
-
 /* lookup a program by it's name */
 struct process *get_process_by_name(const char *);
 
 int parse_top_args(const char *s, const char *arg, struct text_object *obj);
-void print_top(struct text_object *, char *, int);
-void free_top(struct text_object *, int);
 
-/* return zero on success, non-zero otherwise */
-int set_top_name_width(const char *);
+int update_top(void);
 
+void get_top_info(void);
+
+extern struct process *first_process;
+extern unsigned long g_time;
+
+struct process *get_process(pid_t pid);
 
 #endif /* _top_h_ */

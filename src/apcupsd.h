@@ -25,30 +25,23 @@
 #ifndef APCUPSD_H_
 #define APCUPSD_H_
 
-enum _apcupsd_items {
-	APCUPSD_NAME,
-	APCUPSD_MODEL,
-	APCUPSD_UPSMODE,
-	APCUPSD_CABLE,
-	APCUPSD_STATUS,
-	APCUPSD_LINEV,
-	APCUPSD_LOAD,
-	APCUPSD_CHARGE,
-	APCUPSD_TIMELEFT,
-	APCUPSD_TEMP,
-	APCUPSD_LASTXFER,
-	_APCUPSD_COUNT,
-};
-
-/* type for data exchange with main thread */
-#define APCUPSD_MAXSTR 32
-typedef struct apcupsd_s {
-	char items[_APCUPSD_COUNT][APCUPSD_MAXSTR+1];	/* e.g. items[APCUPSD_STATUS] */
-	char host[64];
-	int  port;
-} APCUPSD_S, *PAPCUPSD_S;
+int apcupsd_scan_arg(const char *);
 
 /* Service routine for the conky main thread */
 int update_apcupsd(void);
+
+double apcupsd_loadbarval(struct text_object *);
+
+void print_apcupsd_name(struct text_object *, char *, int);
+void print_apcupsd_model(struct text_object *, char *, int);
+void print_apcupsd_upsmode(struct text_object *, char *, int);
+void print_apcupsd_cable(struct text_object *, char *, int);
+void print_apcupsd_status(struct text_object *, char *, int);
+void print_apcupsd_linev(struct text_object *, char *, int);
+void print_apcupsd_load(struct text_object *, char *, int);
+void print_apcupsd_charge(struct text_object *, char *, int);
+void print_apcupsd_timeleft(struct text_object *, char *, int);
+void print_apcupsd_temp(struct text_object *, char *, int);
+void print_apcupsd_lastxfer(struct text_object *, char *, int);
 
 #endif /*APCUPSD_H_*/

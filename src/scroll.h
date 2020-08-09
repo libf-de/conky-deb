@@ -1,4 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -9,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -29,8 +30,8 @@
 #ifndef _SCROLL_H
 #define _SCROLL_H
 
-void parse_scroll_arg(struct text_object *, const char *, void *);
-void print_scroll(struct text_object *, char *, int, struct information *);
+void parse_scroll_arg(struct text_object *, const char *, void *, char *);
+void print_scroll(struct text_object *, char *, int);
 void free_scroll(struct text_object *);
 
 #endif /* _SCROLL_H */

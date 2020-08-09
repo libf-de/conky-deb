@@ -56,7 +56,7 @@
             </command>
             <option>FILE</option>
         </term>
-        <listitem>Config file to load instead of $HOME/.conkyrc 
+        <listitem>Config file to load instead of $HOME/.config/conky/conky.conf 
         <para></para></listitem>
     </varlistentry>
     <varlistentry>
@@ -104,6 +104,28 @@
             </command>
         </term>
         <listitem>Create own window to draw 
+        <para></para></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>-s | --for-scripts</option>
+            </command>
+            <option>TEXT</option>
+        </term>
+        <listitem>Prints TEXT on the standard output and exits.
+        (This option makes conky useful in scripts)
+        TEXT has to be enclosed by single quotes. Example:
+        conky -s 'Your uptime is: $uptime'
+        <para></para></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>-S | --stdin-config</option>
+            </command>
+        </term>
+        <listitem>Read configuration from stdin.
         <para></para></listitem>
     </varlistentry>
     <varlistentry>

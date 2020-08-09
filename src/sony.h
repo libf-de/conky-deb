@@ -4,7 +4,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  * Copyright (c) 2009 Yeon-Hyeong Yang <lbird94@gmail.com>
  *	(see AUTHORS)
  * All rights reserved.
@@ -31,8 +31,6 @@
 #ifndef _SONY_H
 #define _SONY_H
 
-#include <sys/types.h>
-
-void get_sony_fanspeed(char *buf, size_t client_buffer_size);
+void get_sony_fanspeed(struct text_object *, char *, int);
 
 #endif /* _SONY_H */

@@ -10,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -36,16 +36,17 @@ enum match_type {
 	OP_EQ = 3,	/* == */
 	OP_LEQ = 4,	/* <= */
 	OP_GEQ = 5,	/* >= */
-	OP_NEQ = 6,	/* != */
+	OP_NEQ = 6	/* != */
 };
 
 enum arg_type {
 	ARG_BAD = 0,    /* something strange */
 	ARG_STRING = 1, /* "asdf" */
 	ARG_LONG = 2,	/* 123456 */
-	ARG_DOUBLE = 3, /* 12.456 */
+	ARG_DOUBLE = 3  /* 12.456 */
 };
 
 int compare(const char *);
+int check_if_match(struct text_object *);
 
 #endif /* _ALGEBRA_H */

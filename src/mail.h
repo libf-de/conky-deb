@@ -1,9 +1,32 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*- */
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+ *
+ * Conky, a system monitor, based on torsmo
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ *	(see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 #ifndef _MAIL_H
 #define _MAIL_H
 
-extern char *current_mail_spool;
+#include "setting.hh"
 
 void parse_local_mail_args(struct text_object *, const char *);
 
@@ -35,5 +58,21 @@ void print_imap_unseen(struct text_object *, char *, int);
 void print_imap_messages(struct text_object *, char *, int);
 void print_pop3_unseen(struct text_object *, char *, int);
 void print_pop3_used(struct text_object *, char *, int);
+
+namespace priv {
+	class current_mail_spool_setting: public conky::simple_config_setting<std::string> {
+		typedef conky::simple_config_setting<std::string> Base;
+		
+	protected:
+		virtual std::pair<std::string, bool> do_convert(lua::state &l, int index);
+
+	public:
+		current_mail_spool_setting()
+			: Base("current_mail_spool", "$MAIL", true)
+		{}
+	};
+}
+
+extern priv::current_mail_spool_setting current_mail_spool;
 
 #endif /* _MAIL_H */

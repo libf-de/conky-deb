@@ -5,7 +5,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -35,5 +35,12 @@ struct bmpx_s {
 	int bitrate;
 	int track;
 };
+
+void print_bmpx_title(struct text_object *, char *, int);
+void print_bmpx_artist(struct text_object *, char *, int);
+void print_bmpx_album(struct text_object *, char *, int);
+void print_bmpx_uri(struct text_object *, char *, int);
+void print_bmpx_track(struct text_object *, char *, int);
+void print_bmpx_bitrate(struct text_object *, char *, int);
 
 #endif /*BMPX_H_*/

@@ -1,46 +1,40 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*- */
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+ *
+ * Conky, a system monitor, based on torsmo
+ *
+ * Please see COPYING for details
+ *
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ *	(see AUTHORS)
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 #ifndef MPD_H_
 #define MPD_H_
 
-struct mpd_s {
-	char *title;
-	char *artist;
-	char *album;
-	char *date;
-	const char *status;
-	const char *random;
-	const char *repeat;
-	char *track;
-	char *name;
-	char *file;
-	int is_playing;
-	int vol;
-	float progress;
-	int bitrate;
-	int length;
-	int elapsed;
-};
-
-/* functions for setting the configuration values */
-void mpd_set_host(const char *);
-void mpd_set_password(const char *, int);
-void mpd_clear_password(void);
-int mpd_set_port(const char *);
-
 /* text object functions */
-void init_mpd(void);
-struct mpd_s *mpd_get_info(void);
-void free_mpd(void);
-int update_mpd(void);
-
 void print_mpd_elapsed(struct text_object *, char *, int);
 void print_mpd_length(struct text_object *, char *, int);
-void print_mpd_percent(struct text_object *, char *, int);
-void print_mpd_bar(struct text_object *, char *, int);
+uint8_t mpd_percentage(struct text_object *);
+double mpd_barval(struct text_object *);
 void print_mpd_smart(struct text_object *, char *, int);
 void print_mpd_title(struct text_object *, char *, int);
 void print_mpd_artist(struct text_object *, char *, int);
+void print_mpd_albumartist(struct text_object *, char *, int);
 void print_mpd_album(struct text_object *, char *, int);
 void print_mpd_date(struct text_object *, char *, int);
 void print_mpd_random(struct text_object *, char *, int);
@@ -51,5 +45,6 @@ void print_mpd_file(struct text_object *, char *, int);
 void print_mpd_vol(struct text_object *, char *, int);
 void print_mpd_bitrate(struct text_object *, char *, int);
 void print_mpd_status(struct text_object *, char *, int);
+int check_mpd_playing(struct text_object *);
 
 #endif /*MPD_H_*/

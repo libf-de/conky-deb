@@ -1,4 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -9,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
  * (see AUTHORS)
  * All rights reserved.
  *
@@ -30,7 +31,22 @@
 #ifndef DISKIO_H_
 #define DISKIO_H_
 
+#include <limits.h>
+
 struct diskio_stat {
+	diskio_stat() :
+		next(NULL),
+		current(0),
+		current_read(0),
+		current_write(0),
+		last(UINT_MAX),
+		last_read(UINT_MAX),
+		last_write(UINT_MAX)
+	{
+		memset(sample, 0, sizeof(sample) / sizeof(sample[0]));
+		memset(sample_read, 0, sizeof(sample_read) / sizeof(sample_read[0]));
+		memset(sample_write, 0, sizeof(sample_write) / sizeof(sample_write[0]));
+	}
 	struct diskio_stat *next;
 	char *dev;
 	double sample[15];
@@ -55,11 +71,11 @@ void parse_diskio_arg(struct text_object *, const char *);
 void print_diskio(struct text_object *, char *, int);
 void print_diskio_read(struct text_object *, char *, int);
 void print_diskio_write(struct text_object *, char *, int);
-#ifdef X11
+#ifdef BUILD_X11
 void parse_diskiograph_arg(struct text_object *, const char *);
-void print_diskiograph(struct text_object *, char *, int);
-void print_diskiograph_read(struct text_object *, char *, int);
-void print_diskiograph_write(struct text_object *, char *, int);
-#endif /* X11 */
+double diskiographval(struct text_object *);
+double diskiographval_read(struct text_object *);
+double diskiographval_write(struct text_object *);
+#endif /* BUILD_X11 */
 
 #endif /* DISKIO_H_ */

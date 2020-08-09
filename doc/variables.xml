@@ -411,7 +411,8 @@
         </term>
         <listitem>Battery percentage remaining of ACPI battery in a
         bar. ACPI battery number can be given as argument (default
-        is BAT0). 
+        is BAT0, use all to get the mean percentage remaining for
+        all batteries).
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -423,7 +424,8 @@
         </term>
         <listitem>Battery percentage remaining for ACPI battery.
         ACPI battery number can be given as argument (default is
-        BAT0). 
+        BAT0, use all to get the mean percentage remaining for
+        all batteries).
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -545,6 +547,151 @@
         </term>
         <listitem>PID of the first process that has string in it's
 	commandline
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_aaa</option>
+            </command>
+        </term>
+       <listitem>Print aaa status of cmus (all/artist/album).
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_album</option>
+            </command>
+        </term>
+        <listitem>Prints the album of the current cmus song.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_artist</option>
+            </command>
+        </term>
+        <listitem>Prints the artist of the current cmus song.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_curtime</option>
+            </command>
+        </term>
+        <listitem>Current time of the current cmus song.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_file</option>
+            </command>
+        </term>
+        <listitem>Print the file name of the current cmus song
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_date</option>
+            </command>
+        </term>
+        <listitem>Print the date of the current cmus song
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_genre</option>
+            </command>
+        </term>
+        <listitem>Print the genre name of the current cmus song
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_percent</option>
+            </command>
+        </term>
+        <listitem>Percent of song's progress.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_progress</option>
+            </command>
+            <option>(height),(width)</option>
+        </term>
+        <listitem>cmus' progress bar.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_random</option>
+            </command>
+        </term>
+       <listitem>Random status of cmus (on/off).
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_repeat</option>
+            </command>
+        </term>
+       <listitem>Repeat status of cmus (song/all/off).
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_state</option>
+            </command>
+        </term>
+        <listitem>Current state of cmus (playing, paused, stopped etc).
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_timeleft</option>
+            </command>
+        </term>
+        <listitem>Time left of the current cmus song.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_title</option>
+            </command>
+        </term>
+        <listitem>Prints the title of the current cmus song.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_totaltime</option>
+            </command>
+        </term>
+        <listitem>Total length of the current cmus song.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>cmus_track</option>
+            </command>
+        </term>
+       <listitem>Print track number of current cmus song.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -674,15 +821,15 @@
             <option>url (interval_in_minutes)</option>
         </term>
         <listitem>
-            <para>Download data from URI using Curl at the
-            specified interval. The interval may be a floating
-            point value greater than 0, otherwise defaults to 15
+            Download data from URI using Curl at the
+            specified interval. The interval may be a positive floating
+            point value (0 is allowed), otherwise defaults to 15
             minutes. Most useful when used in conjunction with Lua
             and the Lua API. This object is threaded, and once a
             thread is created it can't be explicitly destroyed.
             One thread will run for each URI specified. You can use
-            any protocol that Curl supports.</para>
-        </listitem>
+            any protocol that Curl supports.
+	<para /></listitem>
     </varlistentry>
     <varlistentry>
         <term>
@@ -734,8 +881,9 @@
             <option>(device)</option>
         </term>
         <listitem>Displays current disk IO. Device is optional, and
-        takes the form of sda for /dev/sda. Individual partitions
-        are allowed. 
+       takes the form of sda for /dev/sda. A block device label can
+       be specified with label:foo. Individual partitions are also
+       allowed.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -809,6 +957,22 @@
         switch '-t' to use a temperature gradient, which makes the
         gradient values change depending on the amplitude of a
         particular graph value (try it and see). 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>distribution</option>
+            </command>
+        </term>
+        <listitem>The name of the distribution. It could be that some
+        of the untested distributions will show up wrong or as "unknown",
+        if that's the case post a bug on sourceforge, make sure it
+        contains the name of your distribution, the contents of
+        /proc/version and if there is a file that only exists on your
+        distribution, also add the path of that file in the bug. If there
+        is no such file, please add another way which we can use to identify
+        your distribution.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -928,7 +1092,7 @@
             <option>string</option>
         </term>
         <listitem>Evaluates given string according to the rules of
-        TEXT interpretation, i.e. parsing any contained text object
+        conky.text interpretation, i.e. parsing any contained text object
         specifications into their output, any occuring '$$' into a
         single '$' and so on. The output is then being parsed
         again. 
@@ -1000,7 +1164,11 @@
         use a temperature gradient, which makes the gradient values
         change depending on the amplitude of a particular graph
         value (try it and see). If -t or -l is your first argument,
-        you may need to preceed it by a space (' ').
+        you may need to preceed it by a space (' ').  You may also use
+        double-quotes around the exec argument should you need to execute a
+        command with spaces.  For example, ${execgraph "date +'%S'"} to execute
+        `date +'%S'` and graph the result.  Without quotes, it would simply
+        print the result of `date`.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1514,11 +1682,47 @@
     <varlistentry>
         <term>
             <command>
+                <option>ibm_thinklight</option>
+            </command>
+        </term>
+        <listitem>If running the IBM ACPI, displays the status of your
+            ThinkLight™. Value is either 'on', 'off' or 'unknown'.
+            <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>ibm_volume</option>
             </command>
         </term>
         <listitem>If running the IBM ACPI, displays the "master"
         volume, controlled by the volume keys (0-14). 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>ical</option>
+            </command>
+            <option>number file</option>
+        </term>
+        <listitem>Shows title of event number 'number' in the ical (RFC 5545) file
+        'file'. The events are first ordered by starting time, events that started
+        in the past are  ignored. The events that are shown are the VEVENTS, the
+        title that is shown is the SUMMARY and the starting time used for sorting
+        is DTSTART .
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>irc</option>
+            </command>
+            <option>server(:port) #channel</option>
+        </term>
+        <listitem>Shows everything that's being told in #channel on IRCserver
+        'server'. TCP-port 6667 is used for the connection unless 'port' is
+        specified.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1720,7 +1924,7 @@
         pixels. Conky does not make any attempt to adjust the
         position (or any other formatting) of images, they are just
         rendered as per the arguments passed. The only reason
-        $image is part of the TEXT section, is to allow for runtime
+        $image is part of the conky.text section, is to allow for runtime
         modifications, through $execp $lua_parse, or some other
         method. 
         <para /></listitem>
@@ -1764,20 +1968,6 @@
     <varlistentry>
         <term>
             <command>
-                <option>include</option>
-            </command>
-            <option>path</option>
-        </term>
-        <listitem>
-            <para>Loads the configfile at path, places the
-            configsettings behind the configsettings in the orginal
-            config and places the vars where the includevar
-            stood.</para>
-        </listitem>
-    </varlistentry>
-    <varlistentry>
-        <term>
-            <command>
                 <option>ioscheduler</option>
             </command>
             <option>disk</option>
@@ -1793,6 +1983,15 @@
             </command>
         </term>
         <listitem>Kernel version 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>version</option>
+            </command>
+        </term>
+        <listitem>Git version numer (DragonFly only)
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1917,7 +2116,7 @@
         </term>
         <listitem>Executes a Lua function with given parameters as
         per $lua, then parses and prints the result value as per
-        the syntax for Conky's TEXT section. See also 'lua_load' on
+        the syntax for the conky.text section. See also 'lua_load' on
         how to load scripts. Conky puts 'conky_' in front of
         function_name to prevent accidental calls to the wrong
         function unless you put you place 'conky_' in front of it
@@ -1974,11 +2173,39 @@
     <varlistentry>
         <term>
             <command>
+                <option>memwithbuffers</option>
+            </command>
+        </term>
+        <listitem>Amount of memory in use, including that used by system buffers and caches
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>membar</option>
             </command>
             <option>(height),(width)</option>
         </term>
         <listitem>Bar that shows amount of memory in use 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>memwithbuffersbar</option>
+            </command>
+            <option>(height),(width)</option>
+        </term>
+        <listitem>Bar that shows amount of memory in use (including memory used by system buffers and caches)
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>memdirty</option>
+            </command>
+        </term>
+        <listitem>Amount of "dirty" memory (linux only)
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -2260,6 +2487,15 @@
     <varlistentry>
         <term>
             <command>
+                <option>mpd_albumartist</option>
+            </command>
+        </term>
+        <listitem>Artist of the album of the current MPD song. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>mpd_bar</option>
             </command>
             <option>(height),(width)</option>
@@ -2399,6 +2635,17 @@
     <varlistentry>
         <term>
             <command>
+                <option>mysql</option>
+            </command>
+            <option>query</option>
+        </term>
+        <listitem>Shows the first field of the first row of the
+        result of the query.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>nameserver</option>
             </command>
             <option>(index)</option>
@@ -2429,13 +2676,26 @@
         <listitem>Hostname 
         <para /></listitem>
     </varlistentry>
-     <varlistentry>
+    <varlistentry>
         <term>
             <command>
                 <option>nodename_short</option>
             </command>
         </term>
         <listitem>Short hostname (same as 'hostname -s' shell command).
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>no_update</option>
+            </command>
+            <option>text</option>
+        </term>
+        <listitem>Shows text and parses the vars in it, but doesn't
+        update them. Use this for things that do not change while conky
+        is running, like $machine, $conky_version,... By not updating
+        this you can save some resources.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -3003,17 +3263,6 @@
     <varlistentry>
         <term>
             <command>
-                <option>pre_exec</option>
-            </command>
-            <option>shell command</option>
-        </term>
-        <listitem>Executes a shell command one time before conky
-        displays anything and puts output as text. 
-        <para /></listitem>
-    </varlistentry>
-    <varlistentry>
-        <term>
-            <command>
                 <option>processes</option>
             </command>
         </term>
@@ -3029,7 +3278,19 @@
         </term>
         <listitem>Connects to a tcp port on a host (default is
         localhost), reads every char available at the moment and
-        shows them. 
+        shows them.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>read_udp</option>
+            </command>
+            <option>(host) port</option>
+        </term>
+        <listitem>Connects to a udp port on a host (default is
+        localhost), reads every char available at the moment and
+        shows them.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -3054,7 +3315,7 @@
             (spaces_in_front))</option>
         </term>
         <listitem>
-            <para>Download and parse RSS feeds. The interval may be
+            Download and parse RSS feeds. The interval may be
             a floating point value greater than 0, otherwise
             defaults to 15 minutes. Action may be one of the
             following: feed_title, item_title (with num par),
@@ -3064,8 +3325,8 @@
             threaded, and once a thread is created it can't be
             explicitly destroyed. One thread will run for each URI
             specified. You can use any protocol that Curl
-            supports.</para>
-        </listitem>
+            supports.
+        <para /></listitem>
     </varlistentry>
     <varlistentry>
         <term>
@@ -3091,12 +3352,14 @@
             <command>
                 <option>scroll</option>
             </command>
-            <option>length (step) text</option>
+            <option>(direction) length (step) text</option>
         </term>
-        <listitem>Scroll 'text' by 'step' characters showing
+        <listitem>Scroll 'text' by 'step' characters to the left
+        or right (set 'direction' to 'left' or 'right') showing
         'length' number of characters at the same time. The text
         may also contain variables. 'step' is optional and defaults
-        to 1 if not set. If a var creates output on multiple lines
+        to 1 if not set. 'direction' is optional and defaults to left
+        if not set. If a var creates output on multiple lines
         then the lines are placed behind each other separated with
         a '|'-sign. If you change the textcolor inside $scroll it
         will automatically have it's old value back at the end of
@@ -3216,6 +3479,17 @@
     <varlistentry>
         <term>
             <command>
+                <option>stock</option>
+            </command>
+            <option>symbol data</option>
+        </term>
+        <listitem>Displays the data of a stock symbol. The following data
+        is supported: adv(Average Daily Volume), ask, asksize, bid, askrt(ask realtime), bidrt(bid realtime), bookvalue, bidsize, change, commission, changert(change realtime), ahcrt(After Hours Change realtime), ds(dividend/share), ltd(Last Trade Date), tradedate, es(earnings/share), ei(error indication), epsecy(EPS Estimate Current Year), epseny(EPS Estimate Next Year), epsenq(EPS Estimate Next Quarter), floatshares, dayslow, dayshigh, 52weeklow, 52weekhigh, hgp(Holdings Gain Percent), ag(Annualized Gain), hg(Holdings Gain), hgprt(Holdings Gain Percent realtime), hgrt(Holdings Gain realtime), moreinfo, obrt(Order Book realtime), mc(Market Capitalization), mcrt(Market Cap realtime), ebitda, c52wlow(Change From 52-week Low), pc52wlow(Percent Change From 52-week Low), cprt(change percent realtime), lts(Last Trade Size), c52whigh(Change from 52-week high), pc52whigh(percent change from 52-week high), ltp(last trade price), hl(high limit), ll(low limit), dr(day's range), drrt(day's range realtime), 50ma(50-day Moving Average), 200ma(200-day Moving Average), c200ma(Change From 200-day Moving Average), pc200ma(Percent Change From 200-day Moving Average), c50ma(Change From 50-day Moving Average), pc50ma(Percent Change From 50-day Moving Average), name, notes, open, pc(previous close), pricepaid, cip(change in percent), ps(price/sales), pb(price/book), edv(Ex-Dividend Date), per(P/E Ratio), dpd(Dividend Pay Date), perrt(P/E Ratio realtime), pegr(PEG Ratio), pepsecy(Price/EPS Estimate Current Year), pepseny(Price/EPS Estimate Next Year), symbol, sharesowned, shortratio, ltt(Last Trade Time), tradelinks, tt(Ticker Trend), 1ytp(1 yr Target Price), volume, hv(Holdings Value), hvrt(Holdings Value realtime), 52weekrange, dvc(Day's Value Change), dvcrt(Day's Value Change realtime), se(Stock Exchange), dy(Dividend Yield)
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>swap</option>
             </command>
         </term>
@@ -3290,6 +3564,21 @@
         file is checked every 'next_check' update. If next_check is
         not supplied, Conky defaults to 2. Max of 30 lines can be
         displayed, or until the text buffer is filled. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>tcp_ping</option>
+            </command>
+            <option>host (port)</option>
+        </term>
+        <listitem>Displays the number of microseconds it takes to
+        get a reply on a ping to to tcp 'port' on 'host'. 'port' is optional
+        and has 80 as default. This works on both open and closed
+        ports, just make sure that the port is not behind a firewall or you
+        will get 'down' as answer. It's best to test a closed port instead
+        of an open port, you will get a quicker response.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -3481,6 +3770,17 @@
         it is destroyed, so it can safely be used in a nested
         fashion, though it may not produce the desired behaviour if
         used this way. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>texecpi</option>
+            </command>
+            <option>interval command</option>
+        </term>
+        <listitem>Same as execpi, except the command is run inside
+        a thread.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -3810,6 +4110,19 @@
     <varlistentry>
         <term>
             <command>
+                <option>v6addrs</option>
+            </command>
+            <option>(-n) (-s) (interface)</option>
+        </term>
+        <listitem>IPv6 addresses for an interface, followed by
+        netmask if -n is specified and scope with -s. Scopes are
+        Global(G), Host-local(H), Link-local(L), Site-local(S), Compat(C)
+        and Unspecified(/). Linux only.
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>voffset</option>
             </command>
             <option>(pixels)</option>
@@ -4039,11 +4352,31 @@
     <varlistentry>
         <term>
             <command>
+                <option>wireless_channel</option>
+            </command>
+            <option>(net)</option>
+        </term>
+        <listitem>WLAN channel on which device 'net' is listening (Linux only)
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
                 <option>wireless_essid</option>
             </command>
             <option>(net)</option>
         </term>
         <listitem>Wireless access point ESSID (Linux only) 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>wireless_freq</option>
+            </command>
+            <option>(net)</option>
+        </term>
+        <listitem>Frequency on which device 'net' is listening (Linux only)
         <para /></listitem>
     </varlistentry>
     <varlistentry>

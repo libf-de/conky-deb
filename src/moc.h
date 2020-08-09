@@ -1,4 +1,5 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=cpp
  *
  * MOC Conky integration
  *
@@ -23,25 +24,17 @@
 #ifndef MOC_H_
 #define MOC_H_
 
-#include "timed_thread.h"
-
-struct moc_s {
-	char *state;
-	char *file;
-	char *title;
-	char *artist;
-	char *song;
-	char *album;
-	char *totaltime;
-	char *timeleft;
-	char *curtime;
-	char *bitrate;
-	char *rate;
-};
-extern struct moc_s moc;
-
-int update_moc(void);
-void free_moc(void);
+void print_moc_state(struct text_object *, char *, int);
+void print_moc_file(struct text_object *, char *, int);
+void print_moc_title(struct text_object *, char *, int);
+void print_moc_artist(struct text_object *, char *, int);
+void print_moc_song(struct text_object *, char *, int);
+void print_moc_album(struct text_object *, char *, int);
+void print_moc_totaltime(struct text_object *, char *, int);
+void print_moc_timeleft(struct text_object *, char *, int);
+void print_moc_curtime(struct text_object *, char *, int);
+void print_moc_bitrate(struct text_object *, char *, int);
+void print_moc_rate(struct text_object *, char *, int);
 
 #endif /* MOC_H_ */
 
