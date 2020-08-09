@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005  Philip Kovacs kovacsp3@comcast.net
  *
- * $Id: libtcp-portmon.h,v 1.11 2005/12/05 23:50:08 pkovacs Exp $
+ * $Id: libtcp-portmon.h 437 2005-12-05 23:50:08Z pkovacs $
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

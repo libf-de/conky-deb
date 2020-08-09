@@ -213,10 +213,28 @@
 		</td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">own_window_type</td>
+<td>
+		if own_window is yes, you may specify type normal, desktop or override (default: normal).
+		Desktop windows are special windows that have no window decorations; are always visible 
+		on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
+		Override windows are not under the control of the window manager.  Hints are ignored. This type
+		of window can be useful for certain situations.
+		</td>
+</tr>
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window_colour</td>
 <td>
 		If own_window_transparent no, set a specified background colour (defaults to black).  Takes either a hex value (#ffffff) or a valid RGB name (see /usr/lib/X11/rgb.txt)
 		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">own_window_hints</td>
+<td>
+		If own_window is yes, you may use these window manager hints to affect the way conky displays.  
+		Notes: Use own_window_type desktop as another way to implement many of these hints implicitly.
+		If you use own_window_type override, window manager hints have no meaning and are ignored.
+	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
 <td align="center">out_to_console</td>

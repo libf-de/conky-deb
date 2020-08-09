@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: common.c,v 1.16 2006/01/08 14:51:47 pkovacs Exp $
+ *  $Id: common.c 488 2006-01-08 14:51:47Z pkovacs $
  */
 
 #include "conky.h"

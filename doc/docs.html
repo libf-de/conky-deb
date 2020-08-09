@@ -14,14 +14,14 @@
 		This should be a package along the lines of "libx11-dev or xorg-x11-dev". 
 		</p><p>
 		Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
-		There is also usually an up-to-date ebuild within Conky's package or in	CVS.
+		There is also usually an up-to-date ebuild within Conky's package or in	Svn.
 		</p><p>
 		Debian,etc. users -- Conky will be in Debian's repositories soon (by mid-September, hopefully), and then 
 		Ubuntu shortly thereafter. Until then, "dpkg -i" the .deb package to install. 
 		</p><p>
 		Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
 		</p><div class="variablelist"><dl><dt><span class="term">
-					<span><strong class="command"><code class="option">sh autogen.sh</code></strong></span> <code class="option"># Only required if building from CVS</code>
+					<span><strong class="command"><code class="option">sh autogen.sh</code></strong></span> <code class="option"># Only required if building from Svn</code>
 				</span></dt><dd></dd><dt><span class="term">
 					<span><strong class="command"><code class="option">./configure </code></strong></span><code class="option">--prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib --enable-xft --enable-seti --enable-double-buffer --enable-own-window --enable-proc-uptime --enable-mpd --enable-mldonkey --enable-x11 --enable-portmon --enable-xmms --enable-bmp --enable-audacious --enable-infopipe --enable-bmpx </code>
 				</span></dt><dd></dd><dt><span class="term">
@@ -159,11 +159,23 @@
 		Boolean, create own window to draw?
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_transparent</code></strong></span></span></dt><dd>
 		Boolean, set pseudo-transparency?
+		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_type</code></strong></span></span></dt><dd>
+		if own_window is yes, you may specify type normal, desktop or override (default: normal).
+		Desktop windows are special windows that have no window decorations; are always visible 
+		on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
+		Override windows are not under the control of the window manager.  Hints are ignored. This type
+		of window can be useful for certain situations.
 		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_colour</code></strong></span>
 		<code class="option">colour</code>
 	</span></dt><dd>
 		If own_window_transparent no, set a specified background colour (defaults to black).  Takes either a hex value (#ffffff) or a valid RGB name (see /usr/lib/X11/rgb.txt)
-		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">out_to_console</code></strong></span>
+		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">own_window_hints</code></strong></span>
+                <code class="option">undecorated,below,above,sticky,skip_taskbar,skip_pager</code>
+	</span></dt><dd>
+		If own_window is yes, you may use these window manager hints to affect the way conky displays.  
+		Notes: Use own_window_type desktop as another way to implement many of these hints implicitly.
+		If you use own_window_type override, window manager hints have no meaning and are ignored.
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">out_to_console</code></strong></span>
 	</span></dt><dd>
 		Print text to stdout.
 		<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">pad_percents</code></strong></span></span></dt><dd>
@@ -186,7 +198,7 @@
 		Use specified player/plugin for the xmms status variables.  Valid items are: none, xmms, bmp, audacious and infopipe. (default is none).  Note that bmpx is currently handled separately.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">TEXT</code></strong></span></span></dt><dd>
 		After this begins text to be formatted on screen
-	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id269060"></a><h2>Variables</h2><p>
+	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id269146"></a><h2>Variables</h2><p>
 		Colors are parsed using XParsecolor(), there might be a list of them:
 		/usr/X11R6/lib/X11/rgb.txt. Also, <a href="http://sedition.com/perl/rgb.html" target="_top">
 																			 http://sedition.com/perl/rgb.html</a>.
@@ -441,12 +453,12 @@
 		<span><strong class="command"><code class="option">i8k_cpu_temp</code></strong></span>
 	<code class="option"></code>
 	</span></dt><dd>
-		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in celsius, as reported by /proc/i8k.
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Celsius, as reported by /proc/i8k.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">i8k_cpu_tempf</code></strong></span>
 	<code class="option"></code>
 	</span></dt><dd>
-		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in farenheit, as reported by /proc/i8k.
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Farenheit, as reported by /proc/i8k.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">i8k_left_fan_rpm</code></strong></span>
 	<code class="option"></code>
@@ -591,6 +603,10 @@
 		<span><strong class="command"><code class="option">mpd_file</code></strong></span>
 	</span></dt><dd>
 		Prints the file name of the current MPD song
+	<p></p></dd><dt><span class="term">
+		<span><strong class="command"><code class="option">mpd_smart</code></strong></span>
+	</span></dt><dd>
+		Prints the song name in either the form "artist - title" or file name, depending on whats available
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">new_mails</code></strong></span>
 	</span></dt><dd>
@@ -754,7 +770,7 @@
 		<span><strong class="command"><code class="option">voffset</code></strong></span>
 		<code class="option">(pixels)</code>
 	</span></dt><dd>
-		Change verticle offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
+		Change vertical offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
 		<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">xmms_bar</code></strong></span>
                 <code class="option">(height),(width)</code>
@@ -808,8 +824,8 @@
 		<span><strong class="command"><code class="option">xmms_title</code></strong></span>
 	</span></dt><dd>
 		xmms / bmp / audacious / infopipe: title of current tune
-	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id274859"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%m}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id274897"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
-	</div><div class="refsect1" lang="en"><a name="id274910"></a><h2>Bugs</h2><p>	
+	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id274983"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%m}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id275022"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
+	</div><div class="refsect1" lang="en"><a name="id275035"></a><h2>Bugs</h2><p>	
 		Drawing to root or some other desktop window directly doesn't work with 
 		all window managers. Especially doesn't work well with Gnome and it has 
 		been reported that it doesn't work with KDE either. Nautilus can be 
@@ -818,10 +834,10 @@
 		to set some specific window id. You might find xwininfo -tree useful to 
 		find the window to draw to. You can also use -o argument which makes
 		Conky to create its own window.
-		</p></div><div class="refsect1" lang="en"><a name="id274925"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net" target="_top">
+		</p></div><div class="refsect1" lang="en"><a name="id275050"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net" target="_top">
     http://conky.sourceforge.net</a></p><p><a href="http://www.sourceforge.net/projects/conky" target="_top">
     http://www.sourceforge.net/projects/conky</a></p><p>
 			#conky on irc.freenode.net
-		</p></div><div class="refsect1" lang="en"><a name="id274950"></a><h2>Authors</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id275074"></a><h2>Authors</h2><p>
 			The Conky dev team. What's up now!
 		</p></div></div></body></html>

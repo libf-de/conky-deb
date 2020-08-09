@@ -3,7 +3,7 @@
  * 
  * Copyright (C) 2005  Philip Kovacs kovacsp3@comcast.net
  *
- * $Id: xmms.h,v 1.2 2006/01/11 17:03:45 pkovacs Exp $
+ * $Id: xmms.h 493 2006-01-11 17:03:45Z pkovacs $
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

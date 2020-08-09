@@ -11,7 +11,7 @@
  * by Kyle Loudon (O'Reilly 1999).
  * Modified by Philip Kovacs (kovacsp3@comcast.net)
  * 
- * $Id: hash.h,v 1.2 2005/11/09 02:01:10 pkovacs Exp $
+ * $Id: hash.h 380 2005-11-09 02:01:10Z pkovacs $
  * ------------------------------------------------------ */
 
 #ifndef HASH_H

@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005  Philip Kovacs kovacsp3@comcast.net
  * 
- * $Id: libtcp-portmon.c,v 1.13 2005/12/05 23:50:08 pkovacs Exp $
+ * $Id: libtcp-portmon.c 529 2006-02-13 05:24:22Z pkovacs $
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -231,8 +231,8 @@ int monitor_match_function( const void *p_data1, const void *p_data2 )
    p_monitor1 = (tcp_port_monitor_t *)p_data1;
    p_monitor2 = (tcp_port_monitor_t *)p_data2;
 
-   return (p_monitor1->port_range_begin == p_monitor1->port_range_begin &&
-	   p_monitor2->port_range_end == p_monitor2->port_range_end);
+   return (p_monitor1->port_range_begin == p_monitor2->port_range_begin &&
+	   p_monitor1->port_range_end == p_monitor2->port_range_end);
 }
 
 /* ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: conky.c,v 1.112 2006/02/13 02:28:46 brenden1 Exp $
+ *  $Id: conky.c 570 2006-03-09 02:28:38Z pkovacs $
  */
 
 #include "conky.h"
@@ -241,7 +241,6 @@ static int set_transparent = 0;
 #ifdef OWN_WINDOW
 static int own_window = 0;
 static int background_colour = 0;
-static char wm_class_name[256];
 /* fixed size/pos is set if wm/user changes them */
 static int fixed_size = 0, fixed_pos = 0;
 #endif
@@ -891,6 +890,7 @@ enum text_object_type {
 	OBJ_mpd_name,
 	OBJ_mpd_file,
 	OBJ_mpd_percent,
+	OBJ_mpd_smart,
 #endif
 #if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
 	OBJ_xmms_status,
@@ -1181,6 +1181,20 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 				if (info.mpd.status) {
 					free(info.mpd.status);
 					info.mpd.status = 0;
+				}
+				break;
+			case OBJ_mpd_smart:
+				if (info.mpd.artist) {
+					free(info.mpd.artist);
+					info.mpd.artist = 0;
+				}
+				if (info.mpd.title) {
+					free(info.mpd.title);
+					info.mpd.title = 0;
+				}
+				if (info.mpd.file) {
+					free(info.mpd.file);
+					info.mpd.file = 0;
 				}
 				break;
 			case OBJ_mpd_host:
@@ -1892,13 +1906,13 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		END OBJ(mpd_name, INFO_MPD)
 		END OBJ(mpd_file, INFO_MPD)
 		END OBJ(mpd_percent, INFO_MPD)
-		END OBJ(mpd_album, INFO_MPD) END OBJ(mpd_vol,
-				INFO_MPD) END OBJ(mpd_bitrate,
-					INFO_MPD)
-					END OBJ(mpd_status, INFO_MPD)
-					END OBJ(mpd_bar, INFO_MPD)
-					(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
-	END
+		END OBJ(mpd_album, INFO_MPD)
+		END OBJ(mpd_vol, INFO_MPD)
+		END OBJ(mpd_bitrate, INFO_MPD)
+		END OBJ(mpd_status, INFO_MPD)
+		END OBJ(mpd_bar, INFO_MPD)
+		(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+		END OBJ(mpd_smart, INFO_MPD) END
 #endif
 #if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
 		OBJ(xmms_status, INFO_XMMS) END
@@ -3187,6 +3201,13 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					(int) (cur->mpd.progress *
 					       255.0f));
 			}
+			OBJ(mpd_smart) {
+				if (strlen(cur->mpd.title) < 2 && strlen(cur->mpd.title) < 2) {
+					snprintf(p, p_max_size, "%s", cur->mpd.file);
+				} else {
+					snprintf(p, p_max_size, "%s - %s", cur->mpd.artist, cur->mpd.title);
+				}
+			}
 #endif
 #if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
 			OBJ(xmms_status) {
@@ -4069,6 +4090,7 @@ static void draw_line(char *s)
 					int h =
 					    specials[special_index].height;
 					int by;
+					unsigned long last_colour = current_color;
 #ifdef XFT
 					if (use_xft) {
                                             by = cur_y - (font_ascent() + h) / 2 - 1;
@@ -4127,15 +4149,16 @@ static void draw_line(char *s)
 						    specials
 						    [special_index].height;
 					}
-				}
-				if (draw_mode == BG) {
+/*				if (draw_mode == BG) {
 					set_foreground_color(default_bg_color);
 				}
 				else if (draw_mode == OUTLINE) {
 					set_foreground_color(default_out_color);
 				} else {
 					set_foreground_color(default_fg_color);
-				}
+				}*/
+				set_foreground_color(last_colour);
+			}
 				break;
 			
 				case FONT:
@@ -4409,11 +4432,6 @@ static void main_loop()
 					update_text();
 #ifdef X11
 			}
-#ifdef OWN_WINDOW
-			if (own_window) {
-				set_transparent_background(window.window);
-			}
-#endif
 		}
 		
 		if (need_to_update) {
@@ -4428,9 +4446,9 @@ static void main_loop()
 			if (own_window) {
 				/* resize window if it isn't right size */
 				if (!fixed_size &&
-				    (text_width + border_margin * 2 !=
+				    (text_width + border_margin * 2 + 1 !=
 				     window.width
-				     || text_height + border_margin * 2 !=
+				     || text_height + border_margin * 2 + 1 !=
 				     window.height)) {
 					window.width =
 					    text_width +
@@ -4442,6 +4460,9 @@ static void main_loop()
 						      window.window,
 						      window.width,
 						      window.height);
+			if (own_window) {
+				set_transparent_background(window.window);
+			}
 				     }
 
 				/* move window if it isn't in right position */
@@ -4550,6 +4571,26 @@ static void main_loop()
 					set_font();
 				}
 				break;
+
+			case ButtonPress:
+				if (own_window)
+				{
+				    /* forward the click to the desktop window */
+				    XUngrabPointer(display, ev.xbutton.time);
+				    ev.xbutton.window = window.desktop;
+				    XSendEvent(display, ev.xbutton.window, False, ButtonPressMask, &ev);
+				}
+				break;
+
+ 			case ButtonRelease:
+                                if (own_window)
+                                {
+                                    /* forward the release to the desktop window */
+                                    ev.xbutton.window = window.desktop;
+                                    XSendEvent(display, ev.xbutton.window, False, ButtonReleaseMask, &ev);
+                                }
+                                break;
+
 #endif
 
 			default:
@@ -4691,8 +4732,12 @@ void clean_up(void)
 	}
 #endif
 #ifdef OWN_WINDOW
-	if (own_window)
+	if (own_window) 
+	{
 		XDestroyWindow(display, window.window);
+		XClearWindow(display, RootWindow(display, screen));
+		XFlush(display);
+	}
 	else
 #endif
 	{
@@ -4817,7 +4862,9 @@ static void set_default_configurations(void)
 	maximum_width = 0;
 #ifdef OWN_WINDOW
 	own_window = 0;
-     	strcpy(wm_class_name, "conky");	
+	window.type=TYPE_NORMAL;
+	window.hints=0;
+     	strcpy(window.wm_class_name, "conky");	
 #endif
 	stippled_borders = 0;
 	border_margin = 3;
@@ -4929,7 +4976,11 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 		}
 		CONF("on_bottom") {
 			if(value)
+				ERR("on_bottom is deprecated.  use own_window_hints below");
 				on_bottom = string_to_bool(value);
+				if (on_bottom)
+				    SET_HINT(window.hints,HINT_BELOW);
+
 			else
 				CONF_ERR;
 		}
@@ -5216,8 +5267,8 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 			own_window = string_to_bool(value);
 		}
 		CONF("wm_class_name") {
-			strncpy(wm_class_name, value, sizeof(wm_class_name)-1);
-			wm_class_name[sizeof(wm_class_name)-1] = 0;
+			memset(window.wm_class_name,0,sizeof(window.wm_class_name));
+			strncpy(window.wm_class_name, value, sizeof(window.wm_class_name)-1);
 		}
 		CONF("own_window_transparent") {
 			set_transparent = string_to_bool(value);
@@ -5227,6 +5278,47 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 				background_colour = get_x11_color(value);
 			} else {
 				ERR("Invalid colour for own_winder_colour (try omitting the '#' for hex colours");
+			}
+		}
+		CONF("own_window_hints") {
+			if (value) {
+				char *p_hint, *p_save;
+				char delim[] = ", ";
+
+				/* tokenize the value into individual hints */
+				if ((p_hint=strtok_r(value, delim, &p_save)) != NULL)
+				do {
+					 /*fprintf(stderr, "hint [%s] parsed\n", p_hint);*/
+					 if (strncmp(p_hint,"undecorate",10) == 0)
+					     SET_HINT(window.hints,HINT_UNDECORATED);
+					 else if (strncmp(p_hint,"below",5) == 0)
+					     SET_HINT(window.hints,HINT_BELOW);
+					 else if (strncmp(p_hint,"above",5) == 0)
+					     SET_HINT(window.hints,HINT_ABOVE);
+					 else if (strncmp(p_hint,"sticky",6) == 0)
+					     SET_HINT(window.hints,HINT_STICKY);
+					 else if (strncmp(p_hint,"skip_taskbar",12) == 0)
+					     SET_HINT(window.hints,HINT_SKIP_TASKBAR);
+					 else if (strncmp(p_hint,"skip_pager",10) == 0)
+					     SET_HINT(window.hints,HINT_SKIP_PAGER);
+					 else
+					     CONF_ERR;
+
+					 p_hint=strtok_r(NULL, delim, &p_save);
+				}
+				while (p_hint!=NULL);
+			}
+		}
+		CONF("own_window_type") {
+			if (value) {
+				if (strncmp(value,"normal",6)==0)
+					window.type = TYPE_NORMAL;
+				else if  (strncmp(value,"desktop",7)==0)
+					window.type = TYPE_DESKTOP;
+				else if (strncmp(value,"override",8)==0)
+					window.type = TYPE_OVERRIDE;
+				else
+				    	CONF_ERR;
 			}
 		}
 #endif
@@ -5572,6 +5664,28 @@ int main(int argc, char **argv)
 		free(text);
 	}
 	text = NULL;
+	/* fork */
+	if (fork_to_background) {
+		int pid = fork();
+		switch (pid) {
+		case -1:
+			ERR("can't fork() to background: %s",
+			    strerror(errno));
+			break;
+
+		case 0:
+			/* child process */
+			sleep(1);
+			fprintf(stderr,"\n");fflush(stderr);
+			break;
+
+		default:
+			/* parent process */
+			fprintf(stderr,"Conky: forked to background, pid is %d\n",pid);
+			fflush(stderr);
+			return 0;
+		}
+	}
 
 	update_uname();
 
@@ -5579,22 +5693,12 @@ int main(int argc, char **argv)
 #ifdef X11
 	update_text_area();	/* to get initial size of the window */
 
-#if defined OWN_WINDOW
-	init_window
-	    (own_window,
-	     wm_class_name,
-	     text_width + border_margin * 2 + 1,
-	     text_height + border_margin * 2 + 1,
-	     on_bottom, fixed_pos, set_transparent, background_colour, info.uname_s.nodename);
-#else
 	init_window
 		(own_window,
 		 text_width + border_margin * 2 + 1,
 		 text_height + border_margin * 2 + 1,
-		 on_bottom, set_transparent, background_colour, info.uname_s.nodename);
+		 set_transparent, background_colour, info.uname_s.nodename, argv, argc);
 	
-#endif
-
 	update_text_area();	/* to position text/window on screen */
 #endif /* X11 */
 
@@ -5619,26 +5723,6 @@ int main(int argc, char **argv)
 	draw_stuff();
 #endif /* X11 */
 
-	/* fork */
-	if (fork_to_background) {
-		int ret = fork();
-		switch (ret) {
-		case -1:
-			ERR("can't fork() to background: %s",
-			    strerror(errno));
-			break;
-
-		case 0:
-			break;
-
-		default:
-			fprintf
-			    (stderr,
-			     "Conky: forked to background, pid is %d\n",
-			     ret);
-			return 0;
-		}
-	}
 
 	/* Set signal handlers */
 	act.sa_handler = signal_handler;

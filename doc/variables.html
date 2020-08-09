@@ -385,14 +385,14 @@
 <td align="center">i8k_cpu_temp</td>
 <td align="center"></td>
 <td>
-		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in celsius, as reported by /proc/i8k.
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Celsius, as reported by /proc/i8k.
 	</td>
 </tr>
 <tr bgcolor="#fffafa">
 <td align="center">i8k_cpu_tempf</td>
 <td align="center"></td>
 <td>
-		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in farenheit, as reported by /proc/i8k.
+		If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Farenheit, as reported by /proc/i8k.
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -627,97 +627,104 @@
 	</td>
 </tr>
 <tr bgcolor="#fffafa">
+<td align="center">mpd_smart</td>
+<td align="center"></td>
+<td>
+		Prints the song name in either the form "artist - title" or file name, depending on whats available
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
 <td align="center">new_mails</td>
 <td align="center"></td>
 <td>
 		Unread mail count in mail spool.
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">nodename</td>
 <td align="center"></td>
 <td>
 		Hostname
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">outlinecolor</td>
 <td align="center">(color)</td>
 <td>
 		Change outline color
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">pre_exec</td>
 <td align="center">shell command</td>
 <td>
 		Executes a shell command one time before conky displays anything and puts output as text.
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">processes</td>
 <td align="center"></td>
 <td>
 		Total processes (sleeping and running)
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">running_processes</td>
 <td align="center"></td>
 <td>
 		Running processes (not sleeping), requires Linux 2.6
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">shadecolor</td>
 <td align="center">(color)</td>
 <td>
 		Change shading color
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">stippled_hr</td>
 <td align="center">(space)</td>
 <td>
 		Stippled (dashed) horizontal line
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">swapbar</td>
 <td align="center">(height),(width)</td>
 <td>
 		Bar that shows amount of swap in use
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">swap</td>
 <td align="center"></td>
 <td>
 		Amount of swap in use
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">swapmax</td>
 <td align="center"></td>
 <td>
 		Total amount of swap
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">swapperc</td>
 <td align="center"></td>
 <td>
 		Percentage of swap in use
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">sysname</td>
 <td align="center"></td>
 <td>
 		System name, Linux for example
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">tcp_portmon</td>
 <td align="center">port_begin port_end item (index)</td>
 <td>
@@ -755,217 +762,217 @@
 		Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally.  In other words, the program avoids creating redundant monitors. 
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">texeci</td>
 <td align="center">interval command</td>
 <td>
 		Runs a command at an interval inside a thread and displays the output.  Same as $execi, except the command is run inside a thread.  Use this if you have a slow script to keep Conky updating.  You should make the interval slightly longer then the time it takes your script to execute.  For example, if you have a script that take 5 seconds to execute, you should make the interval at least 6 seconds. See also $execi.
 		</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">offset</td>
 <td align="center">(pixels)</td>
 <td>
 		Move text over by N pixels.  See also $voffset.
 		</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">tail</td>
 <td align="center">logfile lines (interval)</td>
 <td>
 		Displays last N lines of supplied text text file. If interval is not supplied, Conky assumes 2x Conky's interval. Max of 30 lines can be displayed, or until the text buffer is filled.
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">time</td>
 <td align="center">(format)</td>
 <td>
 		Local time, see man strftime to get more information about format
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">totaldown</td>
 <td align="center">net</td>
 <td>
 		Total download, overflows at 4 GB on Linux with 32-bit arch and there doesn't seem to be a way to know how many times it has already done that before conky has started.
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">top</td>
 <td align="center">type, num</td>
 <td>
 		This takes arguments in the form:top (name) (number) Basically, processes are ranked from highest to lowest in terms of cpu usage, which is what (num) represents. The types are: "name", "pid", "cpu", and mem". There can be a max of 10 processes listed.
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">top_mem</td>
 <td align="center">type, num</td>
 <td>
 		Same as top, except sorted by mem usage instead of cpu
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">totalup</td>
 <td align="center">net</td>
 <td>
 		Total upload, this one too, may overflow
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">updates</td>
 <td align="center">Number of updates</td>
 <td>
 		for debugging
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">upspeed</td>
 <td align="center">net</td>
 <td>
 		Upload speed in kilobytes
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">upspeedf</td>
 <td align="center">net</td>
 <td>
 		Upload speed in kilobytes with one decimal
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">upspeedgraph</td>
 <td align="center">net (height),(width) (gradient colour 1) (gradient colour 2) (scale)</td>
 <td>
 		Upload speed graph, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">uptime</td>
 <td align="center"></td>
 <td>
 		Uptime
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">uptime_short</td>
 <td align="center"></td>
 <td>
 		Uptime in a shorter format
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">seti_prog</td>
 <td align="center"></td>
 <td>
 		Seti@home current progress
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">seti_progbar</td>
 <td align="center">(height),(width)</td>
 <td>
 		Seti@home current progress bar
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">seti_credit</td>
 <td align="center"></td>
 <td>
 		Seti@home total user credit
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">voffset</td>
 <td align="center">(pixels)</td>
 <td>
-		Change verticle offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
+		Change vertical offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
 		</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms_bar</td>
 <td align="center">(height),(width)</td>
 <td>
 		xmms / bmp / audacious / infopipe: progress bar
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms_bitrate</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: bitrate of current tune
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms_channels</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: number of audio channels of current tune
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms_filename</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: full path and filename of current tune
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms_frequency</td>
 <td align="center"></td>
 <td>
 	        xmms / bmp / audacious / infopipe: sampling frequency of current tune
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms_length</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: total length of current tune as MM:SS
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms_length_seconds</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: total length of current tune in seconds
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms_playlist_position</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: playlist position of current tune
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms_playlist_length</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: number of tunes in playlist
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms_position</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: MM:SS position of current tune
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms_position_seconds</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: position of current tune in seconds
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">xmms_status</td>
 <td align="center"></td>
 <td>
 		xmms / bmp / audacious / infopipe: player status (Playing/Paused/Stopped/Not running)
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">xmms_title</td>
 <td align="center"></td>
 <td>
