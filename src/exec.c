@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <math.h>
 #include <unistd.h>
 
 struct execi_data {
@@ -93,6 +94,7 @@ static FILE* pid_popen(const char *command, const char *mode, pid_t *child) {
 		} else {
 			close(1);
 		}
+		close(parentend);
 		dup(childend);	//by dupping childend, the returned fd will have close-on-exec turned off
 		execl("/bin/sh", "sh", "-c", command, (char *) NULL);
 		_exit(EXIT_FAILURE); //child should die here, (normally execl will take care of this but it can fail)
@@ -156,7 +158,7 @@ static inline void read_exec(const char *data, char *buf, const int size, const
 		int length;
 
 		length = fread(buf, 1, size, fp);
-		pclose(fp);
+		fclose(fp);
 		buf[length] = '\0';
 		if (length > 0 && buf[length - 1] == '\n') {
 			buf[length - 1] = '\0';
@@ -228,6 +230,7 @@ void scan_execi_arg(struct text_object *obj, const char *arg)
 
 	ed = malloc(sizeof(struct execi_data));
 	memset(ed, 0, sizeof(struct execi_data));
+	ed->last_update = -INFINITY;
 
 	if (sscanf(arg, "%f %n", &ed->interval, &n) <= 0) {
 		NORM_ERR("${execi* <interval> command}");
@@ -242,18 +245,17 @@ void scan_execi_arg(struct text_object *obj, const char *arg)
 void scan_execgraph_arg(struct text_object *obj, const char *arg)
 {
 	struct execi_data *ed;
-	char *buf;
 
 	ed = malloc(sizeof(struct execi_data));
 	memset(ed, 0, sizeof(struct execi_data));
 
-	buf = scan_graph(obj, arg, 100);
-	if (!buf) {
+	ed->cmd = scan_execgraph(obj, arg);
+	obj->data.opaque = ed;
+
+	if(! ed->cmd) {
 		NORM_ERR("missing command argument to execgraph object");
 		return;
 	}
-	ed->cmd = buf;
-	obj->data.opaque = ed;
 }
 #endif /* X11 */
 
@@ -320,7 +322,7 @@ void print_execpi(struct text_object *obj, char *p, int p_max_size)
 			ed->buffer = malloc(text_buffer_size);
 
 		length = fread(ed->buffer, 1, text_buffer_size, fp);
-		pclose(fp);
+		fclose(fp);
 
 		output = ed->buffer;
 		output[length] = '\0';
@@ -387,7 +389,7 @@ void print_execgraph(struct text_object *obj, char *p, int p_max_size)
 	read_exec(ed->cmd, p, p_max_size, 1);
 	barnum = get_barnum(p);
 
-	if (barnum > 0) {
+	if (barnum >= 0) {
 		new_graph(obj, p, p_max_size, round_to_int(barnum));
 	}
 }

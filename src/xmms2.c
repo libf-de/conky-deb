@@ -223,7 +223,7 @@ int handle_playback_state_change(xmmsv_t *value, void *p)
 				break;
 			case XMMS_PLAYBACK_STATUS_STOP:
 				strncpy(ptr->xmms2.status, "Stopped", text_buffer_size - 1);
-				ptr->xmms2.elapsed = ptr->xmms2.progress = ptr->xmms2.percent = 0;
+ 				ptr->xmms2.elapsed = ptr->xmms2.progress = 0;
 				break;
 			default:
 				strncpy(ptr->xmms2.status, "Unknown", text_buffer_size - 1);
@@ -232,7 +232,7 @@ int handle_playback_state_change(xmmsv_t *value, void *p)
 	return TRUE;
 }
 
-int handle_playlist_loaded(xmmsv_t *value, void *p) 
+int handle_playlist_loaded(xmmsv_t *value, void *p)
 {
 	struct information *ptr = p;
 	const char *c, *errbuf;
@@ -251,6 +251,25 @@ int handle_playlist_loaded(xmmsv_t *value, void *p)
 		strncpy(ptr->xmms2.playlist, c, text_buffer_size - 1);
 	}
 	return TRUE;
+}
+
+int handle_medialib_changed(xmmsv_t *value, void *p)
+{
+		struct information *ptr = (struct information*) p;
+		const char *errbuf;
+		int current_id;
+
+		if (xmmsv_get_error(value, &errbuf)) {
+			fprintf(stderr,"XMMS2 server error. %s\n", errbuf);
+			return TRUE;
+		}
+
+		if (xmmsv_get_int(value, &current_id) && current_id > 0 &&
+				ptr->xmms2.id == (unsigned int)current_id) {
+			return handle_curent_id(value, ptr);
+		}
+
+		return TRUE;
 }
 
 int update_xmms2(void)
@@ -298,6 +317,8 @@ int update_xmms2(void)
 				handle_playback_state_change, current_info);
 		XMMS_CALLBACK_SET(xmms2_conn, xmmsc_broadcast_playlist_loaded, 
 				handle_playlist_loaded, current_info);
+		XMMS_CALLBACK_SET(xmms2_conn, xmmsc_broadcast_medialib_entry_changed,
+				handle_medialib_changed, current_info);
 
 		/* get playback status, current id and active playlist */
 		XMMS_CALLBACK_SET(xmms2_conn, xmmsc_playback_current_id, 

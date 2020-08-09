@@ -927,8 +927,9 @@ static int open_sysfs_sensor(const char *dir, const char *dev, const char *type,
 		snprintf(path, 255, "%s%s/%s%d_input", dir, dev, type, n);
 		fd = open(path, O_RDONLY);
 		if (fd < 0) {
-			CRIT_ERR(NULL, NULL, "can't open '%s': %s\nplease check your device or remove this "
+			NORM_ERR("can't open '%s': %s\nplease check your device or remove this "
 					 "var from "PACKAGE_NAME, path, strerror(errno));
+			return -1;
 		}
 	}
 
@@ -1080,7 +1081,7 @@ void print_sysfs_sensor(struct text_object *obj, char *p, int p_max_size)
 	double r;
 	struct sysfs *sf = obj->data.opaque;
 
-	if (!sf)
+	if (!sf || sf->fd < 0)
 		return;
 
 	r = get_sysfs_info(&sf->fd, sf->arg,
@@ -1104,7 +1105,8 @@ void free_sysfs_sensor(struct text_object *obj)
 	if (!sf)
 		return;
 
-	close(sf->fd);
+	if(sf->fd >= 0)
+		close(sf->fd);
 	free(obj->data.opaque);
 	obj->data.opaque = NULL;
 }
@@ -1421,25 +1423,19 @@ critical (S5):           73 C
 passive:                 73 C: tc1=4 tc2=3 tsp=40 devices=0xcdf6e6c0
 */
 
-#define ACPI_THERMAL_DIR "/proc/acpi/thermal_zone/"
-#define ACPI_THERMAL_FORMAT "/proc/acpi/thermal_zone/%s/temperature"
+#define ACPI_THERMAL_ZONE_DEFAULT "thermal_zone0"
+#define ACPI_THERMAL_FORMAT "/sys/class/thermal/%s/temp"
 
 int open_acpi_temperature(const char *name)
 {
 	char path[256];
-	char buf[256];
 	int fd;
 
 	if (name == NULL || strcmp(name, "*") == 0) {
-		static int rep = 0;
-
-		if (!get_first_file_in_a_directory(ACPI_THERMAL_DIR, buf, &rep)) {
-			return -1;
-		}
-		name = buf;
+		snprintf(path, 255, ACPI_THERMAL_FORMAT, ACPI_THERMAL_ZONE_DEFAULT);
+	} else {
+		snprintf(path, 255, ACPI_THERMAL_FORMAT, name);
 	}
-
-	snprintf(path, 255, ACPI_THERMAL_FORMAT, name);
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
@@ -1451,6 +1447,9 @@ int open_acpi_temperature(const char *name)
 
 static double last_acpi_temp;
 static double last_acpi_temp_time;
+
+//the maximum length of the string inside a ACPI_THERMAL_FORMAT file including the ending 0
+#define MAXTHERMZONELEN 6
 
 double get_acpi_temperature(int fd)
 {
@@ -1469,15 +1468,16 @@ double get_acpi_temperature(int fd)
 
 	/* read */
 	{
-		char buf[256];
+		char buf[MAXTHERMZONELEN];
 		int n;
 
-		n = read(fd, buf, 255);
+		n = read(fd, buf, MAXTHERMZONELEN-1);
 		if (n < 0) {
 			NORM_ERR("can't read fd %d: %s", fd, strerror(errno));
 		} else {
 			buf[n] = '\0';
-			sscanf(buf, "temperature: %lf", &last_acpi_temp);
+			sscanf(buf, "%lf", &last_acpi_temp);
+			last_acpi_temp /= 1000;
 		}
 	}
 
@@ -1547,6 +1547,12 @@ present voltage:         16608 mV
 	POWER_SUPPLY_MODEL_NAME=IBM-92P1060
 	POWER_SUPPLY_MANUFACTURER=Panasonic
   On some systems POWER_SUPPLY_ENERGY_* is replaced by POWER_SUPPLY_CHARGE_*
+*/
+
+/* Tiago Marques Vale <tiagomarquesvale@gmail.com>
+  Regarding the comment above, since kernel 2.6.36.1 I have
+  POWER_SUPPLY_POWER_NOW instead of POWER_SUPPLY_CURRENT_NOW
+  See http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=532000
 */
 
 #define SYSFS_BATTERY_BASE_PATH "/sys/class/power_supply"
@@ -1671,6 +1677,8 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
  			the tradition! */
  			else if (strncmp(buf, "POWER_SUPPLY_CURRENT_NOW=", 25) == 0)
  				sscanf(buf, "POWER_SUPPLY_CURRENT_NOW=%d", &present_rate);
+			else if (strncmp(buf, "POWER_SUPPLY_POWER_NOW=", 23) == 0)
+				sscanf(buf, "POWER_SUPPLY_POWER_NOW=%d", &present_rate);
  			else if (strncmp(buf, "POWER_SUPPLY_ENERGY_NOW=", 24) == 0)
  				sscanf(buf, "POWER_SUPPLY_ENERGY_NOW=%d", &remaining_capacity);
  			else if (strncmp(buf, "POWER_SUPPLY_ENERGY_FULL=", 25) == 0)

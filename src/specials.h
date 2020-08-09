@@ -33,11 +33,10 @@
 
 #define SPECIAL_CHAR '\x01'
 
-#define MAX_GRAPH_DEPTH 512
-
 // don't use spaces in LOGGRAPH or NORMGRAPH if you change them
 #define LOGGRAPH "-l"
 #define TEMPGRAD "-t"
+#define DOTGRAPH "-d"
 
 enum special_types {
 	NONSPECIAL = 0,
@@ -67,11 +66,12 @@ struct special_t {
 	double graph_scale;
 	short show_scale;
 	int graph_width;
+	int graph_allocated;
 	int scaled;
 	unsigned long first_colour;	// for graph gradient
 	unsigned long last_colour;
 	short font_added;
-	char tempgrad;
+	char tempgrad, dotgraph;
 };
 
 /* direct access to the registered specials (FIXME: bad encapsulation) */
@@ -99,6 +99,7 @@ const char *scan_gauge(struct text_object *, const char *);
 #ifdef X11
 char *scan_font(const char *);
 char *scan_graph(struct text_object *, const char *, int);
+char *scan_execgraph(struct text_object *obj, const char *arg);
 void scan_tab(struct text_object *, const char *);
 void scan_stippled_hr(struct text_object *, const char*);
 

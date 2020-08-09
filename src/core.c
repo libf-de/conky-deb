@@ -541,11 +541,11 @@ struct text_object *construct_text_object(const char *s, const char *arg, long
 		parse_platform_sensor(obj, arg);
 	END OBJ_ARG(hwmon, 0, "hwmon needs argumanets")
 		parse_hwmon_sensor(obj, arg);
-	END OBJ(addr, &update_net_stats)
-		parse_net_stat_arg(obj, arg, free_at_crash);
 	END OBJ(addrs, &update_net_stats)
 		parse_net_stat_arg(obj, arg, free_at_crash);
 #endif /* __linux__ */
+	END OBJ(addr, &update_net_stats)
+		parse_net_stat_arg(obj, arg, free_at_crash);
 	END
 	/* we have four different types of top (top, top_mem, top_time and top_io). To
 	 * avoid having almost-same code four times, we have this special
@@ -577,7 +577,7 @@ struct text_object *construct_text_object(const char *s, const char *arg, long
 		obj->data.s = strndup(arg, text_buffer_size);
 	END OBJ_IF_ARG(if_mounted, 0, "if_mounted needs an argument")
 		obj->data.s = strndup(arg, text_buffer_size);
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 	END OBJ_IF_ARG(if_running, &update_top, "if_running needs an argument")
 		top_running = 1;
 		obj->data.s = strndup(arg, text_buffer_size);
@@ -925,6 +925,9 @@ struct text_object *construct_text_object(const char *s, const char *arg, long
 	END OBJ(mpd_album, &update_mpd)
 		mpd_set_maxlen(mpd_album);
 		init_mpd();
+	END OBJ(mpd_date, &update_mpd)
+		mpd_set_maxlen(mpd_date);
+		init_mpd();
 	END OBJ(mpd_vol, &update_mpd) init_mpd();
 	END OBJ(mpd_bitrate, &update_mpd) init_mpd();
 	END OBJ(mpd_status, &update_mpd) init_mpd();
@@ -967,8 +970,10 @@ struct text_object *construct_text_object(const char *s, const char *arg, long
 	END OBJ(xmms2_size, &update_xmms2)
 	END OBJ(xmms2_status, &update_xmms2)
 	END OBJ(xmms2_percent, &update_xmms2)
+#ifdef X11
 	END OBJ(xmms2_bar, &update_xmms2)
 		scan_bar(obj, arg);
+#endif
 	END OBJ(xmms2_smart, &update_xmms2)
 	END OBJ(xmms2_playlist, &update_xmms2)
 	END OBJ(xmms2_timesplayed, &update_xmms2)
@@ -994,8 +999,10 @@ struct text_object *construct_text_object(const char *s, const char *arg, long
 	END OBJ(audacious_playlist_length, &update_audacious)
 	END OBJ(audacious_playlist_position, &update_audacious)
 	END OBJ(audacious_main_volume, &update_audacious)
+#ifdef X11
 	END OBJ(audacious_bar, &update_audacious)
 		scan_bar(obj, arg);
+#endif
 #endif
 #ifdef BMPX
 	END OBJ(bmpx_title, &update_bmpx)
@@ -1733,6 +1740,7 @@ void free_text_objects(struct text_object *root, int internal)
 			case OBJ_mpd_title:
 			case OBJ_mpd_artist:
 			case OBJ_mpd_album:
+			case OBJ_mpd_date:
 			case OBJ_mpd_random:
 			case OBJ_mpd_repeat:
 			case OBJ_mpd_vol:
