@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: conky.c 1227 2008-07-20 02:05:11Z brenden1 $ */
+ * $Id: conky.c 1236 2008-08-14 17:10:41Z brenden1 $ */
 
 #include "conky.h"
 #include <stdarg.h>
@@ -1575,6 +1575,13 @@ struct mail_s *parse_mail_args(char type, const char *arg)
 		tcsetattr(fp, TCSANOW, &term);
 	}
 	// now we check for optional args
+	tmp = strstr(arg, "-r ");
+	if (tmp) {
+		tmp += 3;
+		sscanf(tmp, "%u", &mail->retries);
+	} else {
+		mail->retries = 5;	// 5 retries after failure
+	}
 	tmp = strstr(arg, "-i ");
 	if (tmp) {
 		tmp += 3;
@@ -1627,7 +1634,7 @@ void *imap_thread(void *arg)
 	char recvbuf[MAXDATASIZE];
 	char sendbuf[MAXDATASIZE];
 	char *reply;
-	int fail = 0;
+	unsigned int fail = 0;
 	unsigned int old_unseen = UINT_MAX;
 	unsigned int old_messages = UINT_MAX;
 	struct stat stat_buf;
@@ -1648,14 +1655,14 @@ void *imap_thread(void *arg)
 		exit(1);
 	}
 #endif /* HAVE_GETHOSTBYNAME_R */
-	while (fail < 5) {
+	while (fail < mail->retries) {
 		struct timeval timeout;
 		int res;
 		fd_set fdset;
 
 		if (fail > 0) {
-			ERR("Trying IMAP connection again for %s@%s (try %i/5)",
-					mail->user, mail->host, fail + 1);
+			ERR("Trying IMAP connection again for %s@%s (try %u/%u)",
+					mail->user, mail->host, fail + 1, mail->retries);
 		}
 		do {
 			if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
@@ -1824,7 +1831,7 @@ void *pop3_thread(void *arg)
 	char recvbuf[MAXDATASIZE];
 	char sendbuf[MAXDATASIZE];
 	char *reply;
-	int fail = 0;
+	unsigned int fail = 0;
 	unsigned int old_unseen = UINT_MAX;
 	struct stat stat_buf;
 	struct hostent he, *he_res = 0;
@@ -1844,14 +1851,14 @@ void *pop3_thread(void *arg)
 		exit(1);
 	}
 #endif /* HAVE_GETHOSTBYNAME_R */
-	while (fail < 5) {
+	while (fail < mail->retries) {
 		struct timeval timeout;
 		int res;
 		fd_set fdset;
 
 		if (fail > 0) {
-			ERR("Trying POP3 connection again for %s@%s (try %i/5)",
-					mail->user, mail->host, fail + 1);
+			ERR("Trying POP3 connection again for %s@%s (try %u/%u)",
+					mail->user, mail->host, fail + 1, mail->retries);
 		}
 		do {
 			if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
@@ -2390,6 +2397,7 @@ static void free_text_objects(struct text_object_list *text_object_list, char fu
 				break;
 		}
 	}
+	if (full) {} // disable warning when MPD !defined
 	free(text_object_list->text_objects);
 	text_object_list->text_objects = NULL;
 	text_object_list->text_object_count = 0;
@@ -3735,9 +3743,8 @@ static struct text_object *construct_text_object(const char *s,
 		} else {
 			obj->global_mode = 1;
 		}
-	END
 #ifdef SMAPI
-	OBJ(smapi, 0)
+	END OBJ(smapi, 0)
 		if (arg)
 			obj->data.s = strndup(arg, text_buffer_size);
 		else
@@ -3781,10 +3788,9 @@ static struct text_object *construct_text_object(const char *s,
 			}
 		} else
 			ERR("if_smapi_bat_bar needs an argument");
-		END
 #endif /* SMAPI */
 #ifdef MPD
-			OBJ_THREAD(mpd_artist, INFO_MPD)
+			END OBJ_THREAD(mpd_artist, INFO_MPD)
 			END OBJ_THREAD(mpd_title, INFO_MPD)
 			if (arg) {
 				sscanf(arg, "%d", &info.mpd.max_title_len);
@@ -3811,9 +3817,9 @@ static struct text_object *construct_text_object(const char *s,
 			END OBJ_THREAD(mpd_bar, INFO_MPD)
 			scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
 		END OBJ_THREAD(mpd_smart, INFO_MPD)
-#endif
+#endif /* MPD */
 #ifdef XMMS2
-			OBJ(xmms2_artist, INFO_XMMS2)
+			END OBJ(xmms2_artist, INFO_XMMS2)
 			END OBJ(xmms2_album, INFO_XMMS2)
 			END OBJ(xmms2_title, INFO_XMMS2)
 			END OBJ(xmms2_genre, INFO_XMMS2)
@@ -4022,24 +4028,11 @@ static struct text_object *construct_text_object(const char *s,
 			}
 #ifdef NVIDIA
 		END OBJ(nvidia, 0)
-			if (!arg){
-				CRIT_ERR("nvidia needs one argument "
-						"[temp,threshold,gpufreq,memfreq,imagequality]");
-			} else {
-				if (strcmp(arg, "temp") == 0)
-					obj->data.nvidia.type = NV_TEMP;
-				else if (strcmp(arg, "threshold") == 0)
-					obj->data.nvidia.type = NV_TEMP_THRESHOLD;
-				else if (strcmp(arg, "gpufreq") == 0)
-					obj->data.nvidia.type = NV_GPU_FREQ;
-				else if (strcmp(arg, "memfreq") == 0)
-					obj->data.nvidia.type = NV_MEM_FREQ;
-				else if (strcmp(arg, "imagequality") == 0)
-					obj->data.nvidia.type = NV_IMAGE_QUALITY;
-				else
-					CRIT_ERR("you have to give one of these arguments "
-							"[temp,threshold,gpufreq,memfreq,imagequality");
-				strncpy((char*)&obj->data.nvidia.arg, arg, 20);
+			if (!arg) {
+				CRIT_ERR("nvidia needs an argument\n");
+			} else if (set_nvidia_type(&obj->data.nvidia, arg)) {
+				CRIT_ERR("nvidia: invalid argument"
+				         " specified: '%s'\n", arg);
 			}
 #endif /* NVIDIA */
 		END {
@@ -6321,13 +6314,14 @@ head:
 			}
 #ifdef NVIDIA
 			OBJ(nvidia) {
-				int hol = (strcmp((char*)&obj->data.nvidia.arg, "gpufreq")) ? 1 : 0;
-				if(!(obj->data.nvidia.value = get_nvidia_value(obj->data.nvidia.type, display, hol)))
-					snprintf(p, p_max_size, "value unavailible");
+				int value = get_nvidia_value(obj->data.nvidia.type, display);
+				if(value == -1)
+					snprintf(p, p_max_size, "N/A");
+				else if (obj->data.nvidia.print_as_float &&
+						value > 0 && value < 100)
+					snprintf(p, p_max_size, "%.1f", (float)value);
 				else
-					spaced_print(p, p_max_size, "%*d", 4, "nvidia",
-							     4, obj->data.nvidia.value);
-
+					snprintf(p, p_max_size, "%d", value);
 			}
 #endif /* NVIDIA */
 

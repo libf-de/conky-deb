@@ -1,11 +1,11 @@
-dnl $Id: configure.ac.in 1228 2008-07-22 01:15:57Z brenden1 $
+dnl $Id: configure.ac.in 1237 2008-08-14 17:16:31Z brenden1 $
 
 dnl major, minor and micro version macros.
 m4_define([conky_version_major], [1])
 m4_define([conky_version_minor], [6])
-m4_define([conky_version_micro], [0])
-m4_define([conky_version_tag], []) dnl [] for releases
-m4_define([conky_version_revision],[_pre01228])
+m4_define([conky_version_micro], [1])
+m4_define([conky_version_tag]) dnl, [pre]) dnl [] for releases
+m4_define([conky_version_revision],[_pre01237])
 m4_define([conky_version],
     [conky_version_major().conky_version_minor().conky_version_micro()ifelse(
       conky_version_tag(), [pre],
@@ -644,10 +644,10 @@ AC_ARG_ENABLE([testing],
 
 if test "x$want_testing" = "xyes" -a $ac_cv_c_compiler_gnu != no; then
   if test "x$want_debug" = "xyes"; then
-    CFLAGS="$CFLAGS -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -std=c99 -pedantic"
+    CFLAGS="$CFLAGS -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -std=c99 -pedantic -Werror"
     AC_DEFINE([TESTING], [], [Define for testing (enables strict compiler flags)])
   else
-    CFLAGS="$CFLAGS -g3 -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -std=c99 -pedantic"
+    CFLAGS="$CFLAGS -g3 -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -std=c99 -pedantic -Werror"
     AC_DEFINE([TESTING], [], [Define for testing (enables strict compiler flags)])
   fi
 fi

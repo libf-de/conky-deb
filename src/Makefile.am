@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: Makefile.am 1218 2008-07-07 20:09:37Z pkovacs $
+# $Id: Makefile.am 1235 2008-08-07 06:07:50Z mirrorbox $
 
 INCLUDES = -DSYSTEM_CONFIG_FILE=\"$(sysconfdir)/conky/conky.conf\"
 
@@ -133,6 +133,7 @@ EXTRA_DIST = 			\
 	bmpx.c			\
 	common.h		\
 	freebsd.c		\
+	freebsd.h		\
 	fs.h			\
 	hddtemp.c		\
 	hddtemp.h		\
@@ -157,6 +158,7 @@ EXTRA_DIST = 			\
 	x11.c			\
 	x11.h			\
 	xmms2.c                 \
+	xmms2.h                 \
 	smapi.c			\
 	users.c
 

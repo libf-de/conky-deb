@@ -23,15 +23,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: nvidia.h 1156 2008-06-15 18:38:33Z IQgryn $
+ * $Id: nvidia.h 1231 2008-08-03 13:27:00Z n0-1 $
  */
 
 
-#include <X11/Xlib.h>
-#include <NVCtrl/NVCtrlLib.h>
-
 #ifndef NVIDIA_CONKY_H
 #define NVIDIA_CONKY_H
+
+#include <X11/Xlib.h>
+#include <NVCtrl/NVCtrlLib.h>
 
 typedef enum _QUERY_ID {
 	NV_TEMP = NV_CTRL_GPU_CORE_TEMPERATURE,
@@ -43,9 +43,11 @@ typedef enum _QUERY_ID {
 
 struct nvidia_s {
 	int interval;
-	int value;
-	char arg[20];
+	int print_as_float;
 	QUERY_ID type;
 };
+
+int get_nvidia_value(QUERY_ID qid, Display *dpy);
+int set_nvidia_type(struct nvidia_s *, const char *);
 
 #endif
