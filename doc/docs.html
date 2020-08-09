@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.70.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id258410"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id258468"></a><h2>Description</h2><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.70.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id2486743"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id2530153"></a><h2>Description</h2><p>
     Conky is a system monitor for X originally based on the torsmo code. 
     Since it's original conception, Conky has changed a fair bit from it's predecessor.  
     Conky can display just about anything, either on your root desktop or in it's own window.  
@@ -9,7 +9,7 @@
 		Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches.
 		</p><p>
 		Thanks for your interest in Conky.
-		</p></div><div class="refsect1" lang="en"><a name="id258490"></a><h2>Compiling</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id2530180"></a><h2>Compiling</h2><p>
 		For users compiling from source, make sure you have the X development libraries installed. 
 		This should be a package along the lines of "libx11-dev or xorg-x11-dev". 
 		</p><p>
@@ -23,7 +23,7 @@
 		</p><div class="variablelist"><dl><dt><span class="term">
 					<span><strong class="command"><code class="option">sh autogen.sh</code></strong></span> <code class="option"># Only required if building from Svn</code>
 				</span></dt><dd></dd><dt><span class="term">
-					<span><strong class="command"><code class="option">./configure </code></strong></span><code class="option">--prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib --disable-own-window --enable-audacious --enable-bmpx --disable-hddtemp --disable-mpd --enable-xmms2 --disable-portmon --disable-network --enable-debug --disable-x11 --disable-double-buffer --disable-xdamage --disable-xft</code>
+					<span><strong class="command"><code class="option">./configure </code></strong></span><code class="option">--prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib --disable-own-window --enable-audacious[=yes|no|legacy] --enable-bmpx --disable-hddtemp --disable-mpd --enable-xmms2 --disable-portmon --disable-network --enable-debug --disable-x11 --disable-double-buffer --disable-xdamage --disable-xft</code>
 				</span></dt><dd></dd><dt><span class="term">
 					<span><strong class="command"><code class="option">make</code></strong></span>
 				</span></dt><dd></dd><dt><span class="term">
@@ -41,7 +41,7 @@
 			--disable-own-window to configure -script.
 		</p><p>
 			
-		</p></div><div class="refsect1" lang="en"><a name="id258601"></a><h2>You Should Know</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id2488735"></a><h2>You Should Know</h2><p>
 		Conky is generally very good on resources.  However, certain objects in
 		Conky are harder on resources then others.  In particular, the $tail,
 		$top, $font, and $graph objects are quite costly in comparison to the rest of Conky.
@@ -54,7 +54,7 @@
 		</p><p>
 		IMPORTANT: For previous Conky users, Conky 1.3 no longer supports the metar stuff. 
 		mdsplib was causing way too many problems. Hopefully there'll be a better solution in Conky 2.x...
-		</p></div><div class="refsect1" lang="en"><a name="id258626"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span><strong class="command"><code class="option">-v | -V</code></strong></span></span></dt><dd>
+		</p></div><div class="refsect1" lang="en"><a name="id2488767"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span><strong class="command"><code class="option">-v | -V</code></strong></span></span></dt><dd>
     Prints version and exits
     <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-a </code></strong></span><code class="option">ALIGNMENT</code></span></dt><dd>
       Text alignment on screen, {top,bottom}_{left,right} or none
@@ -80,7 +80,7 @@
       X position
     <p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">-y </code></strong></span><code class="option">Y_COORDINATE</code></span></dt><dd>
       Y position
-    <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id258802"></a><h2>Configuration Settings</h2><p>
+    <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id2488990"></a><h2>Configuration Settings</h2><p>
 		Default configuration file is $HOME/.conkyrc (can be changed from
 		conky.c among other things). See conkyrc.sample. If installing from Debian package, 
 		this should be in /usr/share/doc/conky/examples ("gunzip conkyrc.sample.gz" to get conkyrc.sample).
@@ -172,6 +172,8 @@
 		Port of MPD server
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">mpd_password</code></strong></span></span></dt><dd>
 		MPD server password
+	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">music_player_interval</code></strong></span></span></dt><dd>
+		Music player thread update interval (defaults to Conky's update interval)
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">net_avg_samples</code></strong></span></span></dt><dd>
 		The number of samples to average for net data
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">no_buffers</code></strong></span></span></dt><dd>
@@ -227,7 +229,7 @@
 		Xft font to use.
 	<p></p></dd><dt><span class="term"><span><strong class="command"><code class="option">TEXT</code></strong></span></span></dt><dd>
 		After this begins text to be formatted on screen
-	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id260791"></a><h2>Variables</h2><p>
+	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id2541117"></a><h2>Variables</h2><p>
 		Colors are parsed using XParsecolor(), there might be a list of them:
 		/usr/X11R6/lib/X11/rgb.txt. Also, <a href="http://sedition.com/perl/rgb.html" target="_top">
 																			 http://sedition.com/perl/rgb.html</a>.
@@ -467,7 +469,7 @@
 	</span></dt><dd>
 		Displays current disk IO for reads.
 		<p></p></dd><dt><span class="term">
-		<span><strong class="command"><code class="option">diskio_readgraph</code></strong></span>
+		<span><strong class="command"><code class="option">diskiograph_read</code></strong></span>
 		<code class="option">(height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
 	</span></dt><dd>
 		Disk IO graph for reads, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
@@ -476,7 +478,7 @@
 	</span></dt><dd>
 		Displays current disk IO for writes.
 		<p></p></dd><dt><span class="term">
-		<span><strong class="command"><code class="option">diskio_writegraph</code></strong></span>
+		<span><strong class="command"><code class="option">diskiograph_write</code></strong></span>
 		<code class="option">(height),(width) (gradient colour 1) (gradient colour 2) (scale)</code>
 	</span></dt><dd>
 		Disk IO graph for writes, colours defined in hex, minus the #.  If scale is non-zero, it becomes the scale for the graph.
@@ -755,8 +757,13 @@
 		Machine, i686 for example
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">mails</code></strong></span>
+	<code class="option">(mailbox)</code>
+	<code class="option">(interval)</code>
 	</span></dt><dd>
-		Mail count in mail spool. You can use program like fetchmail to get mails from some server using your favourite protocol. See also new_mails.
+		Mail count in the specified mailbox or your mail spool if not.
+		Both mbox and maildir type mailboxes are supported. You can
+		use a program like fetchmail to get mails from some server
+		using your favourite protocol. See also new_mails.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">mboxscan</code></strong></span>
 		<code class="option">(-n number of messages to print) (-fw from width) (-sw subject width) mbox</code>
@@ -847,8 +854,11 @@
 		Prints the song name in either the form "artist - title" or file name, depending on whats available
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">new_mails</code></strong></span>
+	<code class="option">(mailbox)</code>
+	<code class="option">(interval)</code>
 	</span></dt><dd>
-		Unread mail count in mail spool.
+		Unread mail count in the specified mailbox or mail spool if
+		not. Both mbox and maildir type mailboxes are supported.
 	<p></p></dd><dt><span class="term">
 		<span><strong class="command"><code class="option">nodename</code></strong></span>
 	</span></dt><dd>
@@ -1184,8 +1194,8 @@
 		<span><strong class="command"><code class="option">xmms2_smart</code></strong></span>
 	</span></dt><dd>
 		Prints the song name in either the form "artist - title" or file name, depending on whats available
-	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id268521"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%m}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id257976"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
-	</div><div class="refsect1" lang="en"><a name="id268749"></a><h2>Bugs</h2><p>	
+	<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id2549625"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%M}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd></dl></div></div><div class="refsect1" lang="en"><a name="id2549663"></a><h2>Files</h2><code class="filename">~/.conkyrc</code> default configuration file
+	</div><div class="refsect1" lang="en"><a name="id2549676"></a><h2>Bugs</h2><p>	
 		Drawing to root or some other desktop window directly doesn't work with 
 		all window managers. Especially doesn't work well with Gnome and it has 
 		been reported that it doesn't work with KDE either. Nautilus can be 
@@ -1194,10 +1204,10 @@
 		to set some specific window id. You might find xwininfo -tree useful to 
 		find the window to draw to. You can also use -o argument which makes
 		Conky to create its own window.
-		</p></div><div class="refsect1" lang="en"><a name="id268764"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net" target="_top">
+		</p></div><div class="refsect1" lang="en"><a name="id2549694"></a><h2>See Also</h2><p><a href="http://conky.sourceforge.net" target="_top">
     http://conky.sourceforge.net</a></p><p><a href="http://www.sourceforge.net/projects/conky" target="_top">
     http://www.sourceforge.net/projects/conky</a></p><p>
 			#conky on irc.freenode.net
-		</p></div><div class="refsect1" lang="en"><a name="id268786"></a><h2>Authors</h2><p>
+		</p></div><div class="refsect1" lang="en"><a name="id2549720"></a><h2>Authors</h2><p>
 			The Conky dev team. What's up now!
 		</p></div></div></body></html>

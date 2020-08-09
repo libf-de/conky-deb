@@ -1,4 +1,4 @@
-/* $Id: timed_thread.h 905 2007-08-10 20:09:43Z pkovacs $ */
+/* $Id: timed_thread.h 978 2007-10-21 18:04:53Z pkovacs $ */
 
 /* 
  * timed_thread.h: Abstraction layer for timed threads
@@ -25,13 +25,16 @@
 #ifndef _TIMED_THREAD_H_
 #define _TIMED_THREAD_H_
 
-#define MINIMUM_INTERVAL_USECS 50000  /* 50000 microseconds = 50 ms =  0.05 sec */
+#define MINIMUM_INTERVAL_USECS 10000  /* 10000 microseconds = 10 ms =  0.01 sec */
 
 /* opaque structure for clients */
 typedef struct _timed_thread timed_thread;
 
-/* create a timed thread */
+/* create a timed thread (object creation only) */
 timed_thread* timed_thread_create (void *(*start_routine)(void*), void *arg, unsigned int interval_usecs);
+
+/* run a timed thread (drop the thread and run it) */
+int timed_thread_run (timed_thread* p_timed_thread);
 
 /* destroy a timed thread */
 void timed_thread_destroy (timed_thread* p_timed_thread, timed_thread** addr_of_p_timed_thread);

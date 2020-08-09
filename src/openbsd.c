@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  *
- *  $Id: openbsd.c 914 2007-08-10 21:14:06Z spets $
+ *  $Id: openbsd.c 986 2007-11-04 13:14:55Z spets $
  */
 
 #include <sys/dkstat.h>
@@ -288,41 +288,60 @@ update_running_processes()
 	info.run_procs = cnt;
 }
 
+/* new SMP code can be enabled by commenting the following line */
+#define OLDCPU
+
+#ifdef OLDCPU
 struct cpu_load_struct {
 	unsigned long load[5];
 };
 
 struct cpu_load_struct fresh = { {0, 0, 0, 0, 0} };
 long cpu_used, oldtotal, oldused;
+#else
+#include <assert.h>
+int64_t* fresh = NULL;
+/* XXX is 8 enough? - What's the constant for MAXCPU?*/
+/* allocate this with malloc would be better*/
+int64_t oldtotal[8], oldused[8];
+#endif
 
 void
 get_cpu_count()
 {
-	/*
-	 * FIXME: is it possible to get per cpu stats with openbsd?
-	 */
-#if 0
-	int cpu_count = 0;
+	int cpu_count = 1; /* default to 1 cpu */
+#ifndef OLDCPU
 	int mib[2] = { CTL_HW, HW_NCPU };
 	size_t len = sizeof(cpu_count);
-	if (sysctl(mib, 2, &cpu_count, &len, NULL, 0) == 0)
-		info.cpu_count = cpu_count;
-	else	/* last resort, 1 cpu */
+	if(sysctl(mib, 2, &cpu_count, &len, NULL, 0) != 0)
+		ERR("error getting cpu count, defaulting to 1");
 #endif
-		info.cpu_count = 1;
+	info.cpu_count = cpu_count;
 
 	info.cpu_usage = malloc(info.cpu_count * sizeof (float));
 	if (info.cpu_usage == NULL)
 		CRIT_ERR("malloc");
+
+#ifndef OLDCPU
+	assert(fresh == NULL); /* XXX Is this leaking memory?*/
+	/* XXX Where shall I free this?*/
+	if (NULL == (fresh = calloc(cpu_count, sizeof(int64_t) * CPUSTATES)))
+		CRIT_ERR("calloc");
+#endif
 }
 
 void
 update_cpu_usage()
 {
+#ifdef OLDCPU
 	int mib[2] = { CTL_KERN, KERN_CPTIME };
 	long used, total;
 	long cp_time[CPUSTATES];
 	size_t len = sizeof (cp_time);
+#else
+	size_t size;
+	unsigned int i;
+#endif
 
 	/* add check for !info.cpu_usage since that mem is freed on a SIGUSR1 */
 	if ((cpu_setup == 0) || (!info.cpu_usage)) {
@@ -330,6 +349,7 @@ update_cpu_usage()
 		cpu_setup = 1;
 	}
 
+#ifdef OLDCPU
 	if (sysctl(mib, 2, &cp_time, &len, NULL, 0) < 0) {
 		ERR("Cannot get kern.cp_time");
 	}
@@ -353,6 +373,45 @@ update_cpu_usage()
 
 	oldused = used;
 	oldtotal = total;
+#else
+	if (info.cpu_count > 1) {
+		size = CPUSTATES * sizeof(int64_t);
+		for (i = 0; i < info.cpu_count; i++) {
+			int cp_time_mib[] = {CTL_KERN, KERN_CPTIME2, i};
+			if (sysctl(cp_time_mib, 3, &(fresh[i * CPUSTATES]), &size, NULL, 0) < 0)
+				ERR("sysctl kern.cp_time2 failed");
+		}
+	} else {
+		int cp_time_mib[] = {CTL_KERN, KERN_CPTIME};
+		long cp_time_tmp[CPUSTATES];
+
+		size = sizeof(cp_time_tmp);
+		if (sysctl(cp_time_mib, 2, cp_time_tmp, &size, NULL, 0) < 0)
+			ERR("sysctl kern.cp_time failed");
+
+		for (i = 0; i < CPUSTATES; i++)
+			fresh[i] = (int64_t)cp_time_tmp[i];
+	}
+
+	/* XXX Do sg with this int64_t => long => double ? float hell.*/
+	for (i = 0; i < info.cpu_count; i++) {
+		int64_t used, total;
+		int at = i * CPUSTATES;
+
+		used = fresh[at + CP_USER] + fresh[at + CP_NICE] + fresh[at + CP_SYS];
+		total = used + fresh[at + CP_IDLE];
+
+		if ((total - oldtotal[i]) != 0) {
+			info.cpu_usage[i] = ((double) (used - oldused[i])) /
+			(double) (total - oldtotal[i]);
+		} else {
+			info.cpu_usage[i] = 0;
+		}
+
+		oldused[i] = used;
+		oldtotal[i] = total;
+	}
+#endif
 }
 
 void
@@ -497,7 +556,7 @@ get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
 	snprintf(p_client_buffer, client_buffer_size, p_format,
 		(float)((cycles[1] - cycles[0]) / microseconds) / divisor);
 #else
-	get_freq(p_client_buffer, client_buffer_size, p_format, divisor);
+	get_freq(p_client_buffer, client_buffer_size, p_format, divisor, 1);
 #endif
 }
 

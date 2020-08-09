@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+               "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
                <!ENTITY testtable SYSTEM "test.xml">
                <!ENTITY command_options SYSTEM "command_options.xml">
                <!ENTITY config_settings SYSTEM "config_settings.xml">
@@ -79,7 +79,7 @@
 			</varlistentry>
 			<varlistentry>
 				<term>
-					<command><option>./configure </option></command><option>--prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib --disable-own-window --enable-audacious --enable-bmpx --disable-hddtemp --disable-mpd --enable-xmms2 --disable-portmon --disable-network --enable-debug --disable-x11 --disable-double-buffer --disable-xdamage --disable-xft</option>
+					<command><option>./configure </option></command><option>--prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib --disable-own-window --enable-audacious[=yes|no|legacy] --enable-bmpx --disable-hddtemp --disable-mpd --enable-xmms2 --disable-portmon --disable-network --enable-debug --disable-x11 --disable-double-buffer --disable-xdamage --disable-xft</option>
 				</term>
 			</varlistentry>
 			<varlistentry>
@@ -183,7 +183,7 @@
 		<variablelist>
 		
 			<varlistentry>
-				<term><varname>conky </varname><option>-t &apos;${time %D %H:%m}&apos; -o -u 30</option></term>
+				<term><varname>conky </varname><option>-t &apos;${time %D %H:%M}&apos; -o -u 30</option></term>
 				<listitem>Start Conky in its own window with date and clock as text and 30 sec update interval.</listitem>
 			</varlistentry>
 			
