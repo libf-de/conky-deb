@@ -1,9 +1,11 @@
+# -*- mode: Makefile; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+#
 dnl major, minor and micro version macros.
 m4_define([conky_version_major], [1])
-m4_define([conky_version_minor], [7])
-m4_define([conky_version_micro], [1.1])
-m4_define([conky_version_tag])dnl, [pre]) dnl [] for releases
-m4_define([conky_version_revision],[_rc4])
+m4_define([conky_version_minor], [8])
+m4_define([conky_version_micro], [0])
+m4_define([conky_version_tag]) dnl, [pre]) dnl [] for releases
+m4_define([conky_version_revision],[_rc3])
 m4_define([conky_version],
     [conky_version_major().conky_version_minor().conky_version_micro()ifelse(
       conky_version_tag(), [pre],
@@ -31,6 +33,8 @@ AC_PROG_CC
 AC_PROG_LD
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
+AM_PROG_LIBTOOL
+AM_PROG_CC_C_O
 
 AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, yes, no)
 if test x"$HAVE_PKGCONFIG" = x"no"; then
@@ -44,6 +48,7 @@ AC_CONFIG_FILES(
   doc/Makefile
   src/Makefile
   src/build.h
+  lua/Makefile
   )
 
 uname=`uname`
@@ -99,10 +104,10 @@ AC_ARG_ENABLE([config_output],
               [want_config_output="$enableval"], [want_config_output=yes])
 
 AM_CONDITIONAL(BUILD_CONFIG_OUTPUT, test x$want_config_output = xyes)
-AM_CONDITIONAL(BUILD_FOR_FOPENCOOKIE, test x$want_config_output = xyes)
 if test x$want_config_output = xyes; then
   AC_DEFINE(CONFIG_OUTPUT, 1, [Define if you want conky to output a default config (with -C)])
   AC_CHECK_FUNCS(fopencookie)
+  AC_CHECK_FUNCS(funopen)
 fi
 
 dnl
@@ -118,6 +123,20 @@ if test $dah != "no"; then
   AC_DEFINE(OWN_WINDOW, 1, [Define if you want support for window creating])
 fi
 
+dnl
+dnl NCURSES option
+dnl
+
+AC_ARG_ENABLE([ncurses],
+              AC_HELP_STRING([--disable-ncurses], [disable if you do not want ncurses support in conky @<:@default=yes@:>@]),
+              [want_ncurses="$enableval"], [want_ncurses=yes])
+
+AM_CONDITIONAL(BUILD_NCURSES, test x$want_ncurses = xyes)
+if test x$want_ncurses = xyes; then
+      conky_LIBS="$conky_LIBS -lncurses"
+      AC_DEFINE(NCURSES, 1, [Define for ncurses support])
+fi
+
 
 dnl
 dnl Audacious Media Player
@@ -131,8 +150,8 @@ AC_ARG_ENABLE([audacious],
 AM_CONDITIONAL(BUILD_AUDACIOUS, test x$want_audacious = xyes -o x$want_audacious = xlegacy)
 if test x$want_audacious = xyes; then
       PKG_CHECK_MODULES([Audacious], [audacious >= 1.4.0 dbus-glib-1 glib-2.0 gobject-2.0])
-      CFLAGS="$CFLAGS $Audacious_CFLAGS"
-      LIBS="$LIBS $Audacious_LIBS"
+      conky_CFLAGS="$conky_CFLAGS $Audacious_CFLAGS"
+      conky_LIBS="$conky_LIBS $Audacious_LIBS"
       save_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$Audacious_CFLAGS -I`pkg-config --variable=audacious_include_dir audacious`/audacious"
       AC_CHECK_HEADERS([audacious/audctrl.h audacious/dbus.h glib.h glib-object.h],
@@ -141,8 +160,8 @@ if test x$want_audacious = xyes; then
       AC_DEFINE(AUDACIOUS, 1, [Define for Audacious support])
 else if test x$want_audacious = xlegacy; then
       PKG_CHECK_MODULES([Audacious], [audacious < 1.4.0 glib-2.0])
-      CFLAGS="$CFLAGS $Audacious_CFLAGS"
-      LIBS="$LIBS $Audacious_LIBS"
+      conky_CFLAGS="$conky_CFLAGS $Audacious_CFLAGS"
+      conky_LIBS="$conky_LIBS $Audacious_LIBS"
       save_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$Audacious_CFLAGS -I`pkg-config --variable=audacious_include_dir audacious`/audacious"
       AC_CHECK_HEADERS([audacious/beepctrl.h glib.h], [], AC_MSG_ERROR([required  header(s) not found]))
@@ -164,8 +183,8 @@ AC_ARG_ENABLE([bmpx],
 AM_CONDITIONAL(BUILD_BMPX, test x$want_bmpx = xyes)
 if test x$want_bmpx = xyes; then
   PKG_CHECK_MODULES([BMPx], [bmp-2.0 >= 0.14.0])
-  CFLAGS="$CFLAGS $BMPx_CFLAGS"
-  LIBS="$LIBS $BMPx_LIBS"
+  conky_CFLAGS="$conky_CFLAGS $BMPx_CFLAGS"
+  conky_LIBS="$conky_LIBS $BMPx_LIBS"
   AC_DEFINE(BMPX, 1, [Define if you want BMPx support])
 fi
 
@@ -182,7 +201,7 @@ AM_CONDITIONAL(BUILD_IBM, test x$want_ibm = xyes)
 if test x$want_ibm = xyes; then
 	if test x"$uname" != xLinux; then
 		AC_MSG_NOTICE([support for IBM/Lenovo notebooks not supported on $uname... disabling])
-		want_ibm=no
+		want_ibm="not supported on $uname"
 	else
 		AC_DEFINE(IBM, 1, [Define if you want support for IBM/Lenovo notebooks (SMAPI)])
 	fi
@@ -202,15 +221,11 @@ AM_CONDITIONAL(BUILD_HDDTEMP, test x$want_hddtemp = xyes)
 if test x$want_hddtemp = xyes; then
   if test x"$uname" != xLinux; then
       AC_MSG_NOTICE([hddtemp not supported on $uname... disabling])
-      want_hddtemp=no
+      want_hddtemp="not supported on $uname"
   else
       AC_DEFINE(HDDTEMP, 1, [Define if you want hddtemp support])
   fi
 fi
-
-dnl
-dnl Math
-dnl
 
 
 dnl
@@ -225,12 +240,36 @@ AC_ARG_ENABLE([apcupsd],
 if test x$want_apcupsd = xyes; then
   if test x"$uname" != xLinux; then
       AC_MSG_NOTICE([apcupsd not supported on $uname... disabling])
-      want_apcupsd=no
+      want_apcupsd="not supported on $uname"
   else
       AC_DEFINE(APCUPSD, 1, [Define if you want apcupsd support])
   fi
 fi
 AM_CONDITIONAL(BUILD_APCUPSD, test x$want_apcupsd = xyes)
+
+
+dnl
+dnl I/O stats
+dnl
+
+AC_ARG_ENABLE([iostats],
+              AC_HELP_STRING([--enable-iostats],
+                             [enable if you want support for per-task I/O statistics @<:@default=yes@:>@]),
+              [want_iostats="$enableval"], [want_iostats=yes])
+
+if test x$want_iostats = xyes; then
+  if test x"$uname" != xLinux; then
+      AC_MSG_NOTICE([iostats not supported on $uname... disabling])
+      want_iostats="not supported on $uname"
+  else
+      AC_DEFINE(IOSTATS, 1, [Define if you want support for per-task I/O statistics])
+  fi
+fi
+
+
+dnl
+dnl Math
+dnl
 
 AC_ARG_ENABLE([math],
               AC_HELP_STRING([--disable-math], [disable if you do not want math support @<:@default=yes@:>@]),
@@ -238,7 +277,7 @@ AC_ARG_ENABLE([math],
 
 AM_CONDITIONAL(BUILD_MATH, test x$want_math = xyes)
 if test x$want_math = xyes; then
-  LIBS="$LIBS -lm"
+  conky_LIBS="$conky_LIBS -lm"
   AC_DEFINE(MATH, 1, [Define if you want math support])
 fi
 
@@ -278,11 +317,19 @@ AC_ARG_ENABLE([xmms2],
 
 AM_CONDITIONAL(BUILD_XMMS2, test x$want_xmms2 = xyes)
 if test x$want_xmms2 = xyes; then
-  PKG_CHECK_MODULES([XMMS2], [xmms2-client])
-    CFLAGS="$CFLAGS $XMMS2_CFLAGS"
-    LIBS="$LIBS $XMMS2_LIBS"
+  PKG_CHECK_MODULES([XMMS2], [xmms2-client] >= [0.6])
+    conky_CFLAGS="$conky_CFLAGS $XMMS2_CFLAGS"
+    conky_LIBS="$conky_LIBS $XMMS2_LIBS"
     AC_DEFINE(XMMS2, 1, [Define if you want XMMS2 support])
 fi
+
+dnl
+dnl libcurl, see below for more (this has to be above the other uses of want_curl)
+dnl
+
+AC_ARG_ENABLE([curl],
+		AC_HELP_STRING([--enable-curl], [enable if you want curl support @<:@default=no@:>@]),
+		[want_curl="$enableval"], [want_curl=no])
 
 dnl
 dnl EVE Skill Monitor
@@ -294,10 +341,8 @@ AC_ARG_ENABLE([eve],
 
 AM_CONDITIONAL(BUILD_EVE, test x$want_eve = xyes)
 if test x$want_eve = xyes; then
-	PKG_CHECK_MODULES([libxml2], libxml-2.0)
-	PKG_CHECK_MODULES([libcurl], libcurl)
-	CFLAGS="$CFLAGS $libxml2_CFLAGS $libcurl_CFLAGS"
-	LIBS="$LIBS $libxml2_LIBS $libcurl_LIBS"
+	want_curl=yes
+	want_libxml2=yes
 	AC_DEFINE(EVE, 1, [Define if you want Eve-Online Skill monitor support])
 	AC_DEFINE(EVEURL_TRAINING, "http://api.eve-online.com/char/SkillInTraining.xml.aspx", [Eve training URL])
 	AC_DEFINE(EVEURL_SKILLTREE, "http://api.eve-online.com/eve/Skilltree.xml.aspx", [Eve skilltree URL])
@@ -316,12 +361,112 @@ AC_ARG_ENABLE([rss],
 AM_CONDITIONAL(BUILD_RSS, test x$want_rss = xyes)
 if test x$want_rss = xyes; then
 	WANT_GLIB=yes
-	PKG_CHECK_MODULES([libxml2], libxml-2.0)
-	PKG_CHECK_MODULES([libcurl], libcurl)
-	CFLAGS="$CFLAGS $libxml2_CFLAGS $libcurl_CFLAGS"
-	LIBS="$LIBS $libxml2_LIBS $libcurl_LIBS"
-	AC_DEFINE(RSS, 1, [Define if you want rss support])
+	want_curl=yes
+	want_libxml2=yes
+	AC_DEFINE(RSS, 1, [Define if you want Curl support])
 fi
+
+dnl
+dnl WEATHER
+dnl
+
+AC_ARG_ENABLE([weather-metar],
+	      AC_HELP_STRING([--enable-weather-metar], [enable if you want METAR weather support @<:@default=no@:>@]),
+	      [want_metar="$enableval"], [want_metar=no])
+
+AC_ARG_ENABLE([weather-xoap],
+	      AC_HELP_STRING([--enable-weather-xoap], [enable if you want XOAP weather support (also enables METAR) @<:@default=no@:>@]),
+	      [want_xoap="$enableval"], [want_xoap=no])
+#
+if test x$want_xoap = xyes; then
+	want_metar=yes
+fi
+AM_CONDITIONAL(BUILD_WEATHER, test x$want_metar = xyes)
+AM_CONDITIONAL(BUILD_XOAP, test x$want_xoap = xyes)
+if test x$want_metar = xyes; then
+	if test x$want_xoap = xyes; then
+		want_libxml2=yes
+		AC_DEFINE(XOAP, 1, [Define if you want XOAP weather support])
+		AC_DEFINE(XOAP_FILE, "$HOME/.xoaprc", [User xoap keys file])
+	fi
+	want_curl=yes
+	AC_DEFINE(WEATHER, 1, [Define if you want METAR weather support])
+fi
+
+dnl
+dnl X11
+dnl
+
+AC_ARG_ENABLE([x11],
+              AC_HELP_STRING([--disable-x11], [disable if you do not want X11 support @<:@default=yes@:>@]),
+              [want_x11="$enableval"], [want_x11=yes])
+
+AM_CONDITIONAL(BUILD_X11, test x$want_x11 = xyes)
+if test "x$want_x11" = "xyes"; then
+    if $PKG_CONFIG --exists x11; then
+      PKG_CHECK_MODULES([X11], [x11])
+      conky_CFLAGS="$conky_CFLAGS $X11_CFLAGS"
+      conky_LIBS="$conky_LIBS $X11_LIBS"
+    else
+      dnl non-modular X11 installations
+      AC_PATH_X
+      AC_PATH_XTRA
+      conky_CFLAGS="$conky_CFLAGS $X_CFLAGS"
+      conky_LIBS="$conky_LIBS $X_LIBS"
+      conky_LDFLAGS="$conky_LDFLAGS $conky_LIBS $X_PRE_LIBS"
+      if test "x$no_x" = "xyes"; then
+        AC_MSG_ERROR([Can't locate your X11 installation])
+      fi
+      AC_CHECK_LIB([X11], [XOpenDisplay], [], AC_MSG_ERROR([Could not find XOpenDisplay in -lX11]))
+    fi
+    AC_DEFINE(X11, 1, [Define if you want to use X11])
+fi
+
+dnl
+dnl ARGB
+dnl
+
+AC_ARG_ENABLE([argb],
+              AC_HELP_STRING([--disable-argb], [disable if you do not want a argb visual @<:@default=yes@:>@]),
+              [want_argb="$enableval"], [want_argb=yes])
+
+if test x$want_argb = xyes; then
+    if test "x$want_x11" != "xyes"; then
+	dnl silently disable if no x11
+	want_argb=no
+    else
+	AC_DEFINE(USE_ARGB, 1, [Define if you want argb visual support])
+    fi
+fi
+
+dnl
+dnl IMLIB2
+dnl
+
+AC_ARG_ENABLE([imlib2],
+			  AC_HELP_STRING([--enable-imlib2], [enable if you want Imlib2 support [[default=no]]]),
+			  [want_imlib2="$enableval"], [want_imlib2=no])
+AC_ARG_ENABLE([lua-imlib2],
+	      AC_HELP_STRING([--enable-lua-imlib2], [enable if you want Lua Imlib2 bindings for Conky @<:@default=no@:>@]),
+	      [want_lua_imlib2="$enableval"], [want_lua_imlib2=no])
+
+# if lua-imlib2 is enabled, we must force imlib2
+if test x$want_lua_imlib2 = xyes; then
+	want_imlib2=yes
+fi
+
+if test x$want_imlib2 = xyes; then
+	if test "x$want_x11" != "xyes"; then
+		dnl silently disable if no x11
+		want_imlib2=no
+	else
+		PKG_CHECK_MODULES([Imlib2], [imlib2])
+		conky_CFLAGS="$conky_CFLAGS $Imlib2_CFLAGS"
+		conky_LIBS="$conky_LIBS $Imlib2_LIBS"
+		AC_DEFINE(IMLIB2, 1, [Define if you want Imlib2 support])
+	fi
+fi
+AM_CONDITIONAL(BUILD_IMLIB2, test x$want_imlib2 = xyes)
 
 dnl
 dnl Lua
@@ -330,7 +475,15 @@ dnl
 AC_ARG_ENABLE([lua],
 	      AC_HELP_STRING([--enable-lua], [enable if you want Lua scripting support @<:@default=yes@:>@]),
 	      [want_lua="$enableval"], [want_lua=yes])
-#
+AC_ARG_ENABLE([lua-cairo],
+	      AC_HELP_STRING([--enable-lua-cairo], [enable if you want Lua Cairo bindings for Conky @<:@default=no@:>@]),
+	      [want_lua_cairo="$enableval"], [want_lua_cairo=no])
+need_tolua=no
+if test x$want_lua_cairo = xyes -o x$want_lua_imlib2 = xyes; then
+	need_tolua=yes
+	want_lua=yes
+fi
+
 AM_CONDITIONAL(BUILD_LUA, test x$want_lua = xyes)
 if test x$want_lua = xyes; then
 	PKG_CHECK_MODULES(LUA, lua >= 5.1, [ ],[
@@ -338,10 +491,47 @@ if test x$want_lua = xyes; then
 			PKG_CHECK_MODULES(LUA51, lua5.1 >= 5.1)
 		])
 	])
-	CFLAGS="$CFLAGS $LUA_CFLAGS $LUA51_CFLAGS"
-	LIBS="$LIBS $LUA_LIBS $LUA51_LIBS"
+	conky_CFLAGS="$conky_CFLAGS $LUA_CFLAGS $LUA51_CFLAGS"
+	conky_LIBS="$conky_LIBS $LUA_LIBS $LUA51_LIBS"
+
+	if test x$need_tolua = xyes; then
+		AC_DEFINE(LUA_EXTRAS, 1, [Define if you want Lua extras])
+		if test "x$want_x11" != "xyes"; then
+			dnl silently disable if no x11
+			want_lua_cairo=no
+		else
+			if test x$want_lua_cairo = xyes; then
+				PKG_CHECK_MODULES([cairo], cairo)
+				PKG_CHECK_MODULES([cairo_xlib], cairo-xlib)
+				AC_DEFINE(HAVE_LUA_CAIRO, 1, [Define if you want Lua Cairo bindings for Conky])
+				libcairo_CFLAGS="$libcairo_CFLAGS $cairo_CFLAGS $cairo_xlib_CFLAGS"
+				libcairo_LIBS="$libcairo_LIBS $cairo_LIBS $cairo_xlib_LIBS"
+			fi
+			if test x$want_imlib2 = xyes; then
+				AC_DEFINE(HAVE_LUA_IMLIB2, 1, [Define if you want Lua Imlib2 bindings for Conky])
+			fi
+		fi
+		AC_CHECK_PROGS(toluapp, [tolua++ tolua++5.1 tolua++-5.1], no)
+		if test x$toluapp = xno; then
+			AC_MSG_ERROR([tolua++, tolua++5.1, or tolua++-5.1 is required for Lua extras.])
+		else
+			AC_SEARCH_LIBS(tolua_error,
+						   [tolua++-5.1 tolua++ tolua++5.1],
+						   [
+							AC_SUBST(tolua_LIBS, "${LIBS}")
+							AC_SUBST(tolua_CFLAGS, "${CFLAGS}")
+							],
+						   AC_MSG_ERROR([tolua_error not found]),
+						   [$LUA_LIBS $LUA51_LIBS])
+		fi
+		conky_LIBS="$conky_LIBS $tolua_LIBS"
+		tolua_CFLAGS="$tolua_CFLAGS $LUA_CFLAGS $LUA51_CFLAGS"
+		tolua_LIBS="$tolua_LIBS $LUA_LIBS $LUA51_LIBS"
+	fi
 	AC_DEFINE(HAVE_LUA, 1, [Define if you want Lua scripting support])
 fi
+AM_CONDITIONAL(BUILD_LUA_CAIRO, test x$want_lua_cairo = xyes)
+AM_CONDITIONAL(BUILD_LUA_IMLIB2, test x$want_lua_imlib2 = xyes)
 
 dnl
 dnl Wireless extensions
@@ -354,8 +544,9 @@ AC_ARG_ENABLE([wlan],
 AM_CONDITIONAL(BUILD_WLAN, test x$want_wlan = xyes)
 if test x$want_wlan = xyes; then
   AC_CHECK_HEADERS([iwlib.h], [], AC_MSG_ERROR([iwlib.h header not found]))
-  AC_CHECK_LIB([iw], [iw_sockets_open], [LIBS="$LIBS -liw"], AC_MSG_ERROR([iw_sockets_open not found]))
-	AC_DEFINE(HAVE_IWLIB, 1, [Define if you want wireless support])
+  AC_CHECK_LIB([iw], [iw_sockets_open], [conky_LIBS="-liw $conky_LIBS"],
+               AC_MSG_ERROR([iw_sockets_open not found]), [$conky_LIBS])
+  AC_DEFINE(HAVE_IWLIB, 1, [Define if you want wireless support])
 fi
 
 dnl
@@ -370,7 +561,7 @@ AC_ARG_ENABLE([portmon],
 if test x"$want_portmon" = xyes; then
   if test x"$uname" != xLinux; then
       AC_MSG_NOTICE([port monitors not supported on $uname... disabling])
-      want_portmon=no
+      want_portmon="not supported on $uname"
   else
         AC_CHECK_FUNCS([getnameinfo], [], AC_MSG_ERROR([getnameinfo function not found]))
         AC_CHECK_HEADERS([netdb.h netinet/in.h netinet/tcp.h sys/socket.h arpa/inet.h], [],
@@ -389,42 +580,14 @@ dnl
 dnl ICONV
 dnl
 
+m4_pattern_allow([AM_ICONV])
 AM_ICONV
 if test "$am_cv_func_iconv" != yes; then
   AC_MSG_WARN([Could not find libiconv])
 else
-  LIBS="$LIBS $LIBICONV"
+  conky_LIBS="$conky_LIBS $LIBICONV"
 fi
-
-dnl
-dnl X11
-dnl
-
-AC_ARG_ENABLE([x11],
-              AC_HELP_STRING([--disable-x11], [disable if you do not want X11 support @<:@default=yes@:>@]),
-              [want_x11="$enableval"], [want_x11=yes])
-
-AM_CONDITIONAL(BUILD_X11, test x$want_x11 = xyes)
-if test "x$want_x11" = "xyes"; then
-    if $PKG_CONFIG --exists x11; then
-      PKG_CHECK_MODULES([X11], [x11])
-      CFLAGS="$CFLAGS $X11_CFLAGS"
-      LIBS="$LIBS $X11_LIBS"
-    else
-      dnl non-modular X11 installations
-      AC_PATH_X
-      AC_PATH_XTRA
-      CFLAGS="$CFLAGS $X_CFLAGS"
-      LIBS="$LIBS $X_LIBS"
-      LDFLAGS="$LDFLAGS $LIBS $X_PRE_LIBS"
-      if test "x$no_x" = "xyes"; then
-        AC_MSG_ERROR([Can't locate your X11 installation])
-      fi
-      AC_CHECK_LIB([X11], [XOpenDisplay], [], AC_MSG_ERROR([Could not find XOpenDisplay in -lX11]))
-    fi
-    AC_DEFINE(X11, 1, [Define if you want to use X11])
-fi
-
+AM_CONDITIONAL(BUILD_ICONV, test "$am_cv_func_iconv" = yes)
 
 dnl
 dnl Xext Double-buffering Extension
@@ -442,11 +605,11 @@ if test "x$want_double_buffer" = "xyes"; then
     else
       if $PKG_CONFIG --exists xext; then
         PKG_CHECK_MODULES([Xext],[xext])
-        CFLAGS="$CFLAGS $Xext_CFLAGS"
-        LIBS="$LIBS $Xext_LIBS"
+        conky_CFLAGS="$conky_CFLAGS $Xext_CFLAGS"
+        conky_LIBS="$conky_LIBS $Xext_LIBS"
       else
         dnl non-modular X11 installation
-        AC_CHECK_LIB([Xext], [XdbeQueryExtension], [LIBS="$LIBS -lXext"],
+        AC_CHECK_LIB([Xext], [XdbeQueryExtension], [conky_LIBS="$conky_LIBS -lXext"],
                     AC_MSG_ERROR([Could not find XdbeQueryExtension in -lXext]))
       fi
       AC_DEFINE(HAVE_XDBE, 1, [Define for X11 double-buffering])
@@ -470,11 +633,11 @@ if test "x$want_xdamage" = "xyes"; then
     else
       if $PKG_CONFIG --exists xdamage; then
         PKG_CHECK_MODULES([XDamage],[xdamage])
-        CFLAGS="$CFLAGS $XDamage_CFLAGS"
-        LIBS="$LIBS $XDamage_LIBS"
+        conky_CFLAGS="$conky_CFLAGS $XDamage_CFLAGS"
+        conky_LIBS="$conky_LIBS $XDamage_LIBS"
       else
         dnl non-modular X11 installation
-        AC_CHECK_LIB([Xdamage], [XDamageQueryExtension], [LIBS="$LIBS -lXdamage"],
+	        AC_CHECK_LIB([Xdamage], [XDamageQueryExtension], [conky_LIBS="$conky_LIBS -lXdamage"],
                      AC_MSG_ERROR([Could not find XDamageQueryExtension in -lXdamage]))
       fi
       AC_DEFINE(HAVE_XDAMAGE, 1, [Define for X11 Xdamage extension])
@@ -496,31 +659,11 @@ if test x$want_xft = "xyes"; then
       want_xft=no
     else
       PKG_CHECK_MODULES([Xft], [xft])
-      CFLAGS="$CFLAGS $Xft_CFLAGS"
-      LIBS="$LIBS $Xft_LIBS"
+      conky_CFLAGS="$conky_CFLAGS $Xft_CFLAGS"
+      conky_LIBS="$conky_LIBS $Xft_LIBS"
       AC_DEFINE(XFT, 1, [Define for Xft support])
     fi
 fi
-
-dnl
-dnl IMLIB2
-dnl
-
-AC_ARG_ENABLE([imlib2],
-			  AC_HELP_STRING([--enable-imlib2], [enable if you want Imlib2 support [[default=no]]]),
-			  [want_imlib2="$enableval"], [want_imlib2=no])
-if test x$want_imlib2 = xyes; then
-	if test "x$want_x11" != "xyes"; then
-		dnl silently disable if no x11
-		want_imlib2=no
-	else
-		PKG_CHECK_MODULES([Imlib2], [imlib2])
-		CFLAGS="$CFLAGS $Imlib2_CFLAGS"
-		LIBS="$LIBS $Imlib2_LIBS"
-		AC_DEFINE(IMLIB2, 1, [Define if you want Imlib2 support])
-	fi
-fi
-AM_CONDITIONAL(BUILD_IMLIB2, test x$want_imlib2 = xyes)
 
 dnl
 dnl NVIDIA libXNVCtrl support
@@ -539,7 +682,7 @@ dnl AC_CHECK_LIB([XNVCtrl], [XNVCTRLQueryVersion], [] ,[AC_MSG_ERROR([grrr])] )
 dnl AC_CHECK_LIB([XNVCtrl], [XNVCTRLCheckTargetData], [], [AC_MSG_ERROR([grr])])
 dnl ## am I Stupid ??
 dnl ## it won't find the lib for some reason!?
-		LIBS="$LIBS -lXNVCtrl"
+		conky_LIBS="$conky_LIBS -lXNVCtrl"
 			AC_DEFINE(NVIDIA, 1, [Define if you want nvidia support])
 	fi
 fi
@@ -551,8 +694,30 @@ dnl
 
 if test x$WANT_GLIB = xyes; then
 	PKG_CHECK_MODULES([GLib2], [glib-2.0])
-        CFLAGS="$CFLAGS $GLib2_CFLAGS"
-	LIBS="$LIBS $GLib2_LIBS"
+        conky_CFLAGS="$conky_CFLAGS $GLib2_CFLAGS"
+	conky_LIBS="$conky_LIBS $GLib2_LIBS"
+fi
+
+dnl
+dnl libcurl
+dnl
+
+if test x$want_curl = xyes; then
+	PKG_CHECK_MODULES([libcurl], libcurl)
+	conky_CFLAGS="$conky_CFLAGS $libcurl_CFLAGS"
+	conky_LIBS="$conky_LIBS $libcurl_LIBS"
+	AC_DEFINE(HAVE_CURL, 1, [Define if you want Curl support])
+fi
+AM_CONDITIONAL(BUILD_CURL, test x$want_curl = xyes)
+
+dnl
+dnl libx
+dnl
+
+if test x$want_libxml2 = xyes; then
+	PKG_CHECK_MODULES([libxml2], libxml-2.0)
+	conky_CFLAGS="$conky_CFLAGS $libxml2_CFLAGS"
+	conky_LIBS="$conky_LIBS $libxml2_LIBS"
 fi
 
 dnl
@@ -561,7 +726,7 @@ dnl
 
 if test x$WANT_KVM = xyes; then
   AC_CHECK_LIB(kvm, kvm_open,
-    LIBS="$LIBS -lkvm",
+    conky_LIBS="$conky_LIBS -lkvm",
   AC_MSG_ERROR([Could not find kvm_open in -lkvm.])
   )
 fi
@@ -572,7 +737,7 @@ dnl
 
 if test x$WANT_DEVSTAT = xyes; then
   AC_CHECK_LIB(devstat, devstat_getversion,
-         LIBS="$LIBS -ldevstat",
+         conky_LIBS="$conky_LIBS -ldevstat",
          AC_MSG_ERROR([Cound not find devstat_getversion in -ldevstat.])
   )
 fi
@@ -583,7 +748,7 @@ dnl
 
 if test x$WANT_OSSLIB = xyes; then
     AC_CHECK_LIB(ossaudio, _oss_ioctl,
-  LIBS="$LIBS -lossaudio",
+  conky_LIBS="$conky_LIBS -lossaudio",
   AC_MSG_ERROR([Could not find oss_ioctl in -lossaudio.])
     )
 fi
@@ -600,7 +765,7 @@ if test x$want_alsa = xyes; then
     AC_CHECK_HEADER(alsa/asoundlib.h,, want_alsa=no)
 fi
 if test x$want_alsa = xyes; then
-    AC_CHECK_LIB(asound, snd_pcm_open,LIBS="$LIBS -lasound", want_alsa=no)
+    AC_CHECK_LIB(asound, snd_pcm_open,conky_LIBS="$conky_LIBS -lasound", want_alsa=no)
 fi
 if test x$want_alsa = xyes; then
 AC_DEFINE(MIXER_IS_ALSA, 1, [Define if the mixers use ALSA])
@@ -610,7 +775,7 @@ dnl Some headers
 dnl
 
 AC_CHECK_HEADERS([signal.h unistd.h sys/utsname.h sys/stat.h linux/soundcard.h alsa/asoundlib.h dirent.h mcheck.h \
-      sys/statfs.h sys/param.h pthread.h assert.h errno.h time.h])
+      sys/statfs.h sys/param.h pthread.h semaphore.h assert.h errno.h time.h])
 AC_CHECK_HEADERS([sys/mount.h], [], [],
      [#ifdef HAVE_SYS_PARAM_H
       #include <sys/param.h>
@@ -628,13 +793,14 @@ AC_DEFINE(CONFIG_FILE, "$HOME/.conkyrc", [Configfile of the user])
 AC_DEFINE(MAX_SPECIALS_DEFAULT, 512, [Default maximum number of special things, e.g. fonts, offsets, aligns, etc.])
 AC_DEFINE(MAX_USER_TEXT_DEFAULT, 16384, [Default maximum size of config TEXT buffer, i.e. below TEXT line.])
 AC_DEFINE(DEFAULT_TEXT_BUFFER_SIZE, 256, [Default size used for temporary, static text buffers])
+AC_DEFINE(MAX_NET_INTERFACES, 16, [Maximum number of network devices])
 
 dnl
 dnl Some functions
 dnl
 
 AC_CHECK_FUNCS([calloc malloc free popen sysinfo getloadavg memrchr strndup gethostbyname_r])
-AC_SEARCH_LIBS(clock_gettime, [rt],
+AC_SEARCH_LIBS(clock_gettime, [rt], conky_LIBS="$conky_LIBS $LIBS"
                [AC_DEFINE(HAVE_CLOCK_GETTIME, 1, [Define if you have clock_gettime()])],
                [AC_CHECK_FUNCS([gettimeofday], [], [AC_MSG_ERROR([gettimeofday() not available!])])], [])
 
@@ -659,26 +825,26 @@ AC_CHECK_HEADER(zlib.h,
 dnl
 dnl Check for OpenMP support
 dnl
+dnl removed for now due to problems with GCC's OpenMP implementation
 
-AC_ARG_ENABLE([openmp],
-	      AC_HELP_STRING([--enable-openmp], [enable if you want OpenMP support @<:@default=no@:>@]),
-	      [want_openmp="$enableval"], [want_openmp=no])
+dnl AC_ARG_ENABLE([openmp],
+dnl 	      AC_HELP_STRING([--enable-openmp], [enable if you want OpenMP support @<:@default=no@:>@]),
+dnl 	      [want_openmp="$enableval"], [want_openmp=no])
 
-if test x$want_openmp = xyes; then
-	AX_OPENMP([
-	  gcc_version=`$CC -dumpversion`
-	  gcc_major=`echo $gcc_version | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-	  gcc_minor=`echo $gcc_version | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-	  dnl check that the gcc version is >=4.3, if we're using gcc
-	  if test ! "x$GCC" = "xyes" -o $gcc_major -ge 4 -a $gcc_minor -ge 3; then
-	    AC_DEFINE(HAVE_OPENMP,1,[Define if OpenMP is enabled])
-	    CFLAGS="$CFLAGS $OPENMP_CFLAGS"
-	  else
-	    want_openmp=no
-	  fi
-
-	])
-fi
+dnl if test x$want_openmp = xyes; then
+dnl 	AX_OPENMP([
+dnl 	  gcc_version=`$CC -dumpversion`
+dnl 	  gcc_major=`echo $gcc_version | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+dnl 	  gcc_minor=`echo $gcc_version | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+dnl 	  dnl check that the gcc version is >=4.3, if we're using gcc
+dnl 	  if test ! "x$GCC" = "xyes" -o $gcc_major -ge 4 -a $gcc_minor -ge 3; then
+dnl 	    AC_DEFINE(HAVE_OPENMP,1,[Define if OpenMP is enabled])
+dnl 	    conky_CFLAGS="$conky_CFLAGS $OPENMP_CFLAGS"
+dnl 	  else
+dnl 	    want_openmp=no
+dnl 	  fi
+dnl 	])
+dnl fi
 
 dnl
 dnl Check doc stuff
@@ -703,7 +869,7 @@ if test x$WANT_KSTAT = xyes; then
 
   if test x$dah = xyes; then
     AC_DEFINE(HAVE_KSTAT, 1, [Define if you have kstat (Solaris)])
-    LDFLAGS="$LDFLAGS -lkstat"
+    conky_LDFLAGS="$conky_LDFLAGS -lkstat"
   fi
 fi
 
@@ -728,7 +894,7 @@ dnl ************************
 AC_MSG_CHECKING([if $LD accepts -O1])
 case `$LD -O1 -v 2>&1 </dev/null` in
 *GNU* | *BSD*)
-  LDFLAGS="$LDFLAGS -Wl,-O1"
+  conky_LDFLAGS="$conky_LDFLAGS -Wl,-O1"
   AC_MSG_RESULT([yes])
   ;;
 *)
@@ -737,13 +903,13 @@ case `$LD -O1 -v 2>&1 </dev/null` in
 esac
 
 dnl Solve multiple definitions (only necessary when gnulib is used)
-dnl LDFLAGS="$LDFLAGS -Xlinker -zmuldefs"
+dnl conky_LDFLAGS="$conky_LDFLAGS -Xlinker -zmuldefs"
 
 dnl
 dnl Da.
 dnl
 
-CFLAGS="$CFLAGS -Wall -W"
+conky_CFLAGS="$conky_CFLAGS -Wall -W"
 
 dnl
 dnl debug
@@ -754,7 +920,7 @@ AC_ARG_ENABLE([debug],
               [want_debug="$enableval"], [want_debug=no])
 
 if test "x$want_debug" = "xyes" -a $ac_cv_c_compiler_gnu != no; then
-  CFLAGS="$CFLAGS -g3"
+  conky_CFLAGS="$conky_CFLAGS -g3 -O0"
   AC_DEFINE([DEBUG], 1, [Define for debugging])
 fi
 
@@ -768,15 +934,33 @@ AC_ARG_ENABLE([testing],
 
 if test "x$want_testing" = "xyes" -a $ac_cv_c_compiler_gnu != no; then
   if test "x$want_debug" = "xyes"; then
-    CFLAGS="$CFLAGS -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -std=c99 -pedantic -Werror"
+    conky_CFLAGS="$conky_CFLAGS -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -std=c99 -pedantic -Werror"
     AC_DEFINE([TESTING], [], [Define for testing (enables strict compiler flags)])
   else
-    CFLAGS="$CFLAGS -g3 -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -std=c99 -pedantic -Werror"
+    conky_CFLAGS="$conky_CFLAGS -O0 -g3 -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -std=c99 -pedantic -Werror"
     AC_DEFINE([TESTING], [], [Define for testing (enables strict compiler flags)])
   fi
 fi
 
-AC_SUBST(CFLAGS)
+dnl
+dnl profiling
+dnl
+
+AC_ARG_ENABLE([profiling],
+	      AC_HELP_STRING([--enable-profiling], [specify compiler flags for use with gprof and gcov @<:@default=no@:>@]),
+	      [want_profiling="$enableval"], [want_profiling=no])
+
+if test "x$want_profiling" = "xyes" -a $ac_cv_c_compiler_gnu != no; then
+  if test "x$want_debug" = "xyes"; then
+    conky_CFLAGS="$conky_CFLAGS -pg -fprofile-arcs -ftest-coverage"
+  else
+    conky_CFLAGS="$conky_CFLAGS -g3 -pg -fprofile-arcs -ftest-coverage"
+  fi
+  AC_DEFINE([PROFILING], [], [Define for profiling (gprof and gcov) support])
+fi
+
+AC_SUBST(conky_CFLAGS)
+AC_SUBST(conky_LIBS)
 AC_SUBST(X11_LIBS)
 
 AC_OUTPUT
@@ -790,15 +974,16 @@ $PACKAGE $VERSION configured successfully:
 
  Installing into:   $prefix
  System config dir: $sysconfdir
- C compiler flags:  $CFLAGS
- Linker flags:      $LDFLAGS
- Libraries:         $LIBS
+ C compiler flags:  $conky_CFLAGS
+ Libraries:         $conky_LIBS
+ Linker flags:      $conky_LDFLAGS
 
  * X11:
   X11 support:      $want_x11
   XDamage support:  $want_xdamage
   XDBE support:     $want_double_buffer
   Xft support:      $want_xft
+  ARGB support      $want_argb
 
  * Music detection:
   Audacious:        $want_audacious
@@ -808,12 +993,15 @@ $PACKAGE $VERSION configured successfully:
   XMMS2:            $want_xmms2
 
  * General:
-  OpenMP:           $want_openmp
+dnl  OpenMP:           $want_openmp
   math:             $want_math
   hddtemp:          $want_hddtemp
   portmon:          $want_portmon
   RSS:              $want_rss
-  Lua:              $want_lua
+  Curl:             $want_curl
+  Weather
+    METAR:          $want_metar
+    XOAP:           $want_xoap
   wireless:         $want_wlan
   IBM:              $want_ibm
   nvidia:           $want_nvidia
@@ -822,4 +1010,10 @@ $PACKAGE $VERSION configured successfully:
   Imlib2:           $want_imlib2
   ALSA mixer:       $want_alsa
   apcupsd:          $want_apcupsd
+  I/O stats:        $want_iostats
+
+ * Lua ($want_lua) bindings:
+  Cairo:            $want_lua_cairo
+  Imlib2:           $want_lua_imlib2
+
 EOF

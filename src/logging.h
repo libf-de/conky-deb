@@ -1,4 +1,6 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -24,18 +26,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+#include "mail.h"
+
+void clean_up(void *memtofree1, void* memtofree2);
+
 #ifndef _LOGGING_H
 #define _LOGGING_H
 
-#define ERR(...) { \
+#define NORM_ERR(...) { \
 	fprintf(stderr, PACKAGE_NAME": "); \
 	fprintf(stderr, __VA_ARGS__); \
 	fprintf(stderr, "\n"); \
 }
 
 /* critical error */
-#define CRIT_ERR(...) \
-	{ ERR(__VA_ARGS__); exit(EXIT_FAILURE); }
+#define CRIT_ERR(memtofree1, memtofree2, ...) \
+	{ NORM_ERR(__VA_ARGS__); clean_up(memtofree1, memtofree2); free(current_mail_spool); exit(EXIT_FAILURE); }
 
 /* debugging output */
 extern int global_debug_level;

@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -28,6 +31,7 @@
 #include "conky.h"
 #include <utmp.h>
 #include <time.h>
+#include <unistd.h>
 
 #define BUFLEN 512
 
@@ -74,7 +78,6 @@ static void user_time(char *ptr)
 {
 	const struct utmp *usr;
 	time_t log_in, real, diff;
-	struct tm *dtime;
 	char buf[BUFLEN] = "";
 
 	setutent();
@@ -83,26 +86,33 @@ static void user_time(char *ptr)
 			log_in = usr->ut_time;
 			time(&real);
 			diff = difftime(real, log_in);
-			dtime = localtime(&diff);
-			dtime->tm_year = dtime->tm_year - 70;
-			dtime->tm_mon = dtime->tm_mon - 1;
-			dtime->tm_mday = dtime->tm_mday - 1;
-			if (dtime->tm_year > 0) {
-				strftime(buf, BUFLEN, "%yy %mm %dd %Hh %Mm", dtime);
-			} else if (dtime->tm_mon > 0) {
-				strftime(buf, BUFLEN, "%mm %dd %Hh %Mm", dtime);
-			} else if (dtime->tm_mday > 0) {
-				strftime(buf, BUFLEN, "%dd %Hh %Mm", dtime);
-			} else if (dtime->tm_hour > 0) {
-				strftime(buf, BUFLEN, "%Hh %Mm", dtime);
-			} else if (dtime->tm_min > 0) {
-				strftime(buf, BUFLEN, "%Mm", dtime);
-			}
+			format_seconds(buf, BUFLEN, diff);
 			if (strlen(ptr) + strlen(buf) + 1 <= BUFLEN) {
 				strncat(ptr, buf, BUFLEN-strlen(ptr)-1);
 			}
 		}
 	}
+}
+static void tty_user_time(char *ptr, char *tty)
+{
+	time_t real, diff, log_in;
+	char buf[BUFLEN] = "";
+
+	struct utmp *usr, line;
+
+	setutent();
+	strcpy(line.ut_line, tty);
+	usr = getutline(&line);
+	if (usr == NULL ) {
+		return;
+	}
+
+	log_in = usr->ut_time;
+
+	time(&real);
+	diff = difftime(real, log_in);
+	format_seconds(buf, BUFLEN, diff);
+	strncpy(ptr, buf, BUFLEN-1);
 }
 
 static void users_alloc(struct information *ptr)
@@ -116,6 +126,34 @@ static void users_alloc(struct information *ptr)
 	}
 	if (ptr->users.times == NULL) {
 		ptr->users.times = malloc(text_buffer_size);
+	}
+}
+
+void update_user_time(char *tty)
+{
+	struct information *current_info = &info;
+	char temp[BUFLEN] = "";
+
+	if (current_info->users.ctime == NULL) {
+		current_info->users.ctime = malloc(text_buffer_size);
+	}
+
+	tty_user_time(temp, tty);
+
+	if (temp != NULL) {
+		if (current_info->users.ctime) {
+			free(current_info->users.ctime);
+			current_info->users.ctime = 0;
+		}
+		current_info->users.ctime = malloc(text_buffer_size);
+		strncpy(current_info->users.ctime, temp, text_buffer_size);
+	} else {
+		if (current_info->users.ctime) {
+			free(current_info->users.ctime);
+			current_info->users.ctime = 0;
+		}
+		current_info->users.ctime = malloc(text_buffer_size);
+		strncpy(current_info->users.ctime, "broken", text_buffer_size);
 	}
 }
 

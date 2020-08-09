@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -31,6 +34,17 @@
 int selected_font = 0;
 int font_count = -1;
 struct font_list *fonts = NULL;
+char fontloaded = 0;
+
+void set_font(void)
+{
+#ifdef XFT
+	if (use_xft) return;
+#endif /* XFT */
+	if (font_count > -1 && fonts[selected_font].font) {
+		XSetFont(display, window.gc, fonts[selected_font].font->fid);
+	}
+}
 
 void setup_fonts(void)
 {
@@ -41,11 +55,13 @@ void setup_fonts(void)
 	if (use_xft) {
 		if (window.xftdraw) {
 			XftDrawDestroy(window.xftdraw);
+			window.xftdraw = 0;
 		}
 		window.xftdraw = XftDrawCreate(display, window.drawable,
-				DefaultVisual(display, screen), DefaultColormap(display, screen));
+				window.visual, window.colourmap);
 	}
-#endif
+#endif /* XFT */
+	set_font();
 }
 
 int add_font(const char *data_in)
@@ -54,7 +70,7 @@ int add_font(const char *data_in)
 		return 0;
 	}
 	if (font_count > MAX_FONTS) {
-		CRIT_ERR("you don't need that many fonts, sorry.");
+		CRIT_ERR(NULL, NULL, "you don't need that many fonts, sorry.");
 	}
 	font_count++;
 	if (font_count == 0) {
@@ -63,14 +79,14 @@ int add_font(const char *data_in)
 		}
 		if ((fonts = (struct font_list *) malloc(sizeof(struct font_list)))
 				== NULL) {
-			CRIT_ERR("malloc");
+			CRIT_ERR(NULL, NULL, "malloc");
 		}
 		memset(fonts, 0, sizeof(struct font_list));
 	}
 	fonts = realloc(fonts, (sizeof(struct font_list) * (font_count + 1)));
 	memset(&fonts[font_count], 0, sizeof(struct font_list));
 	if (fonts == NULL) {
-		CRIT_ERR("realloc in add_font");
+		CRIT_ERR(NULL, NULL, "realloc in add_font");
 	}
 	// must account for null terminator
 	if (strlen(data_in) < DEFAULT_TEXT_BUFFER_SIZE) {
@@ -79,7 +95,7 @@ int add_font(const char *data_in)
 		fonts[font_count].font_alpha = 0xffff;
 #endif
 	} else {
-		CRIT_ERR("Oops...looks like something overflowed in add_font().");
+		CRIT_ERR(NULL, NULL, "Oops...looks like something overflowed in add_font().");
 	}
 	return font_count;
 }
@@ -92,7 +108,7 @@ void set_first_font(const char *data_in)
 	if (font_count < 0) {
 		if ((fonts = (struct font_list *) malloc(sizeof(struct font_list)))
 				== NULL) {
-			CRIT_ERR("malloc");
+			CRIT_ERR(NULL, NULL, "malloc");
 		}
 		memset(fonts, 0, sizeof(struct font_list));
 		font_count++;
@@ -112,10 +128,20 @@ void free_fonts(void)
 	if ((output_methods & TO_X) == 0) {
 		return;
 	}
+	if(fontloaded == 0) {
+		free(fonts);
+		return;
+	}
 	for (i = 0; i <= font_count; i++) {
 #ifdef XFT
 		if (use_xft) {
-			XftFontClose(display, fonts[i].xftfont);
+			/*
+			 * Do we not need to close fonts with Xft? Unsure.  Not freeing the
+			 * fonts seems to incur a slight memory leak, but it also prevents
+			 * a crash.
+			 *
+			 * XftFontClose(display, fonts[i].xftfont);
+			 */
 			fonts[i].xftfont = 0;
 		} else
 #endif /* XFT */
@@ -154,16 +180,16 @@ void load_fonts(void)
 				continue;
 			}
 
-			ERR("can't load Xft font '%s'", fonts[i].name);
+			NORM_ERR("can't load Xft font '%s'", fonts[i].name);
 			if ((fonts[i].xftfont = XftFontOpenName(display, screen,
 					"courier-12")) != NULL) {
 				continue;
 			}
 
-			ERR("can't load Xft font '%s'", "courier-12");
+			NORM_ERR("can't load Xft font '%s'", "courier-12");
 
 			if ((fonts[i].font = XLoadQueryFont(display, "fixed")) == NULL) {
-				CRIT_ERR("can't load font '%s'", "fixed");
+				CRIT_ERR(NULL, NULL, "can't load font '%s'", "fixed");
 			}
 			use_xft = 0;
 
@@ -171,11 +197,12 @@ void load_fonts(void)
 		}
 #endif
 		/* load normal font */
-		if (fonts[i].font || (fonts[i].font = XLoadQueryFont(display, fonts[i].name)) == NULL) {
-			ERR("can't load font '%s'", fonts[i].name);
+		if (!fonts[i].font && (fonts[i].font = XLoadQueryFont(display, fonts[i].name)) == NULL) {
+			NORM_ERR("can't load font '%s'", fonts[i].name);
 			if ((fonts[i].font = XLoadQueryFont(display, "fixed")) == NULL) {
-				CRIT_ERR("can't load font '%s'", "fixed");
+				CRIT_ERR(NULL, NULL, "can't load font '%s'", "fixed");
 			}
 		}
 	}
+	fontloaded = 1;
 }

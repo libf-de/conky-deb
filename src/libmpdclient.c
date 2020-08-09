@@ -1,4 +1,7 @@
-/* libmpdclient
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * libmpdclient
  * (c)2003-2006 by Warren Dukes (warren.dukes@gmail.com)
  * This project's homepage is: http://www.musicpd.org
  *
@@ -49,6 +52,7 @@
 #  include <netinet/in.h>
 #  include <arpa/inet.h>
 #  include <sys/socket.h>
+#  include <sys/un.h>
 #  include <netdb.h>
 #endif
 
@@ -116,6 +120,38 @@ static int do_connect_fail(mpd_Connection *connection,
 }
 #endif /* !WIN32 */
 
+static int uds_connect(mpd_Connection *connection, const char *host,
+		float timeout)
+{
+	struct sockaddr_un addr;
+
+	strncpy(addr.sun_path, host, sizeof(addr.sun_path)-1);
+	addr.sun_family = AF_UNIX;
+	addr.sun_path[sizeof(addr.sun_path)-1] = 0;
+	connection->sock = socket(AF_UNIX, SOCK_STREAM, 0);
+
+	if (connection->sock < 0) {
+		snprintf(connection->errorStr, MPD_ERRORSTR_MAX_LENGTH,
+				"problems creating socket: %s", strerror(errno));
+		connection->error = MPD_ERROR_SYSTEM;
+		return -1;
+	}
+
+	mpd_setConnectionTimeout(connection, timeout);
+
+	/* connect stuff */
+	if (do_connect_fail(connection, (struct sockaddr *)&addr, SUN_LEN(&addr))) {
+		snprintf(connection->errorStr, MPD_ERRORSTR_MAX_LENGTH,
+				"problems cconnecting socket: %s", strerror(errno));
+		closesocket(connection->sock);
+		connection->sock = -1;
+		connection->error = MPD_ERROR_SYSTEM;
+		return -1;
+	}
+
+	return 0;
+}
+
 #ifdef MPD_HAVE_GAI
 static int mpd_connect(mpd_Connection *connection, const char *host, int port,
 		float timeout)
@@ -126,13 +162,12 @@ static int mpd_connect(mpd_Connection *connection, const char *host, int port,
 	struct addrinfo *res = NULL;
 	struct addrinfo *addrinfo = NULL;
 
-	/* Setup hints
-	 *
-	 * XXX: limit address family to PF_INET here.
-	 * MPD does not support IPv6 yet, so if GAI returns
-	 * an IPv6 address, the later connect() will fail. */
+	if (*host == '/')
+		return uds_connect(connection, host, timeout);
+
+	/* Setup hints */
 	hints.ai_flags		= AI_ADDRCONFIG;
-	hints.ai_family		= PF_INET;
+	hints.ai_family		= AF_UNSPEC;
 	hints.ai_socktype	= SOCK_STREAM;
 	hints.ai_protocol	= IPPROTO_TCP;
 	hints.ai_addrlen	= 0;
@@ -200,6 +235,9 @@ static int mpd_connect(mpd_Connection *connection, const char *host, int port,
 	struct sockaddr *dest;
 	int destlen;
 	struct sockaddr_in sin;
+
+	if (*host == '/')
+		return uds_connect(connection, host, timeout);
 
 #ifdef HAVE_GETHOSTBYNAME_R
 		if (gethostbyname_r(rhost, &he, hostbuff, sizeof(hostbuff), &he_res, &he_errno)) {	// get the host info

@@ -1,4 +1,6 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -63,7 +65,7 @@ struct font_list {
 
 #endif
 
-#define MAX_FONTS 64 // hmm, no particular reason, just makes sense.
+#define MAX_FONTS 256
 
 /* direct access to registered fonts (FIXME: bad encapsulation) */
 extern struct font_list *fonts;
@@ -71,6 +73,7 @@ extern int selected_font;
 extern int font_count;
 
 void setup_fonts(void);
+void set_font(void);
 int add_font(const char *);
 void set_first_font(const char *);
 void free_fonts(void);

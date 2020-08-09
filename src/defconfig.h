@@ -11,7 +11,7 @@
 "# Please see COPYING for details\n", \
 "#\n", \
 "# Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen\n", \
-"# Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)\n", \
+"# Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)\n", \
 "# All rights reserved.\n", \
 "#\n", \
 "# This program is free software: you can redistribute it and/or modify\n", \
@@ -27,34 +27,58 @@
 "# along with this program.  If not, see <http://www.gnu.org/licenses/>.\n", \
 "#\n", \
 "\n", \
+"alignment top_left\n", \
 "background no\n", \
+"border_width 1\n", \
 "cpu_avg_samples 2\n", \
+"default_color white\n", \
+"default_outline_color white\n", \
+"default_shade_color white\n", \
+"draw_borders no\n", \
+"draw_graph_borders yes\n", \
+"draw_outline no\n", \
+"draw_shades no\n", \
+"use_xft yes\n", \
+"xftfont DejaVu Sans Mono:size=12\n", \
+"gap_x 5\n", \
+"gap_y 60\n", \
+"minimum_size 5 5\n", \
 "net_avg_samples 2\n", \
 "no_buffers yes\n", \
 "out_to_console no\n", \
 "out_to_stderr no\n", \
+"extra_newline no\n", \
+"own_window yes\n", \
+"own_window_class Conky\n", \
+"own_window_type desktop\n", \
+"stippled_borders 0\n", \
 "update_interval 1.0\n", \
 "uppercase no\n", \
 "use_spacer none\n", \
+"show_graph_scale no\n", \
+"show_graph_range no\n", \
 "\n", \
 "TEXT\n", \
 "${scroll 16 $nodename - $sysname $kernel on $machine | }\n", \
-"Uptime: $uptime\n", \
-"Frequency (in MHz): $freq\n", \
-"Frequency (in GHz): $freq_g\n", \
-"RAM Usage: $mem/$memmax - $memperc%\n", \
-"Swap Usage: $swap/$swapmax - $swapperc%\n", \
-"CPU Usage: $cpu%\n", \
-"Processes: $processes  Running: $running_processes\n", \
-"File systems:\n", \
-" / ${fs_used /}/${fs_size /}\n", \
-"Networking:\n", \
-"Up: ${upspeed eth0}  - Down: ${downspeed eth0}\n", \
-"Name              PID   CPU%   MEM%\n", \
-" ${top name 1} ${top pid 1} ${top cpu 1} ${top mem 1}\n", \
-" ${top name 2} ${top pid 2} ${top cpu 2} ${top mem 2}\n", \
-" ${top name 3} ${top pid 3} ${top cpu 3} ${top mem 3}\n", \
-" ${top name 4} ${top pid 4} ${top cpu 4} ${top mem 4}\n", \
+"$hr\n", \
+"${color grey}Uptime:$color $uptime\n", \
+"${color grey}Frequency (in MHz):$color $freq\n", \
+"${color grey}Frequency (in GHz):$color $freq_g\n", \
+"${color grey}RAM Usage:$color $mem/$memmax - $memperc% ${membar 4}\n", \
+"${color grey}Swap Usage:$color $swap/$swapmax - $swapperc% ${swapbar 4}\n", \
+"${color grey}CPU Usage:$color $cpu% ${cpubar 4}\n", \
+"${color grey}Processes:$color $processes  ${color grey}Running:$color $running_processes\n", \
+"$hr\n", \
+"${color grey}File systems:\n", \
+" / $color${fs_used /}/${fs_size /} ${fs_bar 6 /}\n", \
+"${color grey}Networking:\n", \
+"Up:$color ${upspeed eth0} ${color grey} - Down:$color ${downspeed eth0}\n", \
+"$hr\n", \
+"${color grey}Name              PID   CPU%   MEM%\n", \
+"${color lightgrey} ${top name 1} ${top pid 1} ${top cpu 1} ${top mem 1}\n", \
+"${color lightgrey} ${top name 2} ${top pid 2} ${top cpu 2} ${top mem 2}\n", \
+"${color lightgrey} ${top name 3} ${top pid 3} ${top cpu 3} ${top mem 3}\n", \
+"${color lightgrey} ${top name 4} ${top pid 4} ${top cpu 4} ${top mem 4}\n", \
 NULL }
 
 #define print_defconfig() { \

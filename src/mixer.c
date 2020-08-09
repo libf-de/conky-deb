@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -27,6 +30,8 @@
 
 #include "conky.h"
 #include "logging.h"
+#include "specials.h"
+#include "text_object.h"
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -170,20 +175,25 @@ int mixer_init (const char *name)
 	snd_mixer_selem_get_playback_volume_range(data.elem, &data.vol_min, &data.vol_max);
 	return i;
 }
-int mixer_get_avg (int i)
+static int mixer_get_avg (int i)
 {
-  long val;
+	long val;
 
-  snd_mixer_handle_events (data.mixer);
-  snd_mixer_selem_get_playback_volume (data.elem, 0, &val);
-  return (int) val;
+	snd_mixer_handle_events (data.mixer);
+	snd_mixer_selem_get_playback_volume (data.elem, 0, &val);
+	if(data.vol_max != 100) {
+		float avgf = ((float)val / data.vol_max) * 100;
+		int avg = (int)avgf;
+		return (avgf - avg < 0.5) ? avg : avg + 1;
+	}
+	return (int) val;
 }
-int mixer_get_left (int i)
+static int mixer_get_left (int i)
 {
   /* stub */
   return mixer_get_avg (i);
 }
-int mixer_get_right (int i)
+static int mixer_get_right (int i)
 {
   /* stub */
   return mixer_get_avg (i);
@@ -206,7 +216,7 @@ int mixer_is_mute(int i)
 }
 #undef data
 
-#else
+#else /* MIXER_IS_ALSA */
 int mixer_init(const char *name)
 {
 	unsigned int i;
@@ -219,7 +229,7 @@ int mixer_init(const char *name)
 	if (mixer_fd <= 0) {
 		mixer_fd = open(MIXER_DEV, O_RDONLY);
 		if (mixer_fd == -1) {
-			ERR("can't open %s: %s", MIXER_DEV, strerror(errno));
+			NORM_ERR("can't open %s: %s", MIXER_DEV, strerror(errno));
 			return -1;
 		}
 	}
@@ -240,7 +250,7 @@ static int mixer_get(int i)
 
 	if (ioctl(mixer_fd, MIXER_READ(i), &val) == -1) {
 		if (!rep) {
-			ERR("mixer ioctl: %s", strerror(errno));
+			NORM_ERR("mixer ioctl: %s", strerror(errno));
 		}
 		rep = 1;
 		return 0;
@@ -250,19 +260,19 @@ static int mixer_get(int i)
 	return val;
 }
 
-int mixer_get_avg(int i)
+static int mixer_get_avg(int i)
 {
 	int v = mixer_get(i);
 
 	return ((v >> 8) + (v & 0xFF)) / 2;
 }
 
-int mixer_get_left(int i)
+static int mixer_get_left(int i)
 {
 	return mixer_get(i) >> 8;
 }
 
-int mixer_get_right(int i)
+static int mixer_get_right(int i)
 {
 	return mixer_get(i) & 0xFF;
 }
@@ -270,4 +280,99 @@ int mixer_is_mute(int i)
 {
 	return !mixer_get(i);
 }
-#endif
+
+#define mixer_to_255(i, x) x
+#endif /* MIXER_IS_ALSA */
+
+void parse_mixer_arg(struct text_object *obj, const char *arg)
+{
+	obj->data.l = mixer_init(arg);
+}
+
+/* chan specifies the channel to print:
+ * -1 := left channel
+ *  0 := channel average
+ *  1 := right channel
+ */
+static void print_mixer_chan(struct text_object *obj, int chan, char *p, int p_max_size)
+{
+	int val;
+
+	if (chan < 0)
+		val = mixer_get_left(obj->data.l);
+	else if (chan == 0)
+		val = mixer_get_avg(obj->data.l);
+	else
+		val = mixer_get_right(obj->data.l);
+
+	percent_print(p, p_max_size, val);
+}
+
+void print_mixer(struct text_object *obj, char *p, int p_max_size)
+{
+	print_mixer_chan(obj, 0, p, p_max_size);
+}
+
+void print_mixerl(struct text_object *obj, char *p, int p_max_size)
+{
+	print_mixer_chan(obj, -1, p, p_max_size);
+}
+
+void print_mixerr(struct text_object *obj, char *p, int p_max_size)
+{
+	print_mixer_chan(obj, 1, p, p_max_size);
+}
+
+int check_mixer_muted(struct text_object *obj)
+{
+	if (!mixer_is_mute(obj->data.l))
+		return 0;
+	return 1;
+}
+
+void scan_mixer_bar(struct text_object *obj, const char *arg)
+{
+	char buf1[64];
+	int n;
+
+	if (arg && sscanf(arg, "%63s %n", buf1, &n) >= 1) {
+		obj->data.i = mixer_init(buf1);
+		scan_bar(obj, arg + n);
+	} else {
+		obj->data.i = mixer_init(NULL);
+		scan_bar(obj, arg);
+	}
+}
+
+/* see print_mixer() above for a description of 'chan' */
+static void print_mixer_bar_chan(struct text_object *obj, int chan, char *p, int p_max_size)
+{
+	int val;
+
+	if (!p_max_size)
+		return;
+
+	if (chan < 0)
+		val = mixer_get_left(obj->data.i);
+	else if (chan == 0)
+		val = mixer_get_avg(obj->data.i);
+	else
+		val = mixer_get_right(obj->data.i);
+
+	new_bar(obj, p, p_max_size, mixer_to_255(obj->data.i, val));
+}
+
+void print_mixer_bar(struct text_object *obj, char *p, int p_max_size)
+{
+	print_mixer_bar_chan(obj, 0, p, p_max_size);
+}
+
+void print_mixerl_bar(struct text_object *obj, char *p, int p_max_size)
+{
+	print_mixer_bar_chan(obj, -1, p, p_max_size);
+}
+
+void print_mixerr_bar(struct text_object *obj, char *p, int p_max_size)
+{
+	print_mixer_bar_chan(obj, 1, p, p_max_size);
+}

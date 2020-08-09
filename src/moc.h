@@ -1,4 +1,6 @@
-/* MOC Conky integration
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * MOC Conky integration
  *
  * Please see COPYING for details
  *
@@ -38,7 +40,7 @@ struct moc_s {
 };
 extern struct moc_s moc;
 
-int run_moc_thread(double interval);
+void update_moc(void);
 void free_moc(void);
 
 #endif /* MOC_H_ */

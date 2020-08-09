@@ -1,4 +1,4 @@
-/*
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
  *
  * Copyright (c) 2007 Mikko Sysikaski <mikko.sysikaski@gmail.com>
  *					  Toni Spets <toni.spets@gmail.com>
@@ -25,12 +25,11 @@ typedef struct PRSS_Item_ {
 	char *link;
 	char *description;
 	char *category;
-	char *pubdate;
+	char *pubDate;
 	char *guid;
 } PRSS_Item;
 
 typedef struct PRSS_ {
-	xmlDocPtr _data;
 	char *version;
 
 	char *title;
@@ -38,11 +37,11 @@ typedef struct PRSS_ {
 	char *description;
 	char *language;
 	char *generator;
-	char *managingeditor;
-	char *webmaster;
+	char *managingEditor;
+	char *webMaster;
 	char *docs;
-	char *lastbuilddate;
-	char *pubdate;
+	char *lastBuildDate;
+	char *pubDate;
 	char *copyright;
 	char *ttl;
 
@@ -51,8 +50,7 @@ typedef struct PRSS_ {
 } PRSS;
 
 /* Functions for parsing RSS-data */
-PRSS *prss_parse_data(const char *xml_data);
-PRSS *prss_parse_file(const char *xml_file);
+void prss_parse_data(void *result, const char *xml_data);
 
 /* // Works wrong currently when called from application!
 PRSS *prss_parse_doc(xmlDocPtr doc); */

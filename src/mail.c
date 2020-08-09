@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -29,7 +32,8 @@
 #include "conky.h"
 #include "common.h"
 #include "logging.h"
-#include "mail.h"
+#include "text_object.h"
+#include "timed_thread.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -54,9 +58,52 @@
  * #define MAX(a, b)  ((a > b) ? a : b)
  */
 
+#define POP3_TYPE 1
+#define IMAP_TYPE 2
+
+struct mail_s {			// for imap and pop3
+	unsigned long unseen;
+	unsigned long messages;
+	unsigned long used;
+	unsigned long quota;
+	unsigned long port;
+	unsigned int retries;
+	float interval;
+	double last_update;
+	char host[128];
+	char user[128];
+	char pass[128];
+	char command[1024];
+	char folder[128];
+	timed_thread *p_timed_thread;
+	char secure;
+};
+
+struct local_mail_s {
+	char *mbox;
+	int mail_count;
+	int new_mail_count;
+	int seen_mail_count;
+	int unseen_mail_count;
+	int flagged_mail_count;
+	int unflagged_mail_count;
+	int forwarded_mail_count;
+	int unforwarded_mail_count;
+	int replied_mail_count;
+	int unreplied_mail_count;
+	int draft_mail_count;
+	int trashed_mail_count;
+	float interval;
+	time_t last_mtime;
+	double last_update;
+};
+
 char *current_mail_spool;
 
-void update_mail_count(struct local_mail_s *mail)
+static struct mail_s *global_mail;
+static int global_mail_use = 0;
+
+static void update_mail_count(struct local_mail_s *mail)
 {
 	struct stat st;
 
@@ -73,11 +120,11 @@ void update_mail_count(struct local_mail_s *mail)
 		mail->last_update = current_update_time;
 	}
 
-	if (stat(mail->box, &st)) {
+	if (stat(mail->mbox, &st)) {
 		static int rep = 0;
 
 		if (!rep) {
-			ERR("can't stat %s: %s", mail->box, strerror(errno));
+			NORM_ERR("can't stat %s: %s", mail->mbox, strerror(errno));
 			rep = 1;
 		}
 		return;
@@ -96,19 +143,19 @@ void update_mail_count(struct local_mail_s *mail)
 		mail->forwarded_mail_count = mail->unforwarded_mail_count = 0;
 		mail->replied_mail_count = mail->unreplied_mail_count = 0;
 		mail->draft_mail_count = mail->trashed_mail_count = 0;
-		dirname = (char *) malloc(sizeof(char) * (strlen(mail->box) + 5));
+		dirname = (char *) malloc(sizeof(char) * (strlen(mail->mbox) + 5));
 		if (!dirname) {
-			ERR("malloc");
+			NORM_ERR("malloc");
 			return;
 		}
-		strcpy(dirname, mail->box);
+		strcpy(dirname, mail->mbox);
 		strcat(dirname, "/");
 		/* checking the cur subdirectory */
 		strcat(dirname, "cur");
 
 		dir = opendir(dirname);
 		if (!dir) {
-			ERR("cannot open directory");
+			NORM_ERR("cannot open directory");
 			free(dirname);
 			return;
 		}
@@ -119,7 +166,7 @@ void update_mail_count(struct local_mail_s *mail)
 				mail->mail_count++;
 				mailflags = (char *) malloc(sizeof(char) * strlen(strrchr(dirent->d_name, ',')));
 				if (!mailflags) {
-					ERR("malloc");
+					NORM_ERR("malloc");
 					free(dirname);
 					return;
 				}
@@ -162,7 +209,7 @@ void update_mail_count(struct local_mail_s *mail)
 
 		dir = opendir(dirname);
 		if (!dir) {
-			ERR("cannot open directory");
+			NORM_ERR("cannot open directory");
 			free(dirname);
 			return;
 		}
@@ -201,7 +248,7 @@ void update_mail_count(struct local_mail_s *mail)
 		mail->replied_mail_count = mail->unreplied_mail_count = -1;
 		mail->draft_mail_count = mail->trashed_mail_count = -1;
 
-		fp = open_file(mail->box, &rep);
+		fp = open_file(mail->mbox, &rep);
 		if (!fp) {
 			return;
 		}
@@ -290,6 +337,72 @@ void update_mail_count(struct local_mail_s *mail)
 	}
 }
 
+void parse_local_mail_args(struct text_object *obj, const char *arg)
+{
+	float n1;
+	char mbox[256], dst[256];
+	struct local_mail_s *locmail;
+
+	if (!arg) {
+		n1 = 9.5;
+		/* Kapil: Changed from MAIL_FILE to
+		   current_mail_spool since the latter
+		   is a copy of the former if undefined
+		   but the latter should take precedence
+		   if defined */
+		strncpy(mbox, current_mail_spool, sizeof(mbox));
+	} else {
+		if (sscanf(arg, "%s %f", mbox, &n1) != 2) {
+			n1 = 9.5;
+			strncpy(mbox, arg, sizeof(mbox));
+		}
+	}
+
+	variable_substitute(mbox, dst, sizeof(dst));
+
+	locmail = malloc(sizeof(struct local_mail_s));
+	memset(locmail, 0, sizeof(struct local_mail_s));
+	locmail->mbox = strndup(dst, text_buffer_size);
+	locmail->interval = n1;
+	obj->data.opaque = locmail;
+}
+
+#define PRINT_MAILS_GENERATOR(x) \
+void print_##x##mails(struct text_object *obj, char *p, int p_max_size) \
+{ \
+	struct local_mail_s *locmail = obj->data.opaque; \
+	if (!locmail) \
+		return; \
+	update_mail_count(locmail); \
+	snprintf(p, p_max_size, "%d", locmail->x##mail_count); \
+}
+
+PRINT_MAILS_GENERATOR()
+PRINT_MAILS_GENERATOR(new_)
+PRINT_MAILS_GENERATOR(seen_)
+PRINT_MAILS_GENERATOR(unseen_)
+PRINT_MAILS_GENERATOR(flagged_)
+PRINT_MAILS_GENERATOR(unflagged_)
+PRINT_MAILS_GENERATOR(forwarded_)
+PRINT_MAILS_GENERATOR(unforwarded_)
+PRINT_MAILS_GENERATOR(replied_)
+PRINT_MAILS_GENERATOR(unreplied_)
+PRINT_MAILS_GENERATOR(draft_)
+PRINT_MAILS_GENERATOR(trashed_)
+
+void free_local_mails(struct text_object *obj)
+{
+	struct local_mail_s *locmail = obj->data.opaque;
+
+	if (!locmail)
+		return;
+
+	if (locmail->mbox)
+		free(locmail->mbox);
+	free(obj->data.opaque);
+	obj->data.opaque = 0;
+}
+
 #define MAXDATASIZE 1000
 
 struct mail_s *parse_mail_args(char type, const char *arg)
@@ -303,9 +416,9 @@ struct mail_s *parse_mail_args(char type, const char *arg)
 	if (sscanf(arg, "%128s %128s %128s", mail->host, mail->user, mail->pass)
 			!= 3) {
 		if (type == POP3_TYPE) {
-			ERR("Scanning POP3 args failed");
+			NORM_ERR("Scanning POP3 args failed");
 		} else if (type == IMAP_TYPE) {
-			ERR("Scanning IMAP args failed");
+			NORM_ERR("Scanning IMAP args failed");
 		}
 		return 0;
 	}
@@ -352,8 +465,15 @@ struct mail_s *parse_mail_args(char type, const char *arg)
 	if (type == IMAP_TYPE) {
 		tmp = strstr(arg, "-f ");
 		if (tmp) {
+			int len = 1024;
 			tmp += 3;
-			sscanf(tmp, "%s", mail->folder);
+			if (tmp[0] == '\'') {
+				len = strstr(tmp + 1, "'") - tmp - 1;
+				if (len > 1024) {
+					len = 1024;
+				}
+			}
+			strncpy(mail->folder, tmp + 1, len);
 		} else {
 			strncpy(mail->folder, "INBOX", 128);	// default imap inbox
 		}
@@ -377,20 +497,88 @@ struct mail_s *parse_mail_args(char type, const char *arg)
 	return mail;
 }
 
+void parse_imap_mail_args(struct text_object *obj, const char *arg)
+{
+	static int rep = 0;
+
+	if (!arg) {
+		if (!global_mail && !rep) {
+			// something is wrong, warn once then stop
+			NORM_ERR("There's a problem with your mail settings.  "
+					"Check that the global mail settings are properly defined"
+					" (line %li).", obj->line);
+			rep = 1;
+			return;
+		}
+		obj->data.opaque = global_mail;
+		global_mail_use++;
+		return;
+	}
+	// proccss
+	obj->data.opaque = parse_mail_args(IMAP_TYPE, arg);
+}
+
+void parse_pop3_mail_args(struct text_object *obj, const char *arg)
+{
+	static int rep = 0;
+
+	if (!arg) {
+		if (!global_mail && !rep) {
+			// something is wrong, warn once then stop
+			NORM_ERR("There's a problem with your mail settings.  "
+					"Check that the global mail settings are properly defined"
+					" (line %li).", obj->line);
+			rep = 1;
+			return;
+		}
+		obj->data.opaque = global_mail;
+		global_mail_use++;
+		return;
+	}
+	// proccss
+	obj->data.opaque = parse_mail_args(POP3_TYPE, arg);
+}
+
+void parse_global_imap_mail_args(const char *value)
+{
+	global_mail = parse_mail_args(IMAP_TYPE, value);
+}
+
+void parse_global_pop3_mail_args(const char *value)
+{
+	global_mail = parse_mail_args(POP3_TYPE, value);
+}
+
+void free_mail_obj(struct text_object *obj)
+{
+	if (!obj->data.opaque)
+		return;
+
+	if (obj->data.opaque == global_mail) {
+		if (--global_mail_use == 0) {
+			free(global_mail);
+			global_mail = 0;
+		}
+	} else {
+		free(obj->data.opaque);
+		obj->data.opaque = 0;
+	}
+}
+
 int imap_command(int sockfd, const char *command, char *response, const char *verify)
 {
-	struct timeval timeout;
+	struct timeval fetchtimeout;
 	fd_set fdset;
 	int res, numbytes = 0;
 	if (send(sockfd, command, strlen(command), 0) == -1) {
 		perror("send");
 		return -1;
 	}
-	timeout.tv_sec = 60;	// 60 second timeout i guess
-	timeout.tv_usec = 0;
+	fetchtimeout.tv_sec = 60;	// 60 second timeout i guess
+	fetchtimeout.tv_usec = 0;
 	FD_ZERO(&fdset);
 	FD_SET(sockfd, &fdset);
-	res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+	res = select(sockfd + 1, &fdset, NULL, NULL, &fetchtimeout);
 	if (res > 0) {
 		if ((numbytes = recv(sockfd, response, MAXDATASIZE - 1, 0)) == -1) {
 			perror("recv");
@@ -416,7 +604,7 @@ int imap_check_status(char *recvbuf, struct mail_s *mail)
 	reply += 2;
 	*strchr(reply, ')') = '\0';
 	if (reply == NULL) {
-		ERR("Error parsing IMAP response: %s", recvbuf);
+		NORM_ERR("Error parsing IMAP response: %s", recvbuf);
 		return -1;
 	} else {
 		timed_thread_lock(mail->p_timed_thread);
@@ -438,7 +626,25 @@ void imap_unseen_command(struct mail_s *mail, unsigned long old_unseen, unsigned
 	}
 }
 
-void *imap_thread(void *arg)
+static void ensure_mail_thread(struct mail_s *mail,
+		void *thread(void *), const char *text)
+{
+	if (mail->p_timed_thread)
+		return;
+
+	mail->p_timed_thread = timed_thread_create(thread,
+				mail, mail->interval * 1000000);
+	if (!mail->p_timed_thread) {
+		NORM_ERR("Error creating %s timed thread", text);
+	}
+	timed_thread_register(mail->p_timed_thread,
+			&mail->p_timed_thread);
+	if (timed_thread_run(mail->p_timed_thread)) {
+		NORM_ERR("Error running %s timed thread", text);
+	}
+}
+
+static void *imap_thread(void *arg)
 {
 	int sockfd, numbytes;
 	char recvbuf[MAXDATASIZE];
@@ -454,25 +660,31 @@ void *imap_thread(void *arg)
 	struct mail_s *mail = (struct mail_s *)arg;
 	int has_idle = 0;
 	int threadfd = timed_thread_readfd(mail->p_timed_thread);
+	char resolved_host = 0;
 
-#ifdef HAVE_GETHOSTBYNAME_R
-	if (gethostbyname_r(mail->host, &he, hostbuff, sizeof(hostbuff), &he_res, &he_errno)) {	// get the host info
-		ERR("IMAP gethostbyname_r: %s", hstrerror(h_errno));
-		exit(1);
-	}
-#else /* HAVE_GETHOSTBYNAME_R */
-	if ((he_res = gethostbyname(mail->host)) == NULL) {	// get the host info
-		herror("gethostbyname");
-		exit(1);
-	}
-#endif /* HAVE_GETHOSTBYNAME_R */
 	while (fail < mail->retries) {
-		struct timeval timeout;
+		struct timeval fetchtimeout;
 		int res;
 		fd_set fdset;
 
+		if (!resolved_host) {
+#ifdef HAVE_GETHOSTBYNAME_R
+			if (gethostbyname_r(mail->host, &he, hostbuff, sizeof(hostbuff), &he_res, &he_errno)) {	// get the host info
+				NORM_ERR("IMAP gethostbyname_r: %s", hstrerror(h_errno));
+				fail++;
+				break;
+			}
+#else /* HAVE_GETHOSTBYNAME_R */
+			if ((he_res = gethostbyname(mail->host)) == NULL) {	// get the host info
+				herror("gethostbyname");
+				fail++;
+				break;
+			}
+#endif /* HAVE_GETHOSTBYNAME_R */
+			resolved_host = 1;
+		}
 		if (fail > 0) {
-			ERR("Trying IMAP connection again for %s@%s (try %u/%u)",
+			NORM_ERR("Trying IMAP connection again for %s@%s (try %u/%u)",
 					mail->user, mail->host, fail + 1, mail->retries);
 		}
 		do {
@@ -497,11 +709,11 @@ void *imap_thread(void *arg)
 				break;
 			}
 
-			timeout.tv_sec = 60;	// 60 second timeout i guess
-			timeout.tv_usec = 0;
+			fetchtimeout.tv_sec = 60;	// 60 second timeout i guess
+			fetchtimeout.tv_usec = 0;
 			FD_ZERO(&fdset);
 			FD_SET(sockfd, &fdset);
-			res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+			res = select(sockfd + 1, &fdset, NULL, NULL, &fetchtimeout);
 			if (res > 0) {
 				if ((numbytes = recv(sockfd, recvbuf, MAXDATASIZE - 1, 0)) == -1) {
 					perror("recv");
@@ -509,17 +721,26 @@ void *imap_thread(void *arg)
 					break;
 				}
 			} else {
-				ERR("IMAP connection failed: timeout");
+				NORM_ERR("IMAP connection failed: timeout");
 				fail++;
 				break;
 			}
 			recvbuf[numbytes] = '\0';
 			DBGP2("imap_thread() received: %s", recvbuf);
 			if (strstr(recvbuf, "* OK") != recvbuf) {
-				ERR("IMAP connection failed, probably not an IMAP server");
+				NORM_ERR("IMAP connection failed, probably not an IMAP server");
 				fail++;
 				break;
 			}
+			strncpy(sendbuf, "abc CAPABILITY\r\n", MAXDATASIZE);
+			if (imap_command(sockfd, sendbuf, recvbuf, "abc OK")) {
+				fail++;
+				break;
+			}
+			if (strstr(recvbuf, " IDLE ") != NULL) {
+				has_idle = 1;
+			}
+
 			strncpy(sendbuf, "a1 login ", MAXDATASIZE);
 			strncat(sendbuf, mail->user, MAXDATASIZE - strlen(sendbuf) - 1);
 			strncat(sendbuf, " ", MAXDATASIZE - strlen(sendbuf) - 1);
@@ -529,13 +750,10 @@ void *imap_thread(void *arg)
 				fail++;
 				break;
 			}
-			if (strstr(recvbuf, " IDLE ") != NULL) {
-				has_idle = 1;
-			}
 
-			strncpy(sendbuf, "a2 STATUS ", MAXDATASIZE);
+			strncpy(sendbuf, "a2 STATUS \"", MAXDATASIZE);
 			strncat(sendbuf, mail->folder, MAXDATASIZE - strlen(sendbuf) - 1);
-			strncat(sendbuf, " (MESSAGES UNSEEN)\r\n",
+			strncat(sendbuf, "\" (MESSAGES UNSEEN)\r\n",
 					MAXDATASIZE - strlen(sendbuf) - 1);
 			if (imap_command(sockfd, sendbuf, recvbuf, "a2 OK")) {
 				fail++;
@@ -552,9 +770,9 @@ void *imap_thread(void *arg)
 			old_messages = mail->messages;
 
 			if (has_idle) {
-				strncpy(sendbuf, "a4 SELECT ", MAXDATASIZE);
+				strncpy(sendbuf, "a4 SELECT \"", MAXDATASIZE);
 				strncat(sendbuf, mail->folder, MAXDATASIZE - strlen(sendbuf) - 1);
-				strncat(sendbuf, "\r\n", MAXDATASIZE - strlen(sendbuf) - 1);
+				strncat(sendbuf, "\"\r\n", MAXDATASIZE - strlen(sendbuf) - 1);
 				if (imap_command(sockfd, sendbuf, recvbuf, "a4 OK")) {
 					fail++;
 					break;
@@ -572,13 +790,13 @@ void *imap_thread(void *arg)
 					 * RFC 2177 says we have to re-idle every 29 minutes.
 					 * We'll do it every 20 minutes to be safe.
 					 */
-					timeout.tv_sec = 1200;
-					timeout.tv_usec = 0;
+					fetchtimeout.tv_sec = 1200;
+					fetchtimeout.tv_usec = 0;
 					DBGP2("idling...");
 					FD_ZERO(&fdset);
 					FD_SET(sockfd, &fdset);
 					FD_SET(threadfd, &fdset);
-					res = select(MAX(sockfd + 1, threadfd + 1), &fdset, NULL, NULL, NULL);
+					res = select(MAX(sockfd + 1, threadfd + 1), &fdset, NULL, NULL, &fetchtimeout);
 					if (timed_thread_test(mail->p_timed_thread, 1) || (res == -1 && errno == EINTR) || FD_ISSET(threadfd, &fdset)) {
 						if ((fstat(sockfd, &stat_buf) == 0) && S_ISSOCK(stat_buf.st_mode)) {
 							/* if a valid socket, close it */
@@ -598,7 +816,7 @@ void *imap_thread(void *arg)
 					recvbuf[numbytes] = '\0';
 					DBGP2("imap_thread() received: %s", recvbuf);
 					if (strlen(recvbuf) > 2) {
-						unsigned long messages, recent;
+						unsigned long messages, recent = 0;
 						char *buf = recvbuf;
 						char force_check = 0;
 						buf = strstr(buf, "EXISTS");
@@ -638,15 +856,15 @@ void *imap_thread(void *arg)
 						 * something other than 0, or we had a timeout
 						 */
 						buf = recvbuf;
-						if (recent > 0 || (buf && strstr(buf, " FETCH ")) || timeout.tv_sec == 0 || force_check) {
+						if (recent > 0 || (buf && strstr(buf, " FETCH ")) || fetchtimeout.tv_sec == 0 || force_check) {
 							// re-check messages and unseen
 							if (imap_command(sockfd, "DONE\r\n", recvbuf, "a5 OK")) {
 								fail++;
 								break;
 							}
-							strncpy(sendbuf, "a2 STATUS ", MAXDATASIZE);
+							strncpy(sendbuf, "a2 STATUS \"", MAXDATASIZE);
 							strncat(sendbuf, mail->folder, MAXDATASIZE - strlen(sendbuf) - 1);
-							strncat(sendbuf, " (MESSAGES UNSEEN)\r\n",
+							strncat(sendbuf, "\" (MESSAGES UNSEEN)\r\n",
 									MAXDATASIZE - strlen(sendbuf) - 1);
 							if (imap_command(sockfd, sendbuf, recvbuf, "a2 OK")) {
 								fail++;
@@ -687,11 +905,11 @@ void *imap_thread(void *arg)
 					fail++;
 					break;
 				}
-				timeout.tv_sec = 60;	// 60 second timeout i guess
-				timeout.tv_usec = 0;
+				fetchtimeout.tv_sec = 60;	// 60 second timeout i guess
+				fetchtimeout.tv_usec = 0;
 				FD_ZERO(&fdset);
 				FD_SET(sockfd, &fdset);
-				res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+				res = select(sockfd + 1, &fdset, NULL, NULL, &fetchtimeout);
 				if (res > 0) {
 					if ((numbytes = recv(sockfd, recvbuf, MAXDATASIZE - 1, 0)) == -1) {
 						perror("recv a3");
@@ -702,7 +920,7 @@ void *imap_thread(void *arg)
 				recvbuf[numbytes] = '\0';
 				DBGP2("imap_thread() received: %s", recvbuf);
 				if (strstr(recvbuf, "a3 OK") == NULL) {
-					ERR("IMAP logout failed: %s", recvbuf);
+					NORM_ERR("IMAP logout failed: %s", recvbuf);
 					fail++;
 					break;
 				}
@@ -721,20 +939,52 @@ void *imap_thread(void *arg)
 	return 0;
 }
 
+void print_imap_unseen(struct text_object *obj, char *p, int p_max_size)
+{
+	struct mail_s *mail = obj->data.opaque;
+
+	if (!mail)
+		return;
+
+	ensure_mail_thread(mail, imap_thread, "imap");
+
+	if (mail && mail->p_timed_thread) {
+		timed_thread_lock(mail->p_timed_thread);
+		snprintf(p, p_max_size, "%lu", mail->unseen);
+		timed_thread_unlock(mail->p_timed_thread);
+	}
+}
+
+void print_imap_messages(struct text_object *obj, char *p, int p_max_size)
+{
+	struct mail_s *mail = obj->data.opaque;
+
+	if (!mail)
+		return;
+
+	ensure_mail_thread(mail, imap_thread, "imap");
+
+	if (mail && mail->p_timed_thread) {
+		timed_thread_lock(mail->p_timed_thread);
+		snprintf(p, p_max_size, "%lu", mail->messages);
+		timed_thread_unlock(mail->p_timed_thread);
+	}
+}
+
 int pop3_command(int sockfd, const char *command, char *response, const char *verify)
 {
-	struct timeval timeout;
+	struct timeval fetchtimeout;
 	fd_set fdset;
 	int res, numbytes = 0;
 	if (send(sockfd, command, strlen(command), 0) == -1) {
 		perror("send");
 		return -1;
 	}
-	timeout.tv_sec = 60;	// 60 second timeout i guess
-	timeout.tv_usec = 0;
+	fetchtimeout.tv_sec = 60;	// 60 second timeout i guess
+	fetchtimeout.tv_usec = 0;
 	FD_ZERO(&fdset);
 	FD_SET(sockfd, &fdset);
-	res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+	res = select(sockfd + 1, &fdset, NULL, NULL, &fetchtimeout);
 	if (res > 0) {
 		if ((numbytes = recv(sockfd, response, MAXDATASIZE - 1, 0)) == -1) {
 			perror("recv");
@@ -749,7 +999,7 @@ int pop3_command(int sockfd, const char *command, char *response, const char *ve
 	return 0;
 }
 
-void *pop3_thread(void *arg)
+static void *pop3_thread(void *arg)
 {
 	int sockfd, numbytes;
 	char recvbuf[MAXDATASIZE];
@@ -763,25 +1013,30 @@ void *pop3_thread(void *arg)
 	char hostbuff[2048];
 	struct sockaddr_in their_addr;	// connector's address information
 	struct mail_s *mail = (struct mail_s *)arg;
+	char resolved_host = 0;
 
-#ifdef HAVE_GETHOSTBYNAME_R
-	if (gethostbyname_r(mail->host, &he, hostbuff, sizeof(hostbuff), &he_res, &he_errno)) {	// get the host info
-		ERR("POP3 gethostbyname_r: %s", hstrerror(h_errno));
-		exit(1);
-	}
-#else /* HAVE_GETHOSTBYNAME_R */
-	if ((he_res = gethostbyname(mail->host)) == NULL) {	// get the host info
-		herror("gethostbyname");
-		exit(1);
-	}
-#endif /* HAVE_GETHOSTBYNAME_R */
 	while (fail < mail->retries) {
-		struct timeval timeout;
+		struct timeval fetchtimeout;
 		int res;
 		fd_set fdset;
-
+		if (!resolved_host) {
+#ifdef HAVE_GETHOSTBYNAME_R
+			if (gethostbyname_r(mail->host, &he, hostbuff, sizeof(hostbuff), &he_res, &he_errno)) {	// get the host info
+				NORM_ERR("POP3 gethostbyname_r: %s", hstrerror(h_errno));
+				fail++;
+				break;
+			}
+#else /* HAVE_GETHOSTBYNAME_R */
+			if ((he_res = gethostbyname(mail->host)) == NULL) {	// get the host info
+				herror("gethostbyname");
+		fail++;
+		break;
+	}
+#endif /* HAVE_GETHOSTBYNAME_R */
+	resolved_host = 1;
+}
 		if (fail > 0) {
-			ERR("Trying POP3 connection again for %s@%s (try %u/%u)",
+			NORM_ERR("Trying POP3 connection again for %s@%s (try %u/%u)",
 					mail->user, mail->host, fail + 1, mail->retries);
 		}
 		do {
@@ -806,11 +1061,11 @@ void *pop3_thread(void *arg)
 				break;
 			}
 
-			timeout.tv_sec = 60;	// 60 second timeout i guess
-			timeout.tv_usec = 0;
+			fetchtimeout.tv_sec = 60;	// 60 second timeout i guess
+			fetchtimeout.tv_usec = 0;
 			FD_ZERO(&fdset);
 			FD_SET(sockfd, &fdset);
-			res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+			res = select(sockfd + 1, &fdset, NULL, NULL, &fetchtimeout);
 			if (res > 0) {
 				if ((numbytes = recv(sockfd, recvbuf, MAXDATASIZE - 1, 0)) == -1) {
 					perror("recv");
@@ -818,14 +1073,14 @@ void *pop3_thread(void *arg)
 					break;
 				}
 			} else {
-				ERR("POP3 connection failed: timeout\n");
+				NORM_ERR("POP3 connection failed: timeout\n");
 				fail++;
 				break;
 			}
 			DBGP2("pop3_thread received: %s", recvbuf);
 			recvbuf[numbytes] = '\0';
 			if (strstr(recvbuf, "+OK ") != recvbuf) {
-				ERR("POP3 connection failed, probably not a POP3 server");
+				NORM_ERR("POP3 connection failed, probably not a POP3 server");
 				fail++;
 				break;
 			}
@@ -841,7 +1096,7 @@ void *pop3_thread(void *arg)
 			strncat(sendbuf, mail->pass, MAXDATASIZE - strlen(sendbuf) - 1);
 			strncat(sendbuf, "\r\n", MAXDATASIZE - strlen(sendbuf) - 1);
 			if (pop3_command(sockfd, sendbuf, recvbuf, "+OK ")) {
-				ERR("POP3 server login failed: %s", recvbuf);
+				NORM_ERR("POP3 server login failed: %s", recvbuf);
 				fail++;
 				break;
 			}
@@ -856,7 +1111,7 @@ void *pop3_thread(void *arg)
 			// now we get the data
 			reply = recvbuf + 4;
 			if (reply == NULL) {
-				ERR("Error parsing POP3 response: %s", recvbuf);
+				NORM_ERR("Error parsing POP3 response: %s", recvbuf);
 				fail++;
 				break;
 			} else {
@@ -864,14 +1119,14 @@ void *pop3_thread(void *arg)
 				sscanf(reply, "%lu %lu", &mail->unseen, &mail->used);
 				timed_thread_unlock(mail->p_timed_thread);
 			}
-			
+
 			strncpy(sendbuf, "QUIT\r\n", MAXDATASIZE);
 			if (pop3_command(sockfd, sendbuf, recvbuf, "+OK")) {
-				ERR("POP3 logout failed: %s", recvbuf);
+				NORM_ERR("POP3 logout failed: %s", recvbuf);
 				fail++;
 				break;
 			}
-			
+
 			if (strlen(mail->command) > 1 && mail->unseen > old_unseen) {
 				// new mail goodie
 				if (system(mail->command) == -1) {
@@ -894,3 +1149,35 @@ void *pop3_thread(void *arg)
 	return 0;
 }
 
+void print_pop3_unseen(struct text_object *obj, char *p, int p_max_size)
+{
+	struct mail_s *mail = obj->data.opaque;
+
+	if (!mail)
+		return;
+
+	ensure_mail_thread(mail, pop3_thread, "pop3");
+
+	if (mail && mail->p_timed_thread) {
+		timed_thread_lock(mail->p_timed_thread);
+		snprintf(p, p_max_size, "%lu", mail->unseen);
+		timed_thread_unlock(mail->p_timed_thread);
+	}
+}
+
+void print_pop3_used(struct text_object *obj, char *p, int p_max_size)
+{
+	struct mail_s *mail = obj->data.opaque;
+
+	if (!mail)
+		return;
+
+	ensure_mail_thread(mail, pop3_thread, "pop3");
+
+	if (mail && mail->p_timed_thread) {
+		timed_thread_lock(mail->p_timed_thread);
+		snprintf(p, p_max_size, "%.1f",
+				mail->used / 1024.0 / 1024.0);
+		timed_thread_unlock(mail->p_timed_thread);
+	}
+}

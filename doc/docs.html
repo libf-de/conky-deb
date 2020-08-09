@@ -1,103 +1,220 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en"><a name="id258082"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the torsmo code, but more kickass.  It just keeps on given'er. Yeah.</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [<em class="replaceable"><code>options</code></em>]</p></div></div><div class="refsect1" lang="en"><a name="id258697"></a><h2>Description</h2><p>
-			Conky is a system monitor for X originally based on torsmo.
-			Since its inception, Conky has changed significantly from its predecessor, while maintaining
-			simplicity and configurability.  Conky can display just about anything, either
-			on your root desktop or in its own window.  Not only does Conky have many
-			built-in objects, it can also display just about any piece of information by
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>conky</title><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" title="conky"><a name="id470378"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>conky &#8212; A system monitor for X originally based on the
+			torsmo code, but more kickass. It just keeps on given'er.
+			Yeah.</p></div><div class="refsynopsisdiv" title="Synopsis"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">conky</code>  [
+				<em class="replaceable"><code>options</code></em>
+			]</p></div></div><div class="refsect1" title="Description"><a name="id504448"></a><h2>Description</h2><p>Conky is a system monitor for X originally based on
+			torsmo. Since its inception, Conky has changed
+			significantly from its predecessor, while maintaining
+			simplicity and configurability. Conky can display just
+			about anything, either on your root desktop or in its own
+			window. Not only does Conky have many built-in objects, it
+			can also display just about any piece of information by
 			using scripts and other external programs.
-		</p><p>
-			Conky has more than 250 built in objects, including support for
-			a plethora of OS stats (uname, uptime, CPU usage, mem usage, disk
-			usage, "top" like process stats, and network monitoring, just to name a few),
-			built in IMAP and POP3 support, built in support for many popular
-			music players (MPD, XMMS2, BMPx, Audacious), and much much more.
-			Conky can display this info either as text,	or using simple progress
-			bars and graph widgets, with different fonts and colours.
-		</p><p>
-			We are always looking for help, whether its reporting bugs, writing patches, or writing docs.
-			Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches,
-			or stop by #conky on irc.freenode.net if you have questions or want to contribute.
-		</p><p>
-			Thanks for your interest in Conky.
-		</p></div><div class="refsect1" lang="en"><a name="id258727"></a><h2>Compiling</h2><p>
-			For users compiling from source on a binary distro, make sure you have the X development
-			libraries installed.  This should be a package along the lines of "libx11-dev" or
-			"xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
-			on your configure options).
-		</p><p>
-			Conky has (for some time) been available in the repositories of most popular distributions.
-			Here are some installation instructions for a few:
-		</p><p>
-			Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
-		</p><p>
-			Debian, etc. users -- Conky should be in your repositories, and can be installed by doing
-			"aptitude install conky".
-		</p><p>
-			Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
+		</p><p>Conky has more than 250 built in objects, including
+			support for a plethora of OS stats (uname, uptime, CPU
+			usage, mem usage, disk usage, "top" like process stats, and
+			network monitoring, just to name a few), built in IMAP and
+			POP3 support, built in support for many popular music
+			players (MPD, XMMS2, BMPx, Audacious), and much much more.
+			Conky can display this info either as text, or using simple
+			progress bars and graph widgets, with different fonts and
+			colours.
+		</p><p>We are always looking for help, whether its reporting
+			bugs, writing patches, or writing docs. Please use the
+			facilities at SourceForge to make bug reports, feature
+			requests, and submit patches, or stop by #conky on
+			irc.freenode.net if you have questions or want to
+			contribute.</p><p>Thanks for your interest in Conky.
+		</p></div><div class="refsect1" title="Compiling"><a name="id469043"></a><h2>Compiling</h2><p>For users compiling from source on a binary distro,
+			make sure you have the X development libraries installed
+			(Unless you provide configure with "--disable-x11"). This
+			should be a package along the lines of "libx11-dev" or
+			"xorg-x11-dev" for X11 libs, and similar "-dev" format for
+			the other libs required (depending on your configure
+			options). You should be able to see which extra packages
+			you need to install by reading errors that you get from
+			'./configure'. You can enable/disable stuff by giving
+			options to configure, but be careful with disabling. For
+			example: with --disable-math you won't get errors but
+			logarithmic graphs will be normal graphs and gauges
+			will miss their line. 
+		</p><p>Conky has (for some time) been available in the
+			repositories of most popular distributions. Here are some
+			installation instructions for a few:
+		</p><p>Gentoo users -- Conky is in Gentoo's Portage...
+			simply use "emerge app-admin/conky" for
+			installation.
+		</p><p>Debian, etc. users -- Conky should be in your
+			repositories, and can be installed by doing "aptitude
+			install conky".
+		</p><p>Example to compile and run Conky with all optional
+			components (note that some configure options may differ for
+			your system):
 		</p><div class="variablelist"><dl><dt><span class="term">
-					<span class="command"><strong><code class="option">sh autogen.sh</code></strong></span> <code class="option"># Only required if building from the git repo</code>
+					<span class="command"><strong>
+						<code class="option">sh autogen.sh</code>
+					</strong></span>
+					<code class="option"># Only required if building from the
+						git repo</code>
 				</span></dt><dd></dd><dt><span class="term">
-					<span class="command"><strong><code class="option">./configure </code></strong></span><code class="option">--prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib --disable-own-window --enable-audacious[=yes|no|legacy] --enable-bmpx --disable-hddtemp --disable-mpd --enable-xmms2 --disable-portmon --disable-network --enable-debug --disable-x11 --disable-double-buffer --disable-xdamage --disable-xft</code>
+					<span class="command"><strong>
+						<code class="option">./configure</code>
+					</strong></span>
+					<code class="option">--prefix=/usr --mandir=/usr/share/man
+						--infodir=/usr/share/info --datadir=/usr/share
+						--sysconfdir=/etc --localstatedir=/var/lib
+						--disable-own-window
+						--enable-audacious[=yes|no|legacy]
+						--enable-bmpx --disable-hddtemp --disable-mpd
+						--enable-xmms2 --disable-portmon
+						--disable-network --enable-debug --disable-x11
+						--disable-double-buffer --disable-xdamage
+						--disable-xft</code>
 				</span></dt><dd></dd><dt><span class="term">
-					<span class="command"><strong><code class="option">make</code></strong></span>
+					<span class="command"><strong>
+						<code class="option">make</code>
+					</strong></span>
 				</span></dt><dd></dd><dt><span class="term">
-					<span class="command"><strong><code class="option">make install</code></strong></span> <code class="option"># Optional</code>
+					<span class="command"><strong>
+						<code class="option">make install</code>
+					</strong></span>
+					<code class="option"># Optional</code>
 				</span></dt><dd></dd><dt><span class="term">
-					<span class="command"><strong><code class="option">src/conky</code></strong></span>
-				</span></dt><dd></dd></dl></div><p>
-			Conky has been tested to be compatible with C99 C, however it has not been tested
-			with anything other than gcc, and is not guaranteed to work with other compilers.
-		</p><p>
-
-		</p></div><div class="refsect1" lang="en"><a name="id259102"></a><h2>You Should Know</h2><p>
-			Conky is generally very good on resources.  That said, the more you try to make Conky
-			do, the more resources it is going to consume.
-		</p><p>
-			An easy way to force Conky to reload your ~/.conkyrc: "killall -SIGUSR1 conky".
-			Saves you the trouble of having to kill and then restart.  You can now also do the same with SIGHUP.
-		</p></div><div class="refsect1" lang="en"><a name="id259118"></a><h2>Options</h2><p>Command line options override configurations defined in configuration file.</p><div class="variablelist"><dl><dt><span class="term"><span class="command"><strong><code class="option">-v | -V | --version</code></strong></span></span></dt><dd>
-			Prints version and exits
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-q | --quiet</code></strong></span></span></dt><dd>
-			Run Conky in 'quiet mode' (ie. no output)
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-D | --debug</code></strong></span></span></dt><dd>
-			Increase debugging output, ie. -DD for more debugging
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-a | --alignment=</code></strong></span><code class="option">ALIGNMENT</code></span></dt><dd>
-			Text alignment on screen, {top,bottom,middle}_{left,right,middle} or none.  Can also be abbreviated with first chars of position, ie. tr for top_right.
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-b | --double-buffer</code></strong></span></span></dt><dd>
-			Use double buffering (eliminates "flicker")
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-c | --config=</code></strong></span><code class="option">FILE</code></span></dt><dd>
-			Config file to load instead of $HOME/.conkyrc
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-C | --print-config</code></strong></span></span></dt><dd>
-			Print builtin default config to stdout. See also the section EXAMPLES for more information.
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-d | --daemonize</code></strong></span></span></dt><dd>
-			Daemonize Conky, aka fork to background
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-f | --font=</code></strong></span><code class="option">FONT</code></span></dt><dd>
-			Font to use
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-h | --help</code></strong></span></span></dt><dd>
-			Prints command line help and exits
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-o | --own-window</code></strong></span></span></dt><dd>
-			Create own window to draw
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-t | --text=</code></strong></span><code class="option">TEXT</code></span></dt><dd>
-			Text to render, remember single quotes, like -t ' $uptime '
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-u | --interval=</code></strong></span><code class="option">SECONDS</code></span></dt><dd>
-			Update interval
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-w | --window-id=</code></strong></span><code class="option">WIN_ID</code></span></dt><dd>
-			Window id to draw
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-X | --display=</code></strong></span><code class="option">DISPLAY</code></span></dt><dd>
-			X11 display to use
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-x </code></strong></span><code class="option">X_COORDINATE</code></span></dt><dd>
-			X position
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-y </code></strong></span><code class="option">Y_COORDINATE</code></span></dt><dd>
-			Y position
-			<p></p></dd><dt><span class="term"><span class="command"><strong><code class="option">-i </code></strong></span><code class="option">COUNT</code></span></dt><dd>
-			Number of times to update Conky (and quit)
-			<p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id302982"></a><h2>Configuration Settings</h2><p>
-			Default configuration file location is $HOME/.conkyrc or
-			${sysconfdir}/conky/conky.conf.  On most systems, sysconfdir is /etc,
-			and you can find the sample config file there (/etc/conky/conky.conf).
-		</p><p>
-			You might want to copy it to $HOME/.conkyrc and then start modifying it.
-			Other configs can be found at http://conky.sf.net/
+					<span class="command"><strong>
+						<code class="option">src/conky</code>
+					</strong></span>
+				</span></dt><dd></dd></dl></div><p>Conky has been tested to be compatible with C99 C,
+			however it has not been tested with anything other than
+			gcc, and is not guaranteed to work with other
+			compilers.
+		</p><p></p></div><div class="refsect1" title="You Should Know"><a name="id469655"></a><h2>You Should Know</h2><p>Conky is generally very good on resources. That said,
+			the more you try to make Conky do, the more resources it is
+			going to consume.
+		</p><p>An easy way to force Conky to reload your ~/.conkyrc:
+			"killall -SIGUSR1 conky". Saves you the trouble of having
+			to kill and then restart. You can now also do the same with
+			SIGHUP.
+		</p></div><div class="refsect1" title="Options"><a name="id469671"></a><h2>Options</h2><p>Command line options override configurations defined in
+			configuration file.
+		</p><div class="variablelist"><dl><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-v | -V | --version</code>
+            </strong></span>
+        </span></dt><dd>Prints version and exits 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-q | --quiet</code>
+            </strong></span>
+        </span></dt><dd>Run Conky in 'quiet mode' (ie. no output) 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-D | --debug</code>
+            </strong></span>
+        </span></dt><dd>Increase debugging output, ie. -DD for more
+        debugging 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-a | --alignment=</code>
+            </strong></span>
+            <code class="option">ALIGNMENT</code>
+        </span></dt><dd>Text alignment on screen,
+        {top,bottom,middle}_{left,right,middle} or none. Can also
+        be abbreviated with first chars of position, ie. tr for
+        top_right. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-b | --double-buffer</code>
+            </strong></span>
+        </span></dt><dd>Use double buffering (eliminates "flicker") 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-c | --config=</code>
+            </strong></span>
+            <code class="option">FILE</code>
+        </span></dt><dd>Config file to load instead of $HOME/.conkyrc 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-C | --print-config</code>
+            </strong></span>
+        </span></dt><dd>Print builtin default config to stdout. See also
+        the section EXAMPLES for more information. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-d | --daemonize</code>
+            </strong></span>
+        </span></dt><dd>Daemonize Conky, aka fork to background 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-f | --font=</code>
+            </strong></span>
+            <code class="option">FONT</code>
+        </span></dt><dd>Font to use 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-h | --help</code>
+            </strong></span>
+        </span></dt><dd>Prints command line help and exits 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-o | --own-window</code>
+            </strong></span>
+        </span></dt><dd>Create own window to draw 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-t | --text=</code>
+            </strong></span>
+            <code class="option">TEXT</code>
+        </span></dt><dd>Text to render, remember single quotes, like -t '
+        $uptime ' 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-p | --pause=</code>
+            </strong></span>
+            <code class="option">SECONDS</code>
+        </span></dt><dd>Time to pause before actually starting Conky
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-u | --interval=</code>
+            </strong></span>
+            <code class="option">SECONDS</code>
+        </span></dt><dd>Update interval 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-w | --window-id=</code>
+            </strong></span>
+            <code class="option">WIN_ID</code>
+        </span></dt><dd>Window id to draw 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-X | --display=</code>
+            </strong></span>
+            <code class="option">DISPLAY</code>
+        </span></dt><dd>X11 display to use 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-x</code>
+            </strong></span>
+            <code class="option">X_COORDINATE</code>
+        </span></dt><dd>X position 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-y</code>
+            </strong></span>
+            <code class="option">Y_COORDINATE</code>
+        </span></dt><dd>Y position 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">-i</code>
+            </strong></span>
+            <code class="option">COUNT</code>
+        </span></dt><dd>Number of times to update Conky (and quit) 
+        <p></p></dd></dl></div></div><div class="refsect1" title="Configuration Settings"><a name="id514306"></a><h2>Configuration Settings</h2><p>Default configuration file location is $HOME/.conkyrc or
+			${sysconfdir}/conky/conky.conf. On most systems, sysconfdir is
+			/etc, and you can find the sample config file there
+			(/etc/conky/conky.conf).
+		</p><p>You might want to copy it to $HOME/.conkyrc and then
+			start modifying it. Other configs can be found at
+			http://conky.sf.net/
 		</p><div class="variablelist"><dl><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">TEXT</code>
@@ -108,25 +225,13 @@
         used to pipe input to dzen2. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
-                <code class="option">alias</code>
-            </strong></span>
-        </span></dt><dd>Use this to create aliases of variables. The
-        first argument is the new name, the second the old name,
-        and the other arguments are passed on to the variable.
-        Example: If you want to use $alpha instead of ${beta gamma
-        delta} then you have to write the following: alias alpha
-        beta gamma delta . PS: Instead of creating an alias in the
-        config you can also use environment variables. Example:
-        Start conky like this: alpha="beta gamma delta" conky 
-        <p></p></dd><dt><span class="term">
-            <span class="command"><strong>
                 <code class="option">alignment</code>
             </strong></span>
         </span></dt><dd>Aligned position on screen, may be top_left,
         top_right, top_middle, bottom_left, bottom_right,
-        bottom_middle, middle_left, middle_right, or none (also can
-        be abreviated as tl, tr, tm, bl, br, bm, ml, mr). See also
-        gap_x and gap_y. 
+        bottom_middle, middle_left, middle_middle, middle_right, or
+        none (also can be abreviated as tl, tr, tm, bl, br, bm, ml,
+        mm, mr). See also gap_x and gap_y.
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">append_file</code>
@@ -140,9 +245,16 @@
         background when started. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
-                <code class="option">border_margin</code>
+                <code class="option">border_inner_margin</code>
             </strong></span>
-        </span></dt><dd>Border margin in pixels. 
+        </span></dt><dd>Inner border margin in pixels (the margin between
+        the border and text). 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">border_outer_margin</code>
+            </strong></span>
+        </span></dt><dd>Outer border margin in pixels (the margin between
+        the border and the edge of the window). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">border_width</code>
@@ -203,6 +315,11 @@
         </span></dt><dd>Default shading color and border's shading color 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">disable_auto_reload</code>
+            </strong></span>
+        </span></dt><dd>Enable to disable the inotify-based auto config reload feature.
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">diskio_avg_samples</code>
             </strong></span>
         </span></dt><dd>The number of samples to average for disk I/O
@@ -241,10 +358,23 @@
         </span></dt><dd>Draw shades? 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">extra_newline</code>
+            </strong></span>
+        </span></dt><dd>Put an extra newline at the end when writing to
+        stdout, useful for writing to awesome's wiboxes. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">font</code>
             </strong></span>
         </span></dt><dd>Font name in X, xfontsel can be used to get a
         nice font 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">format_human_readable</code>
+            </strong></span>
+        </span></dt><dd>If enabled, values which are in bytes will be
+        printed in human readable format (i.e., KiB, MiB, etc). If
+        disabled, the number of bytes is printed instead. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">gap_x</code>
@@ -261,6 +391,18 @@
         For other position related stuff, see 'alignment'. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">hddtemp_host</code>
+            </strong></span>
+        </span></dt><dd>Hostname to connect to for hddtemp objects. Defaults
+		to "127.0.0.1".
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">hddtemp_port</code>
+            </strong></span>
+        </span></dt><dd>Port to use for hddtemp connections. Defaults to
+		7634.
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">if_up_strictness</code>
             </strong></span>
         </span></dt><dd>How strict should if_up be when testing an
@@ -273,25 +415,81 @@
                 <code class="option">imap</code>
             </strong></span>
         </span></dt><dd>Default global IMAP server. Arguments are: "host
-        user pass [-i interval (in seconds)] [-f folder] [-p port]
-        [-e command] [-r retries]". Default port is 143, default
+        user pass [-i interval (in seconds)] [-f 'folder'] [-p port]
+        [-e 'command'] [-r retries]". Default port is 143, default
         folder is 'INBOX', default interval is 5 minutes, and
         default number of retries before giving up is 5. If the
         password is supplied as '*', you will be prompted to enter
         the password when Conky starts. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">imlib_cache_flush_interval</code>
+            </strong></span>
+        </span></dt><dd>Interval (in seconds) to flush Imlib2 cache. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">imlib_cache_size</code>
             </strong></span>
-        </span></dt><dd>IMLIB2 image cache size, in bytes. Defaults to
-        4MiB. Increase this value if you use $image lots. Set to 0
-        to disable the image cache. 
-        <p></p></dd><dt><span class="term">
+        </span></dt><dd>
+            Imlib2 image cache size, in bytes. Defaults to
+            4MiB. Increase this value if you use $image lots. Set
+            to 0 to disable the image cache.<p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">lua_draw_hook_post</code>
+            </strong></span>
+            <code class="option">function_name [function arguments]</code>
+        </span></dt><dd>
+            This function, if defined, will be called by
+            Conky through each iteration after drawing to the
+            window. Requires X support. Takes any number of
+            optional arguments. Use this hook for drawing things on
+            top of what Conky draws. Conky puts 'conky_' in front
+            of function_name to prevent accidental calls to the
+            wrong function unless you place 'conky_' in front of it
+            yourself.<p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">lua_draw_hook_pre</code>
+            </strong></span>
+            <code class="option">function_name [function arguments]</code>
+        </span></dt><dd>
+            This function, if defined, will be called by
+            Conky through each iteration before drawing to the
+            window. Requires X support. Takes any number of
+            optional arguments. Use this hook for drawing things on
+            top of what Conky draws. Conky puts 'conky_' in front
+            of function_name to prevent accidental calls to the
+            wrong function unless you place 'conky_' in front of it
+            yourself.<p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">lua_load</code>
             </strong></span>
         </span></dt><dd>Loads the Lua scripts separated by spaces. 
         <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">lua_shutdown_hook</code>
+            </strong></span>
+            <code class="option">function_name [function arguments]</code>
+        </span></dt><dd>
+            This function, if defined, will be called by
+            Conky at shutdown or when the configuration is
+            reloaded. Use this hook to clean up after yourself,
+            such as freeing memory which has been allocated by
+            external libraries via Lua. Conky puts 'conky_' in
+            front of function_name to prevent accidental calls to
+            the wrong function unless you place 'conky_' in
+            front of it yourself.<p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">lua_startup_hook</code>
+            </strong></span>
+            <code class="option">function_name [function arguments]</code>
+        </span></dt><dd>
+            This function, if defined, will be called by
+            Conky at startup or when the configuration is reloaded.
+            Use this hook to initialize values, or for any run-once
+            applications. Conky puts 'conky_' in front of
+            function_name to prevent accidental calls to the wrong
+            function unless you place 'conky_' in front of
+            it yourself.<p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">mail_spool</code>
             </strong></span>
@@ -308,6 +506,15 @@
             </strong></span>
         </span></dt><dd>Maximum number of special things, e.g. fonts,
         offsets, aligns, etc. (default is 512) 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">max_text_width</code>
+            </strong></span>
+            <code class="option">width</code>
+        </span></dt><dd>When a line in the output contains 'width'
+	chars and the end isn't reached, the next char will start
+	on a new line. If you want to make sure that lines don't
+	get broken, set 'width' to 0
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">max_user_text</code>
@@ -357,13 +564,20 @@
             <span class="command"><strong>
                 <code class="option">no_buffers</code>
             </strong></span>
-        </span></dt><dd>Substract (file system) buffers from used memory?
+        </span></dt><dd>Subtract (file system) buffers from used memory?
         
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">out_to_console</code>
             </strong></span>
         </span></dt><dd>Print text to stdout. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">out_to_ncurses</code>
+            </strong></span>
+        </span></dt><dd>Print text in the console, but use ncurses so
+        that conky can print the text of a new update over the old
+        text. (In the future this will provide more useful things) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">out_to_stderr</code>
@@ -406,8 +620,8 @@
             <code class="option">colour</code>
         </span></dt><dd>If own_window_transparent no, set a specified
         background colour (defaults to black). Takes either a hex
-        value (#ffffff) or a valid RGB name (see
-        /usr/lib/X11/rgb.txt) 
+        value (e.g. ffffff, note the lack of '#') or a valid RGB
+        name (see /usr/lib/X11/rgb.txt)
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">own_window_hints</code>
@@ -428,21 +642,38 @@
         "&lt;hostname&gt; - conky". 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">own_window_argb_visual</code>
+            </strong></span>
+        </span></dt><dd>Boolean, use ARGB visual? ARGB can be used for real
+			transparency, note that a composite manager is required for real
+			transparency.  This option will not work as desired (in most cases)
+			in conjunction with 'own_window_type override'.
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">own_window_argb_value</code>
+            </strong></span>
+        </span></dt><dd>When ARGB visuals are enabled, this use this to modify the alpha value used.  Valid range is 0-255, where 0 is 0% opacity, and 255 is 100% opacity.  Note that if own_window_transparent is enabled, this value has no effect.
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">own_window_transparent</code>
             </strong></span>
-        </span></dt><dd>Boolean, set pseudo-transparency? 
+        </span></dt><dd>Boolean, set transparency? If ARGB visual is enabled, sets
+			background opacity to 0%.
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">own_window_type</code>
             </strong></span>
         </span></dt><dd>if own_window is yes, you may specify type
-        normal, desktop, dock or override (default: normal).
+        normal, desktop, dock, panel or override (default: normal).
         Desktop windows are special windows that have no window
         decorations; are always visible on your desktop; do not
         appear in your pager or taskbar; and are sticky across all
-        workspaces. Override windows are not under the control of
-        the window manager. Hints are ignored. This type of window
-        can be useful for certain situations. 
+        workspaces. Panel windows reserve space along a desktop
+        edge, just like panels and taskbars, preventing maximized
+        windows from overlapping them. The edge is chosen based on
+        the alignment option. Override windows are not under the
+        control of the window manager. Hints are ignored. This type
+        of window can be useful for certain situations. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">pad_percents</code>
@@ -454,7 +685,7 @@
                 <code class="option">pop3</code>
             </strong></span>
         </span></dt><dd>Default global POP3 server. Arguments are: "host
-        user pass [-i interval (in seconds)] [-p port] [-e command]
+        user pass [-i interval (in seconds)] [-p port] [-e 'command']
         [-r retries]". Default port is 110, default interval is 5
         minutes, and default number of retries before giving up is
         5. If the password is supplied as '*', you will be prompted
@@ -496,7 +727,7 @@
         inclusively. The value of the variable is being inserted
         into the stuff below TEXT at the corresponding position,
         but before some substitutions are applied: 
-        <table class="simplelist" border="0" summary="Simple list"><tr><td>'\n' -&gt; newline</td></tr><tr><td>'\\' -&gt; backslash</td></tr><tr><td>'\ ' -&gt; space</td></tr><tr><td>'\N' -&gt; template argument N</td></tr></table><p></p></dd><dt><span class="term">
+        <table border="0" summary="Simple list" class="simplelist"><tr><td>'\n' -&gt; newline</td></tr><tr><td>'\\' -&gt; backslash</td></tr><tr><td>'\ ' -&gt; space</td></tr><tr><td>'\N' -&gt; template argument N</td></tr></table><p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">text_buffer_size</code>
             </strong></span>
@@ -508,6 +739,13 @@
         drastically reduce Conky's performance, but will allow for
         more text display per variable. The size of this buffer
         cannot be smaller than the default value of 256 bytes. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">times_in_seconds</code>
+            </strong></span>
+        </span></dt><dd>If true, variables that output times output a number
+	that represents seconds. This doesn't affect $time, $tztime and
+	$utime
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">top_cpu_separate</code>
@@ -531,7 +769,14 @@
             <span class="command"><strong>
                 <code class="option">update_interval</code>
             </strong></span>
-        </span></dt><dd>Update interval in seconds 
+            <code class="option">seconds</code>
+        </span></dt><dd>Update interval 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">update_interval_on_battery</code>
+            </strong></span>
+            <code class="option">seconds</code>
+        </span></dt><dd>Update interval when running on batterypower 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">uppercase</code>
@@ -564,16 +809,27 @@
                 <code class="option">xftfont</code>
             </strong></span>
         </span></dt><dd>Xft font to use. 
-        <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id305963"></a><h2>Variables</h2><p>
-			Colors are parsed using XParsecolor(), there might be a list of them:
-			/usr/share/X11/rgb.txt. Also, <a class="ulink" href="http://sedition.com/perl/rgb.html" target="_top">
-				http://sedition.com/perl/rgb.html</a>.
-			Color can be also in #rrggbb format (hex).
+        <p></p></dd></dl></div></div><div class="refsect1" title="Objects/Variables"><a name="id518012"></a><h2>Objects/Variables</h2><p>Colours are parsed using XParsecolor(), there might be a
+			list of them: /usr/share/X11/rgb.txt. 
+			Colour can be also in
+			#rrggbb format (hex).
+		</p><p>
+			Some objects may create threads, and sometimes these threads will
+			not be destroyed until Conky terminates.  There is no way to
+			destroy or clean up threads while Conky is running.  For example,
+			if you use an MPD variable, the MPD thread will keep running until
+			Conky dies.  Some threaded objects will use one of the parameters
+			as a 'key', so that you only have 1 relevant thread running (for
+			example, the $curl, $rss and $weather objects launch one thread per
+			URI).
 		</p><div class="variablelist"><dl><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">acpiacadapter</code>
             </strong></span>
-        </span></dt><dd>ACPI ac adapter state. 
+            <code class="option">(adapter)</code>
+        </span></dt><dd>ACPI ac adapter state. On linux, the adapter option specifies the
+        subfolder of /sys/class/power_supply containing the state information (defaults
+        to "AC"). Other systems ignore it.
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">acpifan</code>
@@ -588,14 +844,14 @@
             <span class="command"><strong>
                 <code class="option">addr</code>
             </strong></span>
-            <code class="option">interface</code>
+            <code class="option">(interface)</code>
         </span></dt><dd>IP address for an interface, or "No Address" if
         no address is assigned. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">addrs</code>
             </strong></span>
-            <code class="option">interface</code>
+            <code class="option">(interface)</code>
         </span></dt><dd>IP addresses for an interface (if one - works
         like addr). Linux only. 
         <p></p></dd><dt><span class="term">
@@ -668,6 +924,8 @@
             <span class="command"><strong>
                 <code class="option">apcupsd_loadgraph</code>
             </strong></span>
+            <code class="option">(height),(width) (gradient colour 1) (gradient
+            colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>History graph of current load. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
@@ -823,8 +1081,9 @@
         </span></dt><dd>Battery status and remaining percentage capacity
         of ACPI or APM battery. ACPI battery number can be given as
         argument (default is BAT0). This mode display a short
-        status, which means that C is displayed instead of charging
-        and D is displayed instead of discharging. 
+        status, which means that C is displayed instead of
+        charging, D for discharging, F for full, N for not present,
+        E for empty and U for unknown. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">battery_time</code>
@@ -833,6 +1092,13 @@
         </span></dt><dd>Battery charge/discharge time remaining of ACPI
         battery. ACPI battery number can be given as argument
         (default is BAT0). 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">blink</code>
+            </strong></span>
+            <code class="option">text_and_other_conky_vars</code>
+        </span></dt><dd>Let 'text_and_other_conky_vars' blink on and off.
+        
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">bmpx_album</code>
@@ -875,10 +1141,20 @@
         </span></dt><dd>Amount of memory cached 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">cmdline_to_pid</code>
+            </strong></span>
+            <code class="option">string</code>
+        </span></dt><dd>PID of the first process that has string in it's
+	commandline
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">color</code>
             </strong></span>
             <code class="option">(color)</code>
-        </span></dt><dd>Change drawing color to color 
+        </span></dt><dd>Change drawing color to 'color' which is a name of
+        a color or a hexcode preceded with # (for example #0A1B2C ).
+        If you use ncurses only the following colors are supported:
+	red,green,yellow,blue,magenta,cyan,black,white.
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">colorN</code>
@@ -891,7 +1167,7 @@
             </strong></span>
             <code class="option">var1 var2</code>
         </span></dt><dd>Places the lines of var2 to the right of the
-        lines of var1 seperated by the chars that are put between
+        lines of var1 separated by the chars that are put between
         var1 and var2. For example: ${combine ${head /proc/cpuinfo
         2} - ${head /proc/meminfo 1}} gives as output
         "cpuinfo_line1 - meminfo_line1" on line 1 and
@@ -940,13 +1216,45 @@
             <span class="command"><strong>
                 <code class="option">cpugraph</code>
             </strong></span>
-            <code class="option">(cpuN) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</code>
+            <code class="option">(cpuN) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>CPU usage graph, with optional colours in hex,
         minus the #. See $cpu for more info on SMP. Uses a
-        logarithmic scale (to see small numbers) when you use "log"
-        instead of "normal". 
+        logarithmic scale (to see small numbers) when you use the
+        -l switch. Takes the switch '-t' to use a temperature
+        gradient, which makes the gradient values change depending
+        on the amplitude of a particular graph value (try it and
+        see). 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">curl</code>
+            </strong></span>
+            <code class="option">url (interval_in_minutes)</code>
+        </span></dt><dd><p>Download data from URI using Curl at the
+            specified interval. The interval may be a floating
+            point value greater than 0, otherwise defaults to 15
+            minutes. Most useful when used in conjunction with Lua
+            and the Lua API. This object is threaded, and once a
+            thread is created it can't be explicitly destroyed.
+            One thread will run for each URI specified. You can use
+            any protocol that Curl supports.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">desktop</code>
+            </strong></span>
+        </span></dt><dd>Number of the desktop on which conky is running
+        or the message "Not running in X" if this is the case. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">desktop_name</code>
+            </strong></span>
+        </span></dt><dd>Name of the desktop on which conky is running or
+        the message "Not running in X" if this is the case. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">desktop_number</code>
+            </strong></span>
+        </span></dt><dd>Number of desktops or the message "Not running in
+        X" if this is the case. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">disk_protect</code>
@@ -981,60 +1289,66 @@
             <span class="command"><strong>
                 <code class="option">diskiograph</code>
             </strong></span>
-            <code class="option">(device) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</code>
+            <code class="option">(device) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>Disk IO graph, colours defined in hex, minus the
         #. If scale is non-zero, it becomes the scale for the
         graph. Uses a logarithmic scale (to see small numbers) when
-        you use "log" instead of "normal". 
+        you use -l switch. Takes the switch '-t' to use a
+        temperature gradient, which makes the gradient values
+        change depending on the amplitude of a particular graph
+        value (try it and see). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">diskiograph_read</code>
             </strong></span>
-            <code class="option">(device) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</code>
+            <code class="option">(device) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>Disk IO graph for reads, colours defined in hex,
         minus the #. If scale is non-zero, it becomes the scale for
         the graph. Device as in diskio. Uses a logarithmic scale
-        (to see small numbers) when you use "log" instead of
-        "normal". 
+        (to see small numbers) when you use -l switch. Takes the
+        switch '-t' to use a temperature gradient, which makes the
+        gradient values change depending on the amplitude of a
+        particular graph value (try it and see). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">diskiograph_write</code>
             </strong></span>
-            <code class="option">(device) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</code>
+            <code class="option">(device) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>Disk IO graph for writes, colours defined in hex,
         minus the #. If scale is non-zero, it becomes the scale for
         the graph. Device as in diskio. Uses a logarithmic scale
-        (to see small numbers) when you use "log" instead of
-        "normal". 
+        (to see small numbers) when you use -l switch. Takes the
+        switch '-t' to use a temperature gradient, which makes the
+        gradient values change depending on the amplitude of a
+        particular graph value (try it and see). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">downspeed</code>
             </strong></span>
-            <code class="option">net</code>
-        </span></dt><dd>Download speed in KiB 
+            <code class="option">(net)</code>
+        </span></dt><dd>Download speed in suitable IEC units 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">downspeedf</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Download speed in KiB with one decimal 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">downspeedgraph</code>
             </strong></span>
-            <code class="option">(netdev) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</code>
+            <code class="option">(netdev) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>Download speed graph, colours defined in hex,
         minus the #. If scale is non-zero, it becomes the scale for
         the graph. Uses a logarithmic scale (to see small numbers)
-        when you use "log" instead of "normal". 
+        when you use -l switch. Takes the switch '-t' to use a
+        temperature gradient, which makes the gradient values
+        change depending on the amplitude of a particular graph
+        value (try it and see). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">draft_mails</code>
@@ -1069,6 +1383,12 @@
         freaks 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">entropy_perc</code>
+            </strong></span>
+        </span></dt><dd>Percentage of entropy available in comparison to
+        the poolsize 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">entropy_poolsize</code>
             </strong></span>
         </span></dt><dd>Total size of system entropy pool for crypto
@@ -1078,7 +1398,7 @@
                 <code class="option">eval</code>
             </strong></span>
             <code class="option">string</code>
-        </span></dt><dd>Evalutates given string according to the rules of
+        </span></dt><dd>Evaluates given string according to the rules of
         TEXT interpretation, i.e. parsing any contained text object
         specifications into their output, any occuring '$$' into a
         single '$' and so on. The output is then being parsed
@@ -1122,13 +1442,16 @@
             <span class="command"><strong>
                 <code class="option">execgraph</code>
             </strong></span>
-            <code class="option">("normal"|"log") (height),(width) (gradient
-            colour 1) (gradient colour 2) (scale) command</code>
+            <code class="option">(-t) (-l) command</code>
         </span></dt><dd>Same as execbar, but graphs values. Uses a
-        logaritmic scale when the log option is given (to see small
-        numbers). Values still have to be between 0 and 100. The
-        size for graphs can be controlled via the
-        default_graph_size config setting. 
+        logaritmic scale when the log option (-l switch) is given
+        (to see small numbers). Values still have to be between 0
+        and 100. The size for graphs can be controlled via the
+        default_graph_size config setting. Takes the switch '-t' to
+        use a temperature gradient, which makes the gradient values
+        change depending on the amplitude of a particular graph
+        value (try it and see). If -t or -l is your first argument,
+        you may need to preceed it by a space (' '). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">execi</code>
@@ -1154,9 +1477,10 @@
             <span class="command"><strong>
                 <code class="option">execigraph</code>
             </strong></span>
-            <code class="option">interval command</code>
+            <code class="option">interval (-t) (-l) command</code>
         </span></dt><dd>Same as execgraph, but takes an interval arg and
-        graphs values. 
+        graphs values. If -t or -l is your first argument, you may
+        need to preceed it by a space (' '). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">execp</code>
@@ -1202,6 +1526,24 @@
         apply to the current line and everything following. You can
         use a $font with no arguments to change back to the default
         font (much like with $color) 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">format_time</code>
+            </strong></span>
+            <code class="option">seconds format</code>
+        </span></dt><dd>Format time given in seconds. This var only works when
+	the times_in_seconds configuration setting is on. Format is a string
+	that should start and end with a "-char. The "-chars are not
+	part of the output, \w,\d,\h,\m,\s,\(,\) and \\ are replaced by
+	weeks,days,hours,minutes,seconds,(,) and \. If you leave out a unit,
+	it's value will be expressed in the highest unite lower then the
+	one left out. Text between ()-chars will not be visible if a
+	replaced unit in this text is 0. If seconds is a decimal number
+	then you can see the numbers behind the point by using \S
+	followed by a number that specifies the amount of
+	digits behind the point that you want to see (maximum 9).
+	You can also place a 'x' behind \S so you have all digits behind
+	the point and no trailing zero's. (also maximum 9)
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">forwarded_mails</code>
@@ -1301,20 +1643,21 @@
             <span class="command"><strong>
                 <code class="option">hddtemp</code>
             </strong></span>
-            <code class="option">dev, (host,(port))</code>
+            <code class="option">(dev)</code>
         </span></dt><dd>Displays temperature of a selected hard disk
-        drive as reported by the hddtemp daemon running on
-        host:port. Default host is 127.0.0.1, default port is 7634.
-        
+		drive as reported by the hddtemp daemon. Use hddtemp_host
+		and hddtemp_port to specify a host and port for all hddtemp
+		objects. If no dev parameter is given, the first disk returned
+		by the hddtemp daemon is used.
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">head</code>
             </strong></span>
-            <code class="option">logfile lines (interval)</code>
-        </span></dt><dd>Displays first N lines of supplied text text
-        file. If interval is not supplied, Conky assumes 2x Conky's
-        interval. Max of 30 lines can be displayed, or until the
-        text buffer is filled. 
+            <code class="option">logfile lines (next_check)</code>
+        </span></dt><dd>Displays first N lines of supplied text file. The
+        file is checked every 'next_check' update. If next_check is
+        not supplied, Conky defaults to 2. Max of 30 lines can be
+        displayed, or until the text buffer is filled. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">hr</code>
@@ -1507,14 +1850,13 @@
         right side. Left and right sides are being parsed for
         contained text objects before evaluation. Recognised left
         and right side types are: 
-        <table class="simplelist" border="0" summary="Simple list"><tr><td>
-            <span class="command"><strong>double</strong></span>: argument consists of only
+        <table border="0" summary="Simple list" class="simplelist"><tr><td>
+            <span class="command"><strong>double</strong></span>Argument consists of only
             digits and a single dot.</td></tr><tr><td>
-            <span class="command"><strong>long</strong></span>: argument consists of only
+            <span class="command"><strong>long</strong></span>Argument consists of only
             digits.</td></tr><tr><td>
-            <span class="command"><strong>string</strong></span>: argument is enclosed in
-            quotation mark or the checks for double and long failed
-            before.</td></tr></table>Valid operands are: '&gt;', '&lt;', '&gt;=',
+            <span class="command"><strong>string</strong></span>Argument is enclosed in
+            quotation marks (")</td></tr></table>Valid operands are: '&gt;', '&lt;', '&gt;=',
         '&lt;=', '==', '!='. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
@@ -1582,20 +1924,24 @@
             <span class="command"><strong>
                 <code class="option">image</code>
             </strong></span>
-            <code class="option">&lt;path to image&gt; (-p x,y) (-s
-            WxH)</code>
+            <code class="option">&lt;path to image&gt; (-p x,y) (-s WxH) (-n)
+            (-f interval)</code>
         </span></dt><dd>Renders an image from the path specified using
-        IMLIB2. Takes 2 optional arguments, one being a position,
-        the other an size. Changing the x,y position will move the
-        position of the image, and changing the WxH will scale the
-        image. Example: ${image /home/brenden/cheeseburger.jpg -p
-        20,20 -s 200x200} will render 'cheeseburger.jpg' at (20,20)
-        scaled to 200x200 pixels. Conky does not make any attempt
-        to adjust the position (or any other formatting) of images,
-        they are just rendered as per the arguments passed. The
-        only reason $image is part of the TEXT section, is to allow
-        for runtime modifications, through $execp $lua_parse,
-        $lua_read_parse, or some other method. 
+        Imlib2. Takes 4 optional arguments: a position, a size, a
+        no-cache switch, and a cache flush interval. Changing the
+        x,y position will move the position of the image, and
+        changing the WxH will scale the image. If you specify the
+        no-cache flag (-n), the image will not be cached.
+        Alternately, you can specify the -f int switch to specify a
+        cache flust interval for a particular image. Example:
+        ${image /home/brenden/cheeseburger.jpg -p 20,20 -s 200x200}
+        will render 'cheeseburger.jpg' at (20,20) scaled to 200x200
+        pixels. Conky does not make any attempt to adjust the
+        position (or any other formatting) of images, they are just
+        rendered as per the arguments passed. The only reason
+        $image is part of the TEXT section, is to allow for runtime
+        modifications, through $execp $lua_parse, or some other
+        method. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">imap_messages</code>
@@ -1603,9 +1949,9 @@
             <code class="option">(args)</code>
         </span></dt><dd>Displays the number of messages in your global
         IMAP inbox by default. You can define individual IMAP
-        inboxes seperately by passing arguments to this object.
+        inboxes separately by passing arguments to this object.
         Arguments are: "host user pass [-i interval (in seconds)]
-        [-f folder] [-p port] [-e command] [-r retries]". Default
+        [-f 'folder'] [-p port] [-e 'command'] [-r retries]". Default
         port is 143, default folder is 'INBOX', default interval is
         5 minutes, and default number of retries before giving up
         is 5. If the password is supplied as '*', you will be
@@ -1617,14 +1963,22 @@
             <code class="option">(args)</code>
         </span></dt><dd>Displays the number of unseen messages in your
         global IMAP inbox by default. You can define individual
-        IMAP inboxes seperately by passing arguments to this
+        IMAP inboxes separately by passing arguments to this
         object. Arguments are: "host user pass [-i interval (in
-        seconds)] [-f folder] [-p port] [-e command] [-r retries]".
+        seconds)] [-f 'folder'] [-p port] [-e 'command'] [-r retries]".
         Default port is 143, default folder is 'INBOX', default
         interval is 5 minutes, and default number of retries before
         giving up is 5. If the password is supplied as '*', you
         will be prompted to enter the password when Conky starts. 
         <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">include</code>
+            </strong></span>
+            <code class="option">path</code>
+        </span></dt><dd><p>Loads the configfile at path, places the
+            configsettings behind the configsettings in the orginal
+            config and places the vars where the includevar
+            stood.</p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">ioscheduler</code>
             </strong></span>
@@ -1651,18 +2005,22 @@
             <span class="command"><strong>
                 <code class="option">loadavg</code>
             </strong></span>
-        </span></dt><dd>(1,2,3)&gt; System load average, 1 is for past 1
-        minute, 2 for past 5 minutes and 3 for past 15 minutes. 
+            <code class="option">(1|2|3)</code>
+        </span></dt><dd>System load average, 1 is for past 1 minute, 2
+	for past 5 minutes and 3 for past 15 minutes. Without argument, prints
+	all three values separated by whitespace.
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">loadgraph</code>
             </strong></span>
-            <code class="option">("normal"|"log") (height),(width) (gradient
-            colour 1) (gradient colour 2) (scale)</code>
+            <code class="option">(height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>Load1 average graph, similar to xload, with
         optional colours in hex, minus the #. Uses a logarithmic
-        scale (to see small numbers) when you use "log" instead of
-        "normal". 
+        scale (to see small numbers) when you use the -l switch.
+        Takes the switch '-t' to use a temperature gradient, which
+        makes the gradient values change depending on the amplitude
+        of a particular graph value (try it and see). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">lua</code>
@@ -1670,7 +2028,10 @@
             <code class="option">function_name (function parameters)</code>
         </span></dt><dd>Executes a Lua function with given parameters,
         then prints the returned string. See also 'lua_load' on how
-        to load scripts. 
+        to load scripts. Conky puts 'conky_' in front of
+        function_name to prevent accidental calls to the wrong
+        function unless you put you place 'conky_' in front of it
+        yourself. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">lua_bar</code>
@@ -1679,7 +2040,10 @@
             parameters)</code>
         </span></dt><dd>Executes a Lua function with given parameters and
         draws a bar. Expects result value to be an integer between
-        0 and 100. See also 'lua_load' on how to load scripts. 
+        0 and 100. See also 'lua_load' on how to load scripts.
+        Conky puts 'conky_' in front of function_name to prevent
+        accidental calls to the wrong function unless you put you
+        place 'conky_' in front of it yourself. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">lua_gauge</code>
@@ -1689,18 +2053,24 @@
         </span></dt><dd>Executes a Lua function with given parameters and
         draws a gauge. Expects result value to be an integer
         between 0 and 100. See also 'lua_load' on how to load
-        scripts. 
+        scripts. Conky puts 'conky_' in front of function_name to
+        prevent accidental calls to the wrong function unless you
+        put you place 'conky_' in front of it yourself. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">lua_graph</code>
             </strong></span>
-            <code class="option">function_name (function parameters)
-            ("normal"|"log") (height),(width) (gradient colour 1)
-            (gradient colour 2) (scale)</code>
-        </span></dt><dd>Executes a Lua function with given parameters and
-        draws a graph. Expects result value to be any number, and
-        by default will scale to show the full range. See also
-        'lua_load' on how to load scripts. 
+            <code class="option">function_name (height),(width) (gradient colour
+            1) (gradient colour 2) (scale) (-t) (-l)</code>
+        </span></dt><dd>Executes a Lua function with and draws a graph.
+        Expects result value to be any number, and by default will
+        scale to show the full range. See also 'lua_load' on how to
+        load scripts. Takes the switch '-t' to use a temperature
+        gradient, which makes the gradient values change depending
+        on the amplitude of a particular graph value (try it and
+        see). Conky puts 'conky_' in front of function_name to
+        prevent accidental calls to the wrong function unless you
+        put you place 'conky_' in front of it yourself. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">lua_parse</code>
@@ -1709,18 +2079,10 @@
         </span></dt><dd>Executes a Lua function with given parameters as
         per $lua, then parses and prints the result value as per
         the syntax for Conky's TEXT section. See also 'lua_load' on
-        how to load scripts. 
-        <p></p></dd><dt><span class="term">
-            <span class="command"><strong>
-                <code class="option">lua_read_parse</code>
-            </strong></span>
-            <code class="option">function_name (conky text)</code>
-        </span></dt><dd>Executes a Lua function per $lua, except takes a
-        2nd argument which is first evaluated as per Conky's TEXT
-        section and passed to the function first. The return value
-        is then parsed and prints the result value as per the
-        syntax for Conky's TEXT section. See also 'lua_load' on how
-        to load scripts. 
+        how to load scripts. Conky puts 'conky_' in front of
+        function_name to prevent accidental calls to the wrong
+        function unless you put you place 'conky_' in front of it
+        yourself. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">machine</code>
@@ -1780,10 +2142,13 @@
             <span class="command"><strong>
                 <code class="option">memgraph</code>
             </strong></span>
-            <code class="option">("normal"|"log") (height),(width) (gradient
-            colour 1) (gradient colour 2) (scale)</code>
+            <code class="option">(height),(width) (gradient colour 1) (gradient
+            colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>Memory usage graph. Uses a logarithmic scale (to
-        see small numbers) when you use "log" instead of "normal". 
+        see small numbers) when you use the -l switch. Takes the
+        switch '-t' to use a temperature gradient, which makes the
+        gradient values change depending on the amplitude of a
+        particular graph value (try it and see). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">memmax</code>
@@ -1800,15 +2165,10 @@
             </strong></span>
             <code class="option">(device)</code>
         </span></dt><dd>Prints the mixer value as reported by the OS.
-        Default mixer is "vol", but you can specify one of the
-        following optional arguments: "vol", "bass", "treble",
-        "synth", "pcm", "speaker", "line", "mic", "cd", "mix",
-        "pcm2", "rec", "igain", "ogain", "line1", "line2", "line3",
-        "dig1", "dig2", "dig3", "phin", "phout", "video", "radio",
-        "monitor". Refer to the definition of SOUND_DEVICE_NAMES in
-        &lt;linux/soundcard.h&gt; (on Linux), &lt;soundcard.h&gt;
-        (on OpenBSD), or &lt;sys/soundcard.h&gt; to find the exact
-        options available on your system. 
+        Default mixer is "Master", but you can specify one of the
+        available ALSA Simple mixer controls.
+        You can find the list of those available on your system
+        using amixer.
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">mixerbar</code>
@@ -1905,12 +2265,14 @@
             <span class="command"><strong>
                 <code class="option">monitor</code>
             </strong></span>
-        </span></dt><dd>Number of the monitor on which conky is running 
+        </span></dt><dd>Number of the monitor on which conky is running
+        or the message "Not running in X" if this is the case. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">monitor_number</code>
             </strong></span>
-        </span></dt><dd>Number of monitors 
+        </span></dt><dd>Number of monitors or the message "Not running in
+        X" if this is the case. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">mpd_album</code>
@@ -2031,19 +2393,29 @@
         library. Each option can be shortened to the least
         significant part. Temperatures are printed as float, all
         other values as integer. 
-        <table class="simplelist" border="0" summary="Simple list"><tr><td>
-            <span class="command"><strong>threshold</strong></span>: the thresholdtemperature
-            at which the gpu slows down</td></tr><tr><td>
-            <span class="command"><strong>temp</strong></span>: gives the gpu current
-            temperature</td></tr><tr><td>
-            <span class="command"><strong>ambient</strong></span>: gives current air
-            temperature near GPU case</td></tr><tr><td>
-            <span class="command"><strong>gpufreq</strong></span>: gives the current gpu
-            frequency</td></tr><tr><td>
-            <span class="command"><strong>memfreq</strong></span>: gives the current mem
-            frequency</td></tr><tr><td>
-            <span class="command"><strong>imagequality</strong></span>: which imagequality
-            should be choosen by OpenGL applications</td></tr></table><p></p></dd><dt><span class="term">
+        <table border="0" summary="Simple list" class="simplelist"><tr><td>
+		<span class="command"><strong>threshold</strong></span>
+		<code class="option">The thresholdtemperature at
+			which the gpu slows down</code>
+            </td></tr><tr><td>
+		<span class="command"><strong>temp</strong></span>
+		<code class="option">Gives the gpu current
+			temperature</code>
+            </td></tr><tr><td>
+                <span class="command"><strong>ambient</strong></span>
+                <code class="option">Gives current air temperature near GPU
+                case</code>
+            </td></tr><tr><td>
+                <span class="command"><strong>gpufreq</strong></span>
+                <code class="option">Gives the current gpu frequency</code>
+            </td></tr><tr><td>
+                <span class="command"><strong>memfreq</strong></span>
+                <code class="option">Gives the current mem frequency</code>
+            </td></tr><tr><td>
+                <span class="command"><strong>imagequality</strong></span>
+                <code class="option">Which imagequality should be chosen by
+                OpenGL applications</code>
+            </td></tr></table><p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">offset</code>
             </strong></span>
@@ -2064,19 +2436,268 @@
         information on battery status. The item parameter
         specifies, what information to display. Exactly one item
         must be specified. Valid items are: 
-        <table class="simplelist" border="0" summary="Simple list"><tr><td>
-            <span class="command"><strong>status</strong></span>: Display if battery is fully
-            charged, charging, discharging or absent (running on
-            AC)</td></tr><tr><td>
-            <span class="command"><strong>percent</strong></span>: Display charge of battery
-            in percent, if charging or discharging. Nothing will be
-            displayed, if battery is fully charged or
-            absent.</td></tr><tr><td>
-            <span class="command"><strong>time</strong></span>: Display the time remaining
-            until the battery will be fully charged or discharged
-            at current rate. Nothing is displayed, if battery is
-            absent or if it's present but fully charged and not
-            discharging.</td></tr></table><p></p></dd><dt><span class="term">
+        <table border="0" summary="Simple list" class="simplelist"><tr><td>
+                <span class="command"><strong>status</strong></span>
+                <code class="option">Display if battery is fully charged,
+                charging, discharging or absent (running on
+                AC)</code>
+            </td></tr><tr><td>
+                <span class="command"><strong>percent</strong></span>
+                <code class="option">Display charge of battery in percent, if
+                charging or discharging. Nothing will be displayed,
+                if battery is fully charged or absent.</code>
+            </td></tr><tr><td>
+                <span class="command"><strong>time</strong></span>
+                <code class="option">Display the time remaining until the
+                battery will be fully charged or discharged at
+                current rate. Nothing is displayed, if battery is
+                absent or if it's present but fully charged and not
+                discharging.</code>
+            </td></tr></table><p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_chroot</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Directory used as rootdirectory by the process
+	(this will be "/" unless the process did a chroot syscall)
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_cmdline</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Command line this process was invoked with
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_cwd</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Current working directory of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_environ</code>
+            </strong></span>
+            <code class="option">pid varname</code>
+        </span></dt><dd>Contents of a environment-var of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_environ_list</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>List of environment-vars that the process can see
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_exe</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Path to executed command that started the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_nice</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The nice value of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_openfiles</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>List of files that the process has open
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_parent</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The pid of the parent of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_priority</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The priority of the process (see 'priority' in "man 5 proc")
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_read</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Total number of bytes read by the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_state</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>State of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_state_short</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>One of the chars in "RSDZTW" representing the state
+	of the process where R is running, S is sleeping in an
+	interruptible wait, D is waiting in uninterruptible disk sleep,
+	Z is zombie, T is traced or stopped (on a signal), and W is paging
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_stderr</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Filedescriptor binded to the STDERR of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_stdin</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Filedescriptor binded to the STDIN of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_stdout</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Filedescriptor binded to the STDOUT of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_threads</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Number of threads in process containing this thread
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_thread_list</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>List with pid's from threads from this process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_time_kernelmode</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Amount of time that the process has been scheduled in kernel mode in seconds
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_time_usermode</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Amount of time that the process has been scheduled in user mode in seconds
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_time</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Sum of $pid_time_kernelmode and $pid_time_usermode
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_uid</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The real uid of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_euid</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The effective uid of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_suid</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The saved set uid of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_fsuid</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The file system uid of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_gid</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The real gid of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_egid</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The effective gid of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_sgid</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The saved set gid of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_fsgid</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>The file system gid of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmpeak</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Peak virtual memory size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmsize</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Virtual memory size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmlck</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Locked memory size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmhwm</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Peak resident set size ("high water mark") of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmrss</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Resident set size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmdata</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Data segment size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmstk</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Stack segment size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmexe</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Text segment size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmlib</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Shared library code size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_vmpte</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Page table entries size of the process
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">pid_write</code>
+            </strong></span>
+            <code class="option">pid</code>
+        </span></dt><dd>Total number of bytes written by the process
+        <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">platform</code>
             </strong></span>
@@ -2098,9 +2719,9 @@
             <code class="option">(args)</code>
         </span></dt><dd>Displays the number of unseen messages in your
         global POP3 inbox by default. You can define individual
-        POP3 inboxes seperately by passing arguments to this
+        POP3 inboxes separately by passing arguments to this
         object. Arguments are: "host user pass [-i interval (in
-        seconds)] [-p port] [-e command] [-r retries]". Default
+        seconds)] [-p port] [-e 'command'] [-r retries]". Default
         port is 110, default interval is 5 minutes, and default
         number of retries before giving up is 5. If the password is
         supplied as '*', you will be prompted to enter the password
@@ -2112,9 +2733,9 @@
             <code class="option">(args)</code>
         </span></dt><dd>Displays the amount of space (in MiB, 2^20) used
         in your global POP3 inbox by default. You can define
-        individual POP3 inboxes seperately by passing arguments to
+        individual POP3 inboxes separately by passing arguments to
         this object. Arguments are: "host user pass [-i interval
-        (in seconds)] [-p port] [-e command] [-r retries]". Default
+        (in seconds)] [-p port] [-e 'command'] [-r retries]". Default
         port is 110, default interval is 5 minutes, and default
         number of retries before giving up is 5. If the password is
         supplied as '*', you will be prompted to enter the password
@@ -2133,6 +2754,14 @@
         </span></dt><dd>Total processes (sleeping and running) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">read_tcp</code>
+            </strong></span>
+            <code class="option">(host) port</code>
+        </span></dt><dd>Connects to a tcp port on a host (default is
+        localhost), reads every char available at the moment and
+        shows them. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">replied_mails</code>
             </strong></span>
             <code class="option">(maildir)</code>
@@ -2144,19 +2773,29 @@
             <span class="command"><strong>
                 <code class="option">rss</code>
             </strong></span>
-            <code class="option">url delay_in_minutes action (num_par
+            <code class="option">uri interval_in_minutes action (num_par
             (spaces_in_front))</code>
-        </span></dt><dd>Download and parse RSS feeds. Action may be one
-        of the following: feed_title, item_title (with num par),
-        item_desc (with num par) and item_titles (when using this
-        action and spaces_in_front is given conky places that many
-        spaces in front of each item). 
-        <p></p></dd><dt><span class="term">
+        </span></dt><dd><p>Download and parse RSS feeds. The interval may be
+            a floating point value greater than 0, otherwise
+            defaults to 15 minutes. Action may be one of the
+            following: feed_title, item_title (with num par),
+            item_desc (with num par) and item_titles (when using
+            this action and spaces_in_front is given conky places
+            that many spaces in front of each item). This object is
+            threaded, and once a thread is created it can't be
+            explicitly destroyed. One thread will run for each URI
+            specified. You can use any protocol that Curl
+            supports.</p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">running_processes</code>
             </strong></span>
         </span></dt><dd>Running processes (not sleeping), requires Linux
         2.6 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">running_threads</code>
+            </strong></span>
+        </span></dt><dd>Number of running (runnable) threads. Linux only.
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">scroll</code>
@@ -2167,12 +2806,10 @@
         may also contain variables. 'step' is optional and defaults
         to 1 if not set. If a var creates output on multiple lines
         then the lines are placed behind each other separated with
-        a '|'-sign. Do NOT use vars that change colors or otherwise
-        affect the design inside a scrolling text. If you want
-        spaces between the start and the end of 'text', place them
-        at the end of 'text' not at the front ("foobar" and "
-        foobar" can both generate "barfoo" but "foobar " will keep
-        the spaces like this "bar foo"). 
+        a '|'-sign. If you change the textcolor inside $scroll it
+        will automatically have it's old value back at the end of
+        $scroll. The end and the start of text will be separated by
+        'length' number of spaces. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">seen_mails</code>
@@ -2259,6 +2896,11 @@
         </span></dt><dd>Bar that shows amount of swap in use 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">swapfree</code>
+            </strong></span>
+        </span></dt><dd>Amount of free swap 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">swapmax</code>
             </strong></span>
         </span></dt><dd>Total amount of swap 
@@ -2283,91 +2925,118 @@
             <span class="command"><strong>
                 <code class="option">tail</code>
             </strong></span>
-            <code class="option">logfile lines (interval)</code>
-        </span></dt><dd>Displays last N lines of supplied text text file.
-        If interval is not supplied, Conky assumes 2x Conky's
-        interval. Max of 30 lines can be displayed, or until the
-        text buffer is filled. 
+            <code class="option">logfile lines (next_check)</code>
+        </span></dt><dd>Displays last N lines of supplied text file. The
+        file is checked every 'next_check' update. If next_check is
+        not supplied, Conky defaults to 2. Max of 30 lines can be
+        displayed, or until the text buffer is filled. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">tcp_portmon</code>
             </strong></span>
             <code class="option">port_begin port_end item (index)</code>
-            <span class="emphasis"><em>(ip4 only at present)</em></span>
-        </span></dt><dd>TCP port monitor for specified local ports. Port
-        numbers must be in the range 1 to 65535. Valid items are: 
-        <table class="simplelist" border="0" summary="Simple list"><tr><td>
-            <span class="command"><strong>count</strong></span>- total number of connections
-            in the range</td></tr><tr><td>
-            <span class="command"><strong>rip</strong></span>- remote ip address</td></tr><tr><td>
-            <span class="command"><strong>rhost</strong></span>- remote host name</td></tr><tr><td>
-            <span class="command"><strong>rport</strong></span>- remote port number</td></tr><tr><td>
-            <span class="command"><strong>rservice</strong></span>- remote service name from
-            /etc/services</td></tr><tr><td>
-            <span class="command"><strong>lip</strong></span>- local ip address</td></tr><tr><td>
-            <span class="command"><strong>lhost</strong></span>- local host name</td></tr><tr><td>
-            <span class="command"><strong>lport</strong></span>- local port number</td></tr><tr><td>
-            <span class="command"><strong>lservice</strong></span>- local service name from
-            /etc/services</td></tr></table>The connection index provides you with access
-        to each connection in the port monitor. The monitor will
-        return information for index values from 0 to n-1
-        connections. Values higher than n-1 are simply ignored. For
-        the "count" item, the connection index must be omitted. It
-        is required for all other items. 
-        <table class="simplelist" border="0" summary="Simple list"><tr><td>Examples:</td></tr><tr><td>
-            <span class="command"><strong>${tcp_portmon 6881 6999 count}</strong></span>-
-            displays the number of connections in the bittorrent
-            port range</td></tr><tr><td>
-            <span class="command"><strong>${tcp_portmon 22 22 rip 0}</strong></span>- displays
-            the remote host ip of the first sshd
-            connection</td></tr><tr><td>
-            <span class="command"><strong>${tcp_portmon 22 22 rip 9}</strong></span>- displays
-            the remote host ip of the tenth sshd
-            connection</td></tr><tr><td>
-            <span class="command"><strong>${tcp_portmon 1 1024 rhost 0}</strong></span>-
-            displays the remote host name of the first connection
-            on a privileged port</td></tr><tr><td>
-            <span class="command"><strong>${tcp_portmon 1 1024 rport 4}</strong></span>-
-            displays the remote host port of the fifth connection
-            on a privileged port</td></tr><tr><td>
-            <span class="command"><strong>${tcp_portmon 1 65535 lservice 14}</strong></span>-
-            displays the local service name of the fifteenth
-            connection in the range of all ports</td></tr></table>Note that port monitor variables which share
-        the same port range actually refer to the same monitor, so
-        many references to a single port range for different items
-        and different indexes all use the same monitor internally.
-        In other words, the program avoids creating redundant
-        monitors.</dd><dt><span class="term">
+        </span></dt><dd><p>TCP port (both IPv6 and IPv4) monitor for
+            specified local ports. Port numbers must be in
+            the range 1 to 65535. Valid items are:</p><table border="0" summary="Simple list" class="simplelist"><tr><td>
+                    <span class="command"><strong>count</strong></span>
+                    <code class="option">Total number of connections in the
+                    range</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>rip</strong></span>
+                    <code class="option">Remote ip address</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>rhost</strong></span>
+                    <code class="option">Remote host name</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>rport</strong></span>
+                    <code class="option">Remote port number</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>rservice</strong></span>
+                    <code class="option">Remote service name from
+                    /etc/services</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>lip</strong></span>
+                    <code class="option">Local ip address</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>lhost</strong></span>
+                    <code class="option">Local host name</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>lport</strong></span>
+                    <code class="option">Local port number</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>lservice</strong></span>
+                    <code class="option">Local service name from
+                    /etc/services</code>
+                </td></tr></table><p>The connection index provides you with access to
+            each connection in the port monitor. The monitor will
+            return information for index values from 0 to n-1
+            connections. Values higher than n-1 are simply ignored.
+            For the "count" item, the connection index must be
+            omitted. It is required for all other items.</p><p>Examples:</p><table border="0" summary="Simple list" class="simplelist"><tr><td>
+                    <span class="command"><strong>${tcp_portmon 6881 6999
+                    count}</strong></span>
+                    <code class="option">Displays the number of connections in
+                    the bittorrent port range</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>${tcp_portmon 22 22 rip 0}</strong></span>
+                    <code class="option">Displays the remote host ip of the
+                    first sshd connection</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>${tcp_portmon 22 22 rip 9}</strong></span>
+                    <code class="option">Displays the remote host ip of the
+                    tenth sshd connection</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>${tcp_portmon 1 1024 rhost
+                    0}</strong></span>
+                    <code class="option">Displays the remote host name of the
+                    first connection on a privileged port</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>${tcp_portmon 1 1024 rport
+                    4}</strong></span>
+                    <code class="option">Displays the remote host port of the
+                    fifth connection on a privileged port</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>${tcp_portmon 1 65535 lservice
+                    14}</strong></span>
+                    <code class="option">Displays the local service name of the
+                    fifteenth connection in the range of all
+                    ports</code>
+                </td></tr></table><p>Note that port monitor variables which share the
+            same port range actually refer to the same monitor, so
+            many references to a single port range for different
+            items and different indexes all use the same monitor
+            internally. In other words, the program avoids creating
+            redundant monitors.</p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">templateN</code>
             </strong></span>
             <code class="option">(arg1)</code>
             <code class="option">(arg2)</code>
             <code class="option">(arg3 ...)</code>
-        </span></dt><dd>Evaluate the content of the templateN
-        configuration variable (where N is a value between 0 and 9,
-        inclusively), applying substitutions as described in the
-        documentation of the corresponding configuration variable.
-        The number of arguments is optional, but must match the
-        highest referred index in the template. You can use the
-        same special sequences in each argument as the ones valid
-        for a template definition, e.g. to allow an argument to
-        contain a whitespace. Also simple nesting of templates is
-        possible this way. 
-        <p></p>Here are some examples of template definitions: 
-        <table class="simplelist" border="0" summary="Simple list"><tr><td>template0 $\1\2</td></tr><tr><td>template1 \1: ${fs_used \2} / ${fs_size
-            \2}</td></tr><tr><td>template2 \1 \2</td></tr></table>The following list shows sample usage of the
-        templates defined above, with the equivalent syntax when
-        not using any template at all: 
-        <div class="table"><a name="id311905"></a><p class="title"><b>Table 1. </b></p><div class="table-contents"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>using template</th><th>same without template</th></tr></thead><tbody><tr><td>${template0 node name}</td><td>$nodename</td></tr><tr><td>${template1 root /}</td><td>root: ${fs_free /} / ${fs_size
-                        /}</td></tr><tr><td>
-                            <pre class="programlisting">${template1
-                            ${template2\ disk\ root}
-                            /}</pre>
-                        </td><td>
-                            <pre class="programlisting">disk root: ${fs_free /}
-                            / ${fs_size /}</pre>
-                        </td></tr></tbody></table></div></div><br class="table-break"><p></p></dd><dt><span class="term">
+        </span></dt><dd><p>Evaluate the content of the templateN
+            configuration variable (where N is a value between 0
+            and 9, inclusively), applying substitutions as
+            described in the documentation of the corresponding
+            configuration variable. The number of arguments is
+            optional, but must match the highest referred index in
+            the template. You can use the same special sequences in
+            each argument as the ones valid for a template
+            definition, e.g. to allow an argument to contain a
+            whitespace. Also simple nesting of templates is
+            possible this way.</p><p>Here are some examples of template
+            definitions:</p><table border="0" summary="Simple list" class="simplelist"><tr><td>template0 $\1\2</td></tr><tr><td>template1 \1: ${fs_used \2} / ${fs_size
+                \2}</td></tr><tr><td>template2 \1 \2</td></tr></table><p>The following list shows sample usage of the
+            templates defined above, with the equivalent syntax
+            when not using any template at all:</p><div class="table"><a name="id525157"></a><p class="title"><b>Table 1. </b></p><div class="table-contents"><table border="1"><colgroup><col><col></colgroup><thead><tr><th>using template</th><th>same without template</th></tr></thead><tbody><tr><td>${template0 node name}</td><td>$nodename</td></tr><tr><td>${template1 root /}</td><td>root: ${fs_free /} / ${fs_size
+                            /}</td></tr><tr><td>
+                                ${template1
+                                ${template2\ disk\ root}
+                                /}
+                            </td><td>
+                                disk root:
+                                ${fs_free /} / ${fs_size
+                                /}
+                            </td></tr></tbody></table></div></div><br class="table-break"></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">texeci</code>
             </strong></span>
@@ -2379,7 +3048,15 @@
         longer then the time it takes your script to execute. For
         example, if you have a script that take 5 seconds to
         execute, you should make the interval at least 6 seconds.
-        See also $execi. 
+        See also $execi. This object will clean up the thread when
+        it is destroyed, so it can safely be used in a nested
+        fashion, though it may not produce the desired behaviour if
+        used this way. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">threads</code>
+            </strong></span>
+        </span></dt><dd>Total threads
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">time</code>
@@ -2389,34 +3066,49 @@
         information about format 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">to_bytes</code>
+            </strong></span>
+            <code class="option">size</code>
+        </span></dt><dd>If 'size' is a number followed by a size-unit
+        (kilobyte,mb,GiB,...) then it converts the size to bytes
+        and shows it without unit, otherwise it just shows 'size'. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">top</code>
             </strong></span>
-            <code class="option">type, num</code>
+            <code class="option">type num</code>
         </span></dt><dd>This takes arguments in the form:top (name)
         (number) Basically, processes are ranked from highest to
         lowest in terms of cpu usage, which is what (num)
         represents. The types are: "name", "pid", "cpu", "mem",
-        "mem_res", "mem_vsize", and "time". There can be a max of
-        10 processes listed. 
+        "mem_res", "mem_vsize", "time", "io_perc", "io_read" and
+        "io_write". There can be a max of 10 processes listed. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">top_io</code>
+            </strong></span>
+            <code class="option">type num</code>
+        </span></dt><dd>Same as top, except sorted by the amount of I/O
+        the process has done during the update interval 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">top_mem</code>
             </strong></span>
-            <code class="option">type, num</code>
+            <code class="option">type num</code>
         </span></dt><dd>Same as top, except sorted by mem usage instead
         of cpu 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">top_time</code>
             </strong></span>
-            <code class="option">type, num</code>
+            <code class="option">type num</code>
         </span></dt><dd>Same as top, except sorted by total CPU time
         instead of current CPU usage 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">totaldown</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Total download, overflows at 4 GB on Linux with
         32-bit arch and there doesn't seem to be a way to know how
         many times it has already done that before conky has
@@ -2425,7 +3117,7 @@
             <span class="command"><strong>
                 <code class="option">totalup</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Total upload, this one too, may overflow 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
@@ -2440,12 +3132,24 @@
             <span class="command"><strong>
                 <code class="option">tztime</code>
             </strong></span>
-            <code class="option">(timezone) (format)</code>
+            <code class="option">(timezone (format))</code>
         </span></dt><dd>Local time for specified timezone, see man
         strftime to get more information about format. The timezone
         argument is specified in similar fashion as TZ environment
         variable. For hints, look in /usr/share/zoneinfo. e.g.
         US/Pacific, Europe/Zurich, etc. 
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">gid_name</code>
+            </strong></span>
+            <code class="option">gid</code>
+        </span></dt><dd>Name of group with this gid
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">uid_name</code>
+            </strong></span>
+            <code class="option">uid</code>
+        </span></dt><dd>Username of user with this uid
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">unflagged_mails</code>
@@ -2492,25 +3196,27 @@
             <span class="command"><strong>
                 <code class="option">upspeed</code>
             </strong></span>
-            <code class="option">net</code>
-        </span></dt><dd>Upload speed in KiB 
+            <code class="option">(net)</code>
+        </span></dt><dd>Upload speed in suitable IEC units 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">upspeedf</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Upload speed in KiB with one decimal 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">upspeedgraph</code>
             </strong></span>
-            <code class="option">(netdev) ("normal"|"log") (height),(width)
-            (gradient colour 1) (gradient colour 2)
-            (scale)</code>
+            <code class="option">(netdev) (height),(width) (gradient colour 1)
+            (gradient colour 2) (scale) (-t) (-l)</code>
         </span></dt><dd>Upload speed graph, colours defined in hex, minus
         the #. If scale is non-zero, it becomes the scale for the
         graph. Uses a logarithmic scale (to see small numbers) when
-        you use "log" instead of "normal". 
+        you use the -l switch. Takes the switch '-t' to use a
+        temperature gradient, which makes the gradient values
+        change depending on the amplitude of a particular graph
+        value (try it and see). 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">uptime</code>
@@ -2543,6 +3249,13 @@
         </span></dt><dd>Lists how long users have been logged in for 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">user_time</code>
+            </strong></span>
+	    <code class="option">console</code>
+        </span></dt><dd>Lists how long the user for the given console has been
+        logged in for
+        <p></p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">utime</code>
             </strong></span>
             <code class="option">(format)</code>
@@ -2570,51 +3283,172 @@
         from 1. If omitted, the parameter defaults to 1. 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
+                <code class="option">weather</code>
+            </strong></span>
+            <code class="option">URI locID data_type
+            (interval_in_minutes)</code>
+        </span></dt><dd><p>Download, parse and display METAR data.</p><p>For the 'URI', there are two
+            possibilities:</p><table border="0" summary="Simple list" class="simplelist"><tr><td>
+                http://weather.noaa.gov/pub/data/observations/metar/stations/</td></tr><tr><td>
+                http://xoap.weather.com/weather/local/</td></tr></table><p>The first one is free to use but the second
+            requires you to register and obtain your partner ID and
+            license key. These two must be written, separated by a
+            space, into a file called .xoaprc which needs to be
+            placed into your home directory.</p><p>'locID' must be a valid location identifier for
+            the required uri. For the NOAA site this must be a
+            valid ICAO (see for instance
+            https://pilotweb.nas.faa.gov/qryhtml/icao/). For the
+            weather.com site this must be a valid location ID (see
+            for instance
+            http://aspnetresources.com/tools/locid.aspx).</p><p>'data_type' must be one of the following:</p><table border="0" summary="Simple list" class="simplelist"><tr><td>
+                    <span class="command"><strong>last_update</strong></span>
+                    <p>The date and time stamp of the data.
+                    The result depends on the URI used. For the
+                    NOAA site it is date (yyyy/mm/dd) and UTC time.
+                    For the weather.com one it is date
+                    ([m]m/[d]d/yy) and Local Time of the
+                    station.</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>temperature</strong></span>
+					<p>Air temperature (you can use the
+                    'temperature_unit' config setting to change
+					units)</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>cloud_cover</strong></span>
+                    <p>The highest cloud cover status</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>pressure</strong></span>
+                    <p>Air pressure in millibar</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>wind_speed</strong></span>
+                    <p>Wind speed in km/h</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>wind_dir</strong></span>
+                    <p>Wind direction</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>wind_dir_DEG</strong></span>
+                    <p>Compass wind direction</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>humidity</strong></span>
+                    <p>Relative humidity in %</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>weather</strong></span>
+                    <p>Any relevant weather event (rain, snow,
+                    etc.). This is not used if you are querying the
+                    weather.com site since this data is aggregated
+                    into the cloud_cover one</p>
+                </td></tr><tr><td>
+                    <span class="command"><strong>icon</strong></span>
+                    <p>Weather icon (only for
+                    www.weather.com). Can be used together with the
+                    icon kit provided upon registering to their
+                    service.</p>
+                </td></tr></table><p>'delay_in_minutes' (optional, default 30) cannot
+            be less than 30 minutes.</p><p>This object is threaded, and once a thread is
+            created it can't be explicitly destroyed. One thread
+            will run for each URI specified.</p><p>Note that these variables are still EXPERIMENTAL
+            and can be subject to many future changes.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">weather_forecast</code>
+            </strong></span>
+            <code class="option">URI locID day data_type
+            (interval_in_minutes)</code>
+        </span></dt><dd><p>Download, parse and display weather forecast data
+	    for a given day (daytime only).</p><p>For the 'URI', for the time being only
+            http://xoap.weather.com/weather/local/ is
+	    supported. See 'weather' above for details of usage</p><p>'locID', see 'weather' above.</p><p>'day' is a number from 0 (today) to 4 (3 days
+            after tomorrow).</p><p>'data_type' must be one of the following:</p><table border="0" summary="Simple list" class="simplelist"><tr><td>
+                    <span class="command"><strong>day</strong></span>
+					<code class="option">Day of the week</code>
+				</td></tr><tr><td>
+                    <span class="command"><strong>date</strong></span>
+					<code class="option">Date, in the form MMM DD (ie. Jul 14)</code>
+				</td></tr><tr><td>
+                    <span class="command"><strong>low</strong></span>
+					<code class="option">Minimun temperature (you can use the
+                    'temperature_unit' config setting to change
+                    units)</code>
+				</td></tr><tr><td>
+                    <span class="command"><strong>hi</strong></span>
+					<code class="option">Maximum temperature (you can use the
+                    'temperature_unit' config setting to change
+                    units)</code>
+				</td></tr><tr><td>
+                    <span class="command"><strong>icon</strong></span>
+                    <code class="option">Weather icon. Can be used together with the
+                    icon kit provided upon registering to the weather.com
+                    service</code>
+				</td></tr><tr><td>
+                    <span class="command"><strong>forecast</strong></span>
+                    <code class="option">Weather forecast (sunny, rainy, etc.)</code>
+				</td></tr><tr><td>
+                    <span class="command"><strong>wind_speed</strong></span>
+                    <code class="option">Wind speed in km/h</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>wind_dir</strong></span>
+                    <code class="option">Wind direction</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>wind_dir_DEG</strong></span>
+                    <code class="option">Compass wind direction</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>humidity</strong></span>
+                    <code class="option">Relative humidity in %</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>precipitation</strong></span>
+                    <code class="option">Probability of having a
+					precipitation (in %)</code>
+                </td></tr></table><p>'delay_in_minutes' (optional, default 210) cannot
+            be lower than 210 min.</p><p>This object is threaded, and once a thread is
+            created it can't be explicitly destroyed. One thread
+            will run for each URI specified. You can use any
+            protocol that Curl supports.</p><p>Note that these variables are still EXPERIMENTAL
+            and can be subject to many future changes.</p></dd><dt><span class="term">
+            <span class="command"><strong>
                 <code class="option">wireless_ap</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Wireless access point MAC address (Linux only) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">wireless_bitrate</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Wireless bitrate (ie 11 Mb/s) (Linux only) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">wireless_essid</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Wireless access point ESSID (Linux only) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">wireless_link_bar</code>
             </strong></span>
-            <code class="option">(height), (width) net</code>
+            <code class="option">(height),(width) (net)</code>
         </span></dt><dd>Wireless link quality bar (Linux only) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">wireless_link_qual</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Wireless link quality (Linux only) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">wireless_link_qual_max</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Wireless link quality maximum value (Linux only) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">wireless_link_qual_perc</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Wireless link quality in percents (Linux only) 
         <p></p></dd><dt><span class="term">
             <span class="command"><strong>
                 <code class="option">wireless_mode</code>
             </strong></span>
-            <code class="option">net</code>
+            <code class="option">(net)</code>
         </span></dt><dd>Wireless mode (Managed/Ad-Hoc/Master) (Linux
         only) 
         <p></p></dd><dt><span class="term">
@@ -2721,24 +3555,209 @@
                 <code class="option">xmms2_url</code>
             </strong></span>
         </span></dt><dd>Full path to current song 
-        <p></p></dd></dl></div></div><div class="refsect1" lang="en"><a name="id319651"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term"><code class="varname">conky </code><code class="option">-t '${time %D %H:%M}' -o -u 30</code></span></dt><dd>Start Conky in its own window with date and clock as text and 30 sec update interval.</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-a top_left -x 5 -y 500 -d</code></span></dt><dd>Start Conky to background at coordinates (5, 500).</dd><dt><span class="term"><code class="varname">conky </code><code class="option">-C &gt; ~/.conkyrc</code></span></dt><dd>Do not start Conky, but have it output the builtin default config file to ~/.conkyrc for later customising.</dd></dl></div></div><div class="refsect1" lang="en"><a name="id319701"></a><h2>Files</h2><div class="variablelist"><dl><dt><span class="term"><code class="filename">${sysconfdir}/conky/conky.conf</code></span></dt><dd>Default system-wide configuration file. The value of ${sysconfdir} depends on the compile-time options (most likely /etc).</dd><dt><span class="term"><code class="filename">~/.conkyrc</code></span></dt><dd>Default personal configuration file.</dd></dl></div></div><div class="refsect1" lang="en"><a name="id319737"></a><h2>Bugs</h2><p>
-			Drawing to root or some other desktop window directly doesn't work with
-			all window managers. Especially doesn't work well with Gnome and it has
-			been reported that it doesn't work with KDE either. Nautilus can be
-			disabled from drawing to desktop with program gconf-editor. Uncheck
-			show_desktop in /apps/nautilus/preferences/. There is -w switch in Conky
-			to set some specific window id. You might find xwininfo -tree useful to
-			find the window to draw to. You can also use -o argument which makes
-			Conky to create its own window.  If you do try running Conky in its own
-			window, be sure to read up on the own_window_type settings and experiment.
-		</p></div><div class="refsect1" lang="en"><a name="id319758"></a><h2>See Also</h2><p><a class="ulink" href="http://conky.sourceforge.net/" target="_top">
-				http://conky.sourceforge.net/</a></p><p><a class="ulink" href="http://www.sourceforge.net/projects/conky" target="_top">
-				http://www.sourceforge.net/projects/conky</a></p><p>
-			#conky on irc.freenode.net
-		</p></div><div class="refsect1" lang="en"><a name="id319780"></a><h2>Copying</h2><p>
-			Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
-			Any original torsmo code is licensed under the BSD license (see LICENSE.BSD for a copy).
-			All code written since the fork of torsmo is licensed under the GPL (see LICENSE.GPL for a copy), except where noted differently (such as in portmon code, timed thread code, and audacious code which are LGPL, and prss which is an MIT-style license).
-		</p></div><div class="refsect1" lang="en"><a name="id319793"></a><h2>Authors</h2><p>
-			The Conky dev team (see AUTHORS for a full list of contributors).
-		</p></div></div></body></html>
+        <p></p></dd></dl></div></div><div class="refsect1" title="Lua API"><a name="id535563"></a><h2>Lua API</h2><p>Conky features a Lua Programming API, and also ships with Lua
+			bindings for some useful libraries. Conky defines certain global
+			functions and variables which can be accessed from Lua code running
+			in Conky.
+		</p><p>To use Lua Conky, you first need to make sure you have a version of Conky
+			with Lua support enabled (``conky -v'' will report this).  Scripts
+			must first be loaded using the lua_load configuration option.  You
+			then call functions in Lua via Conky's $lua, $lua_read, and Lua
+			hooks.
+		</p><p>
+			Be careful when creating threaded objects through the Lua API.  You
+			could wind up with a whole bunch of threads running if a thread is
+			created with each iteration.
+		</p><p>
+			At this time, the Lua API should not be considered stable and may
+			change drastically from one release to another as it matures.
+		</p><p>
+			NOTE: In order to accommodate certain features in the cairo
+			library's API, Conky will export a few additional functions for the
+			creation of certain structures.  These are documented below.
+		</p><div class="variablelist"><dl><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_parse(string)</code>
+            </strong></span>
+            <code class="option">function</code>
+        </span></dt><dd><p>This function takes a string that is evaluated as
+            per Conky's TEXT section, and then returns a string
+            with the result.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_set_update_interval(number)</code>
+            </strong></span>
+            <code class="option">function</code>
+        </span></dt><dd><p>Sets Conky's update interval (in seconds) to
+            'number'.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_window</code>
+            </strong></span>
+            <code class="option">table</code>
+        </span></dt><dd><p>This table contains some information about
+            Conky's window. The following table describes the
+            values contained:</p><table border="0" summary="Simple list" class="simplelist"><tr><td>
+                    <span class="command"><strong>drawable</strong></span>
+                    <code class="option">Window's drawable (Xlib Drawable),
+                    requires Lua extras enabled at compile
+                    time.</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>visual</strong></span>
+                    <code class="option">Window's visual (Xlib Visual), requires
+                    Lua extras enabled at compile time.</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>display</strong></span>
+                    <code class="option">Window's display (Xlib Display),
+                    requires Lua extras enabled at compile
+                    time.</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>width</strong></span>
+                    <code class="option">Window width (in pixels).</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>height</strong></span>
+                    <code class="option">Window height (in pixels).</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>border_inner_margin</strong></span>
+                    <code class="option">Window's inner border margin (in
+                    pixels).</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>border_outer_margin</strong></span>
+                    <code class="option">Window's outer border margin (in
+                    pixels).</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>border_width</strong></span>
+                    <code class="option">Window's border width (in
+                    pixels).</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>text_start_x</strong></span>
+                    <code class="option">The x component of the starting
+                    coordinate of text drawing.</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>text_start_y</strong></span>
+                    <code class="option">The y component of the starting
+                    coordinate of text drawing.</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>text_width</strong></span>
+                    <code class="option">The width of the text drawing
+                    region.</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>text_height</strong></span>
+                    <code class="option">The height of the text drawing
+                    region.</code>
+                </td></tr></table><p>NOTE: This table is only defined when X support
+            is enabled.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_info</code>
+            </strong></span>
+            <code class="option">table</code>
+        </span></dt><dd><p>This table contains some information about
+            Conky's internal data. The following table describes
+            the values contained:</p><table border="0" summary="Simple list" class="simplelist"><tr><td>
+                    <span class="command"><strong>update_interval</strong></span>
+                    <code class="option">Conky's update interval (in
+                    seconds).</code>
+                </td></tr><tr><td>
+                    <span class="command"><strong>uptime</strong></span>
+                    <code class="option">System uptime, in seconds.</code>
+                </td></tr></table></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_build_info</code>
+            </strong></span>
+            <code class="option">string</code>
+        </span></dt><dd><p>A string containing the build info for this
+            particular instance of Conky, including the version,
+            build date, and architecture.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_build_date</code>
+            </strong></span>
+            <code class="option">string</code>
+        </span></dt><dd><p>A string containing the build date for this
+            particular instance of Conky.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_build_arch</code>
+            </strong></span>
+            <code class="option">string</code>
+        </span></dt><dd><p>A string containing the build architecture for
+            this particular instance of Conky.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_version</code>
+            </strong></span>
+            <code class="option">string</code>
+        </span></dt><dd><p>A string containing the version of the current
+            instance of Conky.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">conky_config</code>
+            </strong></span>
+            <code class="option">string</code>
+        </span></dt><dd><p>A string containing the path of the current Conky
+            configuration file.</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">cairo_text_extents_t:create()</code>
+            </strong></span>
+            <code class="option">function</code>
+        </span></dt><dd><p>
+				Call this function to return a new cairo_text_extents_t structure.  A creation function for this structure is not provided by the cairo API.  After calling this, you should use tolua.takeownership() on the return value to ensure ownership is passed properly.
+			</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">cairo_font_extents_t:create()</code>
+            </strong></span>
+            <code class="option">function</code>
+        </span></dt><dd><p>
+				Call this function to return a new cairo_font_extents_t structure.  A creation function for this structure is not provided by the cairo API.  After calling this, you should use tolua.takeownership() on the return value to ensure ownership is passed properly.
+			</p></dd><dt><span class="term">
+            <span class="command"><strong>
+                <code class="option">cairo_matrix_t:create()</code>
+            </strong></span>
+            <code class="option">function</code>
+        </span></dt><dd><p>
+				Call this function to return a new cairo_matrix_t structure.  A creation function for this structure is not provided by the cairo API.  After calling this, you should use tolua.takeownership() on the return value to ensure ownership is passed properly.
+			</p></dd></dl></div></div><div class="refsect1" title="Examples"><a name="id536684"></a><h2>Examples</h2><div class="variablelist"><dl><dt><span class="term">
+					<code class="varname">conky</code>
+					<code class="option">-t '${time %D %H:%M}' -o -u 30</code>
+				</span></dt><dd>Start Conky in its own window with date
+					and clock as text and 30 sec update
+					interval.</dd><dt><span class="term">
+					<code class="varname">conky</code>
+					<code class="option">-a top_left -x 5 -y 500 -d</code>
+				</span></dt><dd>Start Conky to background at coordinates
+					(5, 500).</dd><dt><span class="term">
+					<code class="varname">conky</code>
+					<code class="option">-C &gt; ~/.conkyrc</code>
+				</span></dt><dd>Do not start Conky, but have it output
+					the builtin default config file to ~/.conkyrc for
+					later customising.</dd></dl></div></div><div class="refsect1" title="Files"><a name="id536746"></a><h2>Files</h2><div class="variablelist"><dl><dt><span class="term">
+					<code class="filename">
+						${sysconfdir}/conky/conky.conf</code>
+				</span></dt><dd>Default system-wide configuration file.
+					The value of ${sysconfdir} depends on the
+					compile-time options (most likely /etc).</dd><dt><span class="term">
+					<code class="filename">~/.conkyrc</code>
+				</span></dt><dd>Default personal configuration
+					file.</dd></dl></div></div><div class="refsect1" title="Bugs"><a name="id536788"></a><h2>Bugs</h2><p>Drawing to root or some other desktop window directly
+			doesn't work with all window managers. Especially doesn't
+			work well with Gnome and it has been reported that it
+			doesn't work with KDE either. Nautilus can be disabled from
+			drawing to desktop with program gconf-editor. Uncheck
+			show_desktop in /apps/nautilus/preferences/. There is -w
+			switch in Conky to set some specific window id. You might
+			find xwininfo -tree useful to find the window to draw to.
+			You can also use -o argument which makes Conky to create
+			its own window. If you do try running Conky in its own
+			window, be sure to read up on the own_window_type settings
+			and experiment.</p></div><div class="refsect1" title="See Also"><a name="id536804"></a><h2>See Also</h2><p>
+			<a class="ulink" href="http://conky.sourceforge.net/" target="_top">
+				http://conky.sourceforge.net/</a>
+		</p><p>
+			<a class="ulink" href="http://www.sourceforge.net/projects/conky" target="_top">
+				http://www.sourceforge.net/projects/conky</a>
+		</p><p>
+			<a class="ulink" href="http://wiki.conky.be" target="_top">
+				http://wiki.conky.be</a>
+		</p><p>#conky on irc.freenode.net</p></div><div class="refsect1" title="Copying"><a name="id536842"></a><h2>Copying</h2><p>Copyright (c) 2005-2010 Brenden Matthews, Philip
+			Kovacs, et. al. Any original torsmo code is licensed under
+			the BSD license (see LICENSE.BSD for a copy). All code
+			written since the fork of torsmo is licensed under the GPL
+			(see LICENSE.GPL for a copy), except where noted
+			differently (such as in portmon code, timed thread code,
+			and audacious code which are LGPL, and prss which is an
+			MIT-style license).</p></div><div class="refsect1" title="Authors"><a name="id536856"></a><h2>Authors</h2><p>The Conky dev team (see AUTHORS for a full list of
+			contributors).</p></div></div></body></html>

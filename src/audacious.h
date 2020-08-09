@@ -1,4 +1,7 @@
-/* audacious.h:  conky support for audacious music player
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * audacious.h:  conky support for audacious music player
  *
  * Copyright (C) 2005-2007 Philip Kovacs pkovacs@users.sourceforge.net
  *
@@ -15,7 +18,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
- * USA. */
+ * USA.
+ *
+ */
 
 #ifndef AUDACIOUS_H
 #define AUDACIOUS_H

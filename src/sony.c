@@ -1,8 +1,11 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  * Copyright (c) 2009 Yeon-Hyeong Yang <lbird94@gmail.com>
  *	(see AUTHORS)
  * All rights reserved.
@@ -65,7 +68,7 @@ void get_sony_fanspeed(char *p_client_buffer, size_t client_buffer_size)
 			}
 		}
 	} else {
-		CRIT_ERR("can't open '%s': %s\nEnable sony support or remove "
+		CRIT_ERR(NULL, NULL, "can't open '%s': %s\nEnable sony support or remove "
 			"sony* from your "PACKAGE_NAME" config file.",
 			fan, strerror(errno));
 	}

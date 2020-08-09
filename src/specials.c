@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -28,7 +31,7 @@
 #include "colours.h"
 #ifdef X11
 #include "fonts.h"
-#endif
+#endif /* X11 */
 #include "logging.h"
 #include "specials.h"
 #include <math.h>
@@ -45,53 +48,92 @@ int special_count;
 int default_bar_width = 0, default_bar_height = 6;
 #ifdef X11
 int default_graph_width = 0, default_graph_height = 25;
+#endif /* X11 */
 int default_gauge_width = 40, default_gauge_height = 25;
-#endif
+
+/*
+ * Special data typedefs
+ */
+
+struct bar {
+	int width, height;
+};
+
+struct gauge {
+	int width, height;
+};
+
+struct graph {
+	int width, height;
+	unsigned int first_colour, last_colour;
+	unsigned int scale, showaslog;
+	char tempgrad;
+};
+
+struct stippled_hr {
+	int height, arg;
+};
+
+struct tab {
+	int width, arg;
+};
 
 /*
  * Scanning arguments to various special text objects
  */
 
-#ifdef X11
-const char *scan_gauge(const char *args, int *w, int *h)
+const char *scan_gauge(struct text_object *obj, const char *args)
 {
+	struct gauge *g;
+
+	g = malloc(sizeof(struct gauge));
+	memset(g, 0, sizeof(struct gauge));
+
 	/*width and height*/
-	*w = default_gauge_width;
-	*h = default_gauge_height;
+	g->width = default_gauge_width;
+	g->height = default_gauge_height;
 
 	/* gauge's argument is either height or height,width */
 	if (args) {
 		int n = 0;
 
-		if (sscanf(args, "%d,%d %n", h, w, &n) <= 1) {
-			if (sscanf(args, "%d %n", h, &n) == 2) {
-				*w = *h; /*square gauge*/
+		if (sscanf(args, "%d,%d %n", &g->height, &g->width, &n) <= 1) {
+			if (sscanf(args, "%d %n", &g->height, &n) == 2) {
+				g->width = g->height; /*square gauge*/
 			}
 		}
 		args += n;
 	}
 
+	obj->special_data = g;
 	return args;
 }
 
-const char *scan_bar(const char *args, int *w, int *h)
+const char *scan_bar(struct text_object *obj, const char *args)
 {
+	struct bar *b;
+
+	b = malloc(sizeof(struct bar));
+	memset(b, 0, sizeof(struct bar));
+
 	/* zero width means all space that is available */
-	*w = default_bar_width;
-	*h = default_bar_height;
+	b->width = default_bar_width;
+	b->height = default_bar_height;
 	/* bar's argument is either height or height,width */
 	if (args) {
 		int n = 0;
 
-		if (sscanf(args, "%d,%d %n", h, w, &n) <= 1) {
-			sscanf(args, "%d %n", h, &n);
+		if (sscanf(args, "%d,%d %n", &b->height, &b->width, &n) <= 1) {
+			sscanf(args, "%d %n", &b->height, &n);
 		}
 		args += n;
 	}
 
+	obj->special_data = b;
 	return args;
 }
 
+#ifdef X11
 char *scan_font(const char *args)
 {
 	if (args && *args) {
@@ -101,86 +143,78 @@ char *scan_font(const char *args)
 	return NULL;
 }
 
-char *scan_graph(const char *args, int *w, int *h,
-                 unsigned int *first_colour, unsigned int *last_colour,
-                 unsigned int *scale, char *showaslog)
+char *scan_graph(struct text_object *obj, const char *args, int defscale)
 {
-	const char *nographtype;
-	char buf[64];
-	buf[0] = 0;
+	struct graph *g;
+	char buf[1024];
+	memset(buf, 0, 1024);
+
+	g = malloc(sizeof(struct graph));
+	memset(g, 0, sizeof(struct graph));
+	obj->special_data = g;
 
 	/* zero width means all space that is available */
-	*w = default_graph_width;
-	*h = default_graph_height;
-	*first_colour = 0;
-	*last_colour = 0;
-	*scale = 0;
+	g->width = default_graph_width;
+	g->height = default_graph_height;
+	g->first_colour = 0;
+	g->last_colour = 0;
+	g->scale = defscale;
+	g->tempgrad = FALSE;
+	g->showaslog = FALSE;
 	if (args) {
-		//set showaslog and place the rest of the args in nographtype
-		if(strcasecmp(args, LOGGRAPH) == EQUAL) {
-			*showaslog = TRUE;
-			return NULL;
-		}else if(strcasecmp(args, NORMGRAPH) == EQUAL) {
-			*showaslog = FALSE;
-			return NULL;
-		}else if(strncasecmp(args, LOGGRAPH" ", strlen(LOGGRAPH) + 1 ) == EQUAL) {
-			*showaslog = TRUE;
-			nographtype = &args[strlen(LOGGRAPH) + 1];
-		}else if(strncasecmp(args, NORMGRAPH" ", strlen(NORMGRAPH) + 1 ) == EQUAL) {
-			*showaslog = FALSE;
-			nographtype = &args[strlen(NORMGRAPH) + 1];
-		}else{
-			*showaslog = FALSE;
-			nographtype = args;
+		if (strstr(args, " "TEMPGRAD) || strncmp(args, TEMPGRAD, strlen(TEMPGRAD)) == 0) {
+			g->tempgrad = TRUE;
 		}
-		DBGP("printing graph as %s, other args are: %s", (*showaslog ? "log" : "normal"), nographtype);
-		//check the rest of the args
-		if (sscanf(nographtype, "%d,%d %x %x %u", h, w, first_colour, last_colour, scale) == 5) {
+		if (strstr(args, " "LOGGRAPH) || strncmp(args, LOGGRAPH, strlen(LOGGRAPH)) == 0) {
+			g->showaslog = TRUE;
+		}
+		if (sscanf(args, "%d,%d %x %x %u", &g->height, &g->width, &g->first_colour, &g->last_colour, &g->scale) == 5) {
 			return NULL;
 		}
-		*scale = 0;
-		if (sscanf(nographtype, "%d,%d %x %x", h, w, first_colour, last_colour) == 4) {
+		g->scale = defscale;
+		if (sscanf(args, "%d,%d %x %x", &g->height, &g->width, &g->first_colour, &g->last_colour) == 4) {
 			return NULL;
 		}
-		if (sscanf(nographtype, "%63s %d,%d %x %x %u", buf, h, w, first_colour, last_colour, scale) == 6) {
+		if (sscanf(args, "%1023s %d,%d %x %x %u", buf, &g->height, &g->width, &g->first_colour, &g->last_colour, &g->scale) == 6) {
 			return strndup(buf, text_buffer_size);
 		}
-		*scale = 0;
-		if (sscanf(nographtype, "%63s %d,%d %x %x", buf, h, w, first_colour, last_colour) == 5) {
+		g->scale = defscale;
+		if (sscanf(args, "%1023s %d,%d %x %x", buf, &g->height, &g->width, &g->first_colour, &g->last_colour) == 5) {
 			return strndup(buf, text_buffer_size);
 		}
 		buf[0] = '\0';
-		*h = 25;
-		*w = 0;
-		if (sscanf(nographtype, "%x %x %u", first_colour, last_colour, scale) == 3) {
+		g->height = 25;
+		g->width = 0;
+		if (sscanf(args, "%x %x %u", &g->first_colour, &g->last_colour, &g->scale) == 3) {
 			return NULL;
 		}
-		*scale = 0;
-		if (sscanf(nographtype, "%x %x", first_colour, last_colour) == 2) {
+		g->scale = defscale;
+		if (sscanf(args, "%x %x", &g->first_colour, &g->last_colour) == 2) {
 			return NULL;
 		}
-		if (sscanf(nographtype, "%63s %x %x %u", buf, first_colour, last_colour, scale) == 4) {
+		if (sscanf(args, "%1023s %x %x %u", buf, &g->first_colour, &g->last_colour, &g->scale) == 4) {
 			return strndup(buf, text_buffer_size);
 		}
-		*scale = 0;
-		if (sscanf(nographtype, "%63s %x %x", buf, first_colour, last_colour) == 3) {
+		g->scale = defscale;
+		if (sscanf(args, "%1023s %x %x", buf, &g->first_colour, &g->last_colour) == 3) {
 			return strndup(buf, text_buffer_size);
 		}
 		buf[0] = '\0';
-		*first_colour = 0;
-		*last_colour = 0;
-		if (sscanf(nographtype, "%d,%d %u", h, w, scale) == 3) {
+		g->first_colour = 0;
+		g->last_colour = 0;
+		if (sscanf(args, "%d,%d %u", &g->height, &g->width, &g->scale) == 3) {
 			return NULL;
 		}
-		*scale = 0;
-		if (sscanf(nographtype, "%d,%d", h, w) == 2) {
+		g->scale = defscale;
+		if (sscanf(args, "%d,%d", &g->height, &g->width) == 2) {
 			return NULL;
 		}
-		if (sscanf(nographtype, "%63s %d,%d %u", buf, h, w, scale) < 4) {
-			*scale = 0;
+		if (sscanf(args, "%1023s %d,%d %u", buf, &g->height, &g->width, &g->scale) < 4) {
+			g->scale = defscale;
 			//TODO: check the return value and throw an error?
-			sscanf(nographtype, "%63s %d,%d", buf, h, w);
+			sscanf(args, "%1023s %d,%d", buf, &g->height, &g->width);
 		}
+#undef g
 
 		return strndup(buf, text_buffer_size);
 	}
@@ -191,7 +225,7 @@ char *scan_graph(const char *args, int *w, int *h,
 		return strndup(buf, text_buffer_size);
 	}
 }
-#endif
+#endif /* X11 */
 
 /*
  * Printing various special text objects
@@ -200,7 +234,7 @@ char *scan_graph(const char *args, int *w, int *h,
 static struct special_t *new_special(char *buf, enum special_types t)
 {
 	if (special_count >= max_specials) {
-		CRIT_ERR("too many special things in text");
+		CRIT_ERR(NULL, NULL, "too many special things in text");
 	}
 
 	buf[0] = SPECIAL_CHAR;
@@ -209,34 +243,50 @@ static struct special_t *new_special(char *buf, enum special_types t)
 	return &specials[special_count++];
 }
 
+void new_gauge_in_shell(struct text_object *obj, char *p, int p_max_size, int usage)
+{
+	static const char *gaugevals[] = { "_. ", "\\. ", " | ", " ./", " ._" };
+	(void)obj;
+
+	snprintf(p, p_max_size, "%s", gaugevals[round_to_int((double)usage * 4 / 255)]);
+}
+
 #ifdef X11
-void new_gauge(char *buf, int w, int h, int usage)
+void new_gauge_in_x11(struct text_object *obj, char *buf, int usage)
 {
 	struct special_t *s = 0;
+	struct gauge *g = obj->special_data;
+
 	if ((output_methods & TO_X) == 0)
+		return;
+
+	if (!g)
 		return;
 
 	s = new_special(buf, GAUGE);
 
-	s->arg = (usage > 255) ? 255 : ((usage < 0) ? 0 : usage);
-	s->width = w;
-	s->height = h;
+	s->arg = usage;
+	s->width = g->width;
+	s->height = g->height;
 }
+#endif /* X11 */
 
-void new_bar(char *buf, int w, int h, int usage)
+void new_gauge(struct text_object *obj, char *p, int p_max_size, int usage)
 {
-	struct special_t *s = 0;
-
-	if ((output_methods & TO_X) == 0)
+	if (!p_max_size)
 		return;
 
-	s = new_special(buf, BAR);
+	usage = (usage > 255) ? 255 : ((usage < 0) ? 0 : usage);
 
-	s->arg = (usage > 255) ? 255 : ((usage < 0) ? 0 : usage);
-	s->width = w;
-	s->height = h;
+#ifdef X11
+	if (output_methods & TO_X)
+		new_gauge_in_x11(obj, p, usage);
+	else
+#endif /* X11 */
+		new_gauge_in_shell(obj, p, p_max_size, usage);
 }
 
+#ifdef X11
 void new_font(char *buf, char *args)
 {
 	if ((output_methods & TO_X) == 0)
@@ -269,38 +319,40 @@ static void graph_append(struct special_t *graph, double f, char showaslog)
 		f = log10(f + 1);
 #endif
 	}
-	
+
 	if (!graph->scaled && f > graph->graph_scale) {
 		f = graph->graph_scale;
 	}
 
-/* Already happens in new_graph
-	if (graph->scaled) {
-		graph->graph_scale = 1;
-	}
-*/
-	graph->graph[0] = f;	/* add new data */
 	/* shift all the data by 1 */
 	for (i = graph->graph_width - 1; i > 0; i--) {
 		graph->graph[i] = graph->graph[i - 1];
-		if (graph->scaled && graph->graph[i] > graph->graph_scale) {
+		if (graph->scaled && graph->graph[i - 1] > graph->graph_scale) {
 			/* check if we need to update the scale */
-			graph->graph_scale = graph->graph[i];
+			graph->graph_scale = graph->graph[i - 1];
 		}
+	}
+	graph->graph[0] = f;	/* add new data */
+	if (graph->scaled && graph->graph[0] > graph->graph_scale) {
+		/* check if we need to update the scale */
+		graph->graph_scale = graph->graph[0];
 	}
 }
 
-void new_graph(char *buf, int w, int h, unsigned int first_colour,
-		unsigned int second_colour, double i, int scale, int append, char showaslog)
+void new_graph(struct text_object *obj, char *buf, int buf_max_size, double val)
 {
 	struct special_t *s = 0;
+	struct graph *g = obj->special_data;
 
 	if ((output_methods & TO_X) == 0)
 		return;
 
+	if (!g || !buf_max_size)
+		return;
+
 	s = new_special(buf, GRAPH);
 
-	s->width = w;
+	s->width = g->width;
 	if (s->graph == NULL) {
 		if (s->width > 0 && s->width < MAX_GRAPH_DEPTH) {
 			// subtract 2 for the box
@@ -312,29 +364,28 @@ void new_graph(char *buf, int w, int h, unsigned int first_colour,
 		memset(s->graph, 0, s->graph_width * sizeof(double));
 		s->graph_scale = 100;
 	}
-	s->height = h;
-	s->first_colour = adjust_colors(first_colour);
-	s->last_colour = adjust_colors(second_colour);
-	if (scale != 0) {
+	s->height = g->height;
+	s->first_colour = adjust_colours(g->first_colour);
+	s->last_colour = adjust_colours(g->last_colour);
+	if (g->scale != 0) {
 		s->scaled = 0;
-		s->graph_scale = scale;
+		s->graph_scale = g->scale;
 		s->show_scale = 0;
 	} else {
 		s->scaled = 1;
 		s->graph_scale = 1;
 		s->show_scale = 1;
 	}
+	s->tempgrad = g->tempgrad;
 	/* if (s->width) {
 		s->graph_width = s->width - 2;	// subtract 2 for rectangle around
 	} */
-	if (showaslog) {
 #ifdef MATH
+	if (g->showaslog) {
 		s->graph_scale = log10(s->graph_scale + 1);
+	}
 #endif
-	}
-	if (append) {
-		graph_append(s, i, showaslog);
-	}
+	graph_append(s, val, g->showaslog);
 }
 
 void new_hr(char *buf, int a)
@@ -345,27 +396,60 @@ void new_hr(char *buf, int a)
 	new_special(buf, HORIZONTAL_LINE)->height = a;
 }
 
-void new_stippled_hr(char *buf, int a, int b)
+void scan_stippled_hr(struct text_object *obj, const char *arg)
+{
+	struct stippled_hr *sh;
+
+	sh = malloc(sizeof(struct stippled_hr));
+	memset(sh, 0, sizeof(struct stippled_hr));
+
+	sh->arg = get_stippled_borders();
+	sh->height = 1;
+
+	if (arg) {
+		if (sscanf(arg, "%d %d", &sh->arg, &sh->height) != 2) {
+			sscanf(arg, "%d", &sh->height);
+		}
+	}
+	if (sh->arg <= 0) {
+		sh->arg = 1;
+	}
+	obj->special_data = sh;
+}
+
+void new_stippled_hr(struct text_object *obj, char *buf)
 {
 	struct special_t *s = 0;
+	struct stippled_hr *sh = obj->special_data;
 
 	if ((output_methods & TO_X) == 0)
+		return;
+
+	if (!sh)
 		return;
 
 	s = new_special(buf, STIPPLED_HR);
 
-	s->height = b;
-	s->arg = a;
+	s->height = sh->height;
+	s->arg = sh->arg;
 }
+#endif /* X11 */
 
 void new_fg(char *buf, long c)
 {
-	if ((output_methods & TO_X) == 0)
-		return;
-
-	new_special(buf, FG)->arg = c;
+#ifdef X11
+	if (output_methods & TO_X)
+		new_special(buf, FG)->arg = c;
+#endif /* X11 */
+#ifdef NCURSES
+	if (output_methods & TO_NCURSES)
+		new_special(buf, FG)->arg = c;
+#endif /* NCURSES */
+	UNUSED(buf);
+	UNUSED(c);
 }
 
+#ifdef X11
 void new_bg(char *buf, long c)
 {
 	if ((output_methods & TO_X) == 0)
@@ -373,7 +457,63 @@ void new_bg(char *buf, long c)
 
 	new_special(buf, BG)->arg = c;
 }
-#endif
+#endif /* X11 */
+
+static void new_bar_in_shell(struct text_object *obj, char* buffer, int buf_max_size, double usage)
+{
+	struct bar *b = obj->special_data;
+	int width, i, scaledusage;
+
+	if (!b)
+		return;
+
+	width = b->width;
+	if (!width)
+		width = DEFAULT_BAR_WIDTH_NO_X;
+
+	if (width > buf_max_size)
+		width = buf_max_size;
+
+	scaledusage = round_to_int( usage * width / 255);
+
+	for (i = 0; i < scaledusage; i++)
+		buffer[i] = '#';
+
+	for (; i < width; i++)
+		buffer[i] = '_';
+
+	buffer[i] = 0;
+}
+
+#ifdef X11
+static void new_bar_in_x11(struct text_object *obj, char *buf, int usage)
+{
+	struct special_t *s = 0;
+	struct bar *b = obj->special_data;
+
+	s = new_special(buf, BAR);
+
+	s->arg = usage;
+	s->width = b ?  b->width : default_bar_width;
+	s->height = b ? b->height : default_bar_height;
+}
+#endif /* X11 */
+
+/* usage is in range [0,255] */
+void new_bar(struct text_object *obj, char *p, int p_max_size, int usage)
+{
+	if (!p_max_size)
+		return;
+
+	usage = (usage > 255) ? 255 : ((usage < 0) ? 0 : usage);
+
+#ifdef X11
+	if ((output_methods & TO_X))
+		new_bar_in_x11(obj, p, usage);
+	else
+#endif /* X11 */
+		new_bar_in_shell(obj, p, p_max_size, usage);
+}
 
 void new_outline(char *buf, long c)
 {
@@ -406,11 +546,36 @@ void new_goto(char *buf, long c)
 	new_special(buf, GOTO)->arg = c;
 }
 
-void new_tab(char *buf, int a, int b)
+void scan_tab(struct text_object *obj, const char *arg)
 {
-	struct special_t *s = new_special(buf, TAB);
+	struct tab *t;
 
-	s->width = a;
-	s->arg = b;
+	t = malloc(sizeof(struct tab));
+	memset(t, 0, sizeof(struct tab));
+
+	t->width = 10;
+	t->arg = 0;
+
+	if (arg) {
+		if (sscanf(arg, "%d %d", &t->width, &t->arg) != 2) {
+			sscanf(arg, "%d", &t->arg);
+		}
+	}
+	if (t->width <= 0) {
+		t->width = 1;
+	}
+	obj->special_data = t;
 }
 
+void new_tab(struct text_object *obj, char *buf)
+{
+	struct special_t *s = 0;
+	struct tab *t = obj->special_data;
+
+	if (!t)
+		return;
+
+	s = new_special(buf, TAB);
+	s->width = t->width;
+	s->arg = t->arg;
+}

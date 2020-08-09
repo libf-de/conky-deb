@@ -1,4 +1,6 @@
-/* smapi.h:  conky support for IBM Thinkpad smapi
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * smapi.h:  conky support for IBM Thinkpad smapi
  *
  * Copyright (C) 2007 Phil Sutter <Phil@nwl.cc>
  *
@@ -33,5 +35,11 @@ char *smapi_get_val(const char *);
 char *smapi_get_bat_str(int, const char *);
 int smapi_get_bat_int(int, const char *);
 char *smapi_get_bat_val(const char *);
+
+void print_smapi(struct text_object *, char *, int);
+void print_smapi_bat_perc(struct text_object *, char *, int);
+void print_smapi_bat_temp(struct text_object *, char *, int);
+void print_smapi_bat_power(struct text_object *, char *, int);
+void print_smapi_bat_bar(struct text_object *, char *, int);
 
 #endif /* _SMAPI_H */

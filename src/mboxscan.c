@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2006 Marco Candrian <mac@calmar.ws>
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -28,10 +31,10 @@
 #include "conky.h"
 #include "logging.h"
 #include "mail.h"
+#include "text_object.h"
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <errno.h>
-#include "mboxscan.h"
 
 #define FROM_WIDTH 10
 #define SUBJECT_WIDTH 22
@@ -52,12 +55,12 @@ static double last_update;
 static int args_ok = 0;
 static int from_width;
 static int subject_width;
-static int print_mails;
+static int print_num_mails;
 static int time_delay;
 
 static char mbox_mail_spool[DEFAULT_TEXT_BUFFER_SIZE];
 
-void mbox_scan(char *args, char *output, size_t max_len)
+static void mbox_scan(char *args, char *output, size_t max_len)
 {
 	int i, u, flag;
 	int force_rescan = 0;
@@ -78,14 +81,14 @@ void mbox_scan(char *args, char *output, size_t max_len)
 		char *substr = strstr(args, "-n");
 
 		if (substr) {
-			if (sscanf(substr, "-n %i", &print_mails) != 1) {
-				print_mails = PRINT_MAILS;
+			if (sscanf(substr, "-n %i", &print_num_mails) != 1) {
+				print_num_mails = PRINT_MAILS;
 			}
 		} else {
-			print_mails = PRINT_MAILS;
+			print_num_mails = PRINT_MAILS;
 		}
-		if (print_mails < 1) {
-			print_mails = 1;
+		if (print_num_mails < 1) {
+			print_num_mails = 1;
 		}
 
 		substr = strstr(args, "-t");
@@ -137,7 +140,7 @@ void mbox_scan(char *args, char *output, size_t max_len)
 			free(copy_args);
 		}
 		if (strlen(mbox_mail_spool) < 1) {
-			CRIT_ERR("Usage: ${mboxscan [-n <number of messages to print>] "
+			CRIT_ERR(NULL, NULL, "Usage: ${mboxscan [-n <number of messages to print>] "
 				"[-fw <from width>] [-sw <subject width>] "
 				"[-t <delay in sec> mbox]}");
 		}
@@ -148,7 +151,7 @@ void mbox_scan(char *args, char *output, size_t max_len)
 		}
 
 		if (stat(mbox_mail_spool, &statbuf)) {
-			CRIT_ERR("can't stat %s: %s", mbox_mail_spool, strerror(errno));
+			CRIT_ERR(NULL, NULL, "can't stat %s: %s", mbox_mail_spool, strerror(errno));
 		}
 		args_ok = 1;	/* args-computing necessary only once */
 	}
@@ -162,7 +165,7 @@ void mbox_scan(char *args, char *output, size_t max_len)
 
 	/* mbox still exists? and get stat-infos */
 	if (stat(mbox_mail_spool, &statbuf)) {
-		ERR("can't stat %s: %s", mbox_mail_spool, strerror(errno));
+		NORM_ERR("can't stat %s: %s", mbox_mail_spool, strerror(errno));
 		output[0] = '\0';	/* delete any output */
 		return;
 	}
@@ -178,7 +181,7 @@ void mbox_scan(char *args, char *output, size_t max_len)
 
 	/* build up double-linked ring-list to hold data, while scanning down the
 	 * mbox */
-	for (i = 0; i < print_mails; i++) {
+	for (i = 0; i < print_num_mails; i++) {
 		curr = (struct ring_list *) malloc(sizeof(struct ring_list));
 		curr->from = (char *) malloc(sizeof(char[from_width + 1]));
 		curr->subject = (char *) malloc(sizeof(char[subject_width + 1]));
@@ -337,11 +340,11 @@ void mbox_scan(char *args, char *output, size_t max_len)
 
 	output[0] = '\0';
 
-	i = print_mails;
+	i = print_num_mails;
 	while (i) {
 		struct ring_list *tmp;
 		if (curr->from[0] != '\0') {
-			if (i != print_mails) {
+			if (i != print_num_mails) {
 				snprintf(buf, text_buffer_size, "\nF: %-*s S: %-*s", from_width,
 					curr->from, subject_width, curr->subject);
 			} else {	/* first time - no \n in front */
@@ -362,3 +365,49 @@ void mbox_scan(char *args, char *output, size_t max_len)
 		i--;
 	}
 }
+
+struct mboxscan_data {
+	char *args;
+	char *output;
+};
+
+void parse_mboxscan_arg(struct text_object *obj, const char *arg)
+{
+	struct mboxscan_data *msd;
+
+	msd = malloc(sizeof(struct mboxscan_data));
+	memset(msd, 0, sizeof(struct mboxscan_data));
+
+	msd->args = strndup(arg, text_buffer_size);
+	msd->output = (char *) malloc(text_buffer_size);
+	/* if '1' (in mboxscan.c) then there was SIGUSR1, hmm */
+	msd->output[0] = 1;
+
+	obj->data.opaque = msd;
+}
+
+void print_mboxscan(struct text_object *obj, char *p, int p_max_size)
+{
+	struct mboxscan_data *msd = obj->data.opaque;
+
+	if (!msd)
+		return;
+
+	mbox_scan(msd->args, msd->output, text_buffer_size);
+	snprintf(p, p_max_size, "%s", msd->output);
+}
+
+void free_mboxscan(struct text_object *obj)
+{
+	struct mboxscan_data *msd = obj->data.opaque;
+
+	if (!msd)
+		return;
+	if (msd->args)
+		free(msd->args);
+	if (msd->output)
+		free(msd->output);
+	free(obj->data.opaque);
+	obj->data.opaque = NULL;
+}
+

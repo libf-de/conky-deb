@@ -63,6 +63,9 @@
 /* Define if you have clock_gettime() */
 #undef HAVE_CLOCK_GETTIME
 
+/* Define if you want Curl support */
+#undef HAVE_CURL
+
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
 
@@ -77,6 +80,9 @@
 
 /* Define to 1 if you have the `free' function. */
 #undef HAVE_FREE
+
+/* Define to 1 if you have the `funopen' function. */
+#undef HAVE_FUNOPEN
 
 /* Define to 1 if you have the `gethostbyname_r' function. */
 #undef HAVE_GETHOSTBYNAME_R
@@ -120,6 +126,12 @@
 /* Define if you want Lua scripting support */
 #undef HAVE_LUA
 
+/* Define if you want Lua Cairo bindings for Conky */
+#undef HAVE_LUA_CAIRO
+
+/* Define if you want Lua Imlib2 bindings for Conky */
+#undef HAVE_LUA_IMLIB2
+
 /* Define to 1 if you have the `malloc' function. */
 #undef HAVE_MALLOC
 
@@ -144,14 +156,14 @@
 /* Define to 1 if you have the <NVCtrl/NVCtrl.h> header file. */
 #undef HAVE_NVCTRL_NVCTRL_H
 
-/* Define if OpenMP is enabled */
-#undef HAVE_OPENMP
-
 /* Define to 1 if you have the `popen' function. */
 #undef HAVE_POPEN
 
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
+
+/* Define to 1 if you have the <semaphore.h> header file. */
+#undef HAVE_SEMAPHORE_H
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
@@ -225,12 +237,21 @@
 /* Define if you want Imlib2 support */
 #undef IMLIB2
 
+/* Define if you want support for per-task I/O statistics */
+#undef IOSTATS
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #undef LT_OBJDIR
 
+/* Define if you want Lua extras */
+#undef LUA_EXTRAS
+
 /* Define if you want math support */
 #undef MATH
+
+/* Maximum number of network devices */
+#undef MAX_NET_INTERFACES
 
 /* Default maximum number of special things, e.g. fonts, offsets, aligns, etc.
    */
@@ -250,6 +271,12 @@
 
 /* Textencoding to use */
 #undef MY_ENCODING
+
+/* Define for ncurses support */
+#undef NCURSES
+
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
 
 /* Define if you want nvidia support */
 #undef NVIDIA
@@ -272,10 +299,16 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define if you want rss support */
+/* Define for profiling (gprof and gcov) support */
+#undef PROFILING
+
+/* Define if you want Curl support */
 #undef RSS
 
 /* Define to 1 if you have the ANSI C header files. */
@@ -287,8 +320,14 @@
 /* Define for testing (enables strict compiler flags) */
 #undef TESTING
 
+/* Define if you want argb visual support */
+#undef USE_ARGB
+
 /* Version number of package */
 #undef VERSION
+
+/* Define if you want METAR weather support */
+#undef WEATHER
 
 /* Define if you want to use X11 */
 #undef X11
@@ -298,6 +337,12 @@
 
 /* Define if you want XMMS2 support */
 #undef XMMS2
+
+/* Define if you want XOAP weather support */
+#undef XOAP
+
+/* User xoap keys file */
+#undef XOAP_FILE
 
 /* Define to 1 if the X Window System is missing or not being used. */
 #undef X_DISPLAY_MISSING

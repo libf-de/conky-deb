@@ -1,9 +1,196 @@
+**** This changelog is now deprecated.  Please see the git change log instead.
+
+2009-11-24
+	* Added support for max_text_width
+
+2009-11-20
+	* Allow for mpd connections to use IPv6
+
+2009-11-19
+	* Added support for $pid_read and $pid_write
+
+2009-11-17
+	* Added support for $format_time
+
+2009-11-16
+	* Added support for $pid_threads, $pid_thread_list, $pid_nice,
+	$pid_priority, $pid_time_usermode, $pid_time_kernelmode and $pid_time
+	* Added IPv6 support to $tcp_portmon
+
+2009-11-15
+	* Added support for $pid_parent, $pid_uid, $pid_euid, $pid_suid,
+	$pid_fsuid, $pid_gid, $pid_egid, $pid_sgid and $pid_fsgid
+	* Added support for $uid_name and $gid_name
+	* Renamed $running_processes to $running_threads
+	* Added real $running_processes
+	* Added support for $pid_vmpeak, $pid_vmsize, $pid_vmlck, $pid_vmhwm,
+	$pid_vmrss, $pid_vmdata, $pid_vmstk, $pid_vmexe, $pid_vmlib, $pid_vmpte
+
+2009-11-14
+	* Added support for $pid_state and $pid_state_short
+	* Added support for $cmdline_to_pid
+	* Make it possible to use other vars as arguments for the $pid_'s
+
+2009-11-13
+	* Add $conky_user_time (sf.net #2830919)
+	* Drop adt746x objects
+	* Added support for $pid_chroot
+	* Added middle_middle alignment support
+
+2009-11-12
+	* Added support for $pid_environ_list, $pid_exe, $pid_openfiles,
+	$pid_stdin, $pid_stdout and $pid_stderr
+
+2009-11-11
+	* Added support for $pid_cmdline, $pid_cwd, $pid_environ
+
+2009-11-10
+	* Fix $if_mpd_playing and $mpd_percent when you stop playing a song,
+	thanks Sakari Matikka
+
+2009-11-09
+	* Fix $scroll only scrolls once
+
+2009-11-08
+	* Fix segfaults and memleaks in curl
+	* Fix building with metar but without xoap
+
+2009-11-07
+	* Added support for $threads on Linux
+	* Fixed bug in $processes on Linux
+	* Fixed building with --disable-x11, --disable-xft, --disable-lua,
+	--disable-ncurses and --disable-iostats
+	* Added ncurses to the "-v" output when necessary
+
+2009-10-25
+	* Fixed loadavg and loadgraph argument parsing and corrected it's
+	documentation.
+
+2009-09-11
+	* Fixed configure test failure. Tolua test program couldn't find lua
+	libraries (even though they existed) and failed to compile.
+
+2009-09-06
+	* Rewrite hddtemp support for better scaling.
+
+2009-08-10
+	* Add day and date data_type to $weather_forecast
+
+2009-08-03
+	* Added support for $weather_forecast (experimental)
+
+2009-08-01
+	* Added support for out_to_ncurses
+
+2009-07-31
+	* Removed alias config option due to brokenness
+	* Added support for $include
+
+2009-07-29
+	* Add icon data_type for xoap weather
+
+2009-07-23
+	* Changed xoap parsing method to xpath, in preparation to include
+	forecast data
+
+2009-07-19
+	* Fixed out-of-tree builds
+	* Update MPD elapsed/progress when stopped (sf.net #2792113)
+	* Overhauled RSS and weather, added $curl
+
+2009-07-18
+	* Added compilation switch --enable-xoap to be able to use
+	www.weather.com as a source of weather data (this avoids adding
+	libxml2 as a required dependency for users that wish to use noaa
+	and not weather.com)
+	* Added support for X alignment across multi-lined objects (i.e., using
+	$alignr with $exec)
+	* Disabled OpenMP code until GCC's implementation stabilizes
+	* www.weather.com can now be used as well as a source of weather data
+
+2009-07-11
+	* Added support for $desktop, $desktop_number and $desktop_name (sf.net #2040528)
+
+2009-07-09
+	* Added support for $swapfree
+	* Improved Lua API (lua_read_parse has been removed in favour of the
+	conky_parse() Lua API call)
+	* Introduced new Lua Cairo and Imlib2 bindings
+
+2009-07-08
+	* Fixed a couple memory-related bugs
+
+2009-07-06
+	* Added support for $weather (experimental)
+
+2009-07-04
+	* Remove newline with comment only lines in TEXT
+	* Improved parsing of graph arguments, removed "log"|"normal" arguments in
+	favour of -l switch
+
+2009-07-01
+	* Fix escaping of comments in TEXT (sf.net #2813390, thanks Nils)
+
+2009-06-29
+	* Fix segfault in to_real_path, it's sometimes called with the same
+	source and dest without checking the length, causing a segfault.
+
+2009-06-20
+	* Use the internal process list for if_running on Linux
+
+2009-06-14
+	* Fix XMMS2 related crash (sf.net #2806111 and #2805310, thanks Lassi)
+
+2009-06-13
+	* Added support for $blink
+	* Added support for $to_bytes
+	* Fix segfault due to bad checking of return values for inotify code
+	(sf.net #2804886)
+	* Added 'own_window_type panel' to make Conky behave like a panel (thanks
+	Ole)
+
+2009-06-12
+	* Added support for per-task I/O statistics - $top_io
+
+2009-06-11
+	* Added border_inner_margin and border_outer_margin config options, and
+	deprecated border_margin
+
+2009-06-10
+	* Fix regression with loading of non-Xft fonts (sf.net #2804324)
+
 2009-06-09
 	* Fixed a regression which causes fonts to not be rendered properly with
 	certain types of windows
+	* Added format_human_readable option (sf.net #2803345, thanks Vincent)
 	* Fix bug in comments within TEXT (where the line contains just '#')
 	(sf.net #2803586), thanks Pavelo
 	* Fix bug in $mails (sf.net #2802529, thanks Nikos)
+
+2009-06-08
+	* $battery_short can now also display F (full), N (not present),E (empty),
+	U (unknown)
+	* Fix problem that $battery and $battery_short displayed unknown on some
+	systems when the battery wasn't unknown but full
+
+2009-06-06
+	* Add support for membar,swapbar,cpubar,fs_bar,fs_bar_free,battery_bar,
+	execbar,execibar,lua_bar,entropy_bar,mpd_bar,apcupsd_loadbar and
+	wireless_link_bar
+	* Fix finding IP before first update
+
+2009-06-04
+	* Add entropy_perc printing the available entropy as percentage
+	* Add read_tcp to print stuff from tcp-sockets
+
+2009-06-03
+	* Improved Imlib2 cache control by adding a global cache flush option, and
+	per image cache flushing
+
+2009-05-24
+	* Added fancy new 'temperature gradients' feature for graphs, via the -t
+	switch at the end of graph arguments.
+	* Allow ~/... and $HOME/... paths for more stuff.
 
 2009-06-07
 	* Conky 1.7.1 released
@@ -38,11 +225,10 @@
 2009-05-10
 	* Added support for APC UPS daemon monitoring
 	* Fixed hwmon for kernel 2.6.29
-	* Fixed removing comments
 
 2009-05-09
 	* Allow the use of '#' for comments within text area (can be escaped with
-	'\#')
+	'\#'
 
 2009-05-08
 	* Only include disp when needed

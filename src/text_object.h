@@ -1,4 +1,6 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -28,36 +30,22 @@
 #define _TEXT_OBJECT_H
 
 #include "config.h"		/* for the defines */
-#include "timed_thread.h"	/* timed_thread */
-
-#ifdef TCP_PORT_MONITOR
-#include "tcp-portmon.h"	/* tcp_port_monitor_data */
-#endif
-
-#include "mail.h"		/* local_mail_s */
-#include "fs.h"			/* struct fs_stat */
-
-#ifdef NVIDIA
-#include "nvidia.h"		/* nvidia_s */
-#endif
+#include "specials.h"		/* enum special_types */
 
 enum text_object_type {
+	OBJ_read_tcp,
 	OBJ_addr,
 #if defined(__linux__)
 	OBJ_addrs,
 #endif /* __linux__ */
 #ifndef __OpenBSD__
 	OBJ_acpiacadapter,
-	OBJ_adt746xcpu,
-	OBJ_adt746xfan,
 	OBJ_acpifan,
 	OBJ_acpitemp,
 	OBJ_battery,
 	OBJ_battery_time,
 	OBJ_battery_percent,
-#ifdef X11
 	OBJ_battery_bar,
-#endif
 	OBJ_battery_short,
 #endif /* !__OpenBSD__ */
 	OBJ_buffers,
@@ -78,12 +66,12 @@ enum text_object_type {
 	OBJ_conky_build_arch,
 	OBJ_font,
 	OBJ_cpu,
-#ifdef X11
-	OBJ_cpugauge,
 	OBJ_cpubar,
+	OBJ_cpugauge,
+#ifdef X11
 	OBJ_cpugraph,
 	OBJ_loadgraph,
-#endif
+#endif /* X11 */
 	OBJ_diskio,
 	OBJ_diskio_read,
 	OBJ_diskio_write,
@@ -91,12 +79,12 @@ enum text_object_type {
 	OBJ_diskiograph,
 	OBJ_diskiograph_read,
 	OBJ_diskiograph_write,
-#endif
+#endif /* X11 */
 	OBJ_downspeed,
 	OBJ_downspeedf,
 #ifdef X11
 	OBJ_downspeedgraph,
-#endif
+#endif /* X11 */
 	OBJ_else,
 	OBJ_endif,
 	OBJ_eval,
@@ -105,21 +93,19 @@ enum text_object_type {
 	OBJ_execi,
 	OBJ_texeci,
 	OBJ_execbar,
-#ifdef X11
-	OBJ_execgauge,
-	OBJ_execgraph,
 	OBJ_execibar,
-	OBJ_execigraph,
+	OBJ_execgauge,
 	OBJ_execigauge,
-#endif
+#ifdef X11
+	OBJ_execgraph,
+	OBJ_execigraph,
+#endif /* X11 */
 	OBJ_execp,
 	OBJ_execpi,
 	OBJ_freq,
 	OBJ_freq_g,
-#ifdef X11
 	OBJ_fs_bar,
 	OBJ_fs_bar_free,
-#endif
 	OBJ_fs_free,
 	OBJ_fs_free_perc,
 	OBJ_fs_size,
@@ -156,7 +142,7 @@ enum text_object_type {
 	OBJ_smapi,
 #ifdef X11
 	OBJ_smapi_bat_bar,
-#endif
+#endif /* X11 */
 	OBJ_smapi_bat_perc,
 	OBJ_smapi_bat_temp,
 	OBJ_smapi_bat_power,
@@ -180,9 +166,7 @@ enum text_object_type {
 	OBJ_wireless_link_qual,
 	OBJ_wireless_link_qual_max,
 	OBJ_wireless_link_qual_perc,
-#ifdef X11
 	OBJ_wireless_link_bar,
-#endif
 #endif /* __linux__ */
 #if defined(__FreeBSD__) || defined(__linux__)
 	OBJ_if_up,
@@ -196,6 +180,9 @@ enum text_object_type {
 	OBJ_top,
 	OBJ_top_mem,
 	OBJ_top_time,
+#ifdef IOSTATS
+	OBJ_top_io,
+#endif
 	OBJ_tail,
 	OBJ_head,
 	OBJ_lines,
@@ -209,6 +196,7 @@ enum text_object_type {
 	OBJ_unseen_mails,
 	OBJ_flagged_mails,
 	OBJ_unflagged_mails,
+	OBJ_format_time,
 	OBJ_forwarded_mails,
 	OBJ_unforwarded_mails,
 	OBJ_replied_mails,
@@ -219,43 +207,88 @@ enum text_object_type {
 	OBJ_mem,
 	OBJ_memeasyfree,
 	OBJ_memfree,
-#ifdef X11
 	OBJ_memgauge,
-	OBJ_membar,
+#ifdef X11
 	OBJ_memgraph,
-#endif
+#endif /* X11 */
+	OBJ_membar,
 	OBJ_memmax,
 	OBJ_memperc,
 	OBJ_mixer,
 	OBJ_mixerl,
 	OBJ_mixerr,
-#ifdef X11
 	OBJ_mixerbar,
 	OBJ_mixerlbar,
 	OBJ_mixerrbar,
-#endif
 	OBJ_if_mixer_mute,
 #ifdef X11
 	OBJ_monitor,
 	OBJ_monitor_number,
-#endif
+	OBJ_desktop,
+	OBJ_desktop_number,
+	OBJ_desktop_name,
+#endif /* X11 */
 	OBJ_nameserver,
 	OBJ_nodename,
 	OBJ_nvidia,
 	OBJ_pre_exec,
+	OBJ_cmdline_to_pid,
+	OBJ_pid_chroot,
+	OBJ_pid_cmdline,
+	OBJ_pid_cwd,
+	OBJ_pid_environ,
+	OBJ_pid_environ_list,
+	OBJ_pid_exe,
+	OBJ_pid_nice,
+	OBJ_pid_openfiles,
+	OBJ_pid_parent,
+	OBJ_pid_priority,
+	OBJ_pid_state,
+	OBJ_pid_state_short,
+	OBJ_pid_stderr,
+	OBJ_pid_stdin,
+	OBJ_pid_stdout,
+	OBJ_pid_threads,
+	OBJ_pid_thread_list,
+	OBJ_pid_time_kernelmode,
+	OBJ_pid_time_usermode,
+	OBJ_pid_time,
+	OBJ_pid_uid,
+	OBJ_pid_euid,
+	OBJ_pid_suid,
+	OBJ_pid_fsuid,
+	OBJ_pid_gid,
+	OBJ_pid_egid,
+	OBJ_pid_sgid,
+	OBJ_pid_fsgid,
+	OBJ_pid_read,
+	OBJ_pid_vmpeak,
+	OBJ_pid_vmsize,
+	OBJ_pid_vmlck,
+	OBJ_pid_vmhwm,
+	OBJ_pid_vmrss,
+	OBJ_pid_vmdata,
+	OBJ_pid_vmstk,
+	OBJ_pid_vmexe,
+	OBJ_pid_vmlib,
+	OBJ_pid_vmpte,
+	OBJ_pid_write,
+	OBJ_gid_name,
+	OBJ_uid_name,
 	OBJ_processes,
 	OBJ_running_processes,
 	OBJ_shadecolor,
 	OBJ_outlinecolor,
 	OBJ_stippled_hr,
 	OBJ_swap,
-#ifdef X11
+	OBJ_swapfree,
 	OBJ_swapbar,
-#endif
 	OBJ_swapmax,
 	OBJ_swapperc,
 	OBJ_sysname,
 	OBJ_text,
+	OBJ_threads,
+	OBJ_running_threads,
 	OBJ_time,
 	OBJ_utime,
 	OBJ_tztime,
@@ -266,12 +299,13 @@ enum text_object_type {
 	OBJ_upspeedf,
 #ifdef X11
 	OBJ_upspeedgraph,
-#endif
+#endif /* X11 */
 	OBJ_uptime,
 	OBJ_uptime_short,
 	OBJ_user_names,
 	OBJ_user_terms,
 	OBJ_user_times,
+	OBJ_user_time,
 	OBJ_user_number,
 	OBJ_imap_messages,
 	OBJ_imap_unseen,
@@ -299,9 +333,7 @@ enum text_object_type {
 	OBJ_mpd_vol,
 	OBJ_mpd_bitrate,
 	OBJ_mpd_status,
-#ifdef X11
 	OBJ_mpd_bar,
-#endif
 	OBJ_mpd_elapsed,
 	OBJ_mpd_length,
 	OBJ_mpd_track,
@@ -310,7 +342,7 @@ enum text_object_type {
 	OBJ_mpd_percent,
 	OBJ_mpd_smart,
 	OBJ_if_mpd_playing,
-#endif
+#endif /* MPD */
 #ifdef MOC
 	OBJ_moc_state,
 	OBJ_moc_file,
@@ -323,7 +355,7 @@ enum text_object_type {
 	OBJ_moc_curtime,
 	OBJ_moc_bitrate,
 	OBJ_moc_rate,
-#endif
+#endif /* MOC */
 #ifdef XMMS2
 	OBJ_xmms2_artist,
 	OBJ_xmms2_album,
@@ -342,12 +374,12 @@ enum text_object_type {
 	OBJ_xmms2_status,
 #ifdef X11
 	OBJ_xmms2_bar,
-#endif
+#endif /* X11 */
 	OBJ_xmms2_smart,
 	OBJ_xmms2_playlist,
 	OBJ_xmms2_timesplayed,
 	OBJ_if_xmms2_connected,
-#endif
+#endif /* XMMS2 */
 #ifdef AUDACIOUS
 	OBJ_audacious_status,
 	OBJ_audacious_title,
@@ -364,8 +396,8 @@ enum text_object_type {
 	OBJ_audacious_main_volume,
 #ifdef X11
 	OBJ_audacious_bar,
-#endif
-#endif
+#endif /* X11 */
+#endif /* AUDACIOUS */
 #ifdef BMPX
 	OBJ_bmpx_title,
 	OBJ_bmpx_artist,
@@ -373,40 +405,50 @@ enum text_object_type {
 	OBJ_bmpx_track,
 	OBJ_bmpx_uri,
 	OBJ_bmpx_bitrate,
-#endif
+#endif /* BMPX */
 #ifdef EVE
 	OBJ_eve,
-#endif
+#endif /* EVE */
+#ifdef HAVE_CURL
+	OBJ_curl,
+#endif /* HAVE_CURL */
 #ifdef RSS
 	OBJ_rss,
-#endif
+#endif /* RSS */
+#ifdef WEATHER
+	OBJ_weather,
+#endif /* WEATHER */
+#ifdef XOAP
+	OBJ_weather_forecast,
+#endif /* XOAP */
 #ifdef HAVE_LUA
 	OBJ_lua,
 	OBJ_lua_parse,
-	OBJ_lua_read_parse,
-#ifdef X11
 	OBJ_lua_bar,
-	OBJ_lua_graph,
 	OBJ_lua_gauge,
+#ifdef X11
+	OBJ_lua_graph,
 #endif /* X11 */
 #endif /* HAVE_LUA */
 #ifdef TCP_PORT_MONITOR
 	OBJ_tcp_portmon,
-#endif
+#endif /* TCP_PORT_MONITOR */
 #ifdef HAVE_ICONV
 	OBJ_iconv_start,
 	OBJ_iconv_stop,
-#endif
+#endif /* HAVE_ICONV */
 #ifdef HDDTEMP
 	OBJ_hddtemp,
-#endif
+#endif /* HDDTEMP */
+	OBJ_include,
+	OBJ_blink,
+	OBJ_to_bytes,
 	OBJ_scroll,
 	OBJ_combine,
 	OBJ_entropy_avail,
+	OBJ_entropy_perc,
 	OBJ_entropy_poolsize,
-#ifdef X11
 	OBJ_entropy_bar,
-#endif
 #ifdef APCUPSD
 	OBJ_apcupsd,
 	OBJ_apcupsd_name,
@@ -416,162 +458,32 @@ enum text_object_type {
 	OBJ_apcupsd_status,
 	OBJ_apcupsd_linev,
 	OBJ_apcupsd_load,
-#ifdef X11
 	OBJ_apcupsd_loadbar,
-	OBJ_apcupsd_loadgraph,
 	OBJ_apcupsd_loadgauge,
-#endif
+#ifdef X11
+	OBJ_apcupsd_loadgraph,
+#endif /* X11 */
 	OBJ_apcupsd_charge,
 	OBJ_apcupsd_timeleft,
 	OBJ_apcupsd_temp,
 	OBJ_apcupsd_lastxfer,
-#endif
+#endif /* APCUPSD */
 };
 
 struct text_object {
 	struct text_object *next, *prev;	/* doubly linked list of text objects */
 	struct text_object *sub;		/* for objects parsing text into objects */
+	struct text_object *ifblock_next;	/* jump target for ifblock objects */
 	union {
+		void *opaque;		/* new style generic per object data */
 		char *s;		/* some string */
 		int i;			/* some integer */
-		long l;			/* some other integer */
-		unsigned int sensor;
-		struct net_stat *net;
-		struct fs_stat *fs;
-		struct diskio_stat *diskio;
-		unsigned char loadavg[3];
-		unsigned int cpu_index;
-		struct mail_s *mail;
-
-		struct {
-			char *args;
-			char *output;
-		} mboxscan;
-
-		struct {
-			char *tz;	/* timezone variable */
-			char *fmt;	/* time display formatting */
-		} tztime;
-
-#ifdef X11
-		struct {
-			struct fs_stat *fs;
-			int w, h;
-		} fsbar;		/* 3 */
-
-		struct {
-			int l;
-			int w, h;
-		} mixerbar;		/* 3 */
-#endif
-
-		struct {
-			int fd;
-			int arg;
-			char devtype[256];
-			char type[64];
-			float factor, offset;
-		} sysfs;
-
-		struct {
-			struct text_object *next;
-			char *s;
-			int i;
-			char *str;
-		} ifblock;
-
-		struct {
-			int num;
-			int type;
-			int was_parsed;
-			char *s;
-		} top;
-
-		struct {
-			int wantedlines;
-			int readlines;
-			char *logfile;
-			double last_update;
-			float interval;
-			char *buffer;
-			/* If not -1, a file descriptor to read from when
-			 * logfile is a FIFO. */
-			int fd;
-		} tail;
-
-		struct {
-			double last_update;
-			float interval;
-			char *cmd;
-			char *buffer;
-			double data;
-		} execi;		/* 5 */
-
-		struct {
-			float interval;
-			char *cmd;
-			char *buffer;
-			double data;
-			timed_thread *p_timed_thread;
-		} texeci;
-
-		struct {
-			int a, b;
-		} pair;			/* 2 */
-#ifdef TCP_PORT_MONITOR
-		struct tcp_port_monitor_data tcp_port_monitor;
-#endif
-#ifdef HDDTEMP
-		struct {
-			char *addr;
-			int port;
-			char *dev;
-			double update_time;
-			char *temp;
-		} hddtemp;		/* 2 */
-#endif
-#ifdef EVE
-		struct {
-			char *apikey;
-			char *charid;
-			char *userid;
-		} eve;
-#endif
-#ifdef RSS
-		struct {
-			char *uri;
-			char *action;
-			int act_par;
-			int delay;
-			unsigned int nrspaces;
-		} rss;
-#endif
-		struct {
-			char *text;
-			unsigned int show;
-			unsigned int step;
-			unsigned int start;
-		} scroll;
-
-		struct {
-			char *left;
-			char *seperation;
-			char *right;
-		} combine;
-
-		struct local_mail_s local_mail;
-#ifdef NVIDIA
-		struct nvidia_s nvidia;
-#endif /* NVIDIA */
-
+		long l;			/* some long integer */
 	} data;
+
+	void *special_data;
 	int type;
-	int a, b;
 	long line;
-	unsigned int c, d, e;
-	float f;
-	char showaslog;
-	char global_mode;
 };
 
 /* text object list helpers */

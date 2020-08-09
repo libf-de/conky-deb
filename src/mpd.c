@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -6,7 +9,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -27,6 +30,7 @@
 #include "conky.h"
 #include "logging.h"
 #include "timed_thread.h"
+#include "timeinfo.h"
 #include "libmpdclient.h"
 #include "mpd.h"
 
@@ -34,6 +38,9 @@
 static char mpd_host[128];
 static char mpd_password[128];
 static int mpd_port;
+
+/* this is >0 if the current password was set from MPD_HOST */
+static int mpd_environment_password = 0;
 
 /* global mpd information */
 static struct mpd_s mpd_info;
@@ -44,14 +51,21 @@ static int refcount = 0;
 void mpd_set_host(const char *host)
 {
 	snprintf(mpd_host, 128, "%s", host);
+
+	if (mpd_environment_password) {
+		/* for security, dont use environment password when user specifies host in config */
+		mpd_clear_password();
+	}
 }
-void mpd_set_password(const char *password)
+void mpd_set_password(const char *password, int from_environment)
 {
 	snprintf(mpd_password, 128, "%s", password);
+	mpd_environment_password = from_environment;
 }
 void mpd_clear_password(void)
 {
 	*mpd_password = '\0';
+	mpd_environment_password = 0;
 }
 int mpd_set_port(const char *port)
 {
@@ -67,9 +81,7 @@ int mpd_set_port(const char *port)
 void init_mpd(void)
 {
 	if (!(refcount++))	/* first client */
-		memset(&mpd_info, 0, sizeof(struct mpd_s));
-
-	refcount++;
+		memset(&mpd_info, 0, sizeof(mpd_info));
 }
 
 struct mpd_s *mpd_get_info(void)
@@ -112,12 +124,12 @@ void update_mpd(void)
 	interval = info.music_player_interval * 1000000;
 	thread = timed_thread_create(&update_mpd_thread, &thread, interval);
 	if (!thread) {
-		ERR("Failed to create MPD timed thread");
+		NORM_ERR("Failed to create MPD timed thread");
 		return;
 	}
 	timed_thread_register(thread, &thread);
 	if (timed_thread_run(thread))
-		ERR("Failed to run MPD timed thread");
+		NORM_ERR("Failed to run MPD timed thread");
 }
 
 /* stringMAXdup dups at most text_buffer_size bytes */
@@ -143,7 +155,7 @@ static void *update_mpd_thread(void *arg)
 		timed_thread_lock(me);
 
 		if (conn->error || conn == NULL) {
-			ERR("MPD error: %s\n", conn->errorStr);
+			NORM_ERR("MPD error: %s\n", conn->errorStr);
 			mpd_closeConnection(conn);
 			conn = 0;
 			clear_mpd();
@@ -158,7 +170,7 @@ static void *update_mpd_thread(void *arg)
 
 		mpd_sendStatusCommand(conn);
 		if ((status = mpd_getStatus(conn)) == NULL) {
-			ERR("MPD error: %s\n", conn->errorStr);
+			NORM_ERR("MPD error: %s\n", conn->errorStr);
 			mpd_closeConnection(conn);
 			conn = 0;
 			clear_mpd();
@@ -182,12 +194,26 @@ static void *update_mpd_thread(void *arg)
 			continue;
 		}
 
-		mpd_info.volume = status->volume;
+		mpd_info.vol = status->volume;
+		if (status->random == 0) {
+			mpd_info.random = "Off";
+		} else if (status->random == 1) {
+			mpd_info.random = "On";
+		} else {
+			mpd_info.random = "";
+		}
+		if (status->repeat == 0) {
+			mpd_info.repeat = "Off";
+		} else if (status->repeat == 1) {
+			mpd_info.repeat = "On";
+		} else {
+			mpd_info.repeat = "";
+		}
 		/* if (status->error) {
 			printf("error: %s\n", status->error);
 		} */
 
-		switch(status->state) {
+		switch (status->state) {
 			case MPD_STATUS_STATE_PLAY:
 				mpd_info.status = "Playing";
 				break;
@@ -211,20 +237,10 @@ static void *update_mpd_thread(void *arg)
 				status->totalTime;
 			mpd_info.elapsed = status->elapsedTime;
 			mpd_info.length = status->totalTime;
-			if (status->random == 0) {
-				mpd_info.random = "Off";
-			} else if (status->random == 1) {
-				mpd_info.random = "On";
-			} else {
-				mpd_info.random = "";
-			}
-			if (status->repeat == 0) {
-				mpd_info.repeat = "Off";
-			} else if (status->repeat == 1) {
-				mpd_info.repeat = "On";
-			} else {
-				mpd_info.repeat = "";
-			}
+		} else {
+			mpd_info.progress = 0;
+			mpd_info.is_playing = 0;
+			mpd_info.elapsed = 0;
 		}
 
 		if (conn->error) {
@@ -301,3 +317,98 @@ static void *update_mpd_thread(void *arg)
 	/* never reached */
 }
 
+static inline void format_media_player_time(char *buf, const int size,
+		int seconds)
+{
+	int days, hours, minutes;
+
+	if (times_in_seconds()) {
+		snprintf(buf, size, "%d", seconds);
+		return;
+	}
+
+	days = seconds / (24 * 60 * 60);
+	seconds %= (24 * 60 * 60);
+	hours = seconds / (60 * 60);
+	seconds %= (60 * 60);
+	minutes = seconds / 60;
+	seconds %= 60;
+
+	if (days > 0) {
+		snprintf(buf, size, "%i days %i:%02i:%02i", days,
+				hours, minutes, seconds);
+	} else if (hours > 0) {
+		snprintf(buf, size, "%i:%02i:%02i", hours, minutes,
+				seconds);
+	} else {
+		snprintf(buf, size, "%i:%02i", minutes, seconds);
+	}
+}
+
+void print_mpd_elapsed(struct text_object *obj, char *p, int p_max_size)
+{
+	(void)obj;
+	format_media_player_time(p, p_max_size, mpd_get_info()->elapsed);
+}
+
+void print_mpd_length(struct text_object *obj, char *p, int p_max_size)
+{
+	(void)obj;
+	format_media_player_time(p, p_max_size, mpd_get_info()->length);
+}
+
+void print_mpd_percent(struct text_object *obj, char *p, int p_max_size)
+{
+	(void)obj;
+	percent_print(p, p_max_size, (int)(mpd_get_info()->progress * 100));
+}
+
+void print_mpd_bar(struct text_object *obj, char *p, int p_max_size)
+{
+	new_bar(obj, p, p_max_size, (int) (mpd_get_info()->progress * 255.0f));
+}
+
+void print_mpd_smart(struct text_object *obj, char *p, int p_max_size)
+{
+	struct mpd_s *mpd = mpd_get_info();
+	int len = obj->data.i;
+	if (len == 0 || len > p_max_size)
+		len = p_max_size;
+
+	memset(p, 0, p_max_size);
+	if (mpd->artist && *mpd->artist &&
+			mpd->title && *mpd->title) {
+		snprintf(p, len, "%s - %s", mpd->artist,
+				mpd->title);
+	} else if (mpd->title && *mpd->title) {
+		snprintf(p, len, "%s", mpd->title);
+	} else if (mpd->artist && *mpd->artist) {
+		snprintf(p, len, "%s", mpd->artist);
+	} else if (mpd->file && *mpd->file) {
+		snprintf(p, len, "%s", mpd->file);
+	} else {
+		*p = 0;
+	}
+}
+
+#define MPD_PRINT_GENERATOR(name, fmt) \
+void print_mpd_##name(struct text_object *obj, char *p, int p_max_size) \
+{ \
+	if (obj->data.i && obj->data.i < p_max_size) \
+		p_max_size = obj->data.i; \
+	snprintf(p, p_max_size, fmt, mpd_get_info()->name); \
+}
+
+MPD_PRINT_GENERATOR(title, "%s")
+MPD_PRINT_GENERATOR(artist, "%s")
+MPD_PRINT_GENERATOR(album, "%s")
+MPD_PRINT_GENERATOR(random, "%s")
+MPD_PRINT_GENERATOR(repeat, "%s")
+MPD_PRINT_GENERATOR(track, "%s")
+MPD_PRINT_GENERATOR(name, "%s")
+MPD_PRINT_GENERATOR(file, "%s")
+MPD_PRINT_GENERATOR(vol, "%d")
+MPD_PRINT_GENERATOR(bitrate, "%d")
+MPD_PRINT_GENERATOR(status, "%s")
+
+#undef MPD_PRINT_GENERATOR

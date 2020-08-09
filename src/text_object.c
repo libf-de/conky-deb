@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -6,7 +9,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -25,6 +28,8 @@
  */
 #include "text_object.h"
 #include "logging.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 /* text_object_list
  *
@@ -50,7 +55,7 @@ int append_object(struct text_object *root, struct text_object *obj)
 
 	if (end) {
 		if (end->next)
-			CRIT_ERR("huston, we have a lift-off");
+			CRIT_ERR(NULL, NULL, "huston, we have a lift-off");
 		end->next = obj;
 	} else {
 		root->next = obj;
@@ -101,8 +106,8 @@ static int push_ifblock(struct ifblock_stack_obj **ifblock_stack_top,
 	switch (type) {
 		case IFBLOCK_ENDIF:
 			if (!(*ifblock_stack_top))
-				CRIT_ERR("got an endif without matching if");
-			(*ifblock_stack_top)->obj->data.ifblock.next = obj;
+				CRIT_ERR(NULL, NULL, "got an endif without matching if");
+			(*ifblock_stack_top)->obj->ifblock_next = obj;
 			/* if there's some else in between, remove and free it */
 			if ((*ifblock_stack_top)->type == IFBLOCK_ELSE) {
 				stackobj = *ifblock_stack_top;
@@ -116,8 +121,8 @@ static int push_ifblock(struct ifblock_stack_obj **ifblock_stack_top,
 			break;
 		case IFBLOCK_ELSE:
 			if (!(*ifblock_stack_top))
-				CRIT_ERR("got an else without matching if");
-			(*ifblock_stack_top)->obj->data.ifblock.next = obj;
+				CRIT_ERR(NULL, NULL, "got an else without matching if");
+			(*ifblock_stack_top)->obj->ifblock_next = obj;
 			/* fall through */
 		case IFBLOCK_IF:
 			stackobj = malloc(sizeof(struct ifblock_stack_obj));
@@ -127,7 +132,7 @@ static int push_ifblock(struct ifblock_stack_obj **ifblock_stack_top,
 			*ifblock_stack_top = stackobj;
 			break;
 		default:
-			CRIT_ERR("push_ifblock() missuse detected!");
+			CRIT_ERR(NULL, NULL, "push_ifblock() missuse detected!");
 	}
 	return 0;
 }

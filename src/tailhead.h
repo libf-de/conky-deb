@@ -1,4 +1,6 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -24,24 +26,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
 #ifndef _TAILHEAD_H
 #define _TAILHEAD_H
 
-#include "text_object.h"
+void free_tailhead(struct text_object *);
+void init_tailhead(const char *, const char *, struct text_object *, void *);
+void print_tailhead(const char *, struct text_object *, char *, int);
 
-#define MAX_TAIL_LINES 100
-
-enum tailhead_type {
-	TAIL,
-	HEAD,
-};
-
-#define init_tail_object(o, a) init_tailhead_object(TAIL, o, a)
-#define init_head_object(o, a) init_tailhead_object(HEAD, o, a)
-
-int init_tailhead_object(enum tailhead_type,
-		struct text_object *, const char *);
-int print_head_object(struct text_object *, char *, size_t);
-int print_tail_object(struct text_object *, char *, size_t);
+void print_lines(struct text_object *, char *, int);
+void print_words(struct text_object *, char *, int);
 
 #endif /* _TAILHEAD_H */

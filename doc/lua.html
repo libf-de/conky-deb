@@ -1,0 +1,205 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Lua API</title>
+</head>
+<body bgcolor="#FFFFFF"><table cellpadding="3">
+<tr bgcolor="#eecfa1">
+<th>Name</th>
+<th>Type</th>
+<th>Details</th>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">conky_parse(string)</td>
+<td align="center">function</td>
+<td>
+            <p>This function takes a string that is evaluated as
+            per Conky's TEXT section, and then returns a string
+            with the result.</p>
+        </td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">conky_set_update_interval(number)</td>
+<td align="center">function</td>
+<td>
+            <p>Sets Conky's update interval (in seconds) to
+            'number'.</p>
+        </td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">conky_window</td>
+<td align="center">table</td>
+<td>
+            <p>This table contains some information about
+            Conky's window. The following table describes the
+            values contained:</p>
+            <ul>
+<li>
+                    <strong>drawable</strong> - 
+	
+                    Window's drawable (Xlib Drawable),
+                    requires Lua extras enabled at compile
+                    time.
+                </li>
+<li>
+                    <strong>visual</strong> - 
+	
+                    Window's visual (Xlib Visual), requires
+                    Lua extras enabled at compile time.
+                </li>
+<li>
+                    <strong>display</strong> - 
+	
+                    Window's display (Xlib Display),
+                    requires Lua extras enabled at compile
+                    time.
+                </li>
+<li>
+                    <strong>width</strong> - 
+	
+                    Window width (in pixels).
+                </li>
+<li>
+                    <strong>height</strong> - 
+	
+                    Window height (in pixels).
+                </li>
+<li>
+                    <strong>border_inner_margin</strong> - 
+	
+                    Window's inner border margin (in
+                    pixels).
+                </li>
+<li>
+                    <strong>border_outer_margin</strong> - 
+	
+                    Window's outer border margin (in
+                    pixels).
+                </li>
+<li>
+                    <strong>border_width</strong> - 
+	
+                    Window's border width (in
+                    pixels).
+                </li>
+<li>
+                    <strong>text_start_x</strong> - 
+	
+                    The x component of the starting
+                    coordinate of text drawing.
+                </li>
+<li>
+                    <strong>text_start_y</strong> - 
+	
+                    The y component of the starting
+                    coordinate of text drawing.
+                </li>
+<li>
+                    <strong>text_width</strong> - 
+	
+                    The width of the text drawing
+                    region.
+                </li>
+<li>
+                    <strong>text_height</strong> - 
+	
+                    The height of the text drawing
+                    region.
+                </li>
+</ul>
+            <p>NOTE: This table is only defined when X support
+            is enabled.</p>
+        </td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">conky_info</td>
+<td align="center">table</td>
+<td>
+            <p>This table contains some information about
+            Conky's internal data. The following table describes
+            the values contained:</p>
+            <ul>
+<li>
+                    <strong>update_interval</strong> - 
+	
+                    Conky's update interval (in
+                    seconds).
+                </li>
+<li>
+                    <strong>uptime</strong> - 
+	
+                    System uptime, in seconds.
+                </li>
+</ul>
+        </td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">conky_build_info</td>
+<td align="center">string</td>
+<td>
+            <p>A string containing the build info for this
+            particular instance of Conky, including the version,
+            build date, and architecture.</p>
+        </td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">conky_build_date</td>
+<td align="center">string</td>
+<td>
+            <p>A string containing the build date for this
+            particular instance of Conky.</p>
+        </td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">conky_build_arch</td>
+<td align="center">string</td>
+<td>
+            <p>A string containing the build architecture for
+            this particular instance of Conky.</p>
+        </td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">conky_version</td>
+<td align="center">string</td>
+<td>
+            <p>A string containing the version of the current
+            instance of Conky.</p>
+        </td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">conky_config</td>
+<td align="center">string</td>
+<td>
+            <p>A string containing the path of the current Conky
+            configuration file.</p>
+        </td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">cairo_text_extents_t:create()</td>
+<td align="center">function</td>
+<td>
+			<p>
+				Call this function to return a new cairo_text_extents_t structure.  A creation function for this structure is not provided by the cairo API.  After calling this, you should use tolua.takeownership() on the return value to ensure ownership is passed properly.
+			</p>
+        </td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">cairo_font_extents_t:create()</td>
+<td align="center">function</td>
+<td>
+			<p>
+				Call this function to return a new cairo_font_extents_t structure.  A creation function for this structure is not provided by the cairo API.  After calling this, you should use tolua.takeownership() on the return value to ensure ownership is passed properly.
+			</p>
+        </td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">cairo_matrix_t:create()</td>
+<td align="center">function</td>
+<td>
+			<p>
+				Call this function to return a new cairo_matrix_t structure.  A creation function for this structure is not provided by the cairo API.  After calling this, you should use tolua.takeownership() on the return value to ensure ownership is passed properly.
+			</p>
+        </td>
+</tr>
+</table></body>
+</html>

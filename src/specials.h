@@ -1,4 +1,6 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -31,16 +33,15 @@
 
 #define SPECIAL_CHAR '\x01'
 
-/* why 256? cause an array of more then 256 doubles seems excessive,
- * and who needs that kind of precision anyway? */
-#define MAX_GRAPH_DEPTH 256
+#define MAX_GRAPH_DEPTH 512
 
-//don't use spaces in LOGGRAPH or NORMGRAPH if you change them
-#define LOGGRAPH "log"
-#define NORMGRAPH "normal"
+// don't use spaces in LOGGRAPH or NORMGRAPH if you change them
+#define LOGGRAPH "-l"
+#define TEMPGRAD "-t"
 
 enum special_types {
-	HORIZONTAL_LINE,
+	NONSPECIAL = 0,
+	HORIZONTAL_LINE = 1,
 	STIPPLED_HR,
 	BAR,
 	FG,
@@ -70,6 +71,7 @@ struct special_t {
 	unsigned long first_colour;	// for graph gradient
 	unsigned long last_colour;
 	short font_added;
+	char tempgrad;
 };
 
 /* direct access to the registered specials (FIXME: bad encapsulation) */
@@ -85,26 +87,29 @@ extern int default_gauge_width;
 extern int default_gauge_height;
 #endif
 
+/* forward declare to avoid mutual inclusion between specials.h and text_object.h */
+struct text_object;
+
 /* max number of specials allowed (TODO: use linked list instead) */
 extern int max_specials;
 
-#ifdef X11
 /* scanning special arguments */
-const char *scan_gauge(const char *, int *, int *);
-const char *scan_bar(const char *, int *, int *);
+const char *scan_bar(struct text_object *, const char *);
+const char *scan_gauge(struct text_object *, const char *);
+#ifdef X11
 char *scan_font(const char *);
-char *scan_graph(const char *, int *, int *, unsigned int *,
-                 unsigned int *, unsigned int *, char *);
+char *scan_graph(struct text_object *, const char *, int);
+void scan_tab(struct text_object *, const char *);
+void scan_stippled_hr(struct text_object *, const char*);
 
 /* printing specials */
-void new_gauge(char *, int, int, int);
-void new_bar(char *, int, int, int);
 void new_font(char *, char *);
-void new_graph(char *, int, int, unsigned int,
-               unsigned int, double, int, int, char);
+void new_graph(struct text_object *, char *, int, double);
 void new_hr(char *, int);
-void new_stippled_hr(char *, int, int);
+void new_stippled_hr(struct text_object *, char *);
 #endif
+void new_gauge(struct text_object *, char *, int, int);
+void new_bar(struct text_object *, char *, int, int);
 void new_fg(char *, long);
 void new_bg(char *, long);
 void new_outline(char *, long);
@@ -113,6 +118,6 @@ void new_voffset(char *, long);
 void new_alignr(char *, long);
 void new_alignc(char *, long);
 void new_goto(char *, long);
-void new_tab(char *, int, int);
+void new_tab(struct text_object *, char *);
 
 #endif /* _SPECIALS_H */

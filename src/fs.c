@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -28,6 +31,9 @@
 #include "conky.h"
 #include "logging.h"
 #include "fs.h"
+#include "specials.h"
+#include "text_object.h"
+#include <ctype.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -62,12 +68,17 @@ void get_fs_type(const char *path, char *result);
 void update_fs_stats(void)
 {
 	unsigned i;
+	static double last_fs_update = 0.0;
+
+	if (current_update_time - last_fs_update < 13)
+		return;
 
 	for (i = 0; i < MAX_FS_STATS; ++i) {
 		if (fs_stats[i].set) {
 			update_fs_stat(&fs_stats[i]);
 		}
 	}
+	last_fs_update = current_update_time;
 }
 
 void clear_fs_stats(void)
@@ -95,7 +106,7 @@ struct fs_stat *prepare_fs_stat(const char *s)
 	}
 	/* new path */
 	if (!new) {
-		ERR("too many fs stats");
+		NORM_ERR("too many fs stats");
 		return 0;
 	}
 	strncpy(new->path, s, DEFAULT_TEXT_BUFFER_SIZE);
@@ -119,7 +130,7 @@ static void update_fs_stat(struct fs_stat *fs)
 		fs->avail = 0;
 		fs->free = 0;
 		strncpy(fs->type, "unknown", DEFAULT_TEXT_BUFFER_SIZE);
-		ERR("statfs '%s': %s", fs->path, strerror(errno));
+		NORM_ERR("statfs '%s': %s", fs->path, strerror(errno));
 	}
 }
 
@@ -132,7 +143,7 @@ void get_fs_type(const char *path, char *result)
 	if (statfs(path, &s) == 0) {
 		strncpy(result, s.f_fstypename, DEFAULT_TEXT_BUFFER_SIZE);
 	} else {
-		ERR("statfs '%s': %s", path, strerror(errno));
+		NORM_ERR("statfs '%s': %s", path, strerror(errno));
 	}
 	return;
 
@@ -145,7 +156,7 @@ void get_fs_type(const char *path, char *result)
 	char *slash;
 
 	if (mtab == NULL) {
-		ERR("setmntent /etc/mtab: %s", strerror(errno));
+		NORM_ERR("setmntent /etc/mtab: %s", strerror(errno));
 		strncpy(result, "unknown", DEFAULT_TEXT_BUFFER_SIZE);
 		return;
 	}
@@ -162,13 +173,13 @@ void get_fs_type(const char *path, char *result)
 		fseek(mtab, 0, SEEK_SET);
 		slash = strrchr(search_path, '/');
 		if (slash == NULL)
-			CRIT_ERR("invalid path '%s'", path);
+			CRIT_ERR(NULL, NULL, "invalid path '%s'", path);
 		if (strlen(slash) == 1)		/* trailing slash */
 			*(slash) = '\0';
 		else if (strlen(slash) > 1)
 			*(slash + 1) = '\0';
 		else
-			CRIT_ERR("found a crack in the matrix!");
+			CRIT_ERR(NULL, NULL, "found a crack in the matrix!");
 	} while (strlen(search_path) > 0);
 	free(search_path);
 
@@ -182,4 +193,79 @@ void get_fs_type(const char *path, char *result)
 
 	strncpy(result, "unknown", DEFAULT_TEXT_BUFFER_SIZE);
 
+}
+
+void init_fs_bar(struct text_object *obj, const char *arg)
+{
+	arg = scan_bar(obj, arg);
+	if (arg) {
+		while (isspace(*arg)) {
+			arg++;
+		}
+		if (*arg == '\0') {
+			arg = "/";
+		}
+	} else {
+		arg = "/";
+	}
+	obj->data.opaque = prepare_fs_stat(arg);
+}
+
+void print_fs_bar(struct text_object *obj, int be_free_bar, char *p, int p_max_size)
+{
+	double val = 1.0;
+	struct fs_stat *fs = obj->data.opaque;
+
+	if (!fs)
+		return;
+
+	if (fs->size)
+		val = (double)fs->avail / (double)fs->size;
+
+	if (!be_free_bar)
+		val = 1.0 - val;
+
+	new_bar(obj, p, p_max_size, (int)(255 * val));
+}
+
+void init_fs(struct text_object *obj, const char *arg)
+{
+	obj->data.opaque = prepare_fs_stat(arg ? arg : "/");
+}
+
+void print_fs_perc(struct text_object *obj, int be_free, char *p, int p_max_size)
+{
+	struct fs_stat *fs = obj->data.opaque;
+	int val = 100;
+
+	if (!fs)
+		return;
+
+	if (fs->size)
+		val = fs->avail * 100 / fs->size;
+
+	if (!be_free)
+		val = 100 - val;
+
+	percent_print(p, p_max_size, val);
+}
+
+#define HUMAN_PRINT_FS_GENERATOR(name, expr)                           \
+void print_fs_##name(struct text_object *obj, char *p, int p_max_size) \
+{                                                                      \
+	struct fs_stat *fs = obj->data.opaque;                             \
+	if (fs)                                                            \
+		human_readable(expr, p, p_max_size);                           \
+}
+
+HUMAN_PRINT_FS_GENERATOR(free, fs->avail)
+HUMAN_PRINT_FS_GENERATOR(size, fs->size)
+HUMAN_PRINT_FS_GENERATOR(used, fs->size - fs->free)
+
+void print_fs_type(struct text_object *obj, char *p, int p_max_size)
+{
+	struct fs_stat *fs = obj->data.opaque;
+
+	if (fs)
+		snprintf(p, p_max_size, "%s", fs->type);
 }

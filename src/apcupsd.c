@@ -1,4 +1,7 @@
-/* apcupsd.c:  conky module for APC UPS daemon monitoring
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * apcupsd.c:  conky module for APC UPS daemon monitoring
  *
  * Copyright (C) 2009 Jaromir Smrcek <jaromir.smrcek@zoner.com>
  *
@@ -15,7 +18,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
- * USA. */
+ * USA.
+ *
+ */
 
 #include "conky.h"
 #include "apcupsd.h"
@@ -176,8 +181,8 @@ void update_apcupsd(void) {
 			break;
 		}
 #ifdef HAVE_GETHOSTBYNAME_R
-		if (gethostbyname_r(info.apcupsd.host, &he_mem, hostbuff, sizeof(hostbuff), &he, &he_errno)) {
-			ERR("APCUPSD gethostbyname_r: %s", hstrerror(h_errno));
+		if (gethostbyname_r(info.apcupsd.host, &he_mem, hostbuff, sizeof(hostbuff), &he, &he_errno) || !he ) {
+			NORM_ERR("APCUPSD gethostbyname_r: %s", hstrerror(h_errno));
 			break;
 		}
 #else /* HAVE_GETHOSTBYNAME_R */
@@ -221,16 +226,4 @@ void update_apcupsd(void) {
 	//
 	memcpy(info.apcupsd.items, apc.items, sizeof(info.apcupsd.items));
 	return;
-}
-
-//
-// fills in the N/A strings and default host:port
-//
-void init_apcupsd(void) {
-
-	int i;
-	for (i = 0; i < _APCUPSD_COUNT; ++i)
-		memcpy(info.apcupsd.items[i], "N/A", 4); // including \0
-	memcpy(info.apcupsd.host, "localhost", 10);
-	info.apcupsd.port = htons(3551);
 }

@@ -1,4 +1,6 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2008 Markus Meissner
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -29,25 +31,11 @@
 #ifndef NVIDIA_CONKY_H
 #define NVIDIA_CONKY_H
 
+#include "text_object.h"
 #include <X11/Xlib.h>
-#include <NVCtrl/NVCtrlLib.h>
 
-typedef enum _QUERY_ID {
-	NV_TEMP,
-	NV_TEMP_THRESHOLD,
-	NV_TEMP_AMBIENT,
-	NV_GPU_FREQ,
-	NV_MEM_FREQ,
-	NV_IMAGE_QUALITY
-} QUERY_ID;
-
-struct nvidia_s {
-	int interval;
-	int print_as_float;
-	QUERY_ID type;
-};
-
-int get_nvidia_value(QUERY_ID qid, Display *dpy);
-int set_nvidia_type(struct nvidia_s *, const char *);
+int set_nvidia_type(struct text_object *, const char *);
+void print_nvidia_value(struct text_object *, Display *, char *, int);
+void free_nvidia(struct text_object *);
 
 #endif

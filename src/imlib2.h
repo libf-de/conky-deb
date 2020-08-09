@@ -1,8 +1,10 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2009 Brenden Matthews, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, et. al.
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +28,9 @@
 
 void cimlib_add_image(const char *name);
 void cimlib_set_cache_size(long size);
+void cimlib_set_cache_flush_interval(long interval);
 void cimlib_init(Display *display, Window drawable, Visual *visual, Colormap colourmap);
+void cimlib_deinit(void);
 void cimlib_render(int x, int y, int width, int height);
 void cimlib_cleanup(void);
 

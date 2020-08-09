@@ -1,4 +1,7 @@
-/* Conky, a system monitor, based on torsmo
+/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+ * vim: ts=4 sw=4 noet ai cindent syntax=c
+ *
+ * Conky, a system monitor, based on torsmo
  *
  * Any original torsmo code is licensed under the BSD license
  *
@@ -7,7 +10,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -26,6 +29,7 @@
  */
 
 #include "netbsd.h"
+#include "net_stat.h"
 
 static kvm_t *kd = NULL;
 int kd_init = 0, nkd_init = 0;
@@ -135,6 +139,7 @@ void update_meminfo()
 	if (swapmode(&swap_avail, &swap_free) >= 0) {
 		info.swapmax = swap_avail;
 		info.swap = (swap_avail - swap_free);
+		info.swapfree = swap_free;
 	}
 }
 
@@ -185,7 +190,7 @@ void update_net_stats()
 		long long last_recv, last_trans;
 
 		kvm_read(nkd, (u_long) ifnetaddr, (void *) &ifnet, sizeof(ifnet));
-		ns = get_net_stat(ifnet.if_xname);
+		ns = get_net_stat(ifnet.if_xname, NULL, NULL);
 		ns->up = 1;
 		last_recv = ns->recv;
 		last_trans = ns->trans;
@@ -327,8 +332,10 @@ int open_acpi_temperature(const char *name)
 	return -1;
 }
 
-void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size)
+void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size, const char *adapter)
 {
+	(void) adapter; // only linux uses this
+
 	if (!p_client_buffer || client_buffer_size <= 0) {
 		return;
 	}
@@ -348,6 +355,12 @@ void get_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
 	memset(p_client_buffer, 0, client_buffer_size);
 }
 
-void update_entropy(void)
+int get_entropy_avail(unsigned int *val)
 {
+	return 1;
+}
+
+int get_entropy_poolsize(unsigned int *val)
+{
+	return 1;
 }
