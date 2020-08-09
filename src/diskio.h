@@ -32,16 +32,22 @@
 struct diskio_stat {
 	struct diskio_stat *next;
 	char *dev;
-	unsigned int current;
-	unsigned int current_read;
-	unsigned int current_write;
-	unsigned int last;
-	unsigned int last_read;
-	unsigned int last_write;
+	double sample[15];
+	double sample_read[15];
+	double sample_write[15];
+	double current;
+	double current_read;
+	double current_write;
+	double last;
+	double last_read;
+	double last_write;
 };
 
-struct diskio_stat *prepare_diskio_stat(const char *s);
+extern struct diskio_stat stats;
+
+struct diskio_stat *prepare_diskio_stat(const char *);
 void update_diskio(void);
 void clear_diskio_stats(void);
+void update_diskio_values(struct diskio_stat *, unsigned int, unsigned int);
 
 #endif /* DISKIO_H_ */

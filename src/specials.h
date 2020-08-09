@@ -48,6 +48,7 @@ enum special_types {
 	OUTLINE,
 	ALIGNR,
 	ALIGNC,
+	GAUGE,
 	GRAPH,
 	OFFSET,
 	VOFFSET,
@@ -73,24 +74,37 @@ struct special_t {
 
 /* direct access to the registered specials (FIXME: bad encapsulation) */
 extern struct special_t *specials;
-extern unsigned int special_count;
+extern int special_count;
+
+extern int default_bar_width;
+extern int default_bar_height;
+#ifdef X11
+extern int default_graph_width;
+extern int default_graph_height;
+extern int default_gauge_width;
+extern int default_gauge_height;
+#endif
 
 /* max number of specials allowed (TODO: use linked list instead) */
-extern unsigned int max_specials;
+extern int max_specials;
 
+#ifdef X11
 /* scanning special arguments */
+const char *scan_gauge(const char *, int *, int *);
 const char *scan_bar(const char *, int *, int *);
 char *scan_font(const char *);
 char *scan_graph(const char *, int *, int *, unsigned int *,
                  unsigned int *, unsigned int *, char *);
 
 /* printing specials */
+void new_gauge(char *, int, int, int);
 void new_bar(char *, int, int, int);
 void new_font(char *, char *);
 void new_graph(char *, int, int, unsigned int,
                unsigned int, double, int, int, char);
 void new_hr(char *, int);
 void new_stippled_hr(char *, int, int);
+#endif
 void new_fg(char *, long);
 void new_bg(char *, long);
 void new_outline(char *, long);

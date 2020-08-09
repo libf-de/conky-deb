@@ -55,7 +55,9 @@ enum text_object_type {
 	OBJ_battery,
 	OBJ_battery_time,
 	OBJ_battery_percent,
+#ifdef X11
 	OBJ_battery_bar,
+#endif
 	OBJ_battery_short,
 #endif /* !__OpenBSD__ */
 	OBJ_buffers,
@@ -76,34 +78,48 @@ enum text_object_type {
 	OBJ_conky_build_arch,
 	OBJ_font,
 	OBJ_cpu,
+#ifdef X11
+	OBJ_cpugauge,
 	OBJ_cpubar,
 	OBJ_cpugraph,
 	OBJ_loadgraph,
+#endif
 	OBJ_diskio,
 	OBJ_diskio_read,
 	OBJ_diskio_write,
+#ifdef X11
 	OBJ_diskiograph,
 	OBJ_diskiograph_read,
 	OBJ_diskiograph_write,
+#endif
 	OBJ_downspeed,
 	OBJ_downspeedf,
+#ifdef X11
 	OBJ_downspeedgraph,
+#endif
 	OBJ_else,
 	OBJ_endif,
+	OBJ_eval,
 	OBJ_image,
 	OBJ_exec,
 	OBJ_execi,
 	OBJ_texeci,
 	OBJ_execbar,
+#ifdef X11
+	OBJ_execgauge,
 	OBJ_execgraph,
 	OBJ_execibar,
 	OBJ_execigraph,
+	OBJ_execigauge,
+#endif
 	OBJ_execp,
 	OBJ_execpi,
 	OBJ_freq,
 	OBJ_freq_g,
+#ifdef X11
 	OBJ_fs_bar,
 	OBJ_fs_bar_free,
+#endif
 	OBJ_fs_free,
 	OBJ_fs_free_perc,
 	OBJ_fs_size,
@@ -138,13 +154,17 @@ enum text_object_type {
 	OBJ_ibm_volume,
 	OBJ_ibm_brightness,
 	OBJ_smapi,
+#ifdef X11
 	OBJ_smapi_bat_bar,
+#endif
 	OBJ_smapi_bat_perc,
 	OBJ_smapi_bat_temp,
 	OBJ_smapi_bat_power,
 	OBJ_if_smapi_bat_installed,
 #endif /* IBM */
-	OBJ_if_up,
+	/* information from sony_laptop kernel module
+	 * /sys/devices/platform/sony-laptop */
+	OBJ_sony_fanspeed,
 	OBJ_if_gw,
 	OBJ_ioscheduler,
 	OBJ_gw_iface,
@@ -160,8 +180,13 @@ enum text_object_type {
 	OBJ_wireless_link_qual,
 	OBJ_wireless_link_qual_max,
 	OBJ_wireless_link_qual_perc,
+#ifdef X11
 	OBJ_wireless_link_bar,
+#endif
 #endif /* __linux__ */
+#if defined(__FreeBSD__) || defined(__linux__)
+	OBJ_if_up,
+#endif
 	OBJ_if_empty,
 	OBJ_if_match,
 	OBJ_if_existing,
@@ -194,16 +219,22 @@ enum text_object_type {
 	OBJ_mem,
 	OBJ_memeasyfree,
 	OBJ_memfree,
+#ifdef X11
+	OBJ_memgauge,
 	OBJ_membar,
 	OBJ_memgraph,
+#endif
 	OBJ_memmax,
 	OBJ_memperc,
 	OBJ_mixer,
 	OBJ_mixerl,
 	OBJ_mixerr,
+#ifdef X11
 	OBJ_mixerbar,
 	OBJ_mixerlbar,
 	OBJ_mixerrbar,
+#endif
+	OBJ_if_mixer_mute,
 #ifdef X11
 	OBJ_monitor,
 	OBJ_monitor_number,
@@ -218,7 +249,9 @@ enum text_object_type {
 	OBJ_outlinecolor,
 	OBJ_stippled_hr,
 	OBJ_swap,
+#ifdef X11
 	OBJ_swapbar,
+#endif
 	OBJ_swapmax,
 	OBJ_swapperc,
 	OBJ_sysname,
@@ -231,7 +264,9 @@ enum text_object_type {
 	OBJ_updates,
 	OBJ_upspeed,
 	OBJ_upspeedf,
+#ifdef X11
 	OBJ_upspeedgraph,
+#endif
 	OBJ_uptime,
 	OBJ_uptime_short,
 	OBJ_user_names,
@@ -264,7 +299,9 @@ enum text_object_type {
 	OBJ_mpd_vol,
 	OBJ_mpd_bitrate,
 	OBJ_mpd_status,
+#ifdef X11
 	OBJ_mpd_bar,
+#endif
 	OBJ_mpd_elapsed,
 	OBJ_mpd_length,
 	OBJ_mpd_track,
@@ -303,7 +340,9 @@ enum text_object_type {
 	OBJ_xmms2_size,
 	OBJ_xmms2_percent,
 	OBJ_xmms2_status,
+#ifdef X11
 	OBJ_xmms2_bar,
+#endif
 	OBJ_xmms2_smart,
 	OBJ_xmms2_playlist,
 	OBJ_xmms2_timesplayed,
@@ -323,7 +362,9 @@ enum text_object_type {
 	OBJ_audacious_playlist_length,
 	OBJ_audacious_playlist_position,
 	OBJ_audacious_main_volume,
+#ifdef X11
 	OBJ_audacious_bar,
+#endif
 #endif
 #ifdef BMPX
 	OBJ_bmpx_title,
@@ -339,6 +380,16 @@ enum text_object_type {
 #ifdef RSS
 	OBJ_rss,
 #endif
+#ifdef HAVE_LUA
+	OBJ_lua,
+	OBJ_lua_parse,
+	OBJ_lua_read_parse,
+#ifdef X11
+	OBJ_lua_bar,
+	OBJ_lua_graph,
+	OBJ_lua_gauge,
+#endif /* X11 */
+#endif /* HAVE_LUA */
 #ifdef TCP_PORT_MONITOR
 	OBJ_tcp_portmon,
 #endif
@@ -350,9 +401,31 @@ enum text_object_type {
 	OBJ_hddtemp,
 #endif
 	OBJ_scroll,
+	OBJ_combine,
 	OBJ_entropy_avail,
 	OBJ_entropy_poolsize,
-	OBJ_entropy_bar
+#ifdef X11
+	OBJ_entropy_bar,
+#endif
+#ifdef APCUPSD
+	OBJ_apcupsd,
+	OBJ_apcupsd_name,
+	OBJ_apcupsd_model,
+	OBJ_apcupsd_upsmode,
+	OBJ_apcupsd_cable,
+	OBJ_apcupsd_status,
+	OBJ_apcupsd_linev,
+	OBJ_apcupsd_load,
+#ifdef X11
+	OBJ_apcupsd_loadbar,
+	OBJ_apcupsd_loadgraph,
+	OBJ_apcupsd_loadgauge,
+#endif
+	OBJ_apcupsd_charge,
+	OBJ_apcupsd_timeleft,
+	OBJ_apcupsd_temp,
+	OBJ_apcupsd_lastxfer,
+#endif
 };
 
 struct text_object {
@@ -380,6 +453,7 @@ struct text_object {
 			char *fmt;	/* time display formatting */
 		} tztime;
 
+#ifdef X11
 		struct {
 			struct fs_stat *fs;
 			int w, h;
@@ -389,13 +463,15 @@ struct text_object {
 			int l;
 			int w, h;
 		} mixerbar;		/* 3 */
+#endif
 
 		struct {
 			int fd;
 			int arg;
 			char devtype[256];
 			char type[64];
-		} sysfs;		/* 2 */
+			float factor, offset;
+		} sysfs;
 
 		struct {
 			struct text_object *next;
@@ -407,6 +483,8 @@ struct text_object {
 		struct {
 			int num;
 			int type;
+			int was_parsed;
+			char *s;
 		} top;
 
 		struct {
@@ -465,6 +543,7 @@ struct text_object {
 			char *action;
 			int act_par;
 			int delay;
+			unsigned int nrspaces;
 		} rss;
 #endif
 		struct {
@@ -473,6 +552,12 @@ struct text_object {
 			unsigned int step;
 			unsigned int start;
 		} scroll;
+
+		struct {
+			char *left;
+			char *seperation;
+			char *right;
+		} combine;
 
 		struct local_mail_s local_mail;
 #ifdef NVIDIA

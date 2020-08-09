@@ -35,6 +35,9 @@
 #include <X11/Xatom.h>
 #include <X11/Xmd.h>
 #include <X11/Xutil.h>
+#ifdef IMLIB2
+#include "imlib2.h"
+#endif /* IMLIB2 */
 
 #ifdef XFT
 #include <X11/Xft/Xft.h>
@@ -46,7 +49,7 @@ int use_xdbe;
 #endif
 
 /* some basic X11 stuff */
-Display *display;
+Display *display = NULL;
 int display_width;
 int display_height;
 int screen;
@@ -65,10 +68,12 @@ static Window find_desktop_window(Window *p_root, Window *p_desktop);
 static Window find_subwindow(Window win, int w, int h);
 
 /* X11 initializer */
-void init_X11(void)
+void init_X11(const char *disp)
 {
-	if ((display = XOpenDisplay(0)) == NULL) {
-		CRIT_ERR("can't open display: %s", XDisplayName(0));
+	if (!display) {
+		if ((display = XOpenDisplay(disp)) == NULL) {
+			CRIT_ERR("can't open display: %s", XDisplayName(0));
+		}
 	}
 
 	screen = DefaultScreen(display);
@@ -208,6 +213,12 @@ void set_transparent_background(Window win)
 	// XClearWindow(display, win); not sure why this was here
 }
 
+void destroy_window(void)
+{
+	XDestroyWindow(display, window.window);
+	memset(&window, 0, sizeof(struct conky_window));
+}
+
 void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 		char **argv, int argc)
 {
@@ -219,7 +230,6 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 
 #ifdef OWN_WINDOW
 	if (own_window) {
-
 		if (!find_desktop_window(&window.root, &window.desktop)) {
 			return;
 		}
@@ -418,9 +428,10 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 		fflush(stderr);
 
 		XMapWindow(display, window.window);
+
 	} else /* if (own_window) { */
 #endif
-	/* root / desktop window */
+		/* root / desktop window */
 	{
 		XWindowAttributes attrs;
 
@@ -463,7 +474,15 @@ void init_window(int own_window, int w, int h, int set_trans, int back_colour,
 		fprintf(stderr, PACKAGE_NAME": drawing to single buffer\n");
 	}
 #endif
-
+#ifdef IMLIB2
+	{
+		Visual *visual;
+		Colormap colourmap;
+		visual = DefaultVisual(display, DefaultScreen(display));
+		colourmap = DefaultColormap(display, DefaultScreen(display));
+		cimlib_init(display, window.drawable, visual, colourmap);
+	}
+#endif /* IMLIB2 */
 	XFlush(display);
 
 	/* set_transparent_background(window.window);

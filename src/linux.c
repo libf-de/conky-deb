@@ -30,6 +30,7 @@
 #include "logging.h"
 #include "common.h"
 #include "linux.h"
+#include "diskio.h"
 #include <dirent.h>
 #include <ctype.h>
 #include <errno.h>
@@ -58,14 +59,27 @@
 #include <linux/route.h>
 #include <math.h>
 
+/* The following ifdefs were adapted from gkrellm */
+#include <linux/major.h>
+
+#if !defined(MD_MAJOR)
+#define MD_MAJOR 9
+#endif
+
+#if !defined(LVM_BLK_MAJOR)
+#define LVM_BLK_MAJOR 58
+#endif
+
+#if !defined(NBD_MAJOR)
+#define NBD_MAJOR 43
+#endif
+
 #ifdef HAVE_IWLIB
 #include <iwlib.h>
 #endif
 
 #define SHORTSTAT_TEMPL "%*s %llu %llu %llu"
 #define LONGSTAT_TEMPL "%*s %llu %llu %llu "
-
-static int show_nice_processes;
 
 /* This flag tells the linux routines to use the /proc system where possible,
  * even if other api's are available, e.g. sysinfo() or getloadavg().
@@ -209,48 +223,6 @@ char *get_ioscheduler(char *disk)
 	}
 	fclose(fp);
 	return strndup("n/a", text_buffer_size);
-}
-
-int interface_up(const char *dev)
-{
-	int fd;
-	struct ifreq ifr;
-
-	if ((fd = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
-		CRIT_ERR("could not create sockfd");
-		return 0;
-	}
-	strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-	if (ioctl(fd, SIOCGIFFLAGS, &ifr)) {
-		/* if device does not exist, treat like not up */
-		if (errno != ENODEV)
-			perror("SIOCGIFFLAGS");
-		goto END_FALSE;
-	}
-
-	if (!(ifr.ifr_flags & IFF_UP)) /* iface is not up */
-		goto END_FALSE;
-	if (ifup_strictness == IFUP_UP)
-		goto END_TRUE;
-
-	if (!(ifr.ifr_flags & IFF_RUNNING))
-		goto END_FALSE;
-	if (ifup_strictness == IFUP_LINK)
-		goto END_TRUE;
-
-	if (ioctl(fd, SIOCGIFADDR, &ifr)) {
-		perror("SIOCGIFADDR");
-		goto END_FALSE;
-	}
-	if (((struct sockaddr_in *)&(ifr.ifr_ifru.ifru_addr))->sin_addr.s_addr)
-		goto END_TRUE;
-
-END_FALSE:
-	close(fd);
-	return 0;
-END_TRUE:
-	close(fd);
-	return 1;
 }
 
 #define COND_FREE(x) if(x) free(x); x = 0
@@ -447,9 +419,12 @@ void update_net_stats(void)
 		curtmp1 = 0;
 		curtmp2 = 0;
 		// get an average
-		for (i = 0; (unsigned) i < info.net_avg_samples; i++) {
-			curtmp1 += ns->net_rec[i];
-			curtmp2 += ns->net_trans[i];
+#ifdef HAVE_OPENMP
+#pragma omp parallel for reduction(+:curtmp1, curtmp2)
+#endif /* HAVE_OPENMP */
+		for (i = 0; i < info.net_avg_samples; i++) {
+			curtmp1 = curtmp1 + ns->net_rec[i];
+			curtmp2 = curtmp2 + ns->net_trans[i];
 		}
 		if (curtmp1 == 0) {
 			curtmp1 = 1;
@@ -460,6 +435,9 @@ void update_net_stats(void)
 		ns->recv_speed = curtmp1 / (double) info.net_avg_samples;
 		ns->trans_speed = curtmp2 / (double) info.net_avg_samples;
 		if (info.net_avg_samples > 1) {
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif /* HAVE_OPENMP */
 			for (i = info.net_avg_samples; i > 1; i--) {
 				ns->net_rec[i - 1] = ns->net_rec[i - 2];
 				ns->net_trans[i - 1] = ns->net_trans[i - 2];
@@ -634,7 +612,7 @@ inline static void update_stat(void)
 	static int rep = 0;
 	static struct cpu_info *cpu = NULL;
 	char buf[256];
-	unsigned int i;
+	int i;
 	unsigned int idx;
 	double curtmp;
 	const char *stat_template = NULL;
@@ -706,8 +684,11 @@ inline static void update_stat(void)
 				cpu[idx].cpu_last_active_total) /
 				(float) (cpu[idx].cpu_total - cpu[idx].cpu_last_total);
 			curtmp = 0;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for reduction(+:curtmp)
+#endif /* HAVE_OPENMP */
 			for (i = 0; i < info.cpu_avg_samples; i++) {
-				curtmp += cpu[idx].cpu_val[i];
+				curtmp = curtmp + cpu[idx].cpu_val[i];
 			}
 			/* TESTING -- I've removed this, because I don't think it is right.
 			 * You shouldn't divide by the cpu count here ...
@@ -723,6 +704,9 @@ inline static void update_stat(void)
 
 			cpu[idx].cpu_last_total = cpu[idx].cpu_total;
 			cpu[idx].cpu_last_active_total = cpu[idx].cpu_active_total;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif /* HAVE_OPENMP */
 			for (i = info.cpu_avg_samples - 1; i > 0; i--) {
 				cpu[idx].cpu_val[i] = cpu[idx].cpu_val[i - 1];
 			}
@@ -836,6 +820,9 @@ static int get_first_file_in_a_directory(const char *dir, char *s, int *rep)
 		strncpy(s, namelist[0]->d_name, 255);
 		s[255] = '\0';
 
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif /* HAVE_OPENMP */
 		for (i = 0; i < n; i++) {
 			free(namelist[i]);
 		}
@@ -852,6 +839,7 @@ int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
 	char buf[256];
 	int fd;
 	int divfd;
+	struct stat st;
 
 	memset(buf, 0, sizeof(buf));
 
@@ -878,16 +866,21 @@ int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
 		}
 	}
 
-	/* change vol to in */
-	if (strcmp(type, "vol") == 0) {
-		type = "in";
+	/* At least the acpitz hwmon doesn't have a 'device' subdir,
+	 * so check it's existence and strip it from buf otherwise. */
+	snprintf(path, 255, "%s%s", dir, dev);
+	if (stat(path, &st)) {
+		buf[strlen(buf) - 7] = 0;
 	}
 
-	if (strcmp(type, "tempf") == 0) {
-		snprintf(path, 255, "%s%s/%s%d_input", dir, dev, "temp", n);
-	} else {
-		snprintf(path, 255, "%s%s/%s%d_input", dir, dev, type, n);
+	/* change vol to in, tempf to temp */
+	if (strcmp(type, "vol") == 0) {
+		type = "in";
+	} else if (strcmp(type, "tempf") == 0) {
+		type = "temp";
 	}
+
+	snprintf(path, 255, "%s%s/%s%d_input", dir, dev, type, n);
 	strncpy(devtype, path, 255);
 
 	/* open file */
@@ -1496,6 +1489,9 @@ void init_batteries(void)
 	if (batteries_initialized) {
 		return;
 	}
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif /* HAVE_OPENMP */
 	for (idx = 0; idx < MAX_BATTERY_COUNT; idx++) {
 		batteries[idx][0] = '\0';
 	}
@@ -2099,7 +2095,6 @@ void get_powerbook_batt_info(char *buffer, size_t n, int i)
 
 void update_top(void)
 {
-	show_nice_processes = 1;
 	process_find_top(info.cpu, info.memu, info.time);
 	info.first_process = get_first_process();
 }
@@ -2152,3 +2147,52 @@ const char *get_disk_protect_queue(const char *disk)
 	return (state > 0) ? "frozen" : "free  ";
 }
 
+void update_diskio(void)
+{
+	FILE *fp;
+	static int rep = 0;
+	char buf[512], devbuf[64];
+	unsigned int major, minor;
+	int col_count = 0;
+	struct diskio_stat *cur;
+	unsigned int reads, writes;
+	unsigned int total_reads = 0, total_writes = 0;
+
+	stats.current = 0;
+	stats.current_read = 0;
+	stats.current_write = 0;
+
+	if (!(fp = open_file("/proc/diskstats", &rep))) {
+		return;
+	}
+
+	/* read reads and writes from all disks (minor = 0), including cd-roms
+	 * and floppies, and sum them up */
+	while (fgets(buf, 512, fp)) {
+		col_count = sscanf(buf, "%u %u %s %*u %*u %u %*u %*u %*u %u", &major,
+			&minor, devbuf, &reads, &writes);
+		/* ignore subdevices (they have only 3 matching entries in their line)
+		 * and virtual devices (LVM, network block devices, RAM disks, Loopback)
+		 *
+		 * XXX: ignore devices which are part of a SW RAID (MD_MAJOR) */
+		if (col_count == 5 && major != LVM_BLK_MAJOR && major != NBD_MAJOR
+				&& major != RAMDISK_MAJOR && major != LOOP_MAJOR) {
+			total_reads += reads;
+			total_writes += writes;
+		} else {
+			col_count = sscanf(buf, "%u %u %s %*u %u %*u %u",
+				&major, &minor, devbuf, &reads, &writes);
+			if (col_count != 5) {
+				continue;
+			}
+		}
+		cur = stats.next;
+		while (cur && strcmp(devbuf, cur->dev))
+			cur = cur->next;
+
+		if (cur)
+			update_diskio_values(cur, reads, writes);
+	}
+	update_diskio_values(&stats, total_reads, total_writes);
+	fclose(fp);
+}

@@ -1,5 +1,8 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define if you want apcupsd support */
+#undef APCUPSD
+
 /* Define for Audacious support */
 #undef AUDACIOUS
 
@@ -35,6 +38,9 @@
 
 /* Eve output format */
 #undef EVE_OUTPUT_FORMAT
+
+/* Define to 1 if you have the <alsa/asoundlib.h> header file. */
+#undef HAVE_ALSA_ASOUNDLIB_H
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
@@ -111,6 +117,9 @@
 /* Define to 1 if you have the <linux/soundcard.h> header file. */
 #undef HAVE_LINUX_SOUNDCARD_H
 
+/* Define if you want Lua scripting support */
+#undef HAVE_LUA
+
 /* Define to 1 if you have the `malloc' function. */
 #undef HAVE_MALLOC
 
@@ -134,6 +143,9 @@
 
 /* Define to 1 if you have the <NVCtrl/NVCtrl.h> header file. */
 #undef HAVE_NVCTRL_NVCTRL_H
+
+/* Define if OpenMP is enabled */
+#undef HAVE_OPENMP
 
 /* Define to 1 if you have the `popen' function. */
 #undef HAVE_POPEN
@@ -164,6 +176,9 @@
 
 /* Define to 1 if you have the `sysinfo' function. */
 #undef HAVE_SYSINFO
+
+/* Define to 1 if you have the <sys/inotify.h> header file. */
+#undef HAVE_SYS_INOTIFY_H
 
 /* Define to 1 if you have the <sys/mount.h> header file. */
 #undef HAVE_SYS_MOUNT_H
@@ -207,6 +222,9 @@
 /* Define as const if the declaration of iconv() needs const. */
 #undef ICONV_CONST
 
+/* Define if you want Imlib2 support */
+#undef IMLIB2
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #undef LT_OBJDIR
@@ -220,6 +238,9 @@
 
 /* Default maximum size of config TEXT buffer, i.e. below TEXT line. */
 #undef MAX_USER_TEXT_DEFAULT
+
+/* Define if the mixers use ALSA */
+#undef MIXER_IS_ALSA
 
 /* Define if you want MOC support */
 #undef MOC

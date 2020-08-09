@@ -1,9 +1,9 @@
 dnl major, minor and micro version macros.
 m4_define([conky_version_major], [1])
 m4_define([conky_version_minor], [7])
-m4_define([conky_version_micro], [0])
-m4_define([conky_version_tag]) dnl, [pre]) dnl [] for releases
-m4_define([conky_version_revision],[_rc2])
+m4_define([conky_version_micro], [1.1])
+m4_define([conky_version_tag])dnl, [pre]) dnl [] for releases
+m4_define([conky_version_revision],[_rc4])
 m4_define([conky_version],
     [conky_version_major().conky_version_minor().conky_version_micro()ifelse(
       conky_version_tag(), [pre],
@@ -55,8 +55,7 @@ case $uname in
   FreeBSD*|GNU/kFreeBSD*)
     WANT_KVM=yes
     WANT_DEVSTAT=yes
-	want_config_output=no
-	;;
+    ;;
 #  NetBSD*)
 #    WANT_KVM=yes
 #    WANT_OSSLIB=yes
@@ -96,7 +95,7 @@ dnl BUILD_CONFIG_OUTPUT option
 dnl
 
 AC_ARG_ENABLE([config_output],
-              AC_HELP_STRING([--disable-config-output], [disable if you do not want conky to output a default config (with -C) Note: not available on FreeBSD @<:@default=yes@:>@]),
+              AC_HELP_STRING([--disable-config-output], [disable if you do not want conky to output a default config (with -C) @<:@default=yes@:>@]),
               [want_config_output="$enableval"], [want_config_output=yes])
 
 AM_CONDITIONAL(BUILD_CONFIG_OUTPUT, test x$want_config_output = xyes)
@@ -213,6 +212,26 @@ dnl
 dnl Math
 dnl
 
+
+dnl
+dnl Apcupsd
+dnl
+
+AC_ARG_ENABLE([apcupsd],
+              AC_HELP_STRING([--disable-apcupsd],
+                             [disable if you do not want apcupsd support @<:@default=yes@:>@]),
+              [want_apcupsd="$enableval"], [want_apcupsd=yes])
+
+if test x$want_apcupsd = xyes; then
+  if test x"$uname" != xLinux; then
+      AC_MSG_NOTICE([apcupsd not supported on $uname... disabling])
+      want_apcupsd=no
+  else
+      AC_DEFINE(APCUPSD, 1, [Define if you want apcupsd support])
+  fi
+fi
+AM_CONDITIONAL(BUILD_APCUPSD, test x$want_apcupsd = xyes)
+
 AC_ARG_ENABLE([math],
               AC_HELP_STRING([--disable-math], [disable if you do not want math support @<:@default=yes@:>@]),
               [want_math="$enableval"], [want_math=yes])
@@ -305,6 +324,26 @@ if test x$want_rss = xyes; then
 fi
 
 dnl
+dnl Lua
+dnl
+
+AC_ARG_ENABLE([lua],
+	      AC_HELP_STRING([--enable-lua], [enable if you want Lua scripting support @<:@default=yes@:>@]),
+	      [want_lua="$enableval"], [want_lua=yes])
+#
+AM_CONDITIONAL(BUILD_LUA, test x$want_lua = xyes)
+if test x$want_lua = xyes; then
+	PKG_CHECK_MODULES(LUA, lua >= 5.1, [ ],[
+		PKG_CHECK_MODULES(LUA51, lua-5.1 >= 5.1, [ ],[
+			PKG_CHECK_MODULES(LUA51, lua5.1 >= 5.1)
+		])
+	])
+	CFLAGS="$CFLAGS $LUA_CFLAGS $LUA51_CFLAGS"
+	LIBS="$LIBS $LUA_LIBS $LUA51_LIBS"
+	AC_DEFINE(HAVE_LUA, 1, [Define if you want Lua scripting support])
+fi
+
+dnl
 dnl Wireless extensions
 dnl
 
@@ -318,24 +357,6 @@ if test x$want_wlan = xyes; then
   AC_CHECK_LIB([iw], [iw_sockets_open], [LIBS="$LIBS -liw"], AC_MSG_ERROR([iw_sockets_open not found]))
 	AC_DEFINE(HAVE_IWLIB, 1, [Define if you want wireless support])
 fi
-
-dnl
-dnl IMLIB2
-dnl
-
-dnl --commented out until brenden finishes it --
-dnl AC_ARG_ENABLE([imlib2],
-dnl    AC_HELP_STRING([--enable-imlib2], [enable if you want Imlib2 support [[default=no]]]),
-dnl    [want_imlib2="$enableval"], [want_imlib2=no])
-dnl
-dnl AM_CONDITIONAL(BUILD_IMLIB2, test x$want_imlib2 = xyes)
-dnl if test x$want_imlib2 = xyes; then
-dnl PKG_CHECK_MODULES([Imlib2], [imlib2])
-dnl CFLAGS="$CFLAGS $Imlib2_CFLAGS"
-dnl LIBS="$LIBS $Imlib2_LIBS"
-dnl AC_DEFINE(IMLIB2, 1, [Define if you want Imlib2 support])
-dnl fi
-
 
 dnl
 dnl PORT_MONITORS
@@ -482,6 +503,26 @@ if test x$want_xft = "xyes"; then
 fi
 
 dnl
+dnl IMLIB2
+dnl
+
+AC_ARG_ENABLE([imlib2],
+			  AC_HELP_STRING([--enable-imlib2], [enable if you want Imlib2 support [[default=no]]]),
+			  [want_imlib2="$enableval"], [want_imlib2=no])
+if test x$want_imlib2 = xyes; then
+	if test "x$want_x11" != "xyes"; then
+		dnl silently disable if no x11
+		want_imlib2=no
+	else
+		PKG_CHECK_MODULES([Imlib2], [imlib2])
+		CFLAGS="$CFLAGS $Imlib2_CFLAGS"
+		LIBS="$LIBS $Imlib2_LIBS"
+		AC_DEFINE(IMLIB2, 1, [Define if you want Imlib2 support])
+	fi
+fi
+AM_CONDITIONAL(BUILD_IMLIB2, test x$want_imlib2 = xyes)
+
+dnl
 dnl NVIDIA libXNVCtrl support
 dnl
 
@@ -548,16 +589,35 @@ if test x$WANT_OSSLIB = xyes; then
 fi
 
 dnl
+dnl ALSA for Linux
+dnl
+AC_ARG_ENABLE([alsa],
+              AC_HELP_STRING([--disable-alsa], [disable if you do not
+  want ALSA support @<:@default=yes@:>@]),
+              [want_alsa="$enableval"], [want_alsa=yes])
+
+if test x$want_alsa = xyes; then
+    AC_CHECK_HEADER(alsa/asoundlib.h,, want_alsa=no)
+fi
+if test x$want_alsa = xyes; then
+    AC_CHECK_LIB(asound, snd_pcm_open,LIBS="$LIBS -lasound", want_alsa=no)
+fi
+if test x$want_alsa = xyes; then
+AC_DEFINE(MIXER_IS_ALSA, 1, [Define if the mixers use ALSA])
+fi
+dnl
 dnl Some headers
 dnl
 
-AC_CHECK_HEADERS([signal.h unistd.h sys/utsname.h sys/stat.h linux/soundcard.h dirent.h mcheck.h \
+AC_CHECK_HEADERS([signal.h unistd.h sys/utsname.h sys/stat.h linux/soundcard.h alsa/asoundlib.h dirent.h mcheck.h \
       sys/statfs.h sys/param.h pthread.h assert.h errno.h time.h])
 AC_CHECK_HEADERS([sys/mount.h], [], [],
      [#ifdef HAVE_SYS_PARAM_H
       #include <sys/param.h>
       #endif
       ])
+# check if we have inotify support
+AC_CHECK_HEADERS([sys/inotify.h])
 
 dnl
 dnl Some defines
@@ -597,6 +657,30 @@ AC_CHECK_HEADER(zlib.h,
 
 
 dnl
+dnl Check for OpenMP support
+dnl
+
+AC_ARG_ENABLE([openmp],
+	      AC_HELP_STRING([--enable-openmp], [enable if you want OpenMP support @<:@default=no@:>@]),
+	      [want_openmp="$enableval"], [want_openmp=no])
+
+if test x$want_openmp = xyes; then
+	AX_OPENMP([
+	  gcc_version=`$CC -dumpversion`
+	  gcc_major=`echo $gcc_version | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+	  gcc_minor=`echo $gcc_version | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+	  dnl check that the gcc version is >=4.3, if we're using gcc
+	  if test ! "x$GCC" = "xyes" -o $gcc_major -ge 4 -a $gcc_minor -ge 3; then
+	    AC_DEFINE(HAVE_OPENMP,1,[Define if OpenMP is enabled])
+	    CFLAGS="$CFLAGS $OPENMP_CFLAGS"
+	  else
+	    want_openmp=no
+	  fi
+
+	])
+fi
+
+dnl
 dnl Check doc stuff
 dnl
 
@@ -608,7 +692,6 @@ if test x$db2x_xsltproc_cmd = "x" -o x$xsltproc_cmd = "x"; then
 else
   AM_CONDITIONAL(HAVE_DOCSTUFF, true)
 fi
-
 
 dnl
 dnl kstat in Solaris
@@ -725,13 +808,18 @@ $PACKAGE $VERSION configured successfully:
   XMMS2:            $want_xmms2
 
  * General:
+  OpenMP:           $want_openmp
   math:             $want_math
   hddtemp:          $want_hddtemp
   portmon:          $want_portmon
   RSS:              $want_rss
+  Lua:              $want_lua
   wireless:         $want_wlan
   IBM:              $want_ibm
   nvidia:           $want_nvidia
   eve-online:       $want_eve
   config-output:    $want_config_output
+  Imlib2:           $want_imlib2
+  ALSA mixer:       $want_alsa
+  apcupsd:          $want_apcupsd
 EOF

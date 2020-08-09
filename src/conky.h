@@ -43,6 +43,7 @@
 #define FALSE 0
 #define TRUE 1
 
+#define DEFAULT_BAR_WIDTH_NO_X 10
 
 #if !defined(__GNUC__)
 #  define __attribute__(x) /* nothing */
@@ -90,6 +91,10 @@ char *strndup(const char *s, size_t n);
 #include "rss.h"
 #endif
 
+#ifdef HAVE_LUA
+#include "llua.h"
+#endif
+
 #ifdef TCP_PORT_MONITOR
 #include "tcp-portmon.h"
 #endif
@@ -102,6 +107,13 @@ char *strndup(const char *s, size_t n);
 #include "ibm.h"
 #include "smapi.h"
 #endif
+
+#ifdef APCUPSD
+#include "apcupsd.h"
+#endif
+
+/* sony support */
+#include "sony.h"
 
 /* A size for temporary, static buffers to use when
  * one doesn't know what to choose. Defaults to 256.  */
@@ -187,7 +199,10 @@ enum {
 #endif
 	INFO_DNS = 30,
 #ifdef MOC
-  INFO_MOC = 31
+	INFO_MOC = 31,
+#endif
+#ifdef APCUPSD
+ 	INFO_APCUPSD = 32,
 #endif
 };
 
@@ -225,9 +240,11 @@ struct information {
 	float *cpu_usage;
 	/* struct cpu_stat cpu_summed; what the hell is this? */
 	unsigned int cpu_count;
-	unsigned int cpu_avg_samples;
+	int cpu_avg_samples;
 
-	unsigned int net_avg_samples;
+	int net_avg_samples;
+
+	int diskio_avg_samples;
 
 	float loadavg[3];
 
@@ -255,6 +272,10 @@ struct information {
 
 #ifdef X11
 	struct x11_info x11;
+#endif
+
+#ifdef APCUPSD
+	APCUPSD_S apcupsd;
 #endif
 
 	short kflags;	/* kernel settings, see enum KFLAG */
@@ -294,8 +315,11 @@ extern double current_update_time, last_update_time, update_interval;
 /* defined in conky.c */
 int spaced_print(char *, int, const char *, int, ...)
 	__attribute__((format(printf, 3, 5)));
+extern int inotify_fd;
 
+#ifdef X11
 #define TO_X 1
+#endif
 #define TO_STDOUT 2
 #define TO_STDERR 4
 #define OVERWRITE_FILE 8
