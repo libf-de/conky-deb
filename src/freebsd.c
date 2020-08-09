@@ -1,7 +1,7 @@
 /** freebsd.c
  * Contains FreeBSD specific stuff
  *
- * $Id: freebsd.c,v 1.13 2005/08/30 17:32:58 mirrorbox Exp $
+ * $Id: freebsd.c,v 1.21 2005/12/08 13:20:29 mirrorbox Exp $
  */
 
 #include <fcntl.h>
@@ -372,39 +372,59 @@ int open_acpi_temperature(const char *name)
 	return 0;
 }
 
-char *get_acpi_ac_adapter(void)
+void get_acpi_ac_adapter( char * p_client_buffer, size_t client_buffer_size )
 {
 	int state;
-	char *acstate = (char *) malloc(100);
+
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
 
 	if (GETSYSCTL("hw.acpi.acline", state)) {
 		(void) fprintf(stderr,
 			       "Cannot read sysctl \"hw.acpi.acline\"\n");
-		return "n\\a";
+		return;
 	}
 
 
 	if (state)
-		strcpy(acstate, "Running on AC Power");
+		strncpy( p_client_buffer, "Running on AC Power", client_buffer_size );
 	else
-		strcpy(acstate, "Running on battery");
+		strncpy( p_client_buffer, "Running on battery", client_buffer_size );
 
-	return acstate;
+	return;
 }
 
-char *get_acpi_fan()
+void get_acpi_fan( char * p_client_buffer, size_t client_buffer_size )
 {
-	return "";
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
+
+	/* not implemented */
+	memset(p_client_buffer,0,client_buffer_size);
+
+	return;
 }
 
-char *get_adt746x_cpu()
+void get_adt746x_cpu( char * p_client_buffer, size_t client_buffer_size )
 {
-	return "";
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
+
+	/* not implemented */
+	memset(p_client_buffer,0,client_buffer_size);
+
+	return;
 }
 
-char *get_adt746x_fan()
+void get_adt746x_fan( char * p_client_buffer, size_t client_buffer_size )
 {
-	return "";
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
+
+	/* not implemented */
+	memset(p_client_buffer,0,client_buffer_size);
+
+	return; 
 }
 
 /* rdtsc() and get_freq_dynamic() copied from linux.c */
@@ -418,7 +438,8 @@ __inline__ unsigned long long int rdtsc()
 }
 #endif
 
-float get_freq_dynamic()
+/* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
+void get_freq_dynamic( char * p_client_buffer, size_t client_buffer_size, char * p_format, int divisor )
 {
 #if  defined(__i386) || defined(__x86_64)
         struct timezone tz;
@@ -440,20 +461,32 @@ float get_freq_dynamic()
         microseconds = ((tvstop.tv_sec - tvstart.tv_sec) * 1000000) +
             (tvstop.tv_usec - tvstart.tv_usec);
                              
-        return (cycles[1] - cycles[0]) / microseconds;
+	snprintf( p_client_buffer, client_buffer_size, p_format, (float)((cycles[1] - cycles[0]) / microseconds) / divisor );
+        return;
 #else
-        return get_freq();
+	get_freq( p_client_buffer, client_buffer_size, p_format, divisor );
+        return;
 #endif
 }
 
-float get_freq()
+/* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
+void get_freq( char * p_client_buffer, size_t client_buffer_size, char * p_format, int divisor )
 {
 	int freq;
+
+	if ( !p_client_buffer || client_buffer_size <= 0 || !p_format || divisor <= 0 )
+              return;
 	
 	if (GETSYSCTL("dev.cpu.0.freq", freq) == 0)
-		return (float)freq;
+	{
+		snprintf( p_client_buffer, client_buffer_size, p_format, freq/divisor );
+	}
 	else
-		return (float)0;
+	{
+		snprintf( p_client_buffer, client_buffer_size, p_format, (float)0 );
+	}
+
+	return;
 }
 
 void update_top()
@@ -590,6 +623,7 @@ inline void proc_find_top(struct process **cpu, struct process **mem)
 		return;
 }
 
+#if defined(i386) || defined(__i386__)
 #define APMDEV  "/dev/apm"
 #define APM_UNKNOWN     255
 
@@ -705,4 +739,11 @@ char *get_apm_battery_time()
         }
 
 	return out;
+}
+
+#endif
+
+/* empty stub so conky links */
+void free_all_processes(void)
+{
 }

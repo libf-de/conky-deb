@@ -345,12 +345,25 @@ int open_acpi_temperature(const char *name)
 	return -1;
 }
 
-char *get_acpi_ac_adapter(void)
+void get_acpi_ac_adapter( char * p_client_buffer, size_t client_buffer_size )
 {
-	return "N/A";
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
+
+	/* not implemented */
+	memset(p_client_buffer,0,client_buffer_size);
+
+	return;
 }
 
-char *get_acpi_fan()
+/*char *get_acpi_fan()*/
+void get_acpi_fan( char * p_client_buffer, size_t client_buffer_size )
 {
-	return "N/A";
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
+
+	/* not implemented */
+	memset(p_client_buffer,0,client_buffer_size);
+
+	return;
 }

@@ -102,6 +102,48 @@
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">bmpx_artist</td>
+<td align="center"></td>
+<td>
+                Artist in current BMPx track
+        </td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">bmpx_album</td>
+<td align="center"></td>
+<td>
+                Album in current BMPx track
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">bmpx_title</td>
+<td align="center"></td>
+<td>
+		Title of the current BMPx track
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">bmpx_track</td>
+<td align="center"></td>
+<td>
+		Track number of the current BMPx track
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">bmpx_bitrate</td>
+<td align="center"></td>
+<td>
+		Bitrate of the current BMPx track
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">bmpx_uri</td>
+<td align="center"></td>
+<td>
+		URI of the current BMPx track
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
 <td align="center">buffers</td>
 <td align="center"></td>
 <td>
@@ -313,7 +355,7 @@
 </tr>
 <tr bgcolor="#b4cdcd">
 <td align="center">i2c</td>
-<td align="center">(dev), type, n</td>
+<td align="center">(dev) type n</td>
 <td>
 		I2C sensor from sysfs (Linux 2.6). dev may be omitted if you have only one I2C device. type is either in (or vol) meaning voltage, fan meaning fan or temp/tempf (first in C, second in F) meaning temperature. n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
 	</td>
@@ -480,76 +522,6 @@
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
-<td align="center">ml_upload_counter</td>
-<td align="center"></td>
-<td>
-		total session upload in mb
-	</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">ml_download_counter</td>
-<td align="center"></td>
-<td>
-		total session download in mb
-	</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">ml_nshared_files</td>
-<td align="center"></td>
-<td>
-		number of shared files
-	</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">ml_shared_counter</td>
-<td align="center"></td>
-<td>
-		total session shared in mb, buggy in some mldonkey versions
-	</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">ml_tcp_upload_rate</td>
-<td align="center"></td>
-<td>
-		tcp upload rate in kb/s
-	</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">ml_tcp_download_rate</td>
-<td align="center"></td>
-<td>
-		tcp download rate in kb/s
-	</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">ml_udp_upload_rate</td>
-<td align="center"></td>
-<td>
-		udp upload rate in kb/s
-	</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">ml_udp_download_rate</td>
-<td align="center"></td>
-<td>
-		udp download rate in kb/s
-	</td>
-</tr>
-<tr bgcolor="#b4cdcd">
-<td align="center">ml_ndownloaded_files</td>
-<td align="center"></td>
-<td>
-		number of completed files
-	</td>
-</tr>
-<tr bgcolor="#fffafa">
-<td align="center">ml_ndownloading_files</td>
-<td align="center"></td>
-<td>
-		number of downloading files
-	</td>
-</tr>
-<tr bgcolor="#b4cdcd">
 <td align="center">mpd_artist</td>
 <td align="center"></td>
 <td>
@@ -620,94 +592,167 @@
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">mpd_random</td>
+<td align="center"></td>
+<td>
+		Random status (On/Off)
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_repeat</td>
+<td align="center"></td>
+<td>
+		Repeat status (On/Off)
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mpd_track</td>
+<td align="center"></td>
+<td>
+		Prints the MPD track field
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">mpd_name</td>
+<td align="center"></td>
+<td>
+		Prints the MPD name field
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">mpd_file</td>
+<td align="center"></td>
+<td>
+		Prints the file name of the current MPD song
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">new_mails</td>
 <td align="center"></td>
 <td>
 		Unread mail count in mail spool.
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">nodename</td>
 <td align="center"></td>
 <td>
 		Hostname
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">outlinecolor</td>
 <td align="center">(color)</td>
 <td>
 		Change outline color
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pre_exec</td>
 <td align="center">shell command</td>
 <td>
 		Executes a shell command one time before conky displays anything and puts output as text.
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">processes</td>
 <td align="center"></td>
 <td>
 		Total processes (sleeping and running)
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">running_processes</td>
 <td align="center"></td>
 <td>
 		Running processes (not sleeping), requires Linux 2.6
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">shadecolor</td>
 <td align="center">(color)</td>
 <td>
 		Change shading color
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">stippled_hr</td>
 <td align="center">(space)</td>
 <td>
 		Stippled (dashed) horizontal line
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">swapbar</td>
 <td align="center">(height),(width)</td>
 <td>
 		Bar that shows amount of swap in use
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">swap</td>
 <td align="center"></td>
 <td>
 		Amount of swap in use
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">swapmax</td>
 <td align="center"></td>
 <td>
 		Total amount of swap
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">swapperc</td>
 <td align="center"></td>
 <td>
 		Percentage of swap in use
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">sysname</td>
 <td align="center"></td>
 <td>
 		System name, Linux for example
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">tcp_portmon</td>
+<td align="center">port_begin port_end item (index)</td>
+<td>
+		TCP port monitor for specified local ports.  Port numbers must be in the range 1 to 65535. Valid items are:
+		
+			count - total number of connections in the range
+				
+			rip - remote ip address
+				
+			rhost - remote host name 
+				
+			rport - remote port number
+				
+			lip - local ip address
+				
+			lhost - local host name
+				
+			lservice - local service name from /etc/services
+				
+		The connection index provides you with access to each connection in the port monitor.  The monitor will return information for index values from 0 to n-1 connections.  Values higher than n-1 are simply ignored.  For the "count" item, the connection index must be omitted.  It is required for all other items.
+		
+			Examples:
+			${tcp_portmon 6881 6999 count} -
+				displays the number of connections in the bittorrent port range
+			${tcp_portmon 22 22 rip 0} -
+				displays the remote host ip of the first sshd connection
+			${tcp_portmon 22 22 rip 9} -
+				displays the remote host ip of the tenth sshd connection
+			${tcp_portmon 1 1024 rhost 0} -
+				displays the remote host name of the first connection on a privileged port
+			${tcp_portmon 1 1024 rport 4} -
+				displays the remote host port of the fifth connection on a privileged port
+			${tcp_portmon 1 65535 lservice 14} -
+				displays the local service name of the fifteenth connection in the range of all ports
+		Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally.  In other words, the program avoids creating redundant monitors. 
 	</td>
 </tr>
 <tr bgcolor="#fffafa">
@@ -835,6 +880,97 @@
 <td>
 		Change verticle offset by N pixels.  Negative values will cause text to overlap.  See also $offset.
 		</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xmms_bar</td>
+<td align="center">(height),(width)</td>
+<td>
+		xmms / bmp / audacious / infopipe: progress bar
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">xmms_bitrate</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: bitrate of current tune
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xmms_channels</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: number of audio channels of current tune
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">xmms_filename</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: full path and filename of current tune
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xmms_frequency</td>
+<td align="center"></td>
+<td>
+	        xmms / bmp / audacious / infopipe: sampling frequency of current tune
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">xmms_length</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: total length of current tune as MM:SS
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xmms_length_seconds</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: total length of current tune in seconds
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">xmms_playlist_position</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: playlist position of current tune
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xmms_playlist_length</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: number of tunes in playlist
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">xmms_position</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: MM:SS position of current tune
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xmms_position_seconds</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: position of current tune in seconds
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">xmms_status</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: player status (Playing/Paused/Stopped/Not running)
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xmms_title</td>
+<td align="center"></td>
+<td>
+		xmms / bmp / audacious / infopipe: title of current tune
+	</td>
 </tr>
 </table></body>
 </html>

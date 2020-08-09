@@ -1,13 +1,20 @@
-.TH conky 1 2005\-08\-27  
+.\" -*- coding: us-ascii -*-
+.TH conky 1 2006-02-12  
 .SH NAME
 conky \- A system monitor for X originally based on the torsmo code, but more kickass. It just keeps on given'er. Yeah.
 .SH SYNOPSIS
-\fBconky\fR [\fBoptions\fR]
+.ad l
+\fBconky\fR \kx
+.if (\nxu > (\n(.lu / 2)) .nr x (\n(.lu / 5)
+'in \n(.iu+\nxu
+[\fBoptions\fR]
+'in \n(.iu-\nxu
+.ad b
 .SH DESCRIPTION
 Conky is a system monitor for X originally based on the torsmo code. 
 Since it's original conception, Conky has changed a fair bit from it's predecessor. 
 Conky can display just about anything, either on your root desktop or in it's own window. 
-Conky has many built\-in objects, as well as the ability to execute programs and scripts, 
+Conky has many built-in objects, as well as the ability to execute programs and scripts, 
 then display the output from stdout.
 .PP
 We are always looking for help, and anyone interested in becoming a developer is welcome. 
@@ -16,19 +23,19 @@ Please use the facilities at SourceForge to make bug reports, feature requests, 
 Thanks for your interest in Conky.
 .SH COMPILING
 For users compiling from source, make sure you have the X development libraries installed. 
-This should be a package along the lines of "libx11\-dev or xorg\-x11\-dev". 
+This should be a package along the lines of "libx11-dev or xorg-x11-dev". 
 .PP
-Gentoo users \-\- Conky is in Gentoo's Portage... simply use "emerge app\-admin/conky" for installation.
-There is also usually an up\-to\-date ebuild within Conky's package or in CVS.
+Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
+There is also usually an up-to-date ebuild within Conky's package or in CVS.
 .PP
-Debian,etc. users \-\- Conky will be in Debian's repositories soon (by mid\-September, hopefully), and then 
-Ubuntu shortly thereafter. Until then, "dpkg \-i" the .deb package to install. 
+Debian,etc. users -- Conky will be in Debian's repositories soon (by mid-September, hopefully), and then 
+Ubuntu shortly thereafter. Until then, "dpkg -i" the .deb package to install. 
 .PP
-To compile and run Conky with all optional components:
+Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
 .TP 
 \fBsh autogen.sh\fR \fB# Only required if building from CVS\fR 
 .TP 
-\fB\&./configure \fR\fB\-\-prefix=/usr \-\-mandir=/usr/share/man \-\-infodir=/usr/share/info \-\-datadir=/usr/share \-\-sysconfdir=/etc \-\-localstatedir=/var/lib \-\-enable\-double\-buffer \-\-enable\-own\-window \-\-enable\-proc\-uptime \-\-enable\-mpd \-\-enable\-xft \-\-enable\-seti\fR 
+\fB\&./configure \fR\fB\-\-prefix=/usr \-\-mandir=/usr/share/man \-\-infodir=/usr/share/info \-\-datadir=/usr/share \-\-sysconfdir=/etc \-\-localstatedir=/var/lib \-\-enable\-xft \-\-enable\-seti \-\-enable\-double\-buffer \-\-enable\-own\-window \-\-enable\-proc\-uptime \-\-enable\-mpd \-\-enable\-mldonkey \-\-enable\-x11 \-\-enable\-portmon \-\-enable\-xmms \-\-enable\-bmp \-\-enable\-audacious \-\-enable\-infopipe \-\-enable\-bmpx \fR
 .TP 
 \fBmake\fR 
 .TP 
@@ -43,7 +50,7 @@ optarg variable with getopt() and long long (not in C89). Crashes in file system
 statistics stuff when compiled with icc, I don't know exactly why.
 .PP
 You can disable 'drawing to own window' feature in case you don't need it by passing 
-\-\-disable\-own\-window to configure \-script.
+--disable-own-window to configure -script.
 .PP
 .SH "YOU SHOULD KNOW"
 Conky is generally very good on resources. However, certain objects in
@@ -53,7 +60,7 @@ $top, $font, and $graph objects are quite costly in comparison to the rest of Co
 If you do use them, please do not complain about memory or CPU usage, 
 unless you think something's seriously wrong (mem leak, etc.).
 .PP
-An easy way to force Conky to reload your ~/.conkyrc: "killall \-SIGUSR1 conky".
+An easy way to force Conky to reload your ~/.conkyrc: "killall -SIGUSR1 conky".
 Saves you the trouble of having to kill and then restart.
 .PP
 IMPORTANT: For previous Conky users, Conky 1.3 no longer supports the metar stuff. 
@@ -94,7 +101,7 @@ Create own window to draw
 
 .TP 
 \fB\-t \fR\fBTEXT\fR
-Text to render, remember single quotes, like \-t ' $uptime '
+Text to render, remember single quotes, like -t ' $uptime '
 
 .TP 
 \fB\-u \fR\fBSECONDS\fR
@@ -164,6 +171,10 @@ Use the Xdbe extension? (eliminates flicker) It is highly recommended to use own
 Draw borders around text?
 
 .TP 
+\fBdraw_graph_borders\fR
+Draw borders around graphs?
+
+.TP 
 \fBdraw_shades\fR
 Draw shades?
 
@@ -177,11 +188,11 @@ Font name in X, xfontsel can be used to get a nice font
 
 .TP 
 \fBgap_x\fR
-Gap between right or left border of screen, same as passing \-x at command line
+Gap between right or left border of screen, same as passing -x at command line
 
 .TP 
 \fBgap_y\fR
-Gap between top or bottom border of screen, same as passing \-y at command line
+Gap between top or bottom border of screen, same as passing -y at command line
 
 .TP 
 \fBno_buffers\fR
@@ -198,6 +209,14 @@ Maximum width of window
 .TP 
 \fBminimum_size\fR \fBwidth (height)\fR 
 Minimum size of window
+
+.TP 
+\fBmin_port_monitors\fR
+Allow for the creation of at least this number of port monitors (if 0 or not set, default is 16) 
+
+.TP 
+\fBmin_port_monitor_connections\fR
+Allow each port monitor to track at least this many connections (if 0 or not set, default is 256)
 
 .TP 
 \fBmldonkey_hostname\fR
@@ -241,11 +260,15 @@ Boolean, create own window to draw?
 
 .TP 
 \fBown_window_transparent\fR
-Boolean, set pseudo\-transparency?
+Boolean, set pseudo-transparency?
 
 .TP 
 \fBown_window_colour\fR \fBcolour\fR 
 If own_window_transparent no, set a specified background colour (defaults to black). Takes either a hex value (#ffffff) or a valid RGB name (see /usr/lib/X11/rgb.txt)
+
+.TP 
+\fBout_to_console\fR 
+Print text to stdout.
 
 .TP 
 \fBpad_percents\fR
@@ -273,7 +296,15 @@ Adds spaces after certain objects to stop them from moving other things around. 
 
 .TP 
 \fBuse_xft\fR
-Use Xft (anti\-aliased font and stuff)
+Use Xft (anti-aliased font and stuff)
+
+.TP 
+\fBwm_class_name\fR
+Manually set the WM_CLASS name. Defaults to "conky".
+
+.TP 
+\fBxmms_player\fR
+Use specified player/plugin for the xmms status variables. Valid items are: none, xmms, bmp, audacious and infopipe. (default is none). Note that bmpx is currently handled separately.
 
 .TP 
 \fBTEXT\fR
@@ -282,7 +313,7 @@ After this begins text to be formatted on screen
 .SH VARIABLES
 Colors are parsed using XParsecolor(), there might be a list of them:
 /usr/X11R6/lib/X11/rgb.txt. Also, 
-http://sedition.com/perl/rgb.html.
+http://sedition.com/perl/rgb.html [http://sedition.com/perl/rgb.html].
 Color can be also in #rrggbb format (hex).
 Note that when displaying bytes, power is 1024 and not 1000 so 1M really
 means 1024*1024 bytes and not 1000*1000.
@@ -316,7 +347,7 @@ Fan speed from therm_adt746x
 
 .TP 
 \fBalignr\fR \fB(num)\fR 
-Right\-justify text, with space of N
+Right-justify text, with space of N
 
 .TP 
 \fBalignc\fR \fB(num)\fR 
@@ -333,11 +364,35 @@ Display APM battery life in percent (FreeBSD only)
 .TP 
 \fBapm_battery_time\fR 
 Display remaining APM battery life in hh:mm:ss or "unknown" if
-AC adapterstatus is on\-line or charging (FreeBSD only)
+AC adapterstatus is on-line or charging (FreeBSD only)
 
 .TP 
 \fBbattery\fR \fB(num)\fR 
 Remaining capacity in ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+
+.TP 
+\fBbmpx_artist\fR 
+Artist in current BMPx track
+
+.TP 
+\fBbmpx_album\fR 
+Album in current BMPx track
+
+.TP 
+\fBbmpx_title\fR 
+Title of the current BMPx track
+
+.TP 
+\fBbmpx_track\fR 
+Track number of the current BMPx track
+
+.TP 
+\fBbmpx_bitrate\fR 
+Bitrate of the current BMPx track
+
+.TP 
+\fBbmpx_uri\fR 
+URI of the current BMPx track
 
 .TP 
 \fBbuffers\fR 
@@ -369,7 +424,7 @@ Displays current disk IO.
 
 .TP 
 \fBdiskiograph\fR \fB(height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR 
-Disk IO graph, colours defined in hex, minus the #. If scale is non\-zero, it becomes the scale for the graph.
+Disk IO graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
 
 .TP 
 \fBdownspeed\fR \fBnet\fR 
@@ -381,7 +436,7 @@ Download speed in kilobytes with one decimal
 
 .TP 
 \fBdownspeedgraph\fR \fBnet (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR 
-Download speed graph, colours defined in hex, minus the #. If scale is non\-zero, it becomes the scale for the graph.
+Download speed graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
 
 .TP 
 \fBelse\fR 
@@ -393,7 +448,7 @@ Executes a shell command and displays the output in conky. warning: this takes a
 
 .TP 
 \fBexecbar\fR \fBcommand\fR 
-Same as exec, except if the first value return is a value between 0\-100, it will use that number for a bar. The size for the bar is currently fixed, but that may change in the future.
+Same as exec, except if the first value return is a value between 0-100, it will use that number for a bar. The size for the bar is currently fixed, but that may change in the future.
 
 .TP 
 \fBexecgraph\fR \fBcommand\fR 
@@ -460,12 +515,12 @@ Displays first N lines of supplied text text file. If interval is not supplied, 
 Horizontal line, height is the height in pixels
 
 .TP 
-\fBi2c\fR \fB(dev), type, n\fR 
+\fBi2c\fR \fB(dev) type n\fR 
 I2C sensor from sysfs (Linux 2.6). dev may be omitted if you have only one I2C device. type is either in (or vol) meaning voltage, fan meaning fan or temp/tempf (first in C, second in F) meaning temperature. n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
 
 .TP 
 \fBi8k_ac_status\fR \fB\fR
-If running the i8k kernel driver for Inspiron laptops, displays whether ac power is on, as listed in /proc/i8k (translated to human\-readable). Beware that this is by default not enabled by i8k itself.
+If running the i8k kernel driver for Inspiron laptops, displays whether ac power is on, as listed in /proc/i8k (translated to human-readable). Beware that this is by default not enabled by i8k itself.
 
 .TP 
 \fBi8k_bios\fR \fB\fR
@@ -489,7 +544,7 @@ If running the i8k kernel driver for Inspiron laptops, displays the left fan's r
 
 .TP 
 \fBi8k_left_fan_status\fR \fB\fR
-If running the i8k kernel driver for Inspiron laptops, displays the left fan status as listed in /proc/i8k (translated to human\-readable). Beware, some laptops i8k reports these fans in reverse order.
+If running the i8k kernel driver for Inspiron laptops, displays the left fan status as listed in /proc/i8k (translated to human-readable). Beware, some laptops i8k reports these fans in reverse order.
 
 .TP 
 \fBi8k_right_fan_rpm\fR \fB\fR
@@ -497,7 +552,7 @@ If running the i8k kernel driver for Inspiron laptops, displays the right fan's 
 
 .TP 
 \fBi8k_right_fan_status\fR \fB\fR
-If running the i8k kernel driver for Inspiron laptops, displays the right fan status as listed in /proc/i8k (translated to human\-readable). Beware, some laptops i8k reports these fans in reverse order.
+If running the i8k kernel driver for Inspiron laptops, displays the right fan status as listed in /proc/i8k (translated to human-readable). Beware, some laptops i8k reports these fans in reverse order.
 
 .TP 
 \fBi8k_serial\fR \fB\fR
@@ -556,46 +611,6 @@ Total amount of memory
 Percentage of memory in use
 
 .TP 
-\fBml_upload_counter\fR 
-total session upload in mb
-
-.TP 
-\fBml_download_counter\fR 
-total session download in mb
-
-.TP 
-\fBml_nshared_files\fR 
-number of shared files
-
-.TP 
-\fBml_shared_counter\fR 
-total session shared in mb, buggy in some mldonkey versions
-
-.TP 
-\fBml_tcp_upload_rate\fR 
-tcp upload rate in kb/s
-
-.TP 
-\fBml_tcp_download_rate\fR 
-tcp download rate in kb/s
-
-.TP 
-\fBml_udp_upload_rate\fR 
-udp upload rate in kb/s
-
-.TP 
-\fBml_udp_download_rate\fR 
-udp download rate in kb/s
-
-.TP 
-\fBml_ndownloaded_files\fR 
-number of completed files
-
-.TP 
-\fBml_ndownloading_files\fR 
-number of downloading files
-
-.TP 
 \fBmpd_artist\fR 
 Artist in current MPD song must be enabled at compile
 
@@ -634,6 +649,26 @@ Song's length
 .TP 
 \fBmpd_percent\fR 
 Percent of song's progress
+
+.TP 
+\fBmpd_random\fR 
+Random status (On/Off)
+
+.TP 
+\fBmpd_repeat\fR 
+Repeat status (On/Off)
+
+.TP 
+\fBmpd_track\fR 
+Prints the MPD track field
+
+.TP 
+\fBmpd_name\fR 
+Prints the MPD name field
+
+.TP 
+\fBmpd_file\fR 
+Prints the file name of the current MPD song
 
 .TP 
 \fBnew_mails\fR 
@@ -688,6 +723,47 @@ Percentage of swap in use
 System name, Linux for example
 
 .TP 
+\fBtcp_portmon\fR \fBport_begin port_end item (index)\fR \fI(ip4 only at present)\fR 
+TCP port monitor for specified local ports. Port numbers must be in the range 1 to 65535. Valid items are:
+
+count - total number of connections in the range
+
+rip - remote ip address
+
+rhost - remote host name 
+
+rport - remote port number
+
+lip - local ip address
+
+lhost - local host name
+
+lservice - local service name from /etc/services
+
+The connection index provides you with access to each connection in the port monitor. The monitor will return information for index values from 0 to n-1 connections. Values higher than n-1 are simply ignored. For the "count" item, the connection index must be omitted. It is required for all other items.
+
+Examples:
+
+${tcp_portmon 6881 6999 count} -
+displays the number of connections in the bittorrent port range
+
+${tcp_portmon 22 22 rip 0} -
+displays the remote host ip of the first sshd connection
+
+${tcp_portmon 22 22 rip 9} -
+displays the remote host ip of the tenth sshd connection
+
+${tcp_portmon 1 1024 rhost 0} -
+displays the remote host name of the first connection on a privileged port
+
+${tcp_portmon 1 1024 rport 4} -
+displays the remote host port of the fifth connection on a privileged port
+
+${tcp_portmon 1 65535 lservice 14} -
+displays the local service name of the fifteenth connection in the range of all ports
+
+Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors. 
+.TP 
 \fBtexeci\fR \fBinterval command\fR 
 Runs a command at an interval inside a thread and displays the output. Same as $execi, except the command is run inside a thread. Use this if you have a slow script to keep Conky updating. You should make the interval slightly longer then the time it takes your script to execute. For example, if you have a script that take 5 seconds to execute, you should make the interval at least 6 seconds. See also $execi.
 
@@ -705,7 +781,7 @@ Local time, see man strftime to get more information about format
 
 .TP 
 \fBtotaldown\fR \fBnet\fR 
-Total download, overflows at 4 GB on Linux with 32\-bit arch and there doesn't seem to be a way to know how many times it has already done that before conky has started.
+Total download, overflows at 4 GB on Linux with 32-bit arch and there doesn't seem to be a way to know how many times it has already done that before conky has started.
 
 .TP 
 \fBtop\fR \fBtype, num\fR 
@@ -733,7 +809,7 @@ Upload speed in kilobytes with one decimal
 
 .TP 
 \fBupspeedgraph\fR \fBnet (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR 
-Upload speed graph, colours defined in hex, minus the #. If scale is non\-zero, it becomes the scale for the graph.
+Upload speed graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
 
 .TP 
 \fBuptime\fR 
@@ -759,6 +835,58 @@ Seti@home total user credit
 \fBvoffset\fR \fB(pixels)\fR 
 Change verticle offset by N pixels. Negative values will cause text to overlap. See also $offset.
 
+.TP 
+\fBxmms_bar\fR \fB(height),(width)\fR 
+xmms / bmp / audacious / infopipe: progress bar
+
+.TP 
+\fBxmms_bitrate\fR 
+xmms / bmp / audacious / infopipe: bitrate of current tune
+
+.TP 
+\fBxmms_channels\fR 
+xmms / bmp / audacious / infopipe: number of audio channels of current tune
+
+.TP 
+\fBxmms_filename\fR 
+xmms / bmp / audacious / infopipe: full path and filename of current tune
+
+.TP 
+\fBxmms_frequency\fR 
+xmms / bmp / audacious / infopipe: sampling frequency of current tune
+
+.TP 
+\fBxmms_length\fR 
+xmms / bmp / audacious / infopipe: total length of current tune as MM:SS
+
+.TP 
+\fBxmms_length_seconds\fR 
+xmms / bmp / audacious / infopipe: total length of current tune in seconds
+
+.TP 
+\fBxmms_playlist_position\fR 
+xmms / bmp / audacious / infopipe: playlist position of current tune
+
+.TP 
+\fBxmms_playlist_length\fR 
+xmms / bmp / audacious / infopipe: number of tunes in playlist
+
+.TP 
+\fBxmms_position\fR 
+xmms / bmp / audacious / infopipe: MM:SS position of current tune
+
+.TP 
+\fBxmms_position_seconds\fR 
+xmms / bmp / audacious / infopipe: position of current tune in seconds
+
+.TP 
+\fBxmms_status\fR 
+xmms / bmp / audacious / infopipe: player status (Playing/Paused/Stopped/Not running)
+
+.TP 
+\fBxmms_title\fR 
+xmms / bmp / audacious / infopipe: title of current tune
+
 .SH EXAMPLES
 .TP 
 conky \fB\-t '${time %D %H:%m}' \-o \-u 30\fR
@@ -772,15 +900,15 @@ Start Conky to background at coordinates (5, 500).
 Drawing to root or some other desktop window directly doesn't work with 
 all window managers. Especially doesn't work well with Gnome and it has 
 been reported that it doesn't work with KDE either. Nautilus can be 
-disabled from drawing to desktop with program gconf\-editor. Uncheck 
-show_desktop in /apps/nautilus/preferences/. There is \-w switch in Conky 
-to set some specific window id. You might find xwininfo \-tree useful to 
-find the window to draw to. You can also use \-o argument which makes
+disabled from drawing to desktop with program gconf-editor. Uncheck 
+show_desktop in /apps/nautilus/preferences/. There is -w switch in Conky 
+to set some specific window id. You might find xwininfo -tree useful to 
+find the window to draw to. You can also use -o argument which makes
 Conky to create its own window.
 .SH "SEE ALSO"
-http://conky.sourceforge.net
+http://conky.sourceforge.net [http://conky.sourceforge.net]
 .PP
-http://www.sourceforge.net/projects/conky
+http://www.sourceforge.net/projects/conky [http://www.sourceforge.net/projects/conky]
 .PP
 #conky on irc.freenode.net
 .SH AUTHORS

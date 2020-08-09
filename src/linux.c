@@ -1,7 +1,7 @@
 /* linux.c
  * Contains linux specific code
  *
- *  $Id: linux.c,v 1.22 2005/09/05 02:09:31 brenden1 Exp $
+ *  $Id: linux.c,v 1.38 2005/11/27 16:42:49 boojit Exp $
  */
 
 
@@ -28,6 +28,10 @@
 #include <linux/sockios.h>
 #include <net/if.h>
 #include <math.h>
+
+#define SHORTSTAT_TEMPL "%*s %llu %llu %llu"
+#define LONGSTAT_TEMPL "%*s %llu %llu %llu "
+
 
 static struct sysinfo s_info;
 
@@ -109,20 +113,20 @@ void update_meminfo()
 			break;
 
 		if (strncmp(buf, "MemTotal:", 9) == 0) {
-			sscanf(buf, "%*s %u", &info.memmax);
+			sscanf(buf, "%*s %lu", &info.memmax);
 		} else if (strncmp(buf, "MemFree:", 8) == 0) {
-			sscanf(buf, "%*s %u", &info.mem);
+			sscanf(buf, "%*s %lu", &info.mem);
 		} else if (strncmp(buf, "SwapTotal:", 10) == 0) {
-			sscanf(buf, "%*s %u", &info.swapmax);
+			sscanf(buf, "%*s %lu", &info.swapmax);
 		} else if (strncmp(buf, "SwapFree:", 9) == 0) {
-			sscanf(buf, "%*s %u", &info.swap);
+			sscanf(buf, "%*s %lu", &info.swap);
 		} else if (strncmp(buf, "Buffers:", 8) == 0) {
-			sscanf(buf, "%*s %u", &info.buffers);
+			sscanf(buf, "%*s %lu", &info.buffers);
 		} else if (strncmp(buf, "Cached:", 7) == 0) {
-			sscanf(buf, "%*s %u", &info.cached);
+			sscanf(buf, "%*s %lu", &info.cached);
 		}
 	}
-
+	
 	info.mem = info.memmax - info.mem;
 	info.swap = info.swapmax - info.swap;
 
@@ -153,8 +157,9 @@ inline void update_net_stats()
 		return;
 
 	/* open file and ignore first two lines */
-	if (net_dev_fp == NULL)
+	if (net_dev_fp == NULL) {
 		net_dev_fp = open_file("/proc/net/dev", &rep);
+	}
 	else
 		fseek(net_dev_fp, 0, SEEK_SET);
 	if (!net_dev_fp)
@@ -169,8 +174,9 @@ inline void update_net_stats()
 		char *s, *p;
 		long long r, t, last_recv, last_trans;
 
-		if (fgets(buf, 255, net_dev_fp) == NULL)
+		if (fgets(buf, 255, net_dev_fp) == NULL) {
 			break;
+		}
 		p = buf;
 		while (isspace((int) *p))
 			p++;
@@ -186,6 +192,7 @@ inline void update_net_stats()
 
 		ns = get_net_stat(s);
 		ns->up = 1;
+		memset(&(ns->addr.sa_data), 0, 14);
 		last_recv = ns->recv;
 		last_trans = ns->trans;
 
@@ -307,7 +314,8 @@ inline void update_wifi_stats()
 
 		sscanf(p, "%*d   %d.  %d.  %d", &l, &m, &n);
 
-		ns->linkstatus = (int) (log(l) / log(92) * 100);
+		ns->linkstatus = (int) (log(MIN(MAX(l,1),92)) / log(92) * 100);
+
 	}
 
 	/*** end wireless patch ***/
@@ -322,11 +330,18 @@ void update_total_processes()
 
 #define CPU_SAMPLE_COUNT 15
 struct cpu_info {
-	unsigned int cpu_user;
-	unsigned int cpu_system;
-	unsigned int cpu_nice;
-	double last_cpu_sum;
-	int clock_ticks;
+	unsigned long long cpu_user;
+	unsigned long long cpu_system;
+	unsigned long long cpu_nice;
+	unsigned long long cpu_idle;
+	unsigned long long cpu_iowait;
+	unsigned long long cpu_irq;
+	unsigned long long cpu_softirq;
+	unsigned long long cpu_steal;
+	unsigned long long cpu_total;
+	unsigned long long cpu_active_total;
+	unsigned long long cpu_last_total;
+	unsigned long long cpu_last_active_total;
 	double cpu_val[CPU_SAMPLE_COUNT];
 };
 static short cpu_setup = 0;
@@ -334,6 +349,18 @@ static int rep;
 
 
 static FILE *stat_fp;
+
+/* 
+   determine if this kernel gives us "extended" statistics information in /proc/stat. 
+   Kernels around 2.5 and earlier only reported user, system, nice and idle values in proc stat. 
+   Kernels around 2.6 and greater report these PLUS iowait, irq, softirq, and steal 
+*/
+void determine_longstat(char * buf) { 
+	unsigned long long iowait=0;
+	KFLAG_SETOFF(KFLAG_IS_LONGSTAT);	
+	/* scanf will either return -1 or 1 because there is only 1 assignment  */
+	if (sscanf(buf, "%*s %*d %*d %*d %*d %llu",&iowait)>0) KFLAG_SETON(KFLAG_IS_LONGSTAT);
+}
 
 void get_cpu_count()
 {
@@ -352,12 +379,18 @@ void get_cpu_count()
 			break;
 
 		if (strncmp(buf, "cpu", 3) == 0 && isdigit(buf[3])) {
+			if (info.cpu_count == 0) {
+				determine_longstat(buf);
+			}
 			info.cpu_count++;
 		}
 	}
 	info.cpu_usage = malloc((info.cpu_count + 1) * sizeof(float));
+
 }
 
+#define TMPL_LONGSTAT "%*s %llu %llu %llu %llu %llu %llu %llu %llu"
+#define TMPL_SHORTSTAT "%*s %llu %llu %llu %llu"
 
 inline static void update_stat()
 {
@@ -366,20 +399,25 @@ inline static void update_stat()
 	unsigned int i;
 	unsigned int index;
 	double curtmp;
+	char * stat_template=NULL; 
+	unsigned int malloc_cpu_size=0;
+	
+
 	if (!cpu_setup) {
 		get_cpu_count();
 		cpu_setup = 1;
 	}
+
+	if (stat_template == NULL) {
+		stat_template = KFLAG_ISSET(KFLAG_IS_LONGSTAT) ? TMPL_LONGSTAT : TMPL_SHORTSTAT ;
+	}	
+
 	if (cpu == NULL) {
-		cpu = malloc((info.cpu_count + 1) * sizeof(struct cpu_info));
-		for (index = 0; index < info.cpu_count + 1; ++index) {
-			cpu[index].clock_ticks = 0;
-			cpu[index].last_cpu_sum = 0;
-			for (i = 0; i < CPU_SAMPLE_COUNT; ++i) {
-				cpu[index].cpu_val[i] = 0;
-			}
-		}
+		malloc_cpu_size = (info.cpu_count + 1) *  sizeof(struct cpu_info);
+		cpu = malloc(malloc_cpu_size);
+		memset(cpu, 0, malloc_cpu_size);
 	}
+
 	if (stat_fp == NULL) {
 		stat_fp = open_file("/proc/stat", &rep);
 	} else {
@@ -394,57 +432,61 @@ inline static void update_stat()
 			break;
 
 		if (strncmp(buf, "procs_running ", 14) == 0) {
-			sscanf(buf, "%*s %d", &info.run_procs);
+			sscanf(buf, "%*s %hu", &info.run_procs);
 			info.mask |= (1 << INFO_RUN_PROCS);
-		} else if (strncmp(buf, "cpu ", 4) == 0) {
-			sscanf(buf, "%*s %u %u %u", &(cpu[index].cpu_user), &(cpu[index].cpu_nice), &(cpu[index].cpu_system));
-			index++;
-			info.mask |= (1 << INFO_CPU);
-		} else if (strncmp(buf, "cpu", 3) == 0 && isdigit(buf[3]) && index <= info.cpu_count) {
-			sscanf(buf, "%*s %u %u %u", &(cpu[index].cpu_user), &(cpu[index].cpu_nice), &(cpu[index].cpu_system));
-			index++;
-			info.mask |= (1 << INFO_CPU);
-		}
-	}
-	for (index = 0; index < info.cpu_count + 1; index++) {
-		double delta;
-		delta = current_update_time - last_update_time;
-		if (delta <= 0.001) {
-			return;
-		}
+		} else if (strncmp(buf, "cpu", 3) == 0) {
+			index = isdigit(buf[3]) ? ((int)buf[3]) - 0x2F : 0;
+			sscanf(buf, stat_template 
+				, &(cpu[index].cpu_user)
+				, &(cpu[index].cpu_nice)
+				, &(cpu[index].cpu_system)
+				, &(cpu[index].cpu_idle)
+				, &(cpu[index].cpu_iowait)
+				, &(cpu[index].cpu_irq)
+				, &(cpu[index].cpu_softirq)
+				, &(cpu[index].cpu_steal)
+				);
 
-		if (cpu[index].clock_ticks == 0) {
-			cpu[index].clock_ticks = sysconf(_SC_CLK_TCK);
-		}
-		curtmp = 0;
-		cpu[index].cpu_val[0] =
-				(cpu[index].cpu_user + cpu[index].cpu_nice + cpu[index].cpu_system -
-				cpu[index].last_cpu_sum) / delta / (double) cpu[index].clock_ticks;
-		for (i = 0; i < info.cpu_avg_samples; i++) {
-			curtmp += cpu[index].cpu_val[i];
-		}
-		if (index == 0) {
-			info.cpu_usage[index] = curtmp / info.cpu_avg_samples / info.cpu_count;
-		} else {
+			cpu[index].cpu_total = cpu[index].cpu_user 
+			                 + cpu[index].cpu_nice 
+			                 + cpu[index].cpu_system 
+			                 + cpu[index].cpu_idle 
+			                 + cpu[index].cpu_iowait 
+			                 + cpu[index].cpu_irq
+			                 + cpu[index].cpu_softirq
+			                 + cpu[index].cpu_steal 
+			                 ; 
+
+			cpu[index].cpu_active_total = cpu[index].cpu_total - (cpu[index].cpu_idle + cpu[index].cpu_iowait);
+			info.mask |= (1 << INFO_CPU);
+
+			double delta = current_update_time - last_update_time;
+			if (delta <= 0.001) return; 	
+
+			cpu[index].cpu_val[0] = (cpu[index].cpu_active_total -  cpu[index].cpu_last_active_total) / 
+			                        (float )(cpu[index].cpu_total - cpu[index].cpu_last_total); 
+			curtmp = 0;
+			for (i=0; i < info.cpu_avg_samples; i++ ) {
+				curtmp += cpu[index].cpu_val[i];
+			}
+			/* TESTING -- I've removed this, because I don't think it is right. You shouldn't divide 
+			              by the cpu count here ... removing for testing */
+	                /* if (index == 0) {
+        	                info.cpu_usage[index] = curtmp / info.cpu_avg_samples / info.cpu_count; 
+	                } else {
+        	                info.cpu_usage[index] = curtmp / info.cpu_avg_samples;
+  		        }  */
+			/* TESTING -- this line replaces the prev. "suspect" if/else */
 			info.cpu_usage[index] = curtmp / info.cpu_avg_samples;
+
+			cpu[index].cpu_last_total = cpu[index].cpu_total;
+			cpu[index].cpu_last_active_total = cpu[index].cpu_active_total;
+        	        for (i = info.cpu_avg_samples - 1; i > 0; i--) {
+                	        cpu[index].cpu_val[i] = cpu[index].cpu_val[i - 1];
+			}
 		}
-		cpu[index].last_cpu_sum = cpu[index].cpu_user + cpu[index].cpu_nice + cpu[index].cpu_system;
-		for (i = info.cpu_avg_samples; i > 1; i--)
-			cpu[index].cpu_val[i - 1] = cpu[index].cpu_val[i - 2];
 
 	}
-
-// test code
-// this is for getting proc shit
-// pee pee
-// poo
-	//
-
-
-
-
-
-
 }
 
 void update_running_processes()
@@ -562,7 +604,7 @@ open_i2c_sensor(const char *dev, const char *type, int n, int *div,
 		char *devtype)
 {
 	char path[256];
-	char buf[64];
+	char buf[256];
 	int fd;
 	int divfd;
 
@@ -679,49 +721,54 @@ double get_i2c_info(int *fd, int div, char *devtype, char *type)
 
 #define ADT746X_FAN "/sys/devices/temperatures/cpu_fan_speed"
 
-static char *adt746x_fan_state;
-
-char *get_adt746x_fan()
+void get_adt746x_fan( char * p_client_buffer, size_t client_buffer_size )
 {
 	static int rep;
+	char adt746x_fan_state[64];
 	FILE *fp;
 
-	if (adt746x_fan_state == NULL) {
-		adt746x_fan_state = (char *) malloc(100);
-		assert(adt746x_fan_state != NULL);
-	}
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
 
 	fp = open_file(ADT746X_FAN, &rep);
-	if (!fp) {
-		strcpy(adt746x_fan_state,
-		       "No fan found! Hey, you don't have one?");
-		return adt746x_fan_state;
+	if (!fp) 
+	{
+		sprintf(adt746x_fan_state, "adt746x not found");
 	}
-	fscanf(fp, "%s", adt746x_fan_state);
-	fclose(fp);
+	else
+	{
+		fscanf(fp, "%s", adt746x_fan_state);
+		fclose(fp);
+	}
 
-	return adt746x_fan_state;
+	snprintf( p_client_buffer, client_buffer_size, "%s", adt746x_fan_state );
+	return;
 }
 
 #define ADT746X_CPU "/sys/devices/temperatures/cpu_temperature"
 
-static char *adt746x_cpu_state;
-
-char *get_adt746x_cpu()
+void get_adt746x_cpu( char * p_client_buffer, size_t client_buffer_size )
 {
 	static int rep;
+	char adt746x_cpu_state[64];
 	FILE *fp;
 
-	if (adt746x_cpu_state == NULL) {
-		adt746x_cpu_state = (char *) malloc(100);
-		assert(adt746x_cpu_state != NULL);
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
+	
+	fp = open_file(ADT746X_CPU, &rep);
+	if (!fp)
+	{
+		sprintf(adt746x_cpu_state, "adt746x not found");
+	}
+	else
+	{
+		fscanf(fp, "%2s", adt746x_cpu_state);
+		fclose(fp);
 	}
 
-	fp = open_file(ADT746X_CPU, &rep);
-	fscanf(fp, "%2s", adt746x_cpu_state);
-	fclose(fp);
-
-	return adt746x_cpu_state;
+	snprintf( p_client_buffer, client_buffer_size, "%s", adt746x_cpu_state ); 
+	return;
 }
 
 /* Thanks to "Walt Nelson" <wnelsonjr@comcast.net> */
@@ -744,18 +791,19 @@ __inline__ unsigned long long int rdtsc()
 	__asm__ volatile (".byte 0x0f, 0x31":"=A" (x));
 	return x;
 }
-static char *buffer = NULL;
 #endif
 
-float get_freq_dynamic()
+/* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
+void get_freq_dynamic( char * p_client_buffer, size_t client_buffer_size, char * p_format, int divisor )
 {
 #if  defined(__i386) || defined(__x86_64)
-	if (buffer == NULL)
-		buffer = malloc(64);
 	struct timezone tz;
 	struct timeval tvstart, tvstop;
 	unsigned long long cycles[2];	/* gotta be 64 bit */
 	unsigned int microseconds;	/* total time taken */
+
+	if ( !p_client_buffer || client_buffer_size <= 0 || !p_format || divisor <= 0 )
+	     return;
 
 	memset(&tz, 0, sizeof(tz));
 
@@ -771,122 +819,132 @@ float get_freq_dynamic()
 	microseconds = ((tvstop.tv_sec - tvstart.tv_sec) * 1000000) +
 	    (tvstop.tv_usec - tvstart.tv_usec);
 
-	return (cycles[1] - cycles[0]) / microseconds;
+	snprintf( p_client_buffer, client_buffer_size, p_format, (float)((cycles[1] - cycles[0]) / microseconds) / divisor );
+	return;
 #else
-	return get_freq();
+	get_freq( p_client_buffer, client_buffer_size, p_format, divisor );
+	return;
 #endif
 }
 
 #define CPUFREQ_CURRENT "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
 
-static char *frequency;
-	
-float get_freq()
+/* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
+void get_freq( char * p_client_buffer, size_t client_buffer_size, char * p_format, int divisor )
 {
 	FILE *f;
-	char s[1000];
-	if (frequency == NULL) {
-		frequency = (char *) malloc(100);
-		assert(frequency != NULL);
-	}
+	char frequency[32];
+	char s[256];
+	double freq = 0;
+
+	if ( !p_client_buffer || client_buffer_size <= 0 || !p_format || divisor <= 0 )
+		return;
+
 	f = fopen(CPUFREQ_CURRENT, "r");
 	if (f) {
-		/* if there's a cpufreq /sys node, read the current
-		 * frequency there from this node; divice by 1000 to
-		 * get MHz
-		 */
-		double freq = 0;
-		if (fgets(s, 1000,f)) {
+		/* if there's a cpufreq /sys node, read the current frequency from this node;
+		 * divide by 1000 to get Mhz. */
+		if (fgets(s, sizeof(s), f)) {
 			s[strlen(s)-1] = '\0';
 			freq = strtod(s, NULL);
 		}
 		fclose(f);
-		return (freq/1000);
+		snprintf( p_client_buffer, client_buffer_size, p_format, (freq/1000)/divisor );
+		return;
 	}
 	
-	f = fopen("/proc/cpuinfo", "r");	//open the CPU information file
+	f = fopen("/proc/cpuinfo", "r");		//open the CPU information file
 	if (!f)
-	    return 0;
-	while (fgets(s, 1000, f) != NULL){	//read the file
+	    return;
+
+	while (fgets(s, sizeof(s), f) != NULL){		//read the file
 #if defined(__i386) || defined(__x86_64)
-		if (strncmp(s, "cpu MHz", 5) == 0) {	//and search for the cpu mhz
+		if (strncmp(s, "cpu MHz", 7) == 0) {	//and search for the cpu mhz
 #else
 		if (strncmp(s, "clock", 5) == 0) {	// this is different on ppc for some reason
 #endif
 		strcpy(frequency, strchr(s, ':') + 2);	//copy just the number
-		frequency[strlen(frequency) - 1] = '\0';	// strip \n
+		frequency[strlen(frequency) - 1] = '\0'; // strip \n
+		freq = strtod(frequency, NULL);
 		break;
 		}
 	}
-		fclose(f);
-		return strtod(frequency, (char **)NULL);
+	
+	fclose(f);
+	snprintf( p_client_buffer, client_buffer_size, p_format, (float)freq/divisor );
+	return;
 }
 
 
 #define ACPI_FAN_DIR "/proc/acpi/fan/"
 
-static char *acpi_fan_state;
-
-char *get_acpi_fan()
+void get_acpi_fan( char * p_client_buffer, size_t client_buffer_size )
 {
 	static int rep;
 	char buf[256];
 	char buf2[256];
 	FILE *fp;
 
-	if (acpi_fan_state == NULL) {
-		acpi_fan_state = (char *) malloc(100);
-		assert(acpi_fan_state != NULL);
-	}
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
 
 	/* yeah, slow... :/ */
 	if (!get_first_file_in_a_directory(ACPI_FAN_DIR, buf, &rep))
-		return "no fans?";
+	{
+		snprintf( p_client_buffer, client_buffer_size, "no fans?" );
+		return;
+	}
 
-	snprintf(buf2, 256, "%s%s/state", ACPI_FAN_DIR, buf);
+	snprintf(buf2, sizeof(buf2), "%s%s/state", ACPI_FAN_DIR, buf );
 
 	fp = open_file(buf2, &rep);
 	if (!fp) {
-		strcpy(acpi_fan_state, "can't open fan's state file");
-		return acpi_fan_state;
+		snprintf( p_client_buffer, client_buffer_size, "can't open fan's state file" );
+		return;
 	}
-	fscanf(fp, "%*s %99s", acpi_fan_state);
+	memset(buf,0,sizeof(buf));
+	fscanf(fp, "%*s %99s", buf);
+	fclose(fp);
 
-	return acpi_fan_state;
+	snprintf( p_client_buffer, client_buffer_size, "%s", buf );
+
+	return;
 }
 
 #define ACPI_AC_ADAPTER_DIR "/proc/acpi/ac_adapter/"
 
-static char *acpi_ac_adapter_state;
-
-char *get_acpi_ac_adapter()
+void get_acpi_ac_adapter( char * p_client_buffer, size_t client_buffer_size )
 {
 	static int rep;
 	char buf[256];
 	char buf2[256];
 	FILE *fp;
 
-	if (acpi_ac_adapter_state == NULL) {
-		acpi_ac_adapter_state = (char *) malloc(100);
-		assert(acpi_ac_adapter_state != NULL);
-	}
+	if ( !p_client_buffer || client_buffer_size <= 0 )
+		return;
 
 	/* yeah, slow... :/ */
 	if (!get_first_file_in_a_directory(ACPI_AC_ADAPTER_DIR, buf, &rep))
-		return "no ac_adapters?";
+	{
+		snprintf( p_client_buffer, client_buffer_size, "no ac_adapters?" );
+		return;	
+	}
 
-	snprintf(buf2, 256, "%s%s/state", ACPI_AC_ADAPTER_DIR, buf);
+	snprintf(buf2, sizeof(buf2), "%s%s/state", ACPI_AC_ADAPTER_DIR, buf );
+	 
 
 	fp = open_file(buf2, &rep);
 	if (!fp) {
-		strcpy(acpi_ac_adapter_state,
-		       "No ac adapter found.... where is it?");
-		return acpi_ac_adapter_state;
+		snprintf( p_client_buffer, client_buffer_size, "No ac adapter found.... where is it?" );
+		return;
 	}
-	fscanf(fp, "%*s %99s", acpi_ac_adapter_state);
+	memset(buf,0,sizeof(buf));
+	fscanf(fp, "%*s %99s", buf );
 	fclose(fp);
 
-	return acpi_ac_adapter_state;
+	snprintf( p_client_buffer, client_buffer_size, "%s", buf );
+
+	return;
 }
 
 /*
@@ -909,7 +967,7 @@ passive:                 73 C: tc1=4 tc2=3 tsp=40 devices=0xcdf6e6c0
 int open_acpi_temperature(const char *name)
 {
 	char path[256];
-	char buf[64];
+	char buf[256];
 	int fd;
 
 	if (name == NULL || strcmp(name, "*") == 0) {
@@ -1171,6 +1229,7 @@ void update_top()
 {
 	show_nice_processes = 1;
 	process_find_top(info.cpu, info.memu);
+	info.first_process = get_first_process();
 }
 
 
@@ -1243,3 +1302,4 @@ void update_diskio()
 
 	diskio_value = tot;
 }
+

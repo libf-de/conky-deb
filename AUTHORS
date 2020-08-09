@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 1.16 2005/09/04 03:43:18 brenden1 Exp $
+# $Id: AUTHORS,v 1.28 2005/12/30 09:44:39 mirrorbox Exp $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -13,11 +13,17 @@ affinity <affy at users dot sourceforge dot net>
 Bobby Beckmann <bbeckmann at users dot sourceforge dot net>
   Interface IP and Wireless Quality patch
 
+David Carter <boojit at pundo dot com>
+  CPU usage being reported incorrectly by top
+
 Brenden Matthews <brenden at rty dot ca>
   project maintainer
 
 Bruce Merry <bmerry at cs dot uct dot ac dot za>
   Xdbe (double buffering)
+
+btlee
+  linkstatus patch (http://forums.gentoo.org/viewtopic-p-2765647.html#2765647)
 
 dan-h <dan-h at users dot sourceforge dot net>
   adt746x fix
@@ -28,11 +34,18 @@ David McCabe
 Daniel Thiele <dthiele at gmx dot net>
   APM support for FreeBSD
 
+Denis <d-st at users dot sourceforge dot net>
+  WM_CLASS patch
+  statfs patch
+
 Dennis Frommknecht
   NVCtrl, temperature monitoring for nvdia-based graphics cards
 
 Dennis Kaandorp <addict at quicknet dot nl>
   adt746x stuff
+
+Elisey O. Savateev <bio3k at softboard dot ru>
+  Fixed if_mounted on FreeBSD
 
 Falk Feuersenger <lumberjack at users dot sourceforge dot net>
   I2C divisor from a file
@@ -101,8 +114,17 @@ Lucas Brutschy <lbrutschy at users dot sourceforge dot net>
 Moncelier Camille <pixdamix at users dot sourceforge dot net>
   METAR patch
 
+Nattfodd <Nattfodd@gmail.com>
+  Fixed top_mem dupes
+
 nathanj439 <nathanj439 at users dot sourceforge dot net>
   MPD time fix
+
+Pascal Eberhard <pascal dor eberhard at gmail dot com>
+  graph and bar fix for right alignment
+
+Philip Kovacs <pkovacs at users dot sourceforge dot net>
+  tcp port monitor with hashing functionality
 
 roiban adi <adiroiban at users dot sourceforge dot net>
   hex colour patch
@@ -112,9 +134,16 @@ Rui Paulo <rpaulo at netbsd-pt dot org>
 
 Roman Bogorodskiy <novel at clublife dot ru>
   FreeBSD support
+  BMPx support
 
 Szymon Boniecki
   Reads current LC_TIME
+
+Toni <bleach at users dot sourceforge dot net>
+  exec*/tail/head output evalution
+
+tyir <tyir at users dot sourceforge dot net>
+  MPD features patch 1319461
 
 Walt Nelson <wnelsonjr at comcast dot net>
   $freq fix

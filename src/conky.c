@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: conky.c,v 1.40 2005/09/11 23:07:28 brenden1 Exp $
+ *  $Id: conky.c,v 1.112 2006/02/13 02:28:46 brenden1 Exp $
  */
 
 #include "conky.h"
@@ -17,7 +17,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <pthread.h>
 #include <string.h>
 #include <limits.h>
 #if HAVE_DIRENT_H
@@ -33,6 +32,9 @@
 #define CONFIG_FILE "$HOME/.conkyrc"
 #define MAIL_FILE "$MAIL"
 #define MAX_IF_BLOCK_DEPTH 5
+
+/* #define SIGNAL_BLOCKING */
+#undef SIGNAL_BLOCKING
 
 #ifdef X11
 
@@ -82,7 +84,6 @@ struct font_list *fonts = NULL;
 
 
 static void set_font();
-
 
 int addfont(const char *data_in)
 {
@@ -224,6 +225,7 @@ static int gap_x, gap_y;
 
 /* border */
 static int draw_borders;
+static int draw_graph_borders;
 static int stippled_borders;
 
 static int draw_shades, draw_outline;
@@ -239,6 +241,7 @@ static int set_transparent = 0;
 #ifdef OWN_WINDOW
 static int own_window = 0;
 static int background_colour = 0;
+static char wm_class_name[256];
 /* fixed size/pos is set if wm/user changes them */
 static int fixed_size = 0, fixed_pos = 0;
 #endif
@@ -257,6 +260,11 @@ int no_buffers;
 /* pad percentages to decimals? */
 static int pad_percents = 0;
 
+#ifdef TCP_PORT_MONITOR
+tcp_port_monitor_collection_args_t 	tcp_port_monitor_collection_args;
+tcp_port_monitor_args_t 		tcp_port_monitor_args;
+#endif
+
 /* Text that is shown */
 static char original_text[] =
     "$nodename - $sysname $kernel on $machine\n"
@@ -273,8 +281,6 @@ static char original_text[] =
     " / $color${fs_free /}/${fs_size /} ${fs_bar 6 /}\n"
     "${color grey}Networking:\n"
     " Up:$color ${upspeed eth0} k/s${color grey} - Down:$color ${downspeed eth0} k/s\n"
-    "${color grey}Temperatures:\n"
-    " CPU:$color ${i2c temp 1}°C${color grey} - MB:$color ${i2c temp 2}°C\n"
     "$hr\n"
 #ifdef SETI
     "${color grey}SETI@Home Statistics:\n"
@@ -303,6 +309,7 @@ static int blockstart[MAX_IF_BLOCK_DEPTH];
 
 int check_mount(char *s)
 {
+#if defined(__linux__)
 	int ret = 0;
 	FILE *mtab = fopen("/etc/mtab", "r");
 	if (mtab) {
@@ -319,11 +326,22 @@ int check_mount(char *s)
 		ERR("Could not open mtab");
 	}
 	return ret;
+#elif defined(__FreeBSD__)
+	struct statfs *mntbuf;
+	int i, mntsize;
+
+	mntsize = getmntinfo(&mntbuf, MNT_NOWAIT);
+	for (i = mntsize - 1; i >= 0; i--)
+		if (strcmp(mntbuf[i].f_mntonname, s) == 0)
+			return 1;
+
+	return 0;
+#endif
 }
 
 
 #ifdef X11
-static inline int calc_text_width(const char *s, unsigned int l)
+static inline int calc_text_width(const char *s, int l)
 {
 #ifdef XFT
 	if (use_xft) {
@@ -389,7 +407,7 @@ static int special_index;	/* used when drawing */
 
 static struct special_t *new_special(char *buf, int t)
 {
-	if (special_count >= 128)
+	if (special_count >= 512)
 		CRIT_ERR("too many special things in text");
 
 	buf[0] = SPECIAL_CHAR;
@@ -503,9 +521,9 @@ inline void graph_append(struct special_t *graph, double f)
 	if (graph->scaled) {
 		graph->graph_scale = 1;
 	}
-	graph->graph[graph->graph_width - 1] = f; /* add new data */
-	for (i = 0; i < graph->graph_width - 1; i++) { /* shift all the data by 1 */
-		graph->graph[i] = graph->graph[i + 1];
+	graph->graph[0] = f; /* add new data */
+	for (i = graph->graph_width - 1; i > 0; i--) { /* shift all the data by 1 */
+		graph->graph[i] = graph->graph[i - 1];
 		if (graph->scaled && graph->graph[i] > graph->graph_scale) {
 			graph->graph_scale = graph->graph[i]; /* check if we need to update the scale */
 		}
@@ -548,6 +566,7 @@ static void new_graph(char *buf, int w, int h, unsigned int first_colour, unsign
 			s->graph_width = MAX_GRAPH_DEPTH - 3;
 		}
 		s->graph = malloc(s->graph_width * sizeof(double));
+		memset(s->graph, 0, s->graph_width * sizeof(double));
 		s->graph_scale = 100;
 	}
 	s->height = h;
@@ -843,7 +862,7 @@ enum text_object_type {
 	OBJ_upspeedgraph,
 	OBJ_uptime,
 	OBJ_uptime_short,
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
 	OBJ_apm_adapter,
 	OBJ_apm_battery_time,
 	OBJ_apm_battery_life,
@@ -857,16 +876,52 @@ enum text_object_type {
 	OBJ_mpd_title,
 	OBJ_mpd_artist,
 	OBJ_mpd_album,
+	OBJ_mpd_random,
+	OBJ_mpd_repeat,
 	OBJ_mpd_vol,
 	OBJ_mpd_bitrate,
 	OBJ_mpd_status,
 	OBJ_mpd_host,
 	OBJ_mpd_port,
+	OBJ_mpd_password,
 	OBJ_mpd_bar,
 	OBJ_mpd_elapsed,
 	OBJ_mpd_length,
+	OBJ_mpd_track,
+	OBJ_mpd_name,
+	OBJ_mpd_file,
 	OBJ_mpd_percent,
 #endif
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+	OBJ_xmms_status,
+	OBJ_xmms_title,
+	OBJ_xmms_length,
+	OBJ_xmms_length_seconds,
+	OBJ_xmms_position,
+	OBJ_xmms_position_seconds,
+	OBJ_xmms_bitrate,
+	OBJ_xmms_frequency,
+	OBJ_xmms_channels,
+	OBJ_xmms_filename,
+	OBJ_xmms_playlist_length,
+	OBJ_xmms_playlist_position,
+	OBJ_xmms_bar,
+#endif
+#ifdef BMPX
+	OBJ_bmpx_title,
+	OBJ_bmpx_artist,
+	OBJ_bmpx_album,
+	OBJ_bmpx_track,
+	OBJ_bmpx_uri,
+	OBJ_bmpx_bitrate,
+#endif
+#ifdef TCP_PORT_MONITOR
+	OBJ_tcp_portmon,
+#endif
+};
+
+struct thread_info_s {
+	pthread_t thread;
 };
 
 struct text_object {
@@ -881,7 +936,6 @@ struct text_object {
 		struct net_stat *net;
 		struct fs_stat *fs;
 		unsigned char loadavg[3];
-		//unsigned int diskio;
 		unsigned int cpu_index;
 		struct {
 			struct fs_stat *fs;
@@ -923,118 +977,252 @@ struct text_object {
 			char *cmd;
 			char *buffer;
 			double data;
+			int pos;
+			struct thread_info_s thread_info;
 		} execi;	/* 5 */
 
 		struct {
 			int a, b;
 		} pair;		/* 2 */
+#ifdef TCP_PORT_MONITOR
+		struct {
+			in_port_t  port_range_begin;  /* starting port to monitor */
+			in_port_t  port_range_end;    /* ending port to monitor */
+			int        item;              /* enum value from libtcp-portmon.h, e.g. COUNT, REMOTEIP, etc. */
+			int        connection_index;  /* 0 to n-1 connections. */
+		} tcp_port_monitor;
+#endif
 	} data;
+};
+
+struct text_object_list {
+	unsigned int text_object_count;
+	struct text_object *text_objects;
 };
 
 static unsigned int text_object_count;
 static struct text_object *text_objects;
+static void generate_text_internal(char *p, int p_max_size, struct text_object *objs, unsigned int object_count, struct information *cur);
 
-pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+#define MAX_THREADS 512 // sure whatever
+typedef struct thread_info_s *thread_info;
+static thread_info thread_list[MAX_THREADS];
+static int thread_count = 0;
+static int threads_runnable = 1;
 
-void *threaded_exec( struct text_object *obj ) {
-	char *p2 = obj->data.execi.buffer;
-	FILE *fp = popen(obj->data.execi.cmd,"r");
-	pthread_mutex_lock( &mutex1 );
-	int n2 = fread(p2, 1, TEXT_BUFFER_SIZE, fp);
-	(void) pclose(fp);	
-	p2[n2] = '\0';
-	if (n2 && p2[n2 - 1] == '\n')
-		p2[n2 - 1] = '\0';
-	
-	while (*p2) {
-		if (*p2 == '\001')
-			*p2 = ' ';
-		p2++;
+int register_thread(struct thread_info_s *new_thread)
+{
+	if (thread_count >= MAX_THREADS) {
+		CRIT_ERR("Uh oh, tried to register too many threads");
+	} else {
+		thread_list[thread_count] = new_thread;
+		thread_count++;
 	}
-	pthread_mutex_unlock( &mutex1 );
-	return NULL;
+	return thread_count - 1;
 }
 
-/* new_text_object() allocates a new zeroed text_object */
-static struct text_object *new_text_object()
+void replace_thread(struct thread_info_s *new_thread, int pos) // this isn't even used anymore; oh wells
 {
-	text_object_count++;
-	text_objects = (struct text_object *) realloc(text_objects,
-						      sizeof(struct
-							     text_object) *
-						      text_object_count);
-	memset(&text_objects[text_object_count - 1], 0,
-	       sizeof(struct text_object));
-
-	return &text_objects[text_object_count - 1];
+	if (pos >= 0 && pos < MAX_THREADS) {
+		thread_list[pos] = new_thread;
+	} else {
+		ERR("thread position out of bounds");
+	}
 }
 
-static void free_text_objects()
-{
-	unsigned int i;
-	for (i = 0; i < text_object_count; i++) {
-		switch (text_objects[i].type) {
-		case OBJ_acpitemp:
-			close(text_objects[i].data.i);
-			break;
-		case OBJ_acpitempf:
-			close(text_objects[i].data.i);
-			break;
-		case OBJ_i2c:
-			close(text_objects[i].data.i2c.fd);
-			break;
-		case OBJ_time:
-		case OBJ_utime:
-		case OBJ_if_existing:
-		case OBJ_if_mounted:
-		case OBJ_if_running:
-			free(text_objects[i].data.ifblock.s);
-			break;
-		case OBJ_text:
-		case OBJ_font:
-			free(text_objects[i].data.s);
-			break;
-		case OBJ_exec:
-			free(text_objects[i].data.s);
-			break;
-		case OBJ_execbar:
-			free(text_objects[i].data.s);
-			break;
-		case OBJ_execgraph:
-			free(text_objects[i].data.s);
-			break;
-/*		case OBJ_execibar:
-			free(text_objects[i].data.s);
-			break;
-		case OBJ_execigraph:
-			free(text_objects[i].data.s);
-			break;*/
-#ifdef MPD
-		case OBJ_mpd_title:
-		case OBJ_mpd_artist:
-		case OBJ_mpd_album:
-		case OBJ_mpd_status:
-		case OBJ_mpd_host:
-#endif
-		case OBJ_pre_exec:
-		case OBJ_battery:
-			free(text_objects[i].data.s);
-			break;
-
-		case OBJ_execi:
-			free(text_objects[i].data.execi.cmd);
-			free(text_objects[i].data.execi.buffer);
-			break;
-		case OBJ_texeci:
-			free(text_objects[i].data.execi.cmd);
-			free(text_objects[i].data.execi.buffer);
-			break;
+void *threaded_exec(struct text_object *obj) { // pthreads are really beginning to piss me off
+	double update_time;
+	int run_code = threads_runnable;
+	while (threads_runnable == run_code) {
+		update_time = get_time();
+		char *p2 = obj->data.execi.buffer;
+		FILE *fp = popen(obj->data.execi.cmd,"r");
+		int n2 = fread(p2, 1, TEXT_BUFFER_SIZE, fp);
+		(void) pclose(fp);
+		p2[n2] = '\0';
+		if (n2 && p2[n2 - 1] == '\n') {
+			p2[n2 - 1] = '\0';
+		}
+		while (*p2) {
+			if (*p2 == '\001') {
+				*p2 = ' ';
+			}
+			p2++;
+		}
+		obj->data.execi.last_update = update_time;
+		usleep(100); // prevent race condition
+		if (get_time() - obj->data.execi.last_update > obj->data.execi.interval) {
+			continue;
+		} else {
+			unsigned int delay = 1000000.0 * (obj->data.execi.interval -(get_time() - obj->data.execi.last_update));
+			if (delay < update_interval * 500000) {
+				delay = update_interval * 1000000;
+			}
+			usleep(delay);
 		}
 	}
+	ERR("exiting thread");
+	pthread_exit(NULL);
+	return 0;
+}
 
-	free(text_objects);
-	text_objects = NULL;
-	text_object_count = 0;
+static struct text_object *new_text_object_internal()
+{
+	struct text_object *obj = malloc(sizeof(struct text_object));
+	memset(obj, 0, sizeof(struct text_object));
+	return obj;
+}
+
+#ifdef MLDONKEY
+void ml_cleanup()
+{
+	if (mlconfig.mldonkey_hostname) {
+		free(mlconfig.mldonkey_hostname);
+		mlconfig.mldonkey_hostname = NULL;
+	}
+}
+#endif
+
+static void free_text_objects(unsigned int count, struct text_object *objs)
+{
+	unsigned int i;
+	for (i = 0; i < count; i++) {
+		switch (objs[i].type) {
+			case OBJ_acpitemp:
+				close(objs[i].data.i);
+				break;
+			case OBJ_acpitempf:
+				close(objs[i].data.i);
+				break;
+			case OBJ_i2c:
+				close(objs[i].data.i2c.fd);
+				break;
+			case OBJ_time:
+				free(objs[i].data.s);
+				break;
+			case OBJ_utime:
+			case OBJ_if_existing:
+			case OBJ_if_mounted:
+			case OBJ_if_running:
+				free(objs[i].data.ifblock.s);
+				break;
+			case OBJ_tail:
+				free(objs[i].data.tail.logfile);
+				free(objs[i].data.tail.buffer);
+				break;
+			case OBJ_text: case OBJ_font:
+				free(objs[i].data.s);
+				break;
+			case OBJ_exec:
+				free(objs[i].data.s);
+				break;
+			case OBJ_execbar:
+				free(objs[i].data.s);
+				break;
+			case OBJ_execgraph:
+				free(objs[i].data.s);
+				break;
+				/*		case OBJ_execibar:
+						free(objs[i].data.s);
+						break;
+						case OBJ_execigraph:
+						free(objs[i].data.s);
+						break;*/
+#ifdef MPD
+			case OBJ_mpd_title:
+				if (info.mpd.title) {
+					free(info.mpd.title);
+					info.mpd.title = 0;
+				}
+				break;
+			case OBJ_mpd_artist:
+				if (info.mpd.artist) {
+					free(info.mpd.artist);
+					info.mpd.artist = 0;
+				}
+				break;
+			case OBJ_mpd_album:
+				if (info.mpd.album) {
+					free(info.mpd.album);
+					info.mpd.album = 0;
+				}
+				break;
+			case OBJ_mpd_random:
+				if (info.mpd.random) {
+					free(info.mpd.random);
+					info.mpd.random = 0;
+				}
+				break;
+			case OBJ_mpd_repeat:
+				if (info.mpd.repeat) {
+					free(info.mpd.repeat);
+					info.mpd.repeat = 0;
+				}
+				break;
+			case OBJ_mpd_track:
+				if (info.mpd.track) {
+					free(info.mpd.track);
+					info.mpd.track = 0;
+				}
+				break;
+			case OBJ_mpd_name:
+				if (info.mpd.name) {
+					free(info.mpd.name);
+					info.mpd.name = 0;
+				}
+				break;
+			case OBJ_mpd_file:
+				if (info.mpd.file) {
+					free(info.mpd.file);
+					info.mpd.file = 0;
+				}
+				break;
+			case OBJ_mpd_status:
+				if (info.mpd.status) {
+					free(info.mpd.status);
+					info.mpd.status = 0;
+				}
+				break;
+			case OBJ_mpd_host:
+#endif
+#ifdef BMPX
+			case OBJ_bmpx_title:
+			case OBJ_bmpx_artist:
+			case OBJ_bmpx_album:
+			case OBJ_bmpx_track:
+			case OBJ_bmpx_uri:
+			case OBJ_bmpx_bitrate:
+#endif
+			case OBJ_pre_exec:
+			case OBJ_battery:
+				free(objs[i].data.s);
+				break;
+
+			case OBJ_execi:
+				free(objs[i].data.execi.cmd);
+				free(objs[i].data.execi.buffer);
+				break;
+			case OBJ_texeci:
+				free(objs[i].data.execi.cmd);
+				free(objs[i].data.execi.buffer);
+				break;
+			case OBJ_top:
+				if (info.first_process) {
+					free_all_processes();
+					info.first_process = NULL;
+				}
+				break;
+			case OBJ_top_mem:
+				if (info.first_process) {
+					free_all_processes();
+					info.first_process = NULL;
+				}
+				break;
+		}
+	}
+	free(objs);
+	//text_objects = NULL;
+	//text_object_count = 0;
 }
 
 void scan_mixer_bar(const char *arg, int *a, int *w, int *h)
@@ -1051,24 +1239,26 @@ void scan_mixer_bar(const char *arg, int *a, int *w, int *h)
 	}
 }
 
+
 /* construct_text_object() creates a new text_object */
-static void construct_text_object(const char *s, const char *arg)
+static struct text_object *construct_text_object(const char *s, const char *arg, unsigned int object_count, struct text_object *text_objects)
 {
-	struct text_object *obj = new_text_object();
+	//struct text_object *obj = new_text_object();
+	struct text_object *obj = new_text_object_internal();
 
 #define OBJ(a, n) if (strcmp(s, #a) == 0) { obj->type = OBJ_##a; need_mask |= (1 << n); {
 #define END ; } } else
 
 #ifdef X11	
-if (s[0] == '#') {
+	if (s[0] == '#') {
 		obj->type = OBJ_color;
 		obj->data.l = get_x11_color(s);
 	} else
 #endif /* X11 */
-	OBJ(acpitemp, 0) obj->data.i = open_acpi_temperature(arg);
+		OBJ(acpitemp, 0) obj->data.i = open_acpi_temperature(arg);
 	END OBJ(acpitempf, 0) obj->data.i = open_acpi_temperature(arg);
 	END OBJ(acpiacadapter, 0)
-	END OBJ(freq, 0);
+		END OBJ(freq, 0);
 	END OBJ(freq_g, 0);
 	END OBJ(freq_dyn, 0);
 	END OBJ(freq_dyn_g, 0);
@@ -1082,60 +1272,60 @@ if (s[0] == '#') {
 	obj->data.s = strdup(bat);
 #if defined(__linux__)
 	END OBJ(i8k_version, INFO_I8K)
-	END OBJ(i8k_bios, INFO_I8K)
-	END OBJ(i8k_serial, INFO_I8K)
-	END OBJ(i8k_cpu_temp, INFO_I8K)
-	END OBJ(i8k_cpu_tempf, INFO_I8K)
-	END OBJ(i8k_left_fan_status, INFO_I8K)	
-  	END OBJ(i8k_right_fan_status, INFO_I8K)
-	END OBJ(i8k_left_fan_rpm, INFO_I8K)
-	END OBJ(i8k_right_fan_rpm, INFO_I8K)
-	END OBJ(i8k_ac_status, INFO_I8K)
-	END OBJ(i8k_buttons_status, INFO_I8K)
+		END OBJ(i8k_bios, INFO_I8K)
+		END OBJ(i8k_serial, INFO_I8K)
+		END OBJ(i8k_cpu_temp, INFO_I8K)
+		END OBJ(i8k_cpu_tempf, INFO_I8K)
+		END OBJ(i8k_left_fan_status, INFO_I8K)	
+		END OBJ(i8k_right_fan_status, INFO_I8K)
+		END OBJ(i8k_left_fan_rpm, INFO_I8K)
+		END OBJ(i8k_right_fan_rpm, INFO_I8K)
+		END OBJ(i8k_ac_status, INFO_I8K)
+		END OBJ(i8k_buttons_status, INFO_I8K)
 #endif /* __linux__ */
-	END OBJ(buffers, INFO_BUFFERS)
-	END OBJ(cached, INFO_BUFFERS)
-	END OBJ(cpu, INFO_CPU)
+		END OBJ(buffers, INFO_BUFFERS)
+		END OBJ(cached, INFO_BUFFERS)
+		END OBJ(cpu, INFO_CPU)
 		if (arg) {
-		if (strncmp(arg, "cpu", 3) == 0 && isdigit(arg[3])) {
-			obj->data.cpu_index = atoi(&arg[3]);
-			arg += 4;
-		} else {obj->data.cpu_index = 0; }
+			if (strncmp(arg, "cpu", 3) == 0 && isdigit(arg[3])) {
+				obj->data.cpu_index = atoi(&arg[3]);
+				arg += 4;
+			} else {obj->data.cpu_index = 0; }
 		} else {
-				obj->data.cpu_index = 0;
-			}
+			obj->data.cpu_index = 0;
+		}
 	END OBJ(cpubar, INFO_CPU)
 		if (arg) {
-		if (strncmp(arg, "cpu", 3) == 0 && isdigit(arg[3])) {
-			obj->data.cpu_index = atoi(&arg[3]);
-			arg += 4;
-		}
-		else {obj->data.cpu_index = 0;}
-		(void) scan_bar(arg, &obj->a, &obj->b);
+			if (strncmp(arg, "cpu", 3) == 0 && isdigit(arg[3])) {
+				obj->data.cpu_index = atoi(&arg[3]);
+				arg += 4;
+			}
+			else {obj->data.cpu_index = 0;}
+			(void) scan_bar(arg, &obj->a, &obj->b);
 		} else {
-				(void) scan_bar(arg, &obj->a, &obj->b);
-				obj->data.cpu_index = 0;
-			}
-	END OBJ(cpugraph, INFO_CPU)
-			if (arg) {
-		if (strncmp(arg, "cpu", 3) == 0 && isdigit(arg[3])) {
-			obj->data.cpu_index = atoi(&arg[3]);
-			arg += 4;
+			(void) scan_bar(arg, &obj->a, &obj->b);
+			obj->data.cpu_index = 0;
 		}
-				(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
-			} else {
-	(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
-	obj->data.cpu_index = 0;
+	END OBJ(cpugraph, INFO_CPU)
+		if (arg) {
+			if (strncmp(arg, "cpu", 3) == 0 && isdigit(arg[3])) {
+				obj->data.cpu_index = atoi(&arg[3]);
+				arg += 4;
 			}
+			(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+		} else {
+			(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+			obj->data.cpu_index = 0;
+		}
 	END OBJ(diskio, INFO_DISKIO)
-	END OBJ(diskiograph, INFO_DISKIO) (void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+		END OBJ(diskiograph, INFO_DISKIO) (void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
 	END OBJ(color, 0) 
 #ifdef X11
-			obj->data.l = arg ? get_x11_color(arg) : default_fg_color;
+		obj->data.l = arg ? get_x11_color(arg) : default_fg_color;
 #endif /* X11 */
 	END
-	OBJ(font, 0)
-			obj->data.s = scan_font(arg);
+		OBJ(font, 0)
+		obj->data.s = scan_font(arg);
 	END
 		OBJ(downspeed, INFO_NET) 
 		if(arg) {
@@ -1152,7 +1342,7 @@ if (s[0] == '#') {
 			CRIT_ERR("downspeedf needs argument");
 		}
 	END OBJ(downspeedgraph, INFO_NET)
-			(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+		(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
 	char buf[64];
 	sscanf(arg, "%63s %*i,%*i %*i", buf);
 	obj->data.net = get_net_stat(buf);
@@ -1162,28 +1352,24 @@ if (s[0] == '#') {
 			obj->b = 25;
 		}
 	}
-	END OBJ(
-		       else
-		       , 0)
-	if (blockdepth) {
-		text_objects[blockstart[blockdepth - 1] -
-			     1].data.ifblock.pos = text_object_count;
-		blockstart[blockdepth - 1] = text_object_count;
-		obj->data.ifblock.pos = text_object_count + 2;
-	} else {
-		ERR("$else: no matching $if_*");
-	}
+	END OBJ(else, 0)
+		if (blockdepth) {
+			(text_objects[blockstart[blockdepth - 1]]).data.ifblock.pos = object_count;
+			blockstart[blockdepth - 1] = object_count;
+			obj->data.ifblock.pos = object_count + 2;
+		} else {
+			ERR("$else: no matching $if_*");
+		}
 	END OBJ(endif, 0)
-	if (blockdepth) {
-		blockdepth--;
-		text_objects[blockstart[blockdepth] - 1].data.ifblock.pos =
-		    text_object_count;
-	} else {
-		ERR("$endif: no matching $if_*");
-	}
+		if (blockdepth) {
+			blockdepth--;
+			text_objects[blockstart[blockdepth]].data.ifblock.pos = object_count;
+		} else {
+			ERR("$endif: no matching $if_*");
+		}
 	END
 #ifdef HAVE_POPEN
-	    OBJ(exec, 0) obj->data.s = strdup(arg ? arg : "");
+		OBJ(exec, 0) obj->data.s = strdup(arg ? arg : "");
 	END OBJ(execbar, 0) obj->data.s = strdup(arg ? arg : "");
 	END OBJ(execgraph, 0) obj->data.s = strdup(arg ? arg : "");
 	END OBJ(execibar, 0) unsigned int n;
@@ -1193,9 +1379,9 @@ if (s[0] == '#') {
 		obj->type = OBJ_text;
 		snprintf(buf, 256, "${%s}", s);
 		obj->data.s = strdup(buf);
-		} else {
-			obj->data.execi.cmd = strdup(arg + n);
-		    }
+	} else {
+		obj->data.execi.cmd = strdup(arg + n);
+	}
 	END OBJ(execigraph, 0) unsigned int n;
 	if (!arg || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
 		char buf[256];
@@ -1203,13 +1389,13 @@ if (s[0] == '#') {
 		obj->type = OBJ_text;
 		snprintf(buf, 256, "${%s}", s);
 		obj->data.s = strdup(buf);
-		    } else {
-			    obj->data.execi.cmd = strdup(arg + n);
-		    }
+	} else {
+		obj->data.execi.cmd = strdup(arg + n);
+	}
 	END OBJ(execi, 0) unsigned int n;
 
 	if (!arg
-	    || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
+			|| sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
 		char buf[256];
 		ERR("${execi <interval> command}");
 		obj->type = OBJ_text;
@@ -1218,22 +1404,22 @@ if (s[0] == '#') {
 	} else {
 		obj->data.execi.cmd = strdup(arg + n);
 		obj->data.execi.buffer =
-		    (char *) calloc(1, TEXT_BUFFER_SIZE);
+			(char *) calloc(1, TEXT_BUFFER_SIZE);
 	}
 	END OBJ(texeci, 0) unsigned int n;
 
-	if (!arg
-		    || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
+	if (!arg || sscanf(arg, "%f %n", &obj->data.execi.interval, &n) <= 0) {
 		char buf[256];
 		ERR("${texeci <interval> command}");
 		obj->type = OBJ_text;
 		snprintf(buf, 256, "${%s}", s);
 		obj->data.s = strdup(buf);
-		    } else {
-			    obj->data.execi.cmd = strdup(arg + n);
-			    obj->data.execi.buffer =
-					    (char *) calloc(1, TEXT_BUFFER_SIZE);
-		    }
+	} else {
+		obj->data.execi.cmd = strdup(arg + n);
+		obj->data.execi.buffer =
+			(char *) calloc(1, TEXT_BUFFER_SIZE);
+	}
+	obj->data.execi.pos = -1;
 	END OBJ(pre_exec, 0) obj->type = OBJ_text;
 	if (arg) {
 		FILE *fp = popen(arg, "r");
@@ -1253,7 +1439,7 @@ if (s[0] == '#') {
 		obj->data.s = strdup("");
 	END
 #endif
-	    OBJ(fs_bar, INFO_FS) obj->data.fsbar.h = 4;
+		OBJ(fs_bar, INFO_FS) obj->data.fsbar.h = 4;
 	arg = scan_bar(arg, &obj->data.fsbar.w, &obj->data.fsbar.h);
 	if (arg) {
 		while (isspace(*arg))
@@ -1272,19 +1458,19 @@ if (s[0] == '#') {
 		arg = "/";
 	obj->data.fsbar.fs = prepare_fs_stat(arg);
 	END OBJ(fs_free, INFO_FS) if (!arg)
-		 arg = "/";
+		arg = "/";
 	obj->data.fs = prepare_fs_stat(arg);
 	END OBJ(fs_used_perc, INFO_FS) if (!arg)
-		 arg = "/";
+		arg = "/";
 	obj->data.fs = prepare_fs_stat(arg);
 	END OBJ(fs_free_perc, INFO_FS) if (!arg)
-		 arg = "/";
+		arg = "/";
 	obj->data.fs = prepare_fs_stat(arg);
 	END OBJ(fs_size, INFO_FS) if (!arg)
-		 arg = "/";
+		arg = "/";
 	obj->data.fs = prepare_fs_stat(arg);
 	END OBJ(fs_used, INFO_FS) if (!arg)
-		 arg = "/";
+		arg = "/";
 	obj->data.fs = prepare_fs_stat(arg);
 	END OBJ(hr, 0) obj->data.i = arg ? atoi(arg) : 1;
 	END OBJ(offset, 0) obj->data.i = arg ? atoi(arg) : 1;
@@ -1296,7 +1482,7 @@ if (s[0] == '#') {
 		ERR("i2c needs arguments");
 		obj->type = OBJ_text;
 		//obj->data.s = strdup("${i2c}");
-		return;
+		return NULL;
 	}
 
 	if (sscanf(arg, "%63s %63s %d", buf1, buf2, &n) != 3) {
@@ -1304,24 +1490,24 @@ if (s[0] == '#') {
 		 * default device */
 		sscanf(arg, "%63s %d", buf2, &n);
 		obj->data.i2c.fd =
-		    open_i2c_sensor(0, buf2, n, &obj->data.i2c.arg,
-				    obj->data.i2c.devtype);
+			open_i2c_sensor(0, buf2, n, &obj->data.i2c.arg,
+					obj->data.i2c.devtype);
 		strncpy(obj->data.i2c.type, buf2, 63);
 	} else {
 		obj->data.i2c.fd =
-		    open_i2c_sensor(buf1, buf2, n, &obj->data.i2c.arg,
-				    obj->data.i2c.devtype);
+			open_i2c_sensor(buf1, buf2, n, &obj->data.i2c.arg,
+					obj->data.i2c.devtype);
 		strncpy(obj->data.i2c.type, buf2, 63);
 	}
 
 	END OBJ(top, INFO_TOP)
-	char buf[64];
+		char buf[64];
 	int n;
 	if (!arg) {
 		ERR("top needs arguments");
 		obj->type = OBJ_text;
 		//obj->data.s = strdup("${top}");
-		return;
+		return NULL;
 	}
 	if (sscanf(arg, "%63s %i", buf, &n) == 2) {
 		if (strcmp(buf, "name") == 0) {
@@ -1334,27 +1520,27 @@ if (s[0] == '#') {
 			obj->data.top.type = TOP_MEM;
 		} else {
 			ERR("invalid arg for top");
-			return;
+			return NULL;
 		}
 		if (n < 1 || n > 10) {
 			CRIT_ERR("invalid arg for top");
-			return;
+			return NULL;
 		} else {
 			obj->data.top.num = n - 1;
 			top_cpu = 1;
 		}
 	} else {
 		ERR("invalid args given for top");
-		return;
+		return NULL;
 	}
 	END OBJ(top_mem, INFO_TOP)
-	char buf[64];
+		char buf[64];
 	int n;
 	if (!arg) {
 		ERR("top_mem needs arguments");
 		obj->type = OBJ_text;
 		obj->data.s = strdup("${top_mem}");
-		return;
+		return NULL;
 	}
 	if (sscanf(arg, "%63s %i", buf, &n) == 2) {
 		if (strcmp(buf, "name") == 0) {
@@ -1367,18 +1553,18 @@ if (s[0] == '#') {
 			obj->data.top.type = TOP_MEM;
 		} else {
 			ERR("invalid arg for top");
-			return;
+			return NULL;
 		}
 		if (n < 1 || n > 10) {
 			CRIT_ERR("invalid arg for top");
-			return;
+			return NULL;
 		} else {
 			obj->data.top.num = n - 1;
 			top_mem = 1;
 		}
 	} else {
 		ERR("invalid args given for top");
-		return;
+		return NULL;
 	}
 	END OBJ(addr, INFO_NET)
 		if(arg) {
@@ -1395,28 +1581,28 @@ if (s[0] == '#') {
 			CRIT_ERR("linkstatus needs argument");
 		}
 	END OBJ(tail, 0)
-	char buf[64];
+		char buf[64];
 	int n1, n2;
 	if (!arg) {
 		ERR("tail needs arguments");
 		obj->type = OBJ_text;
 		obj->data.s = strdup("${tail}");
-		return;
+		return NULL;
 	}
 	if (sscanf(arg, "%63s %i %i", buf, &n1, &n2) == 2) {
 		if (n1 < 1 || n1 > 30) {
 			CRIT_ERR("invalid arg for tail, number of lines must be between 1 and 30");
-			return;
+			return NULL;
 		} else {
-			FILE *fp;
-			fp = fopen(buf, "rt");
-			if (fp != NULL) {
+			FILE *fp = NULL;
+			fp = fopen(buf, "r");
+			if (fp) {
 				obj->data.tail.logfile =
-				    malloc(TEXT_BUFFER_SIZE);
+					malloc(TEXT_BUFFER_SIZE);
 				strcpy(obj->data.tail.logfile, buf);
 				obj->data.tail.wantedlines = n1 - 1;
 				obj->data.tail.interval =
-				    update_interval * 2;
+					update_interval * 2;
 				fclose(fp);
 			} else {
 				//fclose (fp);
@@ -1426,18 +1612,18 @@ if (s[0] == '#') {
 	} else if (sscanf(arg, "%63s %i %i", buf, &n1, &n2) == 3) {
 		if (n1 < 1 || n1 > 30) {
 			CRIT_ERR
-			    ("invalid arg for tail, number of lines must be between 1 and 30");
-			return;
+				("invalid arg for tail, number of lines must be between 1 and 30");
+			return NULL;
 		} else if (n2 < 1 || n2 < update_interval) {
 			CRIT_ERR
-			    ("invalid arg for tail, interval must be greater than 0 and Conky's interval");
-			return;
+				("invalid arg for tail, interval must be greater than 0 and Conky's interval");
+			return NULL;
 		} else {
 			FILE *fp;
-			fp = fopen(buf, "rt");
+			fp = fopen(buf, "r");
 			if (fp != NULL) {
 				obj->data.tail.logfile =
-				    malloc(TEXT_BUFFER_SIZE);
+					malloc(TEXT_BUFFER_SIZE);
 				strcpy(obj->data.tail.logfile, buf);
 				obj->data.tail.wantedlines = n1 - 1;
 				obj->data.tail.interval = n2;
@@ -1451,32 +1637,32 @@ if (s[0] == '#') {
 
 	else {
 		ERR("invalid args given for tail");
-		return;
+		return NULL;
 	}
 	obj->data.tail.buffer = malloc(TEXT_BUFFER_SIZE * 20); /* asumming all else worked */
 	END OBJ(head, 0)
-			char buf[64];
+		char buf[64];
 	int n1, n2;
 	if (!arg) {
 		ERR("head needs arguments");
 		obj->type = OBJ_text;
 		obj->data.s = strdup("${head}");
-		return;
+		return NULL;
 	}
 	if (sscanf(arg, "%63s %i %i", buf, &n1, &n2) == 2) {
 		if (n1 < 1 || n1 > 30) {
 			CRIT_ERR("invalid arg for head, number of lines must be between 1 and 30");
-			return;
+			return NULL;
 		} else {
 			FILE *fp;
-			fp = fopen(buf, "rt");
+			fp = fopen(buf, "r");
 			if (fp != NULL) {
 				obj->data.tail.logfile =
-						malloc(TEXT_BUFFER_SIZE);
+					malloc(TEXT_BUFFER_SIZE);
 				strcpy(obj->data.tail.logfile, buf);
 				obj->data.tail.wantedlines = n1 - 1;
 				obj->data.tail.interval =
-						update_interval * 2;
+					update_interval * 2;
 				fclose(fp);
 			} else {
 				//fclose (fp);
@@ -1486,18 +1672,18 @@ if (s[0] == '#') {
 	} else if (sscanf(arg, "%63s %i %i", buf, &n1, &n2) == 3) {
 		if (n1 < 1 || n1 > 30) {
 			CRIT_ERR
-					("invalid arg for head, number of lines must be between 1 and 30");
-			return;
+				("invalid arg for head, number of lines must be between 1 and 30");
+			return NULL;
 		} else if (n2 < 1 || n2 < update_interval) {
 			CRIT_ERR
-					("invalid arg for head, interval must be greater than 0 and Conky's interval");
-			return;
+				("invalid arg for head, interval must be greater than 0 and Conky's interval");
+			return NULL;
 		} else {
 			FILE *fp;
-			fp = fopen(buf, "rt");
+			fp = fopen(buf, "r");
 			if (fp != NULL) {
 				obj->data.tail.logfile =
-						malloc(TEXT_BUFFER_SIZE);
+					malloc(TEXT_BUFFER_SIZE);
 				strcpy(obj->data.tail.logfile, buf);
 				obj->data.tail.wantedlines = n1 - 1;
 				obj->data.tail.interval = n2;
@@ -1511,7 +1697,7 @@ if (s[0] == '#') {
 
 	else {
 		ERR("invalid args given for head");
-		return;
+		return NULL;
 	}
 	obj->data.tail.buffer = malloc(TEXT_BUFFER_SIZE * 20); /* asumming all else worked */
 	END OBJ(loadavg, INFO_LOADAVG) int a = 1, b = 2, c = 3, r = 3;
@@ -1528,33 +1714,33 @@ if (s[0] == '#') {
 	obj->data.loadavg[1] = (r >= 2) ? (unsigned char) b : 0;
 	obj->data.loadavg[2] = (r >= 3) ? (unsigned char) c : 0;
 	END OBJ(if_existing, 0)
-	if (blockdepth >= MAX_IF_BLOCK_DEPTH) {
-		CRIT_ERR("MAX_IF_BLOCK_DEPTH exceeded");
-	}
+		if (blockdepth >= MAX_IF_BLOCK_DEPTH) {
+			CRIT_ERR("MAX_IF_BLOCK_DEPTH exceeded");
+		}
 	if (!arg) {
 		ERR("if_existing needs an argument");
 		obj->data.ifblock.s = 0;
 	} else
 		obj->data.ifblock.s = strdup(arg);
-	blockstart[blockdepth] = text_object_count;
-	obj->data.ifblock.pos = text_object_count + 2;
+	blockstart[blockdepth] = object_count;
+	obj->data.ifblock.pos = object_count + 2;
 	blockdepth++;
 	END OBJ(if_mounted, 0)
-	if (blockdepth >= MAX_IF_BLOCK_DEPTH) {
-		CRIT_ERR("MAX_IF_BLOCK_DEPTH exceeded");
-	}
+		if (blockdepth >= MAX_IF_BLOCK_DEPTH) {
+			CRIT_ERR("MAX_IF_BLOCK_DEPTH exceeded");
+		}
 	if (!arg) {
 		ERR("if_mounted needs an argument");
 		obj->data.ifblock.s = 0;
 	} else
 		obj->data.ifblock.s = strdup(arg);
-	blockstart[blockdepth] = text_object_count;
-	obj->data.ifblock.pos = text_object_count + 2;
+	blockstart[blockdepth] = object_count;
+	obj->data.ifblock.pos = object_count + 2;
 	blockdepth++;
 	END OBJ(if_running, 0)
-	if (blockdepth >= MAX_IF_BLOCK_DEPTH) {
-		CRIT_ERR("MAX_IF_BLOCK_DEPTH exceeded");
-	}
+		if (blockdepth >= MAX_IF_BLOCK_DEPTH) {
+			CRIT_ERR("MAX_IF_BLOCK_DEPTH exceeded");
+		}
 	if (arg) {
 		char buf[256];
 		snprintf(buf, 256, "pidof %s >/dev/null", arg);
@@ -1563,59 +1749,59 @@ if (s[0] == '#') {
 		ERR("if_running needs an argument");
 		obj->data.ifblock.s = 0;
 	}
-	blockstart[blockdepth] = text_object_count;
-	obj->data.ifblock.pos = text_object_count + 2;
+	blockstart[blockdepth] = object_count;
+	obj->data.ifblock.pos = object_count + 2;
 	blockdepth++;
 	END OBJ(kernel, 0)
-	END OBJ(machine, 0)
-	END OBJ(mails, INFO_MAIL)
-	END OBJ(mem, INFO_MEM)
-	END OBJ(memmax, INFO_MEM)
-	END OBJ(memperc, INFO_MEM)
-	END OBJ(membar, INFO_MEM)
-	 (void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+		END OBJ(machine, 0)
+		END OBJ(mails, INFO_MAIL)
+		END OBJ(mem, INFO_MEM)
+		END OBJ(memmax, INFO_MEM)
+		END OBJ(memperc, INFO_MEM)
+		END OBJ(membar, INFO_MEM)
+		(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
 	END OBJ(memgraph, INFO_MEM)
-			(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+		(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
 	END OBJ(mixer, INFO_MIXER) obj->data.l = mixer_init(arg);
 	END OBJ(mixerl, INFO_MIXER) obj->data.l = mixer_init(arg);
 	END OBJ(mixerr, INFO_MIXER) obj->data.l = mixer_init(arg);
 	END OBJ(mixerbar, INFO_MIXER)
-	    scan_mixer_bar(arg, &obj->data.mixerbar.l,
-			   &obj->data.mixerbar.w, &obj->data.mixerbar.h);
+		scan_mixer_bar(arg, &obj->data.mixerbar.l,
+				&obj->data.mixerbar.w, &obj->data.mixerbar.h);
 	END OBJ(mixerlbar, INFO_MIXER)
-	    scan_mixer_bar(arg, &obj->data.mixerbar.l,
-			   &obj->data.mixerbar.w, &obj->data.mixerbar.h);
+		scan_mixer_bar(arg, &obj->data.mixerbar.l,
+				&obj->data.mixerbar.w, &obj->data.mixerbar.h);
 	END OBJ(mixerrbar, INFO_MIXER)
-	    scan_mixer_bar(arg, &obj->data.mixerbar.l,
-			   &obj->data.mixerbar.w, &obj->data.mixerbar.h);
+		scan_mixer_bar(arg, &obj->data.mixerbar.l,
+				&obj->data.mixerbar.w, &obj->data.mixerbar.h);
 	END
 #ifdef MLDONKEY
-	    OBJ(ml_upload_counter, INFO_MLDONKEY)
-	END OBJ(ml_download_counter, INFO_MLDONKEY)
-	END OBJ(ml_nshared_files, INFO_MLDONKEY)
-	END OBJ(ml_shared_counter, INFO_MLDONKEY)
-	END OBJ(ml_tcp_upload_rate, INFO_MLDONKEY)
-	END OBJ(ml_tcp_download_rate, INFO_MLDONKEY)
-	END OBJ(ml_udp_upload_rate, INFO_MLDONKEY)
-	END OBJ(ml_udp_download_rate, INFO_MLDONKEY)
-	END OBJ(ml_ndownloaded_files, INFO_MLDONKEY)
-	END OBJ(ml_ndownloading_files, INFO_MLDONKEY) END
+		OBJ(ml_upload_counter, INFO_MLDONKEY)
+		END OBJ(ml_download_counter, INFO_MLDONKEY)
+		END OBJ(ml_nshared_files, INFO_MLDONKEY)
+		END OBJ(ml_shared_counter, INFO_MLDONKEY)
+		END OBJ(ml_tcp_upload_rate, INFO_MLDONKEY)
+		END OBJ(ml_tcp_download_rate, INFO_MLDONKEY)
+		END OBJ(ml_udp_upload_rate, INFO_MLDONKEY)
+		END OBJ(ml_udp_download_rate, INFO_MLDONKEY)
+		END OBJ(ml_ndownloaded_files, INFO_MLDONKEY)
+		END OBJ(ml_ndownloading_files, INFO_MLDONKEY) END
 #endif
-	 OBJ(new_mails, INFO_MAIL)
-	END OBJ(nodename, 0)
-	END OBJ(processes, INFO_PROCS)
-	END OBJ(running_processes, INFO_RUN_PROCS)
-	END OBJ(shadecolor, 0)
+		OBJ(new_mails, INFO_MAIL)
+		END OBJ(nodename, 0)
+		END OBJ(processes, INFO_PROCS)
+		END OBJ(running_processes, INFO_RUN_PROCS)
+		END OBJ(shadecolor, 0)
 #ifdef X11
-	    obj->data.l = arg ? get_x11_color(arg) : default_bg_color;
+		obj->data.l = arg ? get_x11_color(arg) : default_bg_color;
 #endif /* X11 */
 	END OBJ(outlinecolor, 0)
 #ifdef X11
-	    obj->data.l = arg ? get_x11_color(arg) : default_out_color;
+		obj->data.l = arg ? get_x11_color(arg) : default_out_color;
 #endif /* X11 */
 	END OBJ(stippled_hr, 0)
 #ifdef X11
-int a = stippled_borders, b = 1;
+		int a = stippled_borders, b = 1;
 	if (arg) {
 		if (sscanf(arg, "%d %d", &a, &b) != 2)
 			sscanf(arg, "%d", &b);
@@ -1626,18 +1812,18 @@ int a = stippled_borders, b = 1;
 	obj->data.pair.b = b;
 #endif /* X11 */
 	END OBJ(swap, INFO_MEM)
-	END OBJ(swapmax, INFO_MEM)
-	END OBJ(swapperc, INFO_MEM)
-	END OBJ(swapbar, INFO_MEM)
-	 (void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+		END OBJ(swapmax, INFO_MEM)
+		END OBJ(swapperc, INFO_MEM)
+		END OBJ(swapbar, INFO_MEM)
+		(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
 	END OBJ(sysname, 0) END OBJ(temp1, INFO_I2C) obj->type = OBJ_i2c;
 	obj->data.i2c.fd =
-	    open_i2c_sensor(0, "temp", 1, &obj->data.i2c.arg,
-			    obj->data.i2c.devtype);
+		open_i2c_sensor(0, "temp", 1, &obj->data.i2c.arg,
+				obj->data.i2c.devtype);
 	END OBJ(temp2, INFO_I2C) obj->type = OBJ_i2c;
 	obj->data.i2c.fd =
-	    open_i2c_sensor(0, "temp", 2, &obj->data.i2c.arg,
-			    obj->data.i2c.devtype);
+		open_i2c_sensor(0, "temp", 2, &obj->data.i2c.arg,
+				obj->data.i2c.devtype);
 	END OBJ(time, 0) obj->data.s = strdup(arg ? arg : "%F %T");
 	END OBJ(utime, 0) obj->data.s = strdup(arg ? arg : "%F %T");
 	END OBJ(totaldown, INFO_NET)
@@ -1648,14 +1834,14 @@ int a = stippled_borders, b = 1;
 			CRIT_ERR("totaldown needs argument");
 		}
 	END OBJ(totalup, INFO_NET) obj->data.net = get_net_stat(arg);
-		if(arg) {
-			obj->data.net = get_net_stat(arg);
-		}
-		else {
-			CRIT_ERR("totalup needs argument");
-		}
+	if(arg) {
+		obj->data.net = get_net_stat(arg);
+	}
+	else {
+		CRIT_ERR("totalup needs argument");
+	}
 	END OBJ(updates, 0)
-	END OBJ(alignr, 0) obj->data.i = arg ? atoi(arg) : 0;
+		END OBJ(alignr, 0) obj->data.i = arg ? atoi(arg) : 0;
 	END OBJ(alignc, 0) obj->data.i = arg ? atoi(arg) : 0;
 	END OBJ(upspeed, INFO_NET)
 		if(arg) {
@@ -1673,7 +1859,7 @@ int a = stippled_borders, b = 1;
 		}
 
 	END OBJ(upspeedgraph, INFO_NET)
-			(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
+		(void) scan_graph(arg, &obj->a, &obj->b, &obj->c, &obj->d, &obj->e);
 	char buf[64];
 	sscanf(arg, "%63s %*i,%*i %*i", buf);
 	obj->data.net = get_net_stat(buf);
@@ -1684,28 +1870,157 @@ int a = stippled_borders, b = 1;
 		}
 	}
 	END OBJ(uptime_short, INFO_UPTIME) END OBJ(uptime, INFO_UPTIME) END
-	    OBJ(adt746xcpu, 0) END OBJ(adt746xfan, 0) END
-#ifdef __FreeBSD__
-	OBJ(apm_adapter, 0) END
-	OBJ(apm_battery_life, 0) END
-	OBJ(apm_battery_time, 0) END
+		OBJ(adt746xcpu, 0) END OBJ(adt746xfan, 0) END
+#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
+		OBJ(apm_adapter, 0) END
+		OBJ(apm_battery_life, 0) END
+		OBJ(apm_battery_time, 0) END
 #endif /* __FreeBSD__ */
 #ifdef SETI
-	 OBJ(seti_prog, INFO_SETI) END OBJ(seti_progbar, INFO_SETI)
-	 (void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+		OBJ(seti_prog, INFO_SETI) END OBJ(seti_progbar, INFO_SETI)
+		(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
 	END OBJ(seti_credit, INFO_SETI) END
 #endif
 #ifdef MPD
-	 OBJ(mpd_artist, INFO_MPD)
-	END OBJ(mpd_title, INFO_MPD)
-	END OBJ(mpd_elapsed, INFO_MPD)
-	END OBJ(mpd_length, INFO_MPD)
-	END OBJ(mpd_percent, INFO_MPD)
-	END OBJ(mpd_album, INFO_MPD) END OBJ(mpd_vol,
-					     INFO_MPD) END OBJ(mpd_bitrate,
-							       INFO_MPD)
-	END OBJ(mpd_status, INFO_MPD) END OBJ(mpd_bar, INFO_MPD)
-	 (void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+		OBJ(mpd_artist, INFO_MPD)
+		END OBJ(mpd_title, INFO_MPD)
+		END OBJ(mpd_random, INFO_MPD)
+		END OBJ(mpd_repeat, INFO_MPD)
+		END OBJ(mpd_elapsed, INFO_MPD)
+		END OBJ(mpd_length, INFO_MPD)
+		END OBJ(mpd_track, INFO_MPD)
+		END OBJ(mpd_name, INFO_MPD)
+		END OBJ(mpd_file, INFO_MPD)
+		END OBJ(mpd_percent, INFO_MPD)
+		END OBJ(mpd_album, INFO_MPD) END OBJ(mpd_vol,
+				INFO_MPD) END OBJ(mpd_bitrate,
+					INFO_MPD)
+					END OBJ(mpd_status, INFO_MPD)
+					END OBJ(mpd_bar, INFO_MPD)
+					(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+	END
+#endif
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+		OBJ(xmms_status, INFO_XMMS) END
+		OBJ(xmms_title, INFO_XMMS) END
+		OBJ(xmms_length, INFO_XMMS) END
+		OBJ(xmms_length_seconds, INFO_XMMS) END
+		OBJ(xmms_position, INFO_XMMS) END
+		OBJ(xmms_position_seconds, INFO_XMMS) END
+		OBJ(xmms_bitrate, INFO_XMMS) END
+		OBJ(xmms_frequency, INFO_XMMS) END
+		OBJ(xmms_channels, INFO_XMMS) END
+		OBJ(xmms_filename, INFO_XMMS) END
+		OBJ(xmms_playlist_length, INFO_XMMS) END
+		OBJ(xmms_playlist_position, INFO_XMMS) END
+		OBJ(xmms_bar, INFO_XMMS)
+		(void) scan_bar(arg, &obj->a, &obj->b);
+	END
+#endif
+#ifdef BMPX
+		OBJ(bmpx_title, INFO_BMPX)
+		memset(&(info.bmpx), 0, sizeof(struct bmpx_s));
+	END
+		OBJ(bmpx_artist, INFO_BMPX)
+		memset(&(info.bmpx), 0, sizeof(struct bmpx_s));
+	END
+		OBJ(bmpx_album, INFO_BMPX)
+		memset(&(info.bmpx), 0, sizeof(struct bmpx_s));
+	END
+		OBJ(bmpx_track, INFO_BMPX)
+		memset(&(info.bmpx), 0, sizeof(struct bmpx_s));
+	END
+		OBJ(bmpx_uri, INFO_BMPX)
+		memset(&(info.bmpx), 0, sizeof(struct bmpx_s));
+	END
+		OBJ(bmpx_bitrate, INFO_BMPX)
+		memset(&(info.bmpx), 0, sizeof(struct bmpx_s));
+	END
+#endif
+#ifdef TCP_PORT_MONITOR
+		OBJ(tcp_portmon, INFO_TCP_PORT_MONITOR) 
+		int argc, port_begin, port_end, item, connection_index;
+	char itembuf[32];
+	memset(itembuf,0,sizeof(itembuf));
+	connection_index=0;
+	/* massive argument checking */
+	if (!arg) {
+		CRIT_ERR("tcp_portmon: needs arguments");
+	}
+	argc=sscanf(arg, "%d %d %31s %d", &port_begin, &port_end, itembuf, &connection_index);
+	if ( (argc != 3) && (argc != 4) ) 
+	{
+		CRIT_ERR("tcp_portmon: requires 3 or 4 arguments");
+	}
+	if ( (port_begin<1) || (port_begin>65535) || (port_end<1) || (port_end>65535) )
+	{
+		CRIT_ERR("tcp_portmon: port values must be from 1 to 65535");
+	}
+	if ( port_begin > port_end )
+	{
+		CRIT_ERR("tcp_portmon: starting port must be <= ending port");
+	}
+	if ( strncmp(itembuf,"count",31) == 0 )
+		item=COUNT;
+	else if ( strncmp(itembuf,"rip",31) == 0 )
+		item=REMOTEIP;
+	else if ( strncmp(itembuf,"rhost",31) == 0 )
+		item=REMOTEHOST;
+	else if ( strncmp(itembuf,"rport",31) == 0 )
+		item=REMOTEPORT;
+	else if ( strncmp(itembuf,"lip",31) == 0 )
+		item=LOCALIP;
+	else if ( strncmp(itembuf,"lhost",31) == 0 )
+		item=LOCALHOST;
+	else if ( strncmp(itembuf,"lport",31) == 0 )
+		item=LOCALPORT;
+	else if ( strncmp(itembuf,"lservice",31) == 0 )
+		item=LOCALSERVICE;
+	else
+	{
+		CRIT_ERR("tcp_portmon: invalid item specified"); 
+	}
+	if ( (argc==3) && (item!=COUNT) )
+	{
+		CRIT_ERR("tcp_portmon: 3 argument form valid only for \"count\" item");
+	}
+	if ( (argc==4) && (connection_index<0) )
+	{
+		CRIT_ERR("tcp_portmon: connection index must be non-negative");
+	}
+	/* ok, args looks good. save the text object data */
+	obj->data.tcp_port_monitor.port_range_begin = (in_addr_t)port_begin;
+	obj->data.tcp_port_monitor.port_range_end = (in_addr_t)port_end;
+	obj->data.tcp_port_monitor.item = item;
+	obj->data.tcp_port_monitor.connection_index = connection_index;
+
+	/* if the port monitor collection hasn't been created, we must create it */
+	if ( !info.p_tcp_port_monitor_collection )
+	{
+		info.p_tcp_port_monitor_collection = 
+			create_tcp_port_monitor_collection( &tcp_port_monitor_collection_args );
+		if ( !info.p_tcp_port_monitor_collection )
+		{
+			CRIT_ERR("tcp_portmon: unable to create port monitor collection");
+		}
+	}
+
+	/* if a port monitor for this port does not exist, create one and add it to the collection */
+	if ( find_tcp_port_monitor( info.p_tcp_port_monitor_collection, port_begin, port_end ) == NULL )
+	{
+		tcp_port_monitor_t * p_monitor = 
+			create_tcp_port_monitor( port_begin, port_end, &tcp_port_monitor_args );
+		if ( !p_monitor )
+		{
+			CRIT_ERR("tcp_portmon: unable to create port monitor");
+		}
+		/* add the newly created monitor to the collection */
+		if ( insert_tcp_port_monitor_into_collection( info.p_tcp_port_monitor_collection,
+					p_monitor ) != 0 )
+		{
+			CRIT_ERR("tcp_portmon: unable to add port monitor to collection");
+		}
+	}
 	END
 #endif
 	{
@@ -1716,43 +2031,48 @@ int a = stippled_borders, b = 1;
 		obj->data.s = strdup(buf);
 	}
 #undef OBJ
+
+	return obj;
 }
 
-/* append_text() appends text to last text_object if it's text, if it isn't
- * it creates a new text_object */
-static void append_text(const char *s)
+static struct text_object *create_plain_text(const char *s)
 {
 	struct text_object *obj;
 
-	if (s == NULL || *s == '\0')
-		return;
-
-	obj = text_object_count ? &text_objects[text_object_count - 1] : 0;
-
-	/* create a new text object? */
-	if (!obj || obj->type != OBJ_text) {
-		obj = new_text_object();
-		obj->type = OBJ_text;
-		obj->data.s = strdup(s);
-	} else {
-		/* append */
-		obj->data.s = (char *) realloc(obj->data.s,
-					       strlen(obj->data.s) +
-					       strlen(s) + 1);
-		strcat(obj->data.s, s);
+	if (s == NULL || *s == '\0') {
+		return NULL;
 	}
+
+	obj = new_text_object_internal();
+
+	obj->type = OBJ_text;
+	obj->data.s = strdup(s);
+	return obj;
 }
 
-static void extract_variable_text(const char *p)
+static struct text_object_list *extract_variable_text_internal(const char *p)
 {
+	struct text_object_list *retval;
+	struct text_object *obj;
 	const char *s = p;
 
-	free_text_objects();
+	retval = malloc(sizeof(struct text_object_list));
+	memset(retval, 0, sizeof(struct text_object_list));
+	retval->text_object_count = 0;
 
 	while (*p) {
 		if (*p == '$') {
 			*(char *) p = '\0';
-			append_text(s);
+			obj = create_plain_text(s);
+			if(obj != NULL) {
+				// allocate memory for the object
+				retval->text_objects = realloc(retval->text_objects, 
+						sizeof(struct text_object) * (retval->text_object_count+1));
+				// assign the new object to the end of the list.
+				memcpy(&retval->text_objects[retval->text_object_count++],
+						obj, sizeof(struct text_object));
+				free(obj);
+			}
 			*(char *) p = '$';
 			p++;
 			s = p;
@@ -1773,7 +2093,7 @@ static void extract_variable_text(const char *p)
 					if (*p == '#')
 						p++;
 					while (*p && (isalnum((int) *p)
-						      || *p == '_'))
+								|| *p == '_'))
 						p++;
 				}
 
@@ -1811,385 +2131,372 @@ static void extract_variable_text(const char *p)
 						p++;
 					}
 
-					construct_text_object(buf, arg);
+					// create new object
+					obj = construct_text_object(buf, arg, retval->text_object_count, retval->text_objects);
+					if(obj != NULL) {
+						// allocate memory for the object
+						retval->text_objects = realloc(retval->text_objects, 
+								sizeof(struct text_object) * (retval->text_object_count+1));
+						// assign the new object to the end of the list.
+						memcpy(&retval->text_objects[retval->text_object_count++],
+								obj, sizeof(struct text_object));
+						free(obj);
+					}
 				}
 				continue;
-			} else
-				append_text("$");
+			} else {
+				obj = create_plain_text("$");
+				if(obj != NULL) {
+					// allocate memory for the object
+					retval->text_objects = realloc(retval->text_objects, 
+							sizeof(struct text_object) * (retval->text_object_count+1));
+					// assign the new object to the end of the list.
+					memcpy(&retval->text_objects[retval->text_object_count++],
+							obj, sizeof(struct text_object));
+					free(obj);
+				}
+			}
 		}
-
 		p++;
 	}
-	append_text(s);
+	obj = create_plain_text(s);
+	if(obj != NULL) {
+		// allocate memory for the object
+		retval->text_objects = realloc(retval->text_objects,
+				sizeof(struct text_object) * (retval->text_object_count+1));
+		// assign the new object to the end of the list.
+		memcpy(&retval->text_objects[retval->text_object_count++],
+				obj, sizeof(struct text_object));
+		free(obj);
+	}
+
 	if (blockdepth) {
 		ERR("one or more $endif's are missing");
 	}
+
+	return retval;
 }
 
-double current_update_time, last_update_time;
-
-static void generate_text()
+static void extract_variable_text(const char *p)
 {
-	unsigned int i, n;
-	struct information *cur = &info;
-	char *p;
+	struct text_object_list *list;
 
-	special_count = 0;
+	free_text_objects(text_object_count, text_objects);
+	text_object_count = 0;
+	text_objects = NULL;
 
-	/* update info */
+#ifdef MLDONKEY	
+	ml_cleanup();
+#endif /* MLDONKEY */
 
-	current_update_time = get_time();
+	list = extract_variable_text_internal(p);
+	text_objects = list->text_objects;
+	text_object_count = list->text_object_count;
 
-	update_stuff(cur);
+	free(list);
 
-	/* generate text */
+	return;
+}
 
-	n = TEXT_BUFFER_SIZE * 4 - 2;
-	p = text_buffer;
+void parse_conky_vars(char * text, char * p, struct information *cur) { 
+	struct text_object_list *object_list = extract_variable_text_internal(text);
+	generate_text_internal(p, P_MAX_SIZE, object_list->text_objects, object_list->text_object_count, cur);
+	free(object_list);
+}
 
-	for (i = 0; i < text_object_count; i++) {
-		struct text_object *obj = &text_objects[i];
+static void generate_text_internal(char *p, int p_max_size, struct text_object *objs, unsigned int object_count, struct information *cur)
+{
+	unsigned int i;
+	for (i = 0; i < object_count; i++) {
+		struct text_object *obj = &objs[i];
 
 #define OBJ(a) break; case OBJ_##a:
 
 		switch (obj->type) {
-		default:
-			{
-				ERR("not implemented obj type %d",
-				    obj->type);
-			}
-			OBJ(acpitemp) {
-				/* does anyone have decimals in acpi temperature? */
-				if (!use_spacer)
-					snprintf(p, n, "%d", (int)
-							get_acpi_temperature(obj->
-									data.
-									i));
-				else
-					snprintf(p, 5, "%d    ", (int)
-							get_acpi_temperature(obj->
-									data.
-									i));
-			}
-			OBJ(acpitempf) {
-				/* does anyone have decimals in acpi temperature? */
-				if (!use_spacer)
-					snprintf(p, n, "%d", (int)
-							((get_acpi_temperature(obj->
-									data.
-									i)+ 40) * 9.0 / 5 - 40));
-				else
-					snprintf(p, 5, "%d    ", (int)
-							((get_acpi_temperature(obj->
-									data.
-									i)+ 40) * 9.0 / 5 - 40));
-			}
-			OBJ(freq) {
-				snprintf(p, n, "%.0f", get_freq());
-			}
-			OBJ(freq_g) {
-				float ghz = (float)(get_freq()/1000);
-				//printf("%f\n", ghz);
-				snprintf(p, n, "%'.2f", ghz);
-			}
-			OBJ(freq_dyn) {
-				snprintf(p, n, "%.0f", get_freq_dynamic());
-			}
-			OBJ(freq_dyn_g) {
-				float ghz = (float)(get_freq_dynamic()/1000);
-				snprintf(p, n, "%'.2f", ghz);
-			}
-			OBJ(adt746xcpu) {
-				snprintf(p, n, "%s", get_adt746x_cpu());
-			}
-			OBJ(adt746xfan) {
-				snprintf(p, n, "%s", get_adt746x_fan());
-			}
-			OBJ(acpifan) {
-				snprintf(p, n, "%s", get_acpi_fan());
-			}
-			OBJ(acpiacadapter) {
-				snprintf(p, n, "%s",
-					 get_acpi_ac_adapter());
-			}
-			OBJ(battery) {
-				get_battery_stuff(p, n, obj->data.s);
-			}
-			OBJ(buffers) {
-				human_readable(cur->buffers * 1024, p,
-					       255);
-			}
-			OBJ(cached) {
-				human_readable(cur->cached * 1024, p, 255);
-			}
-			OBJ(cpu) {
-				if (obj->data.cpu_index > info.cpu_count) {
-					printf("obj->data.cpu_index %i info.cpu_count %i", obj->data.cpu_index, info.cpu_count);
-					CRIT_ERR("attempting to use more CPUs then you have!");
+			default:
+				{
+					ERR("not implemented obj type %d",
+							obj->type);
 				}
-				if (!use_spacer)
-					snprintf(p, n, "%*d", pad_percents,
-						(int) round_to_int(cur->cpu_usage[obj->data.cpu_index] *
-							100.0));
-				else
-					snprintf(p, 4, "%*d    ",
-						 pad_percents,
-						 (int) round_to_int(cur->cpu_usage[obj->data.cpu_index] *
-							100.0));
-			}
-			OBJ(cpubar) {
-				new_bar(p, obj->a,
-					obj->b,
-					(int) round_to_int(cur->cpu_usage[obj->data.cpu_index] * 255.0));
-			}
-			OBJ(cpugraph) {
-				new_graph(p, obj->a,
-					  obj->b, obj->c, obj->d,
-					  (unsigned int) round_to_int(cur->cpu_usage[obj->data.cpu_index] *
-							  100), 100, 1);
-			}
-			OBJ(color) {
-				new_fg(p, obj->data.l);
-			}
+				OBJ(acpitemp) {
+					/* does anyone have decimals in acpi temperature? */
+					if (!use_spacer)
+						snprintf(p, p_max_size, "%d", (int)
+								get_acpi_temperature(obj->
+									data.
+									i));
+					else
+						snprintf(p, 5, "%d    ", (int)
+								get_acpi_temperature(obj->
+									data.
+									i));
+				}
+				OBJ(acpitempf) {
+					/* does anyone have decimals in acpi temperature? */
+					if (!use_spacer)
+						snprintf(p, p_max_size, "%d", (int)
+								((get_acpi_temperature(obj->
+										       data.
+										       i)+ 40) * 9.0 / 5 - 40));
+					else
+						snprintf(p, 5, "%d    ", (int)
+								((get_acpi_temperature(obj->
+										       data.
+										       i)+ 40) * 9.0 / 5 - 40));
+				}
+				OBJ(freq) {
+					get_freq(p, p_max_size, "%.0f", 1); /* pk */
+				}
+				OBJ(freq_g) {
+					get_freq(p, p_max_size, "%'.2f", 1000); /* pk */
+				}
+				OBJ(freq_dyn) {
+					if (use_spacer) {
+						get_freq_dynamic(p, 6, "%.0f     ", 1 ); /* pk */
+					} else {
+						get_freq_dynamic(p, p_max_size, "%.0f", 1 ); /* pk */
+					}
+				}
+				OBJ(freq_dyn_g) {
+					if (use_spacer) {
+						get_freq_dynamic(p, 6, "%'.2f     ", 1000); /* pk */
+					} else {
+						get_freq_dynamic(p, p_max_size, "%'.2f", 1000); /* pk */
+					}
+				}
+				OBJ(adt746xcpu) {
+					get_adt746x_cpu(p, p_max_size); /* pk */
+				}
+				OBJ(adt746xfan) {
+					get_adt746x_fan(p, p_max_size); /* pk */
+				}
+				OBJ(acpifan) {
+					get_acpi_fan(p, p_max_size);  /* pk */
+				}
+				OBJ(acpiacadapter) {
+					get_acpi_ac_adapter(p, p_max_size); /* pk */
+				}
+				OBJ(battery) {
+					get_battery_stuff(p, p_max_size, obj->data.s);
+				}
+				OBJ(buffers) {
+					human_readable(cur->buffers * 1024, p, 255);
+				}
+				OBJ(cached) {
+					human_readable(cur->cached * 1024, p, 255);
+				}
+				OBJ(cpu) {
+					if (obj->data.cpu_index > info.cpu_count) {
+						printf("obj->data.cpu_index %i info.cpu_count %i", obj->data.cpu_index, info.cpu_count);
+						CRIT_ERR("attempting to use more CPUs then you have!");
+					}
+					if (!use_spacer)
+						snprintf(p, p_max_size, "%*d", pad_percents,
+								(int) round_to_int(cur->cpu_usage[obj->data.cpu_index] *
+										   100.0));
+					else
+						snprintf(p, 4, "%*d    ",
+								pad_percents,
+								(int) round_to_int(cur->cpu_usage[obj->data.cpu_index] *
+										   100.0));
+				}
+				OBJ(cpubar) {
+					new_bar(p, obj->a,
+							obj->b,
+							(int) round_to_int(cur->cpu_usage[obj->data.cpu_index] * 255.0));
+				}
+				OBJ(cpugraph) {
+					new_graph(p, obj->a,
+							obj->b, obj->c, obj->d,
+							(unsigned int) round_to_int(cur->cpu_usage[obj->data.cpu_index] *
+										    100), 100, 1);
+				}
+				OBJ(color) {
+					new_fg(p, obj->data.l);
+				}
 #if defined(__linux__)
-			OBJ(i8k_version) {
-				snprintf(p, n, "%s", i8k.version);
-			}
-			OBJ(i8k_bios) {
-				snprintf(p, n, "%s", i8k.bios);
-			}
-			OBJ(i8k_serial) { 
-				snprintf(p, n, "%s", i8k.serial);
-			}
-			OBJ(i8k_cpu_temp) { 
-				snprintf(p, n, "%s", i8k.cpu_temp);
-			}
-			OBJ(i8k_cpu_tempf) { 
-				int cpu_temp;
-				sscanf(i8k.cpu_temp, "%d", &cpu_temp);
-				snprintf(p, n, "%.1f", cpu_temp*(9.0/5.0)+32.0);
-			}
-			OBJ(i8k_left_fan_status) { 
-				int left_fan_status;
-				sscanf(i8k.left_fan_status, "%d", &left_fan_status);
-				if(left_fan_status == 0) {
-					snprintf(p, n,"off");
-				} if(left_fan_status == 1) {
-					snprintf(p, n, "low");
-				}	if(left_fan_status == 2) {
-					snprintf(p, n, "high");
+				OBJ(i8k_version) {
+					snprintf(p, p_max_size, "%s", i8k.version);
 				}
+				OBJ(i8k_bios) {
+					snprintf(p, p_max_size, "%s", i8k.bios);
+				}
+				OBJ(i8k_serial) { 
+					snprintf(p, p_max_size, "%s", i8k.serial);
+				}
+				OBJ(i8k_cpu_temp) { 
+					snprintf(p, p_max_size, "%s", i8k.cpu_temp);
+				}
+				OBJ(i8k_cpu_tempf) { 
+					int cpu_temp;
+					sscanf(i8k.cpu_temp, "%d", &cpu_temp);
+					snprintf(p, p_max_size, "%.1f", cpu_temp*(9.0/5.0)+32.0);
+				}
+				OBJ(i8k_left_fan_status) { 
+					int left_fan_status;
+					sscanf(i8k.left_fan_status, "%d", &left_fan_status);
+					if(left_fan_status == 0) {
+						snprintf(p, p_max_size,"off");
+					} if(left_fan_status == 1) {
+						snprintf(p, p_max_size, "low");
+					}	if(left_fan_status == 2) {
+						snprintf(p, p_max_size, "high");
+					}
 
-			}
-			OBJ(i8k_right_fan_status) { 
-				int right_fan_status;
-				sscanf(i8k.right_fan_status, "%d", &right_fan_status);
-				if(right_fan_status == 0) {
-					snprintf(p, n,"off");
-				} if(right_fan_status == 1) {
-					snprintf(p, n, "low");
-				}	if(right_fan_status == 2) {
-					snprintf(p, n, "high");
 				}
-			}
-			OBJ(i8k_left_fan_rpm) { 
-				snprintf(p, n, "%s", i8k.left_fan_rpm);
-			}
-			OBJ(i8k_right_fan_rpm) { 
-				snprintf(p, n, "%s", i8k.right_fan_rpm);
-			}
-			OBJ(i8k_ac_status) { 
-				int ac_status;
-				sscanf(i8k.ac_status, "%d", &ac_status);
-				if(ac_status == -1) {
-					snprintf(p, n,"disabled (read i8k docs)");
-				} if(ac_status == 0) {
-					snprintf(p, n, "off");
-				}	if(ac_status == 1) {
-					snprintf(p, n, "on");
+				OBJ(i8k_right_fan_status) { 
+					int right_fan_status;
+					sscanf(i8k.right_fan_status, "%d", &right_fan_status);
+					if(right_fan_status == 0) {
+						snprintf(p, p_max_size,"off");
+					} if(right_fan_status == 1) {
+						snprintf(p, p_max_size, "low");
+					}	if(right_fan_status == 2) {
+						snprintf(p, p_max_size, "high");
+					}
 				}
-			}
-			OBJ(i8k_buttons_status) {
-				snprintf(p, n, "%s", i8k.buttons_status); 
+				OBJ(i8k_left_fan_rpm) { 
+					snprintf(p, p_max_size, "%s", i8k.left_fan_rpm);
+				}
+				OBJ(i8k_right_fan_rpm) { 
+					snprintf(p, p_max_size, "%s", i8k.right_fan_rpm);
+				}
+				OBJ(i8k_ac_status) { 
+					int ac_status;
+					sscanf(i8k.ac_status, "%d", &ac_status);
+					if(ac_status == -1) {
+						snprintf(p, p_max_size,"disabled (read i8k docs)");
+					} if(ac_status == 0) {
+						snprintf(p, p_max_size, "off");
+					}	if(ac_status == 1) {
+						snprintf(p, p_max_size, "on");
+					}
+				}
+				OBJ(i8k_buttons_status) {
+					snprintf(p, p_max_size, "%s", i8k.buttons_status); 
 
-			}
+				}
 #endif /* __linux__ */
 
 #ifdef X11
-			OBJ(font) {
-				new_font(p, obj->data.s);
-			}
+				OBJ(font) {
+					new_font(p, obj->data.s);
+				}
 #endif /* X11 */
-			OBJ(diskio) {
-				if (!use_spacer) {
-					if (diskio_value > 1024*1024) {
-						snprintf(p, n, "%.1fG",
-						 		(double)diskio_value/1024/1024);
-					} else if (diskio_value > 1024) {
-						snprintf(p, n, "%.1fM",
-							 	(double)diskio_value/1024);
-					} else if (diskio_value > 0) {
-						snprintf(p, n, "%dK", diskio_value);
+				OBJ(diskio) {
+					if (!use_spacer) {
+						if (diskio_value > 1024*1024) {
+							snprintf(p, p_max_size, "%.1fG",
+									(double)diskio_value/1024/1024);
+						} else if (diskio_value > 1024) {
+							snprintf(p, p_max_size, "%.1fM",
+									(double)diskio_value/1024);
+						} else if (diskio_value > 0) {
+							snprintf(p, p_max_size, "%dK", diskio_value);
+						} else {
+							snprintf(p, p_max_size, "%d", diskio_value);
+						}
 					} else {
-						snprintf(p, n, "%d", diskio_value);
-					}
-				} else {
-					if (diskio_value > 1024*1024) {
-						snprintf(p, 6, "%.1fG   ",
-								(double)diskio_value/1024/1024);
-					} else if (diskio_value > 1024) {
-						snprintf(p, 6, "%.1fM   ",
-								(double)diskio_value/1024);
-					} else if (diskio_value > 0) {
-						snprintf(p, 6, "%dK ", diskio_value);
-					} else {
-						snprintf(p, 6, "%d     ", diskio_value);
+						if (diskio_value > 1024*1024) {
+							snprintf(p, 6, "%.1fG   ",
+									(double)diskio_value/1024/1024);
+						} else if (diskio_value > 1024) {
+							snprintf(p, 6, "%.1fM   ",
+									(double)diskio_value/1024);
+						} else if (diskio_value > 0) {
+							snprintf(p, 6, "%dK ", diskio_value);
+						} else {
+							snprintf(p, 6, "%d     ", diskio_value);
+						}
 					}
 				}
-			}
-			OBJ(diskiograph) {
-				new_graph(p, obj->a,
-					  obj->b, obj->c, obj->d,
-					  diskio_value, obj->e, 1);
-			}
-	
-			OBJ(downspeed) {
-				if (!use_spacer) {
-					snprintf(p, n, "%d",
-						 (int) (obj->data.net->
-							recv_speed /
-							1024));
-				} else
-					snprintf(p, 6, "%d     ",
-						 (int) (obj->data.net->
-							recv_speed /
-							1024));
-			}
-			OBJ(downspeedf) {
-				if (!use_spacer)
-					snprintf(p, n, "%.1f",
-						 obj->data.net->
-						 recv_speed / 1024.0);
-				else
-					snprintf(p, 8, "%.1f       ",
-						 obj->data.net->
-						 recv_speed / 1024.0);
-			}
-			OBJ(downspeedgraph) {
-				if (obj->data.net->recv_speed == 0)	// this is just to make the ugliness at start go away
-					obj->data.net->recv_speed = 0.01;
-				new_graph(p, obj->a, obj->b, obj->c, obj->d,
-					  (obj->data.net->recv_speed /
-				1024.0), obj->e, 1);
-			}
-			OBJ(
-				   else
-			) {
-				if (!if_jumped) {
-					i = obj->data.ifblock.pos - 2;
-				} else {
+				OBJ(diskiograph) {
+					new_graph(p, obj->a,
+							obj->b, obj->c, obj->d,
+							diskio_value, obj->e, 1);
+				}
+
+				OBJ(downspeed) {
+					if (!use_spacer) {
+						snprintf(p, p_max_size, "%d",
+								(int) (obj->data.net->
+								       recv_speed /
+								       1024));
+					} else
+						snprintf(p, 6, "%d     ",
+								(int) (obj->data.net->
+								       recv_speed /
+								       1024));
+				}
+				OBJ(downspeedf) {
+					if (!use_spacer)
+						snprintf(p, p_max_size, "%.1f",
+								obj->data.net->
+								recv_speed / 1024.0);
+					else
+						snprintf(p, 8, "%.1f       ",
+								obj->data.net->
+								recv_speed / 1024.0);
+				}
+				OBJ(downspeedgraph) {
+					if (obj->data.net->recv_speed == 0)	// this is just to make the ugliness at start go away
+						obj->data.net->recv_speed = 0.01;
+					new_graph(p, obj->a, obj->b, obj->c, obj->d,
+							(obj->data.net->recv_speed /
+							 1024.0), obj->e, 1);
+				}
+				OBJ(
+						else
+				   ) {
+					if (!if_jumped) {
+						i = obj->data.ifblock.pos - 2;
+					} else {
+						if_jumped = 0;
+					}
+				}
+				OBJ(endif) {
 					if_jumped = 0;
 				}
-			}
-			OBJ(endif) {
-				if_jumped = 0;
-			}
 #ifdef HAVE_POPEN
-			OBJ(addr) {
-				snprintf(p, n, "%u.%u.%u.%u",
-					 obj->data.net->addr.
-					 sa_data[2] & 255,
-					 obj->data.net->addr.
-					 sa_data[3] & 255,
-					 obj->data.net->addr.
-					 sa_data[4] & 255,
-					 obj->data.net->addr.
-					 sa_data[5] & 255);
+				OBJ(addr) {
+					snprintf(p, p_max_size, "%u.%u.%u.%u",
+							obj->data.net->addr.
+							sa_data[2] & 255,
+							obj->data.net->addr.
+							sa_data[3] & 255,
+							obj->data.net->addr.
+							sa_data[4] & 255,
+							obj->data.net->addr.
+							sa_data[5] & 255);
 
-			}
-			OBJ(linkstatus) {
-				snprintf(p, n, "%d",
-					 obj->data.net->linkstatus);
-			}
-
-			OBJ(exec) {
-				char *p2 = p;
-				FILE *fp = popen(obj->data.s, "r");
-				int n2 = fread(p, 1, n, fp);
-				(void) pclose(fp);
-
-				p[n2] = '\0';
-				if (n2 && p[n2 - 1] == '\n')
-					p[n2 - 1] = '\0';
-
-				while (*p2) {
-					if (*p2 == '\001')
-						*p2 = ' ';
-					p2++;
 				}
-			}
-			OBJ(execbar) {
-				char *p2 = p;
-				FILE *fp = popen(obj->data.s, "r");
-				int n2 = fread(p, 1, n, fp);
-				(void) pclose(fp);
-
-				p[n2] = '\0';
-				if (n2 && p[n2 - 1] == '\n')
-					p[n2 - 1] = '\0';
-
-				while (*p2) {
-					if (*p2 == '\001')
-						*p2 = ' ';
-					p2++;
-				}
-				double barnum;
-				if (sscanf(p, "%lf", &barnum) == 0) {
-					ERR("reading execbar value failed (perhaps it's not the correct format?)");
-				}
-				if (barnum > 100 || barnum < 0) {
-					ERR("your execbar value is not between 0 and 100, therefore it will be ignored");
-				} else {
-					barnum = barnum / 100.0;
-					new_bar(p, 0, 4, (int) (barnum * 255.0));
+				OBJ(linkstatus) {
+					snprintf(p, p_max_size, "%d",
+							obj->data.net->linkstatus);
 				}
 
-			}
-			OBJ(execgraph) {
-				char *p2 = p;
-				FILE *fp = popen(obj->data.s, "r");
-				int n2 = fread(p, 1, n, fp);
-				(void) pclose(fp);
-
-				p[n2] = '\0';
-				if (n2 && p[n2 - 1] == '\n')
-					p[n2 - 1] = '\0';
-
-				while (*p2) {
-					if (*p2 == '\001')
-						*p2 = ' ';
-					p2++;
-				}
-				double barnum;
-				if (sscanf(p, "%lf", &barnum) == 0) {
-					ERR("reading execgraph value failed (perhaps it's not the correct format?)");
-				}
-				if (barnum > 100 || barnum < 0) {
-					ERR("your execgraph value is not between 0 and 100, therefore it will be ignored");
-				} else {
-					new_graph(p, 0,
-					25, obj->c, obj->d, (int) (barnum), obj->e, 1);
-				}
-
-			}
-			OBJ(execibar) {
-				if (current_update_time - obj->data.execi.last_update <	obj->data.execi.interval) {
-					new_bar(p, 0, 4, (int) obj->f);
-				} else {
-					char *p2 = p;
-					FILE *fp = popen(obj->data.execi.cmd, "r");
-					int n2 = fread(p, 1, n, fp);
+				OBJ(exec) {
+					FILE *fp = popen(obj->data.s, "r");
+					int length = fread(p, 1, p_max_size, fp);
 					(void) pclose(fp);
+
+					/*output[length] = '\0';
+					  if (length > 0 && output[length - 1] == '\n') {
+					  output[length - 1] = '\0';
+					  }*/
+					p[length] = '\0';
+					if (length > 0 && p[length - 1] == '\n') {
+						p[length - 1] = '\0';
+					}
+
+					//parse_conky_vars(output, p, cur);
+				}
+				OBJ(execbar) {
+					char *p2 = p;
+					FILE *fp = popen(obj->data.s, "r");
+					int n2 = fread(p, 1, p_max_size, fp);
+					(void) pclose(fp);
+
 					p[n2] = '\0';
 					if (n2 && p[n2 - 1] == '\n')
 						p[n2 - 1] = '\0';
@@ -2199,104 +2506,136 @@ static void generate_text()
 							*p2 = ' ';
 						p2++;
 					}
-					float barnum;
-					if (sscanf(p, "%f", &barnum) == 0) {
-						ERR("reading execibar value failed (perhaps it's not the correct format?)");
+					double barnum;
+					if (sscanf(p, "%lf", &barnum) == 0) {
+						ERR("reading execbar value failed (perhaps it's not the correct format?)");
 					}
 					if (barnum > 100 || barnum < 0) {
-						ERR("your execibar value is not between 0 and 100, therefore it will be ignored");
+						ERR("your execbar value is not between 0 and 100, therefore it will be ignored");
 					} else {
-						obj->f = 255 * barnum / 100.0;
+						barnum = barnum / 100.0;
+						new_bar(p, 0, 4, (int) (barnum * 255.0));
+					}
+
+				}
+				OBJ(execgraph) {
+					char *p2 = p;
+					FILE *fp = popen(obj->data.s, "r");
+					int n2 = fread(p, 1, p_max_size, fp);
+					(void) pclose(fp);
+
+					p[n2] = '\0';
+					if (n2 && p[n2 - 1] == '\n')
+						p[n2 - 1] = '\0';
+
+					while (*p2) {
+						if (*p2 == '\001')
+							*p2 = ' ';
+						p2++;
+					}
+					double barnum;
+					if (sscanf(p, "%lf", &barnum) == 0) {
+						ERR("reading execgraph value failed (perhaps it's not the correct format?)");
+					}
+					if (barnum > 100 || barnum < 0) {
+						ERR("your execgraph value is not between 0 and 100, therefore it will be ignored");
+					} else {
+						new_graph(p, 0, 25, obj->c, obj->d, (int) (barnum), obj->e, 1);
+					}
+
+				}
+				OBJ(execibar) {
+					if (current_update_time - obj->data.execi.last_update < obj->data.execi.interval) {
 						new_bar(p, 0, 4, (int) obj->f);
-					}
-					obj->data.execi.last_update =
+					} else {
+						char *p2 = p;
+						FILE *fp = popen(obj->data.execi.cmd, "r");
+						int n2 = fread(p, 1, p_max_size, fp);
+						(void) pclose(fp);
+						p[n2] = '\0';
+						if (n2 && p[n2 - 1] == '\n')
+							p[n2 - 1] = '\0';
+
+						while (*p2) {
+							if (*p2 == '\001')
+								*p2 = ' ';
+							p2++;
+						}
+						float barnum;
+						if (sscanf(p, "%f", &barnum) == 0) {
+							ERR("reading execibar value failed (perhaps it's not the correct format?)");
+						}
+						if (barnum > 100 || barnum < 0) {
+							ERR("your execibar value is not between 0 and 100, therefore it will be ignored");
+						} else {
+							obj->f = 255 * barnum / 100.0;
+							new_bar(p, 0, 4, (int) obj->f);
+						}
+						obj->data.execi.last_update =
 							current_update_time;
+					}
 				}
-			}
-			OBJ(execigraph) {
-				if (current_update_time - obj->data.execi.last_update <	obj->data.execi.interval) {
-					new_graph(p, 0,	25, obj->c, obj->d, (int) (obj->f), 100, 0);
-				} else {
-					char *p2 = p;
-					FILE *fp = popen(obj->data.execi.cmd, "r");
-					int n2 = fread(p, 1, n, fp);
-					(void) pclose(fp);
-					p[n2] = '\0';
-					if (n2 && p[n2 - 1] == '\n')
-						p[n2 - 1] = '\0';
-
-					while (*p2) {
-						if (*p2 == '\001')
-							*p2 = ' ';
-						p2++;
-					}
-					float barnum;
-					if (sscanf(p, "%f", &barnum) == 0) {
-						ERR("reading execigraph value failed (perhaps it's not the correct format?)");
-					}
-					if (barnum > 100 || barnum < 0) {
-						ERR("your execigraph value is not between 0 and 100, therefore it will be ignored");
+				OBJ(execigraph) {
+					if (current_update_time - obj->data.execi.last_update < obj->data.execi.interval) {
+						new_graph(p, 0,	25, obj->c, obj->d, (int) (obj->f), 100, 0);
 					} else {
-						obj->f = barnum;
-						new_graph(p, 0,	25, obj->c, obj->d, (int) (obj->f), 100, 1);
-					}
-					obj->data.execi.last_update = current_update_time;
-	
-				}
+						char *p2 = p;
+						FILE *fp = popen(obj->data.execi.cmd, "r");
+						int n2 = fread(p, 1, p_max_size, fp);
+						(void) pclose(fp);
+						p[n2] = '\0';
+						if (n2 && p[n2 - 1] == '\n')
+							p[n2 - 1] = '\0';
 
-			}
-			OBJ(execi) {
-				if (current_update_time -
-				    obj->data.execi.last_update <
-				    obj->data.execi.interval) {
-					snprintf(p, n, "%s",
-						 obj->data.execi.buffer);
-				} else {
-					char *p2 = obj->data.execi.buffer;
-					FILE *fp =
-					    popen(obj->data.execi.cmd,
-						  "r");
-					int n2 =
-					    fread(p2, 1, TEXT_BUFFER_SIZE,
-						  fp);
-					(void) pclose(fp);
-
-					p2[n2] = '\0';
-					if (n2 && p2[n2 - 1] == '\n')
-						p2[n2 - 1] = '\0';
-
-					while (*p2) {
-						if (*p2 == '\001')
-							*p2 = ' ';
-						p2++;
-					}
-
-					snprintf(p, n, "%s",
-						 obj->data.execi.buffer);
-
-					obj->data.execi.last_update =
-					    current_update_time;
-				}
-			}
-			OBJ(texeci) {
-				static int running = 0;
-				if (current_update_time - obj->data.execi.last_update <	obj->data.execi.interval) {
-					snprintf(p, n, "%s", obj->data.execi.buffer);
-				} else {
-					static pthread_t execthread;
-					if (!running) {
-						running = 1;
-						pthread_create( &execthread, NULL, (void*)threaded_exec, (void*) obj);
-						pthread_mutex_lock( &mutex1 );
+						while (*p2) {
+							if (*p2 == '\001')
+								*p2 = ' ';
+							p2++;
+						}
+						float barnum;
+						if (sscanf(p, "%f", &barnum) == 0) {
+							ERR("reading execigraph value failed (perhaps it's not the correct format?)");
+						}
+						if (barnum > 100 || barnum < 0) {
+							ERR("your execigraph value is not between 0 and 100, therefore it will be ignored");
+						} else {
+							obj->f = barnum;
+							new_graph(p, 0,	25, obj->c, obj->d, (int) (obj->f), 100, 1);
+						}
 						obj->data.execi.last_update = current_update_time;
-						pthread_mutex_unlock( &mutex1 );
-					} else {
-						pthread_join( execthread, NULL);
-						running = 0;
+
 					}
-					snprintf(p, n, "%s", obj->data.execi.buffer);
+
 				}
-			}
+				OBJ(execi) {
+					if (current_update_time - obj->data.execi.last_update < obj->data.execi.interval || obj->data.execi.interval == 0) {
+						snprintf(p, p_max_size, "%s", obj->data.execi.buffer);
+					} else {
+						char *output = obj->data.execi.buffer;
+						FILE *fp = popen(obj->data.execi.cmd, "r");
+						//int length = fread(output, 1, TEXT_BUFFER_SIZE, fp);
+						int length = fread(output, 1, TEXT_BUFFER_SIZE, fp);
+						(void) pclose(fp);
+
+						output[length] = '\0';
+						if (length > 0 && output[length - 1] == '\n') {
+							output[length - 1] = '\0';
+						}
+						obj->data.execi.last_update = current_update_time;
+						snprintf(p, p_max_size, "%s", output);
+					}
+					//parse_conky_vars(output, p, cur);
+				}
+				OBJ(texeci) {
+					if (obj->data.execi.pos < 0) {
+						obj->data.execi.last_update = current_update_time;
+						if (pthread_create(&(obj->data.execi.thread_info.thread), NULL, (void*)threaded_exec, (void*) obj)) {
+							ERR("Error starting thread");
+						}
+						obj->data.execi.pos = register_thread(&(obj->data.execi.thread_info));
+					}
+					snprintf(p, p_max_size, "%s", obj->data.execi.buffer);
+				}
 #endif
 			OBJ(fs_bar) {
 				if (obj->data.fs != NULL) {
@@ -2326,7 +2665,7 @@ static void generate_text()
 			OBJ(fs_free_perc) {
 				if (obj->data.fs != NULL) {
 					if (obj->data.fs->size)
-						snprintf(p, n, "%*d",
+						snprintf(p, p_max_size, "%*d",
 							 pad_percents,
 							 (int) ((obj->data.
 								 fs->
@@ -2335,7 +2674,7 @@ static void generate_text()
 								obj->data.
 								fs->size));
 					else
-						snprintf(p, n, "0");
+						snprintf(p, p_max_size, "0");
 				}
 			}
 			OBJ(fs_size) {
@@ -2346,7 +2685,7 @@ static void generate_text()
 			OBJ(fs_used) {
 				if (obj->data.fs != NULL)
 					human_readable(obj->data.fs->size -
-						       obj->data.fs->avail,
+						       (obj->data.fs->free ? obj->data.fs->free :obj->data.fs->avail),
 						       p, 255);
 			}
 			OBJ(fs_bar_free) {
@@ -2381,14 +2720,14 @@ static void generate_text()
 								 fs->
 								 size)));
 					else
-						snprintf(p, n, "0");
+						snprintf(p, p_max_size, "0");
 				}
 			}
 			OBJ(loadavg) {
 				float *v = info.loadavg;
 
 				if (obj->data.loadavg[2])
-					snprintf(p, n, "%.2f %.2f %.2f",
+					snprintf(p, p_max_size, "%.2f %.2f %.2f",
 						 v[obj->data.loadavg[0] -
 						   1],
 						 v[obj->data.loadavg[1] -
@@ -2396,13 +2735,13 @@ static void generate_text()
 						 v[obj->data.loadavg[2] -
 						   1]);
 				else if (obj->data.loadavg[1])
-					snprintf(p, n, "%.2f %.2f",
+					snprintf(p, p_max_size, "%.2f %.2f",
 						 v[obj->data.loadavg[0] -
 						   1],
 						 v[obj->data.loadavg[1] -
 						   1]);
 				else if (obj->data.loadavg[0])
-					snprintf(p, n, "%.2f",
+					snprintf(p, p_max_size, "%.2f",
 						 v[obj->data.loadavg[0] -
 						   1]);
 			}
@@ -2424,9 +2763,9 @@ static void generate_text()
 						 obj->data.i2c.type);
 
 				if (r >= 100.0 || r == 0)
-					snprintf(p, n, "%d", (int) r);
+					snprintf(p, p_max_size, "%d", (int) r);
 				else
-					snprintf(p, n, "%.1f", r);
+					snprintf(p, p_max_size, "%.1f", r);
 			}
 			OBJ(alignr) {
 				new_alignr(p, obj->data.i);
@@ -2439,32 +2778,35 @@ static void generate_text()
 				if ((obj->data.ifblock.s)
 				    && (stat(obj->data.ifblock.s, &tmp) ==
 					-1)) {
-					i = obj->data.ifblock.pos - 2;
+					i = obj->data.ifblock.pos;
 					if_jumped = 1;
-				} else
+				} else {
 					if_jumped = 0;
+				}
 			}
 			OBJ(if_mounted) {
 				if ((obj->data.ifblock.s)
 				    && (!check_mount(obj->data.ifblock.s))) {
-					i = obj->data.ifblock.pos - 2;
+					i = obj->data.ifblock.pos;
 					if_jumped = 1;
-				} else
+				} else {
 					if_jumped = 0;
+				}
 			}
 			OBJ(if_running) {
 				if ((obj->data.ifblock.s)
 				    && system(obj->data.ifblock.s)) {
-					i = obj->data.ifblock.pos - 2;
+					i = obj->data.ifblock.pos;
 					if_jumped = 1;
-				} else
+				} else {
 					if_jumped = 0;
+				}
 			}
 			OBJ(kernel) {
-				snprintf(p, n, "%s", cur->uname_s.release);
+				snprintf(p, p_max_size, "%s", cur->uname_s.release);
 			}
 			OBJ(machine) {
-				snprintf(p, n, "%s", cur->uname_s.machine);
+				snprintf(p, p_max_size, "%s", cur->uname_s.machine);
 			}
 
 			/* memory stuff */
@@ -2477,12 +2819,12 @@ static void generate_text()
 			OBJ(memperc) {
 				if (cur->memmax) {
 					if (!use_spacer)
-						snprintf(p, n, "%*d",
+						snprintf(p, p_max_size, "%*lu",
 							 pad_percents,
 							 (cur->mem * 100) /
 							 (cur->memmax));
 					else
-						snprintf(p, 4, "%*d   ",
+						snprintf(p, 4, "%*lu   ",
 							 pad_percents,
 							 (cur->mem * 100) /
 							 (cur->memmax));
@@ -2503,15 +2845,15 @@ static void generate_text()
 			}
 			/* mixer stuff */
 			OBJ(mixer) {
-				snprintf(p, n, "%d",
+				snprintf(p, p_max_size, "%d",
 					 mixer_get_avg(obj->data.l));
 			}
 			OBJ(mixerl) {
-				snprintf(p, n, "%d",
+				snprintf(p, p_max_size, "%d",
 					 mixer_get_left(obj->data.l));
 			}
 			OBJ(mixerr) {
-				snprintf(p, n, "%d",
+				snprintf(p, p_max_size, "%d",
 					 mixer_get_right(obj->data.l));
 			}
 			OBJ(mixerbar) {
@@ -2535,60 +2877,60 @@ static void generate_text()
 
 			/* mail stuff */
 			OBJ(mails) {
-				snprintf(p, n, "%d", cur->mail_count);
+				snprintf(p, p_max_size, "%d", cur->mail_count);
 			}
 			OBJ(new_mails) {
-				snprintf(p, n, "%d", cur->new_mail_count);
+				snprintf(p, p_max_size, "%d", cur->new_mail_count);
 			}
 #ifdef MLDONKEY
 			OBJ(ml_upload_counter) {
-				snprintf(p, n, "%lld",
+				snprintf(p, p_max_size, "%lld",
 					 mlinfo.upload_counter / 1048576);
 			}
 			OBJ(ml_download_counter) {
-				snprintf(p, n, "%lld",
+				snprintf(p, p_max_size, "%lld",
 					 mlinfo.download_counter /
 					 1048576);
 			}
 			OBJ(ml_nshared_files) {
-				snprintf(p, n, "%i", mlinfo.nshared_files);
+				snprintf(p, p_max_size, "%i", mlinfo.nshared_files);
 			}
 			OBJ(ml_shared_counter) {
-				snprintf(p, n, "%lld",
+				snprintf(p, p_max_size, "%lld",
 					 mlinfo.shared_counter / 1048576);
 			}
 			OBJ(ml_tcp_upload_rate) {
-				snprintf(p, n, "%.2f",
+				snprintf(p, p_max_size, "%.2f",
 					 (float) mlinfo.tcp_upload_rate /
 					 1024);
 			}
 			OBJ(ml_tcp_download_rate) {
-				snprintf(p, n, "%.2f",
+				snprintf(p, p_max_size, "%.2f",
 					 (float) mlinfo.tcp_download_rate /
 					 1024);
 			}
 			OBJ(ml_udp_upload_rate) {
-				snprintf(p, n, "%.2f",
+				snprintf(p, p_max_size, "%.2f",
 					 (float) mlinfo.udp_upload_rate /
 					 1024);
 			}
 			OBJ(ml_udp_download_rate) {
-				snprintf(p, n, "%.2f",
+				snprintf(p, p_max_size, "%.2f",
 					 (float) mlinfo.udp_download_rate /
 					 1024);
 			}
 			OBJ(ml_ndownloaded_files) {
-				snprintf(p, n, "%i",
+				snprintf(p, p_max_size, "%i",
 					 mlinfo.ndownloaded_files);
 			}
 			OBJ(ml_ndownloading_files) {
-				snprintf(p, n, "%i",
+				snprintf(p, p_max_size, "%i",
 					 mlinfo.ndownloading_files);
 			}
 #endif
 
 			OBJ(nodename) {
-				snprintf(p, n, "%s",
+				snprintf(p, p_max_size, "%s",
 					 cur->uname_s.nodename);
 			}
 			OBJ(outlinecolor) {
@@ -2596,21 +2938,21 @@ static void generate_text()
 			}
 			OBJ(processes) {
 				if (!use_spacer)
-					snprintf(p, n, "%d", cur->procs);
+					snprintf(p, p_max_size, "%hu", cur->procs);
 				else
-					snprintf(p, 5, "%d    ",
+					snprintf(p, 5, "%hu    ",
 						 cur->procs);
 			}
 			OBJ(running_processes) {
 				if (!use_spacer)
-					snprintf(p, n, "%d",
+					snprintf(p, p_max_size, "%hu",
 						 cur->run_procs);
 				else
-					snprintf(p, 3, "%d     ",
+					snprintf(p, 3, "%hu     ",
 						 cur->run_procs);
 			}
 			OBJ(text) {
-				snprintf(p, n, "%s", obj->data.s);
+				snprintf(p, p_max_size, "%s", obj->data.s);
 			}
 			OBJ(shadecolor) {
 				new_bg(p, obj->data.l);
@@ -2631,13 +2973,13 @@ static void generate_text()
 					strncpy(p, "No swap", 255);
 				} else {
 					if (!use_spacer)
-						snprintf(p, 255, "%*u",
+						snprintf(p, 255, "%*lu",
 							 pad_percents,
 							 (cur->swap *
 							  100) /
 							 cur->swapmax);
 					else
-						snprintf(p, 4, "%*u   ",
+						snprintf(p, 4, "%*lu   ",
 							 pad_percents,
 							 (cur->swap *
 							  100) /
@@ -2651,18 +2993,18 @@ static void generate_text()
 					(cur->swapmax) : 0);
 			}
 			OBJ(sysname) {
-				snprintf(p, n, "%s", cur->uname_s.sysname);
+				snprintf(p, p_max_size, "%s", cur->uname_s.sysname);
 			}
 			OBJ(time) {
 				time_t t = time(NULL);
 				struct tm *tm = localtime(&t);
 				setlocale(LC_TIME, "");
-				strftime(p, n, obj->data.s, tm);
+				strftime(p, p_max_size, obj->data.s, tm);
 			}
 			OBJ(utime) {
 				time_t t = time(NULL);
 				struct tm *tm = gmtime(&t);
-				strftime(p, n, obj->data.s, tm);
+				strftime(p, p_max_size, obj->data.s, tm);
 			}
 			OBJ(totaldown) {
 				human_readable(obj->data.net->recv, p,
@@ -2673,11 +3015,11 @@ static void generate_text()
 					       255);
 			}
 			OBJ(updates) {
-				snprintf(p, n, "%d", total_updates);
+				snprintf(p, p_max_size, "%d", total_updates);
 			}
 			OBJ(upspeed) {
 				if (!use_spacer)
-					snprintf(p, n, "%d",
+					snprintf(p, p_max_size, "%d",
 						 (int) (obj->data.net->
 							trans_speed /
 							1024));
@@ -2689,7 +3031,7 @@ static void generate_text()
 			}
 			OBJ(upspeedf) {
 				if (!use_spacer)
-					snprintf(p, n, "%.1f",
+					snprintf(p, p_max_size, "%.1f",
 						 obj->data.net->
 						 trans_speed / 1024.0);
 				else
@@ -2705,33 +3047,33 @@ static void generate_text()
 				1024.0), obj->e, 1);
 			}
 			OBJ(uptime_short) {
-				format_seconds_short(p, n,
+				format_seconds_short(p, p_max_size,
 						     (int) cur->uptime);
 			}
 			OBJ(uptime) {
-				format_seconds(p, n, (int) cur->uptime);
+				format_seconds(p, p_max_size, (int) cur->uptime);
 			}
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
 			OBJ(apm_adapter) {
-				snprintf(p, n, "%s", get_apm_adapter());
+				snprintf(p, p_max_size, "%s", get_apm_adapter());
 			}
 			OBJ(apm_battery_life) {
 				char    *msg;
 				msg = get_apm_battery_life();
-				snprintf(p, n, "%s", msg);
+				snprintf(p, p_max_size, "%s", msg);
 				free(msg);
 			}
 			OBJ(apm_battery_time) {
 				char    *msg;
 				msg = get_apm_battery_time();
-				snprintf(p, n, "%s", msg);
+				snprintf(p, p_max_size, "%s", msg);
 				free(msg);
 			}
 #endif /* __FreeBSD__ */
 #ifdef SETI
 			OBJ(seti_prog) {
-				snprintf(p, n, "%.2f",
+				snprintf(p, p_max_size, "%.2f",
 					 cur->seti_prog * 100.0f);
 			}
 			OBJ(seti_progbar) {
@@ -2740,28 +3082,43 @@ static void generate_text()
 					(int) (cur->seti_prog * 255.0f));
 			}
 			OBJ(seti_credit) {
-				snprintf(p, n, "%.0f", cur->seti_credit);
+				snprintf(p, p_max_size, "%.0f", cur->seti_credit);
 			}
 #endif
 
 #ifdef MPD
 			OBJ(mpd_title) {
-				snprintf(p, n, "%s", cur->mpd.title);
+				snprintf(p, p_max_size, "%s", cur->mpd.title);
 			}
 			OBJ(mpd_artist) {
-				snprintf(p, n, "%s", cur->mpd.artist);
+				snprintf(p, p_max_size, "%s", cur->mpd.artist);
 			}
 			OBJ(mpd_album) {
-				snprintf(p, n, "%s", cur->mpd.album);
+				snprintf(p, p_max_size, "%s", cur->mpd.album);
+			}
+			OBJ(mpd_random) {
+				snprintf(p, p_max_size, "%s", cur->mpd.random);
+			}
+			OBJ(mpd_repeat) {
+				snprintf(p, p_max_size, "%s", cur->mpd.repeat);
+			}
+			OBJ(mpd_track) {
+				snprintf(p, p_max_size, "%s", cur->mpd.track);
+			}
+			OBJ(mpd_name) {
+				snprintf(p, p_max_size, "%s", cur->mpd.name);
+			}
+			OBJ(mpd_file) {
+				snprintf(p, p_max_size, "%s", cur->mpd.file);
 			}
 			OBJ(mpd_vol) {
-				snprintf(p, n, "%i", cur->mpd.volume);
+				snprintf(p, p_max_size, "%i", cur->mpd.volume);
 			}
 			OBJ(mpd_bitrate) {
-				snprintf(p, n, "%i", cur->mpd.bitrate);
+				snprintf(p, p_max_size, "%i", cur->mpd.bitrate);
 			}
 			OBJ(mpd_status) {
-				snprintf(p, n, "%s", cur->mpd.status);
+				snprintf(p, p_max_size, "%s", cur->mpd.status);
 			}
 			OBJ(mpd_elapsed) {
 				int days = 0, hours = 0, minutes =
@@ -2781,14 +3138,14 @@ static void generate_text()
 				}
 				seconds = tmp;
 				if (days > 0)
-					snprintf(p, n, "%i days %i:%02i:%02i",
+					snprintf(p, p_max_size, "%i days %i:%02i:%02i",
 						 days, hours, minutes,
 						 seconds);
 				else if (hours > 0)
-					snprintf(p, n, "%i:%02i:%02i", hours,
+					snprintf(p, p_max_size, "%i:%02i:%02i", hours,
 						 minutes, seconds);
 				else
-					snprintf(p, n, "%i:%02i", minutes,
+					snprintf(p, p_max_size, "%i:%02i", minutes,
 						 seconds);
 			}
 			OBJ(mpd_length) {
@@ -2809,19 +3166,19 @@ static void generate_text()
 				}
 				seconds = tmp;
 				if (days > 0)
-					snprintf(p, n,
+					snprintf(p, p_max_size,
 						 "%i days %i:%02i:%02i",
 						 days, hours, minutes,
 						 seconds);
 				else if (hours > 0)
-					snprintf(p, n, "%i:%02i:%02i", hours,
+					snprintf(p, p_max_size, "%i:%02i:%02i", hours,
 						 minutes, seconds);
 				else
-					snprintf(p, n, "%i:%02i", minutes,
+					snprintf(p, p_max_size, "%i:%02i", minutes,
 						 seconds);
 			}
 			OBJ(mpd_percent) {
-				snprintf(p, n, "%2.0f",
+				snprintf(p, p_max_size, "%2.0f",
 					 cur->mpd.progress * 100);
 			}
 			OBJ(mpd_bar) {
@@ -2829,6 +3186,70 @@ static void generate_text()
 					obj->data.pair.b,
 					(int) (cur->mpd.progress *
 					       255.0f));
+			}
+#endif
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+			OBJ(xmms_status) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_STATUS]);
+			}
+        		OBJ(xmms_title) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_TITLE]);
+			}
+        		OBJ(xmms_length) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_LENGTH]);
+			}
+        		OBJ(xmms_length_seconds) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_LENGTH_SECONDS]);
+			}
+        		OBJ(xmms_position) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_POSITION]);
+			}
+        		OBJ(xmms_position_seconds) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_POSITION_SECONDS]);
+			}
+        		OBJ(xmms_bitrate) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_BITRATE]);
+			}
+        		OBJ(xmms_frequency) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_FREQUENCY]);
+			}
+        		OBJ(xmms_channels) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_CHANNELS]);
+			}
+        		OBJ(xmms_filename) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_FILENAME]);
+			}
+        		OBJ(xmms_playlist_length) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_PLAYLIST_LENGTH]);
+			}
+        		OBJ(xmms_playlist_position) {
+			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_PLAYLIST_POSITION]);
+			}
+        		OBJ(xmms_bar) {
+                            double progress;
+                            progress= atof(cur->xmms.items[XMMS_POSITION_SECONDS]) /
+                                      atof(cur->xmms.items[XMMS_LENGTH_SECONDS]);
+                            new_bar(p,obj->a,obj->b,(int)(progress*255.0f));
+			}
+#endif
+#ifdef BMPX
+			OBJ(bmpx_title) {
+				snprintf(p, p_max_size, "%s", cur->bmpx.title);
+			}
+			OBJ(bmpx_artist) {
+				snprintf(p, p_max_size, "%s", cur->bmpx.artist);
+			}
+			OBJ(bmpx_album) {
+				snprintf(p, p_max_size, "%s", cur->bmpx.album);
+			}
+			OBJ(bmpx_uri) {
+				snprintf(p, p_max_size, "%s", cur->bmpx.uri);
+			}
+			OBJ(bmpx_track) {
+				 snprintf(p, p_max_size, "%i", cur->bmpx.track);
+			}
+			OBJ(bmpx_bitrate) {
+				snprintf(p, p_max_size, "%i", cur->bmpx.bitrate);
 			}
 #endif
 			OBJ(top) {
@@ -2890,17 +3311,9 @@ static void generate_text()
 			}
 
 
-
-			/*
-			 * I'm tired of everything being packed in
-			 * pee
-			 * poop
-			 */
-
-
 			OBJ(tail) {
 				if (current_update_time -obj->data.tail.last_update < obj->data.tail.interval) {
-					snprintf(p, n, "%s", obj->data.tail.buffer);
+							snprintf(p, p_max_size, "%s", obj->data.tail.buffer);
 				} else {
 					obj->data.tail.last_update = current_update_time;
 					FILE *fp;
@@ -2950,20 +3363,22 @@ static void generate_text()
 							if (obj->data.tail.buffer[strlen(obj->data.tail.buffer)-1] == '\n') {
 								obj->data.tail.buffer[strlen(obj->data.tail.buffer)-1] = '\0';
 							}
-							snprintf(p, n, "%s", obj->data.tail.buffer);
+							snprintf(p, p_max_size, "%s", obj->data.tail.buffer);
 
 							freetail(freetmp);
-						}
-						else {
+						} else {
 							strcpy(obj->data.tail.buffer, "Logfile Empty");
-							snprintf(p, n, "Logfile Empty");
-						}
-					}
-				}
+							snprintf(p, p_max_size, "Logfile Empty");
+						}  /* if readlines */
+					} /*  fp == NULL  */
+				} /* if cur_upd_time >= */
+	
+				//parse_conky_vars(obj->data.tail.buffer, p, cur);
+
 			}
 			OBJ(head) {
 				if (current_update_time -obj->data.tail.last_update < obj->data.tail.interval) {
-					snprintf(p, n, "%s", obj->data.tail.buffer);
+							snprintf(p, p_max_size, "%s", obj->data.tail.buffer);
 				} else {
 					obj->data.tail.last_update = current_update_time;
 					FILE *fp;
@@ -2973,8 +3388,7 @@ static void generate_text()
 					fp = fopen(obj->data.tail.logfile, "rt");
 					if (fp == NULL) {
 						ERR("head logfile failed to open");
-					}
-					else {
+					} else {
 						obj->data.tail.readlines = 0;
 						while (fgets(obj->data.tail.buffer, TEXT_BUFFER_SIZE*20, fp) != NULL && obj->data.tail.readlines <= obj->data.tail.wantedlines) {
 							addtail(&head, obj->data.tail.buffer);
@@ -3000,15 +3414,41 @@ static void generate_text()
 							if (obj->data.tail.buffer[strlen(obj->data.tail.buffer)-1] == '\n') {
 								obj->data.tail.buffer[strlen(obj->data.tail.buffer)-1] = '\0';
 							}
-							snprintf(p, n, "%s", obj->data.tail.buffer);
-						}
-						else {
+							snprintf(p, p_max_size, "%s", obj->data.tail.buffer);
+						} else {
 							strcpy(obj->data.tail.buffer, "Logfile Empty");
-							snprintf(p, n, "Logfile Empty");
-						}
-					}
+							snprintf(p, p_max_size, "Logfile Empty");
+						} /* if readlines > 0 */
+					} /* if fp == null */
+				} /* cur_upd_time >= */
+
+				//parse_conky_vars(obj->data.tail.buffer, p, cur);
+
+			}
+#ifdef TCP_PORT_MONITOR
+			OBJ(tcp_portmon)
+			{
+				/* grab a pointer to this port monitor */
+				tcp_port_monitor_t * p_monitor = 
+					find_tcp_port_monitor( info.p_tcp_port_monitor_collection,
+							        obj->data.tcp_port_monitor.port_range_begin,
+								obj->data.tcp_port_monitor.port_range_end );
+				if ( !p_monitor ) {
+					snprintf(p, p_max_size, "monitor not found");
+					break;
+				}
+
+				/* now grab the text of interest */
+				if ( peek_tcp_port_monitor( p_monitor, 
+				      	    		    obj->data.tcp_port_monitor.item, 
+				            		    obj->data.tcp_port_monitor.connection_index,
+				                            p, p_max_size ) != 0 )
+				{
+					snprintf(p, p_max_size, "monitor peek error");
+					break;
 				}
 			}
+#endif
 
 			break;
 		}
@@ -3016,9 +3456,34 @@ static void generate_text()
 		{
 			unsigned int a = strlen(p);
 			p += a;
-			n -= a;
+			p_max_size -= a;
 		}
 	}
+}
+
+
+double current_update_time, last_update_time;
+
+static void generate_text()
+{
+	struct information *cur = &info;
+	char *p;
+
+	special_count = 0;
+
+	/* update info */
+
+	current_update_time = get_time();
+
+	update_stuff(cur);
+
+	/* add things to the buffer */
+
+	/* generate text */
+
+	p = text_buffer;
+
+	generate_text_internal(p, P_MAX_SIZE, text_objects, text_object_count, cur);
 
 	if (stuff_in_upper_case) {
 		char *p;
@@ -3034,6 +3499,7 @@ static void generate_text()
 	total_updates++;
 	//free(p);
 }
+
 
 #ifdef X11
 static void set_font()
@@ -3272,9 +3738,12 @@ static void draw_string(const char *s)
 	width_of_s = get_string_width(s);
 	if (out_to_console) {
 		printf("%s\n", s);
+		fflush(stdout);   /* output immediately, don't buffer */
 	}
 	/* daemon_run(s);  the daemon can be called here, but we need to have a buffer in daemon_run() and we need to tell it when everything is ready to be sent */
-	strcpy(tmpstring1, s);
+	memset(tmpstring1,0,TEXT_BUFFER_SIZE);
+	memset(tmpstring2,0,TEXT_BUFFER_SIZE);
+	strncpy(tmpstring1, s, TEXT_BUFFER_SIZE-1);
 	pos = 0;
 	added = 0;
 	char space[2];
@@ -3295,13 +3764,21 @@ static void draw_string(const char *s)
 			for (i2 = 0;
 			     i2 < (8 - (1 + pos) % 8) && added <= max;
 			     i2++) {
-				tmpstring2[pos + i2] = ' ';
+				/*
+				if ( pos + i2 > TEXT_BUFFER_SIZE-1 )
+					fprintf(stderr,"buffer overrun detected\n");
+				*/
+				tmpstring2[ MIN(pos + i2, TEXT_BUFFER_SIZE-1) ] = ' '; /* guard against overrun */
 				added++;
 			}
 			pos += i2;
 		} else {
 			if (tmpstring1[i] != 9) {
-				tmpstring2[pos] = tmpstring1[i];
+				/*
+				if ( pos > TEXT_BUFFER_SIZE-1 )
+					 fprintf(stderr,"buffer overrun detected\n");
+				*/
+				tmpstring2[ MIN(pos, TEXT_BUFFER_SIZE-1) ] = tmpstring1[i]; /* guard against overrun */
 				pos++;
 			}
 		}
@@ -3530,7 +4007,7 @@ static void draw_line(char *s)
 
 			case BAR:
 				{
-					if (cur_x > maximum_width - text_start_x && maximum_width > 0) {
+					if (cur_x - text_start_x > maximum_width && maximum_width > 0) {
 						break;
 					}
 					int h =
@@ -3586,7 +4063,7 @@ static void draw_line(char *s)
 
 			case GRAPH:
 			{
-					if (cur_x > maximum_width - text_start_x && maximum_width > 0) {
+					if (cur_x - text_start_x > maximum_width && maximum_width > 0) {
 						break;
 					}
 					int h =
@@ -3608,15 +4085,10 @@ static void draw_line(char *s)
 						w = text_start_x + text_width - cur_x - 1;
 					if (w < 0)
 						w = 0;
-					XSetLineAttributes(display,
-							   window.gc, 1,
-							   LineSolid,
-							   CapButt,
-							   JoinMiter);
-					XDrawRectangle(display,
-						       window.drawable,
-						       window.gc, cur_x,
-						       by, w, h);
+					if (draw_graph_borders) {
+						XSetLineAttributes(display, window.gc, 1, LineSolid, CapButt, JoinMiter);
+						XDrawRectangle(display,window.drawable, window.gc, cur_x, by, w, h);
+					}
 					XSetLineAttributes(display,
 							   window.gc, 1,
 							   LineSolid,
@@ -3628,23 +4100,23 @@ static void draw_line(char *s)
 	float gradient_factor = 0;
 	float gradient_update = 0;
 	unsigned long tmpcolour = current_color;
-	if (specials[special_index].first_colour != specials[special_index].last_colour) {
-		tmpcolour = specials[special_index].first_colour;
-		gradient_size = gradient_max(specials[special_index].first_colour, specials[special_index].last_colour);
+	if (specials[special_index].last_colour != specials[special_index].first_colour) {
+		tmpcolour = specials[special_index].last_colour;
+		gradient_size = gradient_max(specials[special_index].last_colour, specials[special_index].first_colour);
 		gradient_factor = (float)gradient_size / (w - 3);
 	}
-	for (i = 0; i < w - 3; i++) {
-		if (specials[special_index].first_colour != specials[special_index].last_colour) {
+	for (i = w - 3; i > 0; i--) {
+		if (specials[special_index].last_colour != specials[special_index].first_colour) {
 			XSetForeground(display, window.gc, tmpcolour);
 			gradient_update += gradient_factor;
 			while (gradient_update > 0) {
-				tmpcolour = do_gradient(tmpcolour, specials[special_index].last_colour);
+				tmpcolour = do_gradient(tmpcolour, specials[special_index].first_colour);
 				gradient_update--;
 			}
 		}
-		if (i / ((float) (w - 3) / (specials[special_index].graph_width)) > j) {
+		if ((w - 3 - i) / ((float) (w - 3) / (specials[special_index].graph_width)) > j) {
 			j++;
-						}
+		}
 						XDrawLine(display,  window.drawable, window.gc, cur_x + i + 2, by + h, cur_x + i + 2, by + h - specials[special_index].graph[j] * (h - 1) / specials[special_index].graph_scale);	/* this is mugfugly, but it works */
 					}
 					if (specials[special_index].
@@ -3875,6 +4347,15 @@ static void update_text()
 
 static void main_loop()
 {
+#ifdef SIGNAL_BLOCKING
+	sigset_t  newmask, oldmask;
+
+	sigemptyset(&newmask);
+	sigaddset(&newmask,SIGINT);
+	sigaddset(&newmask,SIGTERM);
+	sigaddset(&newmask,SIGUSR1);
+#endif
+
 #ifdef X11
 	Region region = XCreateRegion();
 #endif /* X11 */
@@ -3882,6 +4363,13 @@ static void main_loop()
 	info.looped = 0;
 	while (total_run_times == 0 || info.looped < total_run_times - 1) {
 		info.looped++;
+
+#ifdef SIGNAL_BLOCKING
+		/* block signals.  we will inspect for pending signals later */
+		if (sigprocmask(SIG_BLOCK, &newmask, &oldmask) < 0)
+			CRIT_ERR("unable to sigprocmask()");
+#endif
+
 #ifdef X11
 		XFlush(display);
 
@@ -4102,15 +4590,68 @@ static void main_loop()
 		}
 #endif /* X11 */
 
+#ifdef SIGNAL_BLOCKING
+		/* unblock signals of interest and let handler fly */
+		if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0)
+			CRIT_ERR("unable to sigprocmask()");
+#endif
+
+		switch(g_signal_pending) {
+		case SIGUSR1:
+			{
+			ERR("received SIGUSR1. reloading the config file.");
+			reload_config();
+			break;
+			}
+		case SIGINT:
+		case SIGTERM:
+			{
+			ERR("received SIGINT or SIGTERM to terminate. bye!");
+			clean_up();
+#ifdef X11
+			XDestroyRegion(region);
+			region = NULL;
+#endif /* X11 */
+			return;  /* return from main_loop */
+			/*break;*/
+			}
+		default:
+			{
+			/* Reaching here means someone set a signal( SIGXXXX, signal_handler )
+			 * but didn't write any code to deal with it.   if you don't want to
+			 * handle a signal, don't set a handler on it in the first place. */
+			if (g_signal_pending)
+				ERR("ignoring signal (%d)", g_signal_pending);
+			break;
+			}
+		}
+		g_signal_pending=0;
+	
 	}
+#ifdef X11
+	XDestroyRegion(region);
+	region = NULL;
+#endif /* X11 */
 }
 
 static void load_config_file(const char *);
 
-/* signal handler that reloads config file */
-static void reload_handler(int a)
+/* reload the config file */
+void reload_config(void)
 {
-	ERR("Conky: received signal %d, reloading config\n", a);
+	//lock_all_threads();
+	threads_runnable++;
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+        if (info.xmms.thread) {
+		if (destroy_xmms_thread()!=0)
+		{
+			ERR("error destroying xmms_player thread");
+		}
+	}
+#endif
+#ifdef TCP_PORT_MONITOR
+	destroy_tcp_port_monitor_collection( info.p_tcp_port_monitor_collection );
+#endif
 
 	if (current_config) {
 		clear_fs_stats();
@@ -4118,16 +4659,31 @@ static void reload_handler(int a)
 #ifdef X11
 		load_fonts();
 		set_font();
+		XClearWindow(display, RootWindow(display, screen)); // clear the window first
+
 #endif /* X11 */
+#ifdef TCP_PORT_MONITOR
+		info.p_tcp_port_monitor_collection = NULL; 
+#endif
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+                if ( (!info.xmms.thread) && (info.xmms.current_project > PROJECT_NONE) && 
+		     (create_xmms_thread() !=0) )
+                    {
+                        CRIT_ERR("unable to create xmms_player thread!");
+                    }
+#endif
 		extract_variable_text(text);
 		free(text);
 		text = NULL;
 		update_text();
 	}
+	thread_count = 0;
 }
 
-static void clean_up()
+void clean_up(void)
 {
+	//lock_all_threads();
+	threads_runnable++;
 #ifdef X11
 #ifdef XDBE
 	if (use_xdbe) {
@@ -4152,7 +4708,13 @@ static void clean_up()
 	/* it is really pointless to free() memory at the end of program but ak|ra
 	 * wants me to do this */
 
-	free_text_objects();
+	free_text_objects(text_object_count, text_objects);
+	text_object_count = 0;
+	text_objects = NULL;
+
+#ifdef MLDONKEY	
+	ml_cleanup();
+#endif /* MLDONKEY */
 
 	if (text != original_text)
 		free(text);
@@ -4162,13 +4724,16 @@ static void clean_up()
 #ifdef SETI
 	free(seti_dir);
 #endif
-}
-
-static void term_handler(int a)
-{
-	a = a;			/* to get rid of warning */
-	clean_up();
-	exit(0);
+#ifdef TCP_PORT_MONITOR
+	destroy_tcp_port_monitor_collection( info.p_tcp_port_monitor_collection );
+	info.p_tcp_port_monitor_collection = NULL;
+#endif
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+        if ( info.xmms.thread && (destroy_xmms_thread()!=0) )
+        {
+            ERR("error destroying xmms_player thread");
+        }
+#endif
 }
 
 static int string_to_bool(const char *s)
@@ -4221,7 +4786,14 @@ static void set_default_configurations(void)
 #ifdef MPD
 	strcpy(info.mpd.host, "localhost");
 	info.mpd.port = 6600;
-	info.mpd.status = "Checking status...";
+	info.mpd.status = NULL;
+	info.mpd.artist = NULL;
+	info.mpd.album = NULL;
+	info.mpd.title = NULL;
+	info.mpd.random = NULL;
+	info.mpd.track = NULL;
+	info.mpd.name = NULL;
+	info.mpd.file = NULL;
 #endif
 	use_spacer = 0;
 #ifdef X11
@@ -4233,8 +4805,9 @@ static void set_default_configurations(void)
 	default_fg_color = WhitePixel(display, screen);
 	default_bg_color = BlackPixel(display, screen);
 	default_out_color = BlackPixel(display, screen);
-	draw_borders = 0;
 	draw_shades = 1;
+	draw_borders = 0;
+	draw_graph_borders = 1;
 	draw_outline = 0;
 	set_first_font("6x10");
 	gap_x = 5;
@@ -4244,6 +4817,7 @@ static void set_default_configurations(void)
 	maximum_width = 0;
 #ifdef OWN_WINDOW
 	own_window = 0;
+     	strcpy(wm_class_name, "conky");	
 #endif
 	stippled_borders = 0;
 	border_margin = 3;
@@ -4264,10 +4838,19 @@ static void set_default_configurations(void)
 	update_interval = 10.0;
 	stuff_in_upper_case = 0;
 #ifdef MLDONKEY
-	mlconfig.mldonkey_hostname = "127.0.0.1";
+	mlconfig.mldonkey_hostname = strdup("127.0.0.1");
 	mlconfig.mldonkey_port = 4001;
 	mlconfig.mldonkey_login = NULL;
 	mlconfig.mldonkey_password = NULL;
+#endif
+
+#ifdef TCP_PORT_MONITOR
+	tcp_port_monitor_collection_args.min_port_monitors = MIN_PORT_MONITORS_DEFAULT;
+	tcp_port_monitor_args.min_port_monitor_connections = MIN_PORT_MONITOR_CONNECTIONS_DEFAULT;
+#endif
+
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+	info.xmms.current_project=PROJECT_NONE;
 #endif
 }
 
@@ -4278,8 +4861,7 @@ static void load_config_file(const char *f)
 	FILE *fp;
 
 	set_default_configurations();
-
-	fp = open_file(f, 0);
+	fp = fopen(f, "r");
 	if (!fp)
 		return;
 
@@ -4331,7 +4913,7 @@ static void load_config_file(const char *f)
 #define CONF2(a) if (strcasecmp(name, a) == 0)
 #define CONF(a) else CONF2(a)
 #define CONF3(a,b) \
-else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
+else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 
 
 #ifdef X11
@@ -4392,10 +4974,30 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
 				CONF_ERR;
 		}
 #endif /* X11 */
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+		CONF("xmms_player") {
+			if (value) {
+				if (strncmp(value,"none",4)==0)
+				    info.xmms.current_project=PROJECT_NONE;
+				else if (strncmp(value,"xmms",4)==0)
+				    info.xmms.current_project=PROJECT_XMMS;
+				else if (strncmp(value,"bmp",3)==0)
+				    info.xmms.current_project=PROJECT_BMP;
+				else if (strncmp(value,"audacious",9)==0)
+				    info.xmms.current_project=PROJECT_AUDACIOUS;
+				else if  (strncmp(value,"infopipe",8)==0)
+				    info.xmms.current_project=PROJECT_INFOPIPE;
+				else
+					CONF_ERR;
+			}
+			else
+				CONF_ERR;
+		}
+#endif
 #ifdef MPD
 		CONF("mpd_host") {
 			if (value)
-				strcpy(info.mpd.host, value);
+				strncpy(info.mpd.host, value, 127);
 			else
 				CONF_ERR;
 		}
@@ -4406,6 +5008,12 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
 				    || info.mpd.port > 0xffff)
 					CONF_ERR;
 			}
+		}
+		CONF("mpd_password") {
+			if (value)
+				strncpy(info.mpd.password, value, 127);
+			else
+				CONF_ERR;
 		}
 #endif
 		CONF("cpu_avg_samples") {
@@ -4453,6 +5061,9 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
 		CONF("draw_borders") {
 			draw_borders = string_to_bool(value);
 		}
+		CONF("draw_graph_borders") {
+			draw_graph_borders = string_to_bool(value);
+		}
 		CONF("draw_shades") {
 			draw_shades = string_to_bool(value);
 		}
@@ -4472,12 +5083,10 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
 			use_xft = string_to_bool(value);
 		}
 		CONF("font") {
-			if (!use_xft) {
-				if (value) {
-					set_first_font(value);
-				} else
-					CONF_ERR;
-			}
+			if (value) {
+				set_first_font(value);
+			} else
+				CONF_ERR;
 		}
 		CONF("xftalpha") {
 			if (value && font_count >= 0)
@@ -4487,6 +5096,7 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
 				CONF_ERR;
 		}
 		CONF("xftfont") {
+			if (use_xft) {
 #else
 		CONF("use_xft") {
 			if (string_to_bool(value))
@@ -4500,10 +5110,13 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
 		}
 		CONF("font") {
 #endif
-			if (value) {
-				set_first_font(value);
-			} else
-				CONF_ERR;
+				if (value) {
+					set_first_font(value);
+				} else
+					CONF_ERR;
+#ifdef XFT
+			}
+#endif
 		}
 		CONF("gap_x") {
 			if (value)
@@ -4602,11 +5215,19 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
 		CONF("own_window") {
 			own_window = string_to_bool(value);
 		}
+		CONF("wm_class_name") {
+			strncpy(wm_class_name, value, sizeof(wm_class_name)-1);
+			wm_class_name[sizeof(wm_class_name)-1] = 0;
+		}
 		CONF("own_window_transparent") {
 			set_transparent = string_to_bool(value);
 		}
 		CONF("own_window_colour") {
-			background_colour = get_x11_color(value);
+			if (value) {
+				background_colour = get_x11_color(value);
+			} else {
+				ERR("Invalid colour for own_winder_colour (try omitting the '#' for hex colours");
+			}
 		}
 #endif
 		CONF("stippled_borders") {
@@ -4670,6 +5291,42 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, a) == 0)
 			fclose(fp);
 			return;
 		}
+#ifdef TCP_PORT_MONITOR
+		CONF("min_port_monitors") 
+		{
+			if ( !value || 
+			     (sscanf(value, "%d", &tcp_port_monitor_collection_args.min_port_monitors) != 1) || 
+			     tcp_port_monitor_collection_args.min_port_monitors < 0 )
+			{
+				/* an error. use default, warn and continue. */
+				tcp_port_monitor_collection_args.min_port_monitors = MIN_PORT_MONITORS_DEFAULT;
+				CONF_ERR;
+			}
+			else if ( tcp_port_monitor_collection_args.min_port_monitors == 0 )
+			{
+				/* no error, just use default */
+				tcp_port_monitor_collection_args.min_port_monitors = MIN_PORT_MONITORS_DEFAULT;
+			}
+			/* else tcp_port_monitor_collection_args.min_port_monitors > 0 as per config */
+		}
+		CONF("min_port_monitor_connections") 
+		{
+			if ( !value || 
+			     (sscanf(value, "%d", &tcp_port_monitor_args.min_port_monitor_connections) != 1) 
+			     || tcp_port_monitor_args.min_port_monitor_connections < 0 )
+			{
+				/* an error. use default, warni and continue. */
+				tcp_port_monitor_args.min_port_monitor_connections = MIN_PORT_MONITOR_CONNECTIONS_DEFAULT;
+				CONF_ERR;
+			}
+			else if ( tcp_port_monitor_args.min_port_monitor_connections == 0 )
+			{
+				/* no error, just use default */
+				tcp_port_monitor_args.min_port_monitor_connections = MIN_PORT_MONITOR_CONNECTIONS_DEFAULT;
+			}
+			/* else tcp_port_monitor_args.min_port_monitor_connections > 0 as per config */
+		}
+#endif
 		else
 		ERR("%s: %d: no such configuration: '%s'", f, line, name);
 
@@ -4697,6 +5354,29 @@ static const char *getopt_string = "vVdt:f:u:i:hc:w:x:y:a:"
 
 int main(int argc, char **argv)
 {
+	struct sigaction act, oact;
+
+	g_signal_pending=0;
+	memset(&info, 0, sizeof(info) );
+
+#ifdef TCP_PORT_MONITOR
+	tcp_port_monitor_collection_args.min_port_monitors = MIN_PORT_MONITORS_DEFAULT;
+	tcp_port_monitor_args.min_port_monitor_connections = MIN_PORT_MONITOR_CONNECTIONS_DEFAULT;
+#endif
+
+#if defined(XMMS)
+	SET_XMMS_PROJECT_AVAILABLE(info.xmms.project_mask, PROJECT_XMMS);
+#endif
+#if defined(BMP)
+	SET_XMMS_PROJECT_AVAILABLE(info.xmms.project_mask, PROJECT_BMP);
+#endif
+#if defined(AUDACIOUS)
+	SET_XMMS_PROJECT_AVAILABLE(info.xmms.project_mask, PROJECT_AUDACIOUS);
+#endif
+#if defined(INFOPIPE)
+	SET_XMMS_PROJECT_AVAILABLE(info.xmms.project_mask, PROJECT_INFOPIPE);
+#endif
+		
 	/* handle command line parameters that don't change configs */
 #ifdef X11
 	char *s;
@@ -4715,7 +5395,6 @@ int main(int argc, char **argv)
 	}
 	if (!setlocale(LC_CTYPE, "")) {
 		ERR("Can't set the specified locale!\nCheck LANG, LC_CTYPE, LC_ALL.");
-		return 1;
 	}
 #endif /* X11 */
 	while (1) {
@@ -4783,11 +5462,6 @@ int main(int argc, char **argv)
 	/* initalize X BEFORE we load config. (we need to so that 'screen' is set) */
 	init_X11();
 #endif /* X11 */
-
-	tmpstring1 = (char *)
-	    malloc(TEXT_BUFFER_SIZE);
-	tmpstring2 = (char *)
-	    malloc(TEXT_BUFFER_SIZE);
 
 	/* load current_config or CONFIG_FILE */
 
@@ -4908,15 +5582,16 @@ int main(int argc, char **argv)
 #if defined OWN_WINDOW
 	init_window
 	    (own_window,
+	     wm_class_name,
 	     text_width + border_margin * 2 + 1,
 	     text_height + border_margin * 2 + 1,
-	     on_bottom, fixed_pos, set_transparent, background_colour);
+	     on_bottom, fixed_pos, set_transparent, background_colour, info.uname_s.nodename);
 #else
 	init_window
 		(own_window,
 		 text_width + border_margin * 2 + 1,
 		 text_height + border_margin * 2 + 1,
-		 on_bottom, set_transparent, background_colour);
+		 on_bottom, set_transparent, background_colour, info.uname_s.nodename);
 	
 #endif
 
@@ -4965,34 +5640,44 @@ int main(int argc, char **argv)
 		}
 	}
 
-	/* set SIGUSR1, SIGINT and SIGTERM handlers */
+	/* Set signal handlers */
+	act.sa_handler = signal_handler;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags = 0;
+#ifdef SA_RESTART
+	act.sa_flags |= SA_RESTART;
+#endif
+
+	if ( sigaction(SIGINT,&act,&oact) < 0 ||
+	     sigaction(SIGUSR1,&act,&oact) < 0 ||
+	     sigaction(SIGTERM,&act,&oact) < 0 )
 	{
-		struct
-		sigaction sa;
-
-		sa.sa_handler = reload_handler;
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = SA_RESTART;
-		if (sigaction(SIGUSR1, &sa, NULL) != 0)
-			ERR("can't set signal handler for SIGUSR1: %s",
-			    strerror(errno));
-
-		sa.sa_handler = term_handler;
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = SA_RESTART;
-		if (sigaction(SIGINT, &sa, NULL) != 0)
-			ERR("can't set signal handler for SIGINT: %s",
-			    strerror(errno));
-
-		sa.sa_handler = term_handler;
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = SA_RESTART;
-		if (sigaction(SIGTERM, &sa, NULL) != 0)
-			ERR("can't set signal handler for SIGTERM: %s",
-			    strerror(errno));
+		ERR("error setting signal handler: %s", strerror(errno) );
 	}
+
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+	if ( (info.xmms.current_project > PROJECT_NONE) && (create_xmms_thread() !=0) )
+	{
+	    CRIT_ERR("unable to create xmms_player thread!");
+	}
+#endif
+
 	main_loop();
-	free(tmpstring1);
-	free(tmpstring2);
+
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+	if ( info.xmms.thread && (destroy_xmms_thread()!=0) )
+        {
+            ERR("error destroying xmms_player thread");
+        }
+#endif	
+
 	return 0;
+}
+
+void signal_handler(int sig)
+{
+	/* signal handler is light as a feather, as it should be. 
+	 * we will poll g_signal_pending with each loop of conky
+	 * and do any signal processing there, NOT here.  pkovacs. */
+	g_signal_pending=sig;
 }

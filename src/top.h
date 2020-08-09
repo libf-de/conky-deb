@@ -12,7 +12,7 @@
 (clarkd@skynet.ca)
  * This software is licensed through the GNU General Public License.
  
- *  $Id: top.h,v 1.1 2005/08/21 22:10:54 brenden1 Exp $
+ *  $Id: top.h,v 1.2 2005/11/10 01:20:19 boojit Exp $
  */
 
 /*
@@ -64,21 +64,22 @@
 #define PROCFS_TEMPLATE "/proc/%d/stat"
 #define PROCFS_TEMPLATE_MEM "/proc/%d/statm"
 #define PROCFS_CMDLINE_TEMPLATE "/proc/%d/cmdline"
+#define MAX_SP 10  //number of elements to sort
 
 
 /******************************************/
 /* Globals                                */
 /******************************************/
 
-
-
-
-
-
-
 /******************************************/
 /* Process class                          */
 /******************************************/
+
+struct sorted_process {
+	struct sorted_process *greater;
+	struct sorted_process *less;	
+	struct process *proc;
+}; 
 
 /*
  * Pointer to head of process list

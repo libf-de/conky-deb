@@ -3,12 +3,13 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: conky.h,v 1.10 2005/08/30 14:59:37 winkj Exp $
+ *  $Id: conky.h,v 1.43 2006/02/13 02:28:46 brenden1 Exp $
  */
 
 #ifndef _conky_h_
 #define _conky_h_
 
+#include <pthread.h>
 #if defined(HAS_MCHECK_H)
 #include <mcheck.h>
 #endif /* HAS_MCHECK_H */
@@ -19,6 +20,11 @@
 #include <locale.h>
 #include <langinfo.h>
 #include <wchar.h>
+#include <sys/param.h>
+#if defined(__FreeBSD__)
+#include <sys/mount.h>
+#include <sys/ucred.h>
+#endif /* __FreeBSD__ */
 
 #ifdef X11
 #if defined(HAVE_CAIRO_H) && defined(HAVE_CAIRO_XLIB_H) && defined(WANT_CAIRO)
@@ -30,16 +36,21 @@
 #endif
 #endif /* X11 */
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
 #include <machine/apm_bios.h>
 #endif /* __FreeBSD__ */
+
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+#include "xmms.h"
+#endif
 
 #define TOP_CPU 1
 #define TOP_NAME 2
 #define TOP_PID 3
 #define TOP_MEM 4
 
-#define TEXT_BUFFER_SIZE 1024
+#define TEXT_BUFFER_SIZE 1280
+#define P_MAX_SIZE ((TEXT_BUFFER_SIZE * 4) - 2) 
 
 #include <sys/socket.h>
 
@@ -49,6 +60,15 @@ fprintf(stderr, "Conky: " s "\n", ##varargs)
 /* critical error */
 #define CRIT_ERR(s, varargs...) \
 { fprintf(stderr, "Conky: " s "\n", ##varargs);  exit(EXIT_FAILURE); }
+
+/* in sys/param.h
+#ifndef MIN
+#define MIN(a,b) (a>b ? b : a)
+#endif
+#ifndef MAX
+#define MAX(a,b) (a<b ? b : a)
+#endif
+*/
 
 struct i8k_struct {
 	char *version;
@@ -79,10 +99,10 @@ struct net_stat {
 unsigned int diskio_value;
 
 struct fs_stat {
-	int fd;
 	char *path;
 	long long size;
 	long long avail;
+	long long free;
 };
 
 /*struct cpu_stat {
@@ -96,14 +116,51 @@ struct mpd_s {
 	char *artist;
 	char *album;
 	char *status;
+	char *random;
+	char *repeat;
+	char *track;
+	char *name;
+	char *file;
 	int volume;
 	unsigned int port;
 	char host[128];
+	char password[128];
 	float progress;
 	int bitrate;
 	int length;
 	int elapsed;
 };
+#endif
+
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+struct xmms_s {
+	unsigned int project_mask;
+	unsigned int current_project;
+	xmms_t items;                   /* e.g. items[XMMS_STATUS] yields char[] */
+	int runnable;                   /* used to signal worker thread to stop */
+	pthread_t thread;               /* worker thread for xmms updating */
+	pthread_attr_t thread_attr;     /* thread attributes */
+	pthread_mutex_t item_mutex;     /* mutex for item array */
+	pthread_mutex_t runnable_mutex; /* mutex for runnable flag */
+};
+#endif
+
+#ifdef BMPX
+void update_bmpx();
+struct bmpx_s {
+	char *title;
+	char *artist;
+	char *album;
+	char *uri;
+	int bitrate;
+	int track;
+};
+#endif
+
+#ifdef TCP_PORT_MONITOR
+#include "libtcp-portmon.h"
+#define MIN_PORT_MONITORS_DEFAULT 16
+#define MIN_PORT_MONITOR_CONNECTIONS_DEFAULT 256
 #endif
 
 enum {
@@ -134,12 +191,23 @@ enum {
 	INFO_WIFI = 19,
 	INFO_DISKIO = 20,
 	INFO_I8K = 21,
+#ifdef TCP_PORT_MONITOR
+        INFO_TCP_PORT_MONITOR = 22,
+#endif
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+	INFO_XMMS = 23,
+#endif
+#ifdef BMPX
+	INFO_BMPX = 24,
+#endif
 };
 
 
 #ifdef MPD
 #include "libmpdclient.h"
 #endif
+
+volatile int g_signal_pending;
 
 struct information {
 	unsigned int mask;
@@ -151,11 +219,11 @@ struct information {
 	double uptime;
 
 	/* memory information in kilobytes */
-	unsigned int mem, memmax, swap, swapmax;
-	unsigned int bufmem, buffers, cached;
+	unsigned long mem, memmax, swap, swapmax;
+	unsigned long bufmem, buffers, cached;
 
-	unsigned int procs;
-	unsigned int run_procs;
+	unsigned short procs;
+	unsigned short run_procs;
 
 	float *cpu_usage;
 	/*	struct cpu_stat cpu_summed; what the hell is this? */
@@ -175,10 +243,33 @@ struct information {
 	struct mpd_s mpd;
 	mpd_Connection *conn;
 #endif
+#if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
+	struct xmms_s xmms;
+#endif
+#ifdef BMPX
+	struct bmpx_s bmpx;
+#endif
 	struct process *cpu[10];
 	struct process *memu[10];
+	struct process *first_process;
 	unsigned long looped;
+#ifdef TCP_PORT_MONITOR
+        tcp_port_monitor_collection_t * p_tcp_port_monitor_collection;
+#endif
+	short kflags;  /* kernel settings, see enum KFLAG */
 };
+
+enum {
+	KFLAG_IS_LONGSTAT = 0x01,         /* set to true if kernel uses "long" format for /proc/stats */
+	KFLAG_PROC_IS_THREADS=0x02       /* set to true if kernel shows # of threads for the proc value in sysinfo() call */
+/* 	KFLAG_NEXT_ONE=0x04                 bits 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 available for future use */
+     };	
+
+#define KFLAG_SETON(a) info.kflags |= a 
+#define KFLAG_SETOFF(a) info.kflags &= (~a)
+#define KFLAG_FLIP(a) info.kflags ^= a
+#define KFLAG_ISSET(a) info.kflags & a
+
 
 int out_to_console;
 
@@ -187,8 +278,8 @@ int top_mem;
 
 int use_spacer;
 
-char *tmpstring1;
-char *tmpstring2;
+char tmpstring1[TEXT_BUFFER_SIZE];
+char tmpstring2[TEXT_BUFFER_SIZE];
 
 #ifdef X11
 /* in x11.c */
@@ -247,9 +338,9 @@ extern struct conky_window window;
 
 void init_X11();
 #if defined OWN_WINDOW
-void init_window(int use_own_window, int width, int height, int on_bottom, int fixed_pos, int set_trans, int back_colour);
+void init_window(int use_own_window, char* wm_class_name, int width, int height, int on_bottom, int fixed_pos, int set_trans, int back_colour, char * nodename);
 #else
-void init_window(int use_own_window, int width, int height, int on_bottom, int set_trans, int back_colour);
+void init_window(int use_own_window, int width, int height, int on_bottom, int set_trans, int back_colour, char * nodename);
 #endif
 void create_gc();
 void set_transparent_background(Window win);
@@ -261,6 +352,10 @@ long get_x11_color(const char *);
 
 /* struct that has all info */
 struct information info;
+
+void signal_handler(int);
+void reload_config(void);
+void clean_up(void);
 
 void update_uname();
 double get_time(void);
@@ -293,21 +388,21 @@ void update_cpu_usage(void);
 void update_total_processes(void);
 void update_running_processes(void);
 void update_i8k(void);
-float get_freq();
-float get_freq_dynamic();
+void get_freq( char *, size_t, char *, int ); /* pk */
+void get_freq_dynamic( char *, size_t, char *, int ); /* pk */
 void update_load_average();
 int open_i2c_sensor(const char *dev, const char *type, int n, int *div,
 		    char *devtype);
 double get_i2c_info(int *fd, int arg, char *devtype, char *type);
 
-char *get_adt746x_cpu(void);
-char *get_adt746x_fan(void);
+void get_adt746x_cpu( char *, size_t ); /* pk */
+void get_adt746x_fan( char *, size_t ); /* pk */
 unsigned int get_diskio(void);
 
 int open_acpi_temperature(const char *name);
 double get_acpi_temperature(int fd);
-char *get_acpi_ac_adapter(void);
-char *get_acpi_fan(void);
+void get_acpi_ac_adapter( char *, size_t ); /* pk */
+void get_acpi_fan( char *, size_t ); /* pk */
 void get_battery_stuff(char *buf, unsigned int n, const char *bat);
 
 struct process {
@@ -317,11 +412,11 @@ struct process {
 	pid_t pid;
 	char *name;
 	float amount;
-	unsigned int user_time;
-	unsigned int total;
-	unsigned int kernel_time;
-	unsigned int previous_user_time;
-	unsigned int previous_kernel_time;
+	unsigned long user_time;
+	unsigned long total;
+	unsigned long kernel_time;
+	unsigned long previous_user_time;
+	unsigned long previous_kernel_time;
 	unsigned int vsize;
 	unsigned int rss;
 	unsigned int time_stamp;
@@ -331,6 +426,8 @@ struct process {
 };
 
 void update_top();
+void free_all_processes();
+struct process *get_first_process();
 
 /* fs-stuff is possibly system dependant (in fs.c) */
 
@@ -360,7 +457,7 @@ void update_seti();
 #endif
 
 /* in freebsd.c */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
 int apm_getinfo(int fd, apm_info_t aip);
 char *get_apm_adapter(void);
 char *get_apm_battery_life(void);

@@ -1,5 +1,25 @@
 bin_PROGRAMS = conky
 
+if BUILD_XMMS
+xmms = xmms.c xmms.h
+endif
+
+if BUILD_BMP
+xmms = xmms.c xmms.h
+endif
+
+if BUILD_AUDACIOUS
+xmms = xmms.c xmms.h
+endif
+
+if BUILD_INFOPIPE
+xmms = xmms.c xmms.h
+endif
+
+if BUILD_BMPX
+bmpx = bmpx.c
+endif
+
 if BUILD_SETI
 seti = seti.c
 endif
@@ -26,8 +46,8 @@ if BUILD_NETBSD
 netbsd = netbsd.c
 endif
 
-if BUILD_CAIRO
-cairo = cairo.c
+if BUILD_PORT_MONITORS
+port_monitors = libtcp-portmon.h libtcp-portmon.c hash.h hash.c
 endif
 
 if BUILD_MLDONKEY
@@ -38,9 +58,9 @@ if BUILD_X11
 x11 = x11.c
 endif
 
-conky_SOURCES = common.c fs.c $(linux) mail.c mixer.c $(seti) $(mpd) $(solaris) $(freebsd) $(netbsd) $(cairo) conky.c conky.h $(x11) $(mldonkey) remoted.c remoted.h remotec.c remotec.h
+conky_SOURCES = common.c fs.c $(linux) mail.c mixer.c $(seti) $(mpd) $(solaris) $(freebsd) $(netbsd) $(port_monitors) conky.c conky.h $(x11) $(mldonkey) remoted.c remoted.h remotec.c remotec.h $(xmms) $(bmpx)
 
 AM_LDFLAGS = $(X11_LIBS) $(XFT_LIBS) $(CAIRO_LIBS) $(PTHREAD_LIBS) -lm
 
 EXTRA_DIST = seti.c linux.c solaris.c freebsd.c netbsd.c mpd.c libmpdclient.c \
-cairo.c libmpdclient.h top.h mldonkey.c ftp.c ftp.h x11.c
+libmpdclient.h top.h mldonkey.c ftp.c ftp.h x11.c
