@@ -354,10 +354,10 @@
 <varlistentry>
 	<term>
 		<command><option>font</option></command>
-	<option>font</option>
+	<option>(font)</option>
 	</term>
 	<listitem>
-		Specify a different font. Only applies to one line.
+		Specify a different font. This new font will apply to the current line and everything following.  You can use a $font with no arguments to change back to the default font (much like with $color)
 	<para></para></listitem>
 </varlistentry>
 
@@ -463,6 +463,26 @@
 	</term>
 	<listitem>
 		Horizontal line, height is the height in pixels
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>iconv_start</option></command>
+	<option>codeset_from codeset_to</option>
+	</term>
+	<listitem>
+		Convert text from one codeset to another using GNU iconv.  Needs to be stopped with iconv_stop.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>iconv_stop</option></command>
+	<option></option>
+	</term>
+	<listitem>
+		Stop iconv codeset conversion.
 	<para></para></listitem>
 </varlistentry>
 
@@ -614,6 +634,26 @@
 	</term>
 	<listitem>
 		if MOUNTPOINT is mounted, display everything between if_mounted and the matching $endif
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>imap_messages</option></command>
+	<option>(args)</option>
+	</term>
+	<listitem>
+		Displays the number of messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>imap_unseen</option></command>
+	<option>(args)</option>
+	</term>
+	<listitem>
+		Displays the number of unseen messages in your global IMAP inbox by default.  You can define individual IMAP inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	<para></para></listitem>
 </varlistentry>
 
@@ -875,6 +915,60 @@
 
 <varlistentry>
 	<term>
+		<command><option>pb_battery</option></command>
+		<option>item</option>
+	</term>
+	<listitem>
+                If running on Apple powerbook/ibook, display
+                information on battery status. The item parameter
+                specifies, what information to display. Exactly one item
+                must be specified. Valid items are:
+		<simplelist>
+                        <member><command>status</command>:
+                                Display if battery is fully charged, charging,
+                                discharging or absent (running on AC)
+                        </member>
+                        <member><command>percent</command>:
+                                Display charge of battery in percent, if
+                                charging or discharging. Nothing will be
+                                displayed, if battery is fully charged
+                                or absent.
+                        </member>
+                        <member><command>time</command>:
+                                Display the time remaining until the battery
+                                will be fully charged or discharged at current
+                                rate.  Nothing is displayed, if battery is
+                                absent or if it's present but fully charged
+                                and not discharging.
+                        </member>
+                </simplelist>
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>pop3_unseen</option></command>
+	<option>(args)</option>
+	</term>
+	<listitem>
+		Displays the number of unseen messages in your global POP3 inbox by default.  You can define individual POP3 inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>pop3_used</option></command>
+	<option>(args)</option>
+	</term>
+	<listitem>
+		Displays the amount of space (in MiB, 2^20) used in your global POP3 inbox by default.  You can define individual POP3 inboxes seperately by passing arguments to this object.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+
+		<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
 		<command><option>pre_exec</option></command>
 	<option>shell command</option>
 	</term>
@@ -984,9 +1078,13 @@
 				</member>
 			<member><command>rport</command> - remote port number
 				</member>
+			<member><command>rservice</command> - remote service name from /etc/services
+				</member>
 			<member><command>lip</command> - local ip address
 				</member>
 			<member><command>lhost</command> - local host name
+				</member>
+			<member><command>lport</command> - local port number
 				</member>
 			<member><command>lservice</command> - local service name from /etc/services
 				</member>
@@ -1302,5 +1400,45 @@
 	<para></para></listitem>
 </varlistentry>
 
+<varlistentry>
+	<term>
+		<command><option>ibm_fan</option></command>
+	</term>
+	<listitem>
+		If running the IBM ACPI, displays the fan speed.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ibm_temps</option></command>
+		<option>N</option>
+	</term>
+	<listitem>
+		If running the IBM ACPI, displays the temperatures
+		from the IBM temperature sensors (N=0..7) Sensor 0 is
+		on the CPU, 3 is on the GPU.
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ibm_volume</option></command>
+	</term>
+	<listitem>
+		If running the IBM ACPI, displays the "master" volume,
+	controlled by the volume keys (0-14).
+	<para></para></listitem>
+</varlistentry>
+
+<varlistentry>
+	<term>
+		<command><option>ibm_brightness</option></command>
+	</term>
+	<listitem>
+		If running the IBM ACPI, displays the brigtness of the
+	laptops's LCD (0-7).
+	<para></para></listitem>
+</varlistentry>
 
 </variablelist>

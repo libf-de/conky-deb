@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: common.c 488 2006-01-08 14:51:47Z pkovacs $
+ *  $Id: common.c 612 2006-03-25 21:21:07Z brenden1 $
  */
 
 #include "conky.h"
@@ -167,7 +167,7 @@ void update_stuff()
 		need_mask |= 1 << INFO_BUFFERS;
 
 	/* clear speeds and up status in case device was removed and doesn't get
-	 * updated */
+	   updated */
 
 	for (i = 0; i < 16; i++) {
 		if (netstats[i].dev) {
@@ -226,6 +226,12 @@ void update_stuff()
 	if (NEED(INFO_MPD))
 		update_mpd();
 #endif
+
+#ifdef XMMS2
+	if (NEED(INFO_XMMS2))
+		update_xmms2();
+#endif
+
 #if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
 	if (NEED(INFO_XMMS))
 		update_xmms();

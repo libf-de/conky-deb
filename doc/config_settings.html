@@ -23,7 +23,7 @@
 <tr bgcolor="#fffafa">
 <td align="center">on_bottom</td>
 <td>
-		Set conky on the bottom of all other applications
+		Set Conky on the bottom of all other applications
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -111,108 +111,114 @@
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
+<td align="center">imap</td>
+<td>
+		Default global IMAP server.  Arguments are: "host user pass [-i interval] [-f folder] [-p port] [-e command]".  Default port is 143, default folder is 'INBOX', default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
 <td align="center">no_buffers</td>
 <td>
 		Substract (file system) buffers from used memory?
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">mail_spool</td>
 <td>
 		Mail spool for mail checking
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">maximum_width</td>
 <td>
 		Maximum width of window
 		</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">minimum_size</td>
 <td>
 		Minimum size of window
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">min_port_monitors</td>
 <td>
 		Allow for the creation of at least this number of port monitors (if 0 or not set, default is 16) 
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">min_port_monitor_connections</td>
 <td>
 		Allow each port monitor to track at least this many connections (if 0 or not set, default is 256)
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">mldonkey_hostname</td>
 <td>
 		Hostname for mldonkey stuff, defaults to localhost
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">mldonkey_port</td>
 <td>
 		Mldonkey port, 4001 default
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">mldonkey_login</td>
 <td>
 		Mldonkey login, default none
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">mldonkey_password</td>
 <td>
 		Mldonkey password, default none
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">mpd_host</td>
 <td>
 		Host of MPD server
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">mpd_port</td>
 <td>
 		Port of MPD server
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">mpd_password</td>
 <td>
 		MPD server password
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">net_avg_samples</td>
 <td>
 		The number of samples to average for net data
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">override_utf8_locale</td>
 <td>
 		Force UTF8? requires XFT
 	</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window</td>
 <td>
 		Boolean, create own window to draw?
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">own_window_transparent</td>
 <td>
 		Boolean, set pseudo-transparency?
 		</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window_type</td>
 <td>
 		if own_window is yes, you may specify type normal, desktop or override (default: normal).
@@ -222,30 +228,36 @@
 		of window can be useful for certain situations.
 		</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">own_window_colour</td>
 <td>
 		If own_window_transparent no, set a specified background colour (defaults to black).  Takes either a hex value (#ffffff) or a valid RGB name (see /usr/lib/X11/rgb.txt)
 		</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">own_window_hints</td>
 <td>
-		If own_window is yes, you may use these window manager hints to affect the way conky displays.  
+		If own_window is yes, you may use these window manager hints to affect the way Conky displays.  
 		Notes: Use own_window_type desktop as another way to implement many of these hints implicitly.
 		If you use own_window_type override, window manager hints have no meaning and are ignored.
 	</td>
 </tr>
-<tr bgcolor="#b4cdcd">
+<tr bgcolor="#fffafa">
 <td align="center">out_to_console</td>
 <td>
 		Print text to stdout.
 		</td>
 </tr>
-<tr bgcolor="#fffafa">
+<tr bgcolor="#b4cdcd">
 <td align="center">pad_percents</td>
 <td>
 		Pad percentages to this many decimals (0 = no padding)
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">pop3</td>
+<td>
+		Default global POP3 server.  Arguments are: "host user pass [-i interval] [-p port] [-e command]".  Default port is 110, default interval is 5 minutes.  If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 	</td>
 </tr>
 <tr bgcolor="#b4cdcd">
@@ -288,6 +300,18 @@
 <td align="center">wm_class_name</td>
 <td>
 		Manually set the WM_CLASS name.  Defaults to "conky".
+	</td>
+</tr>
+<tr bgcolor="#fffafa">
+<td align="center">xftalpha</td>
+<td>
+		Alpha of Xft font.  Must be a value at or between 1 and 0.
+	</td>
+</tr>
+<tr bgcolor="#b4cdcd">
+<td align="center">xftfont</td>
+<td>
+		Xft font to use.
 	</td>
 </tr>
 <tr bgcolor="#fffafa">

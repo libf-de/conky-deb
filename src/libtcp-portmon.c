@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005  Philip Kovacs kovacsp3@comcast.net
  * 
- * $Id: libtcp-portmon.c 529 2006-02-13 05:24:22Z pkovacs $
+ * $Id: libtcp-portmon.c 615 2006-03-30 18:14:18Z pkovacs $
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -673,7 +673,18 @@ int peek_tcp_port_monitor(
 
         snprintf( p_buffer, buffer_size, "%d", p_monitor->p_peek[ connection_index ]->remote_port );                          
 	break;
-	
+
+   case REMOTESERVICE:
+
+        p_servent = getservbyport( htons(p_monitor->p_peek[ connection_index ]->remote_port ), "tcp" );
+        /* if no service name found for the port, just use the port number. */
+        if ( !p_servent || !p_servent->s_name ) {
+            snprintf( p_buffer, buffer_size, "%d", p_monitor->p_peek[ connection_index ]->remote_port );
+        } else {
+            snprintf( p_buffer, buffer_size, "%s", p_servent->s_name );
+        }
+        break;
+
    case LOCALIP:
 
 	net.s_addr = p_monitor->p_peek[ connection_index ]->local_addr;
@@ -816,9 +827,9 @@ void update_tcp_port_monitor_collection(
         /* read all tcp connections */
         while (fgets (buf, sizeof (buf), fp) != NULL) {
 
-                if ( sscanf (buf, "%*d: %lx:%lx %lx:%lx %lx %*x:%*x %*x:%*x %*x %lu %*d %lu",
-                        (unsigned long *)&conn.local_addr, (unsigned long *)&conn.local_port,
-                        (unsigned long *)&conn.remote_addr, (unsigned long *)&conn.remote_port,
+                if ( sscanf (buf, "%*d: %lx:%hx %lx:%hx %lx %*x:%*x %*x:%*x %*x %lu %*d %lu",
+                        (unsigned long *)&conn.local_addr, &conn.local_port,
+                        (unsigned long *)&conn.remote_addr, &conn.remote_port,
                         (unsigned long *)&state, (unsigned long *)&uid, (unsigned long *)&inode) != 7 )
 
                         fprintf( stderr, "/proc/net/tcp: bad file format\n" );

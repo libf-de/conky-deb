@@ -3,15 +3,17 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: mixer.c 130 2005-08-21 22:10:54Z brenden1 $
+ *  $Id: mixer.c 597 2006-03-16 18:07:31Z jasper_la $
  */
 
-#include "conky.h"
-#include <string.h>
-#include <stdlib.h>
+#include <sys/ioctl.h>
+
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "conky.h"
 
 #ifdef HAVE_LINUX_SOUNDCARD_H
 #include <linux/soundcard.h>

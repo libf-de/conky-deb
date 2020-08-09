@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: conky.c 570 2006-03-09 02:28:38Z pkovacs $
+ *  $Id: conky.c 639 2006-05-16 03:38:02Z brenden1 $
  */
 
 #include "conky.h"
@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <termios.h>
 #include <string.h>
 #include <limits.h>
 #if HAVE_DIRENT_H
@@ -28,6 +29,13 @@
 #endif /* X11 */
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <netinet/in.h>
+#include <netdb.h>
+
+
+#ifdef HAVE_ICONV
+#include <iconv.h>
+#endif
 
 #define CONFIG_FILE "$HOME/.conkyrc"
 #define MAIL_FILE "$MAIL"
@@ -154,7 +162,7 @@ void free_fonts()
 static void load_fonts()
 {
 	int i;
-	for (i=0;i<=font_count;i++) {
+	for (i=0; i <= font_count; i++) {
 #ifdef XFT
 	/* load Xft font */
 	if (use_xft) {
@@ -248,6 +256,51 @@ static int fixed_size = 0, fixed_pos = 0;
 static int minimum_width, minimum_height;
 static int maximum_width;
 
+
+
+#ifdef HAVE_ICONV
+#define CODEPAGE_LENGTH 20
+long iconv_selected;
+long iconv_count;
+char iconv_converting;
+static iconv_t **iconv_cd = 0;
+
+int register_iconv(iconv_t *new_iconv)
+{
+	if (iconv_cd) {
+		iconv_cd = realloc(iconv, sizeof(iconv_t *) * (iconv_count + 1));
+	} else {
+		iconv_cd = malloc(sizeof(iconv_t *));
+	}
+	if (!iconv_cd) {
+		CRIT_ERR("Out of memory");
+	}
+	iconv_cd[iconv_count] = malloc(sizeof(iconv_t));
+	if (!iconv_cd[iconv_count]) {
+		CRIT_ERR("Out of memory");
+	}
+	memcpy(iconv_cd[iconv_count], new_iconv, sizeof(iconv_t));
+	iconv_count++;
+	return iconv_count;
+}
+
+void free_iconv(void)
+{
+	if (iconv_cd) {
+		long i;
+		for (i = iconv_count; i < 0; i++) {
+			if (iconv_cd[i]) {
+				free(iconv_cd[i]);
+			}
+		}
+		free(iconv_cd);
+	}
+	iconv_cd = 0;
+		
+}
+
+#endif
+
 /* UTF-8 */
 int utf8_mode = 0;
 
@@ -290,6 +343,10 @@ static char original_text[] =
     "${color grey}MPD: $mpd_status $mpd_artist - $mpd_title from $mpd_album at $mpd_vol\n"
     "Bitrate: $mpd_bitrate\n" "Progress: $mpd_bar\n"
 #endif
+#ifdef XMMS2
+    "${color grey}XMMS2: $xmms2_status $xmms2_artist - $xmms2_title from $xmms2_album\n"
+    "Progress: $xmms2_bar\n"
+#endif
     "${color grey}Name		PID	CPU%	MEM%\n"
     " ${color lightgrey} ${top name 1} ${top pid 1} ${top cpu 1} ${top mem 1}\n"
     " ${color lightgrey} ${top name 2} ${top pid 2} ${top cpu 2} ${top mem 2}\n"
@@ -298,6 +355,7 @@ static char original_text[] =
     "${tail /var/log/Xorg.0.log 3}";
 
 static char *text = original_text;
+long text_lines;
 
 static int total_updates;
 
@@ -492,20 +550,30 @@ static char *scan_font(const char *args)
 	if (args && sizeof(args) < 127) {
 		return strdup(args);
 	}
-	else {
+/*	else {
 		ERR("font scan failed, lets hope it doesn't mess stuff up");
-	}
+		we'll assume this means to use the default font now, like $color
+	}*/
 	return NULL;
 }
 
 #ifdef X11
 static void new_font(char *buf, char * args) {
-	struct special_t *s = new_special(buf, FONT);
-	if (!s->font_added || strcmp(args, fonts[s->font_added].name)) {
+	if (args) {
+		struct special_t *s = new_special(buf, FONT);
+		if (!s->font_added || strcmp(args, fonts[s->font_added].name)) {
+			int tmp = selected_font;
+			selected_font = s->font_added = addfont(args);
+			load_fonts();
+			//set_font();
+			selected_font = tmp;
+		}
+	} else {
+		struct special_t *s = new_special(buf, FONT);
 		int tmp = selected_font;
-		selected_font = s->font_added = addfont(args);
+		selected_font = s->font_added = 0;
 		load_fonts();
-//		set_font();
+		//set_font();
 		selected_font = tmp;
 	}
 }
@@ -800,6 +868,11 @@ enum text_object_type {
 	OBJ_i8k_right_fan_rpm,
 	OBJ_i8k_ac_status,	
 	OBJ_i8k_buttons_status,
+	OBJ_ibm_fan,
+	OBJ_ibm_temps,
+	OBJ_ibm_volume,
+	OBJ_ibm_brightness,
+        OBJ_pb_battery,
 #endif /* __linux__ */
 	OBJ_if_existing,
 	OBJ_if_mounted,
@@ -861,6 +934,12 @@ enum text_object_type {
 	OBJ_upspeedgraph,
 	OBJ_uptime,
 	OBJ_uptime_short,
+	OBJ_imap,
+	OBJ_imap_messages,
+	OBJ_imap_unseen,
+	OBJ_pop3,
+	OBJ_pop3_unseen,
+	OBJ_pop3_used,
 #if defined(__FreeBSD__) && (defined(i386) || defined(__i386__))
 	OBJ_apm_adapter,
 	OBJ_apm_battery_time,
@@ -892,6 +971,27 @@ enum text_object_type {
 	OBJ_mpd_percent,
 	OBJ_mpd_smart,
 #endif
+#ifdef XMMS2
+    OBJ_xmms2_artist,
+    OBJ_xmms2_album,
+    OBJ_xmms2_title,
+    OBJ_xmms2_genre,
+    OBJ_xmms2_comment,
+    OBJ_xmms2_decoder,
+    OBJ_xmms2_transport,
+    OBJ_xmms2_url,
+    OBJ_xmms2_date,
+    OBJ_xmms2_tracknr,
+    OBJ_xmms2_bitrate,
+    OBJ_xmms2_id,
+    OBJ_xmms2_duration,
+    OBJ_xmms2_elapsed,
+    OBJ_xmms2_size,
+	OBJ_xmms2_percent,
+	OBJ_xmms2_status,
+	OBJ_xmms2_bar,
+	OBJ_xmms2_smart,
+#endif
 #if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
 	OBJ_xmms_status,
 	OBJ_xmms_title,
@@ -918,25 +1018,30 @@ enum text_object_type {
 #ifdef TCP_PORT_MONITOR
 	OBJ_tcp_portmon,
 #endif
-};
 
-struct thread_info_s {
-	pthread_t thread;
+#ifdef HAVE_ICONV
+	OBJ_iconv_start,
+	OBJ_iconv_stop,
+#endif
 };
 
 struct text_object {
 	int type;
 	int a, b;
+	long line;
 	unsigned int c, d, e;
 	float f;
+	char global_mode;
 	union {
 		char *s;	/* some string */
 		int i;		/* some integer */
 		long l;		/* some other integer */
-		struct net_stat *net;
+		unsigned int sensor;
+	        struct net_stat *net;
 		struct fs_stat *fs;
 		unsigned char loadavg[3];
 		unsigned int cpu_index;
+		struct mail_s *mail;
 		struct {
 			struct fs_stat *fs;
 			int w, h;
@@ -1017,18 +1122,509 @@ int register_thread(struct thread_info_s *new_thread)
 	} else {
 		thread_list[thread_count] = new_thread;
 		thread_count++;
+		// may as well fix the mutex for them as well
+		pthread_mutex_init(&(new_thread->mutex), NULL);
 	}
 	return thread_count - 1;
 }
 
-void replace_thread(struct thread_info_s *new_thread, int pos) // this isn't even used anymore; oh wells
-{
-	if (pos >= 0 && pos < MAX_THREADS) {
-		thread_list[pos] = new_thread;
-	} else {
-		ERR("thread position out of bounds");
+#define MAXDATASIZE 1000
+#define POP3 1
+#define IMAP 2
+
+struct mail_s* parse_mail_args(char type, const char *arg) {
+	struct mail_s *mail;
+	mail = malloc(sizeof(struct mail_s));
+	memset(mail, 0, sizeof(struct mail_s));
+	char *tmp;
+	if (sscanf(arg, "%128s %128s %128s", mail->host, mail->user, mail->pass) != 3) {
+		if (type == POP3) {
+			ERR("Scanning IMAP args failed");
+		} else  if (type == IMAP) {
+			ERR("Scanning POP3 args failed");
+		}
 	}
+	// see if password needs prompting
+	if (mail->pass[0] == '*' && mail->pass[1] == '\0') {
+		int fp = fileno(stdin);
+		struct termios term;
+		tcgetattr(fp, &term);
+		term.c_lflag &= ~ECHO;
+		tcsetattr(fp, TCSANOW, &term);
+		printf("Enter mailbox password (%s@%s): ", mail->user, mail->host);
+		scanf("%128s", mail->pass);
+		printf("\n");
+		term.c_lflag |= ECHO;
+		tcsetattr(fp, TCSANOW, &term);
+	}
+	// now we check for optional args
+	tmp = strstr(arg, "-i ");
+	if (tmp) {
+		tmp += 3;
+		sscanf(tmp, "%f", &mail->interval);
+	} else {
+		mail->interval = 300;	// 5 minutes
+	}
+	tmp = strstr(arg, "-p ");
+	if (tmp) {
+		tmp += 3;
+		sscanf(tmp, "%lu", &mail->port);
+	} else {
+		if (type == POP3) {
+			mail->port = 110;	// default pop3 port
+		} else if (type == IMAP) {
+			mail->port = 143;	// default imap port
+		}
+	}
+	if (type == IMAP) {
+		tmp = strstr(arg, "-f ");
+		if (tmp) {
+			tmp += 3;
+			sscanf(tmp, "%s", mail->folder);
+		} else {
+			strncpy(mail->folder, "INBOX", 128);	// default imap inbox
+		}
+	}
+	tmp = strstr(arg, "-e ");
+	if (tmp) {
+		tmp += 3;
+		int len = 1024;
+		if (tmp[0] == '\'') {
+			len = strstr(tmp+1, "'") - tmp - 1;
+			if (len > 1024) {
+				len = 1024;
+			}
+		}
+		strncpy(mail->command, tmp+1, len);
+	} else {
+		mail->command[0] = '\0';
+	}
+	mail->pos = -1;
+	return mail;
 }
+
+void *imap_thread(struct mail_s* mail)
+{				// pthreads are really beginning to piss me off
+	double update_time;
+	int run_code = threads_runnable;
+	update_time = get_time();
+	int sockfd, numbytes;
+	char recvbuf[MAXDATASIZE];
+	char sendbuf[MAXDATASIZE];
+	char *reply;
+	int fail = 0;
+	unsigned int old_unseen = UINT_MAX;
+	unsigned int old_messages = UINT_MAX;
+	struct hostent *he;
+	struct sockaddr_in their_addr;	// connector's address information
+	if ((he = gethostbyname(mail->host)) == NULL) {	// get the host info 
+		herror("gethostbyname");
+		exit(1);
+	}
+	while (threads_runnable == run_code && fail < 5) {
+		if (fail > 0) {
+			ERR("Trying IMAP connection again for %s@%s (try %i/5)", mail->user, mail->host, fail + 1);
+			sleep((int)mail->interval);
+		}
+		update_time = get_time();
+		if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+			perror("socket");
+			fail++;
+			continue;
+		}
+
+		their_addr.sin_family = AF_INET;	// host byte order 
+		their_addr.sin_port = htons(mail->port);	// short, network byte order 
+		their_addr.sin_addr = *((struct in_addr *) he->h_addr);
+		memset(&(their_addr.sin_zero), '\0', 8);	// zero the rest of the struct 
+
+		if (connect
+		    (sockfd, (struct sockaddr *) &their_addr,
+		     sizeof(struct sockaddr)) == -1) {
+			perror("connect");
+			fail++;
+			continue;
+		}
+		struct timeval timeout;
+		int res;
+		fd_set fdset;
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv");
+				fail++;
+				continue;
+			}
+		} else {
+			ERR("IMAP connection failed: timeout");
+			fail++;
+			continue;
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "* OK") != recvbuf) {
+			ERR("IMAP connection failed, probably not an IMAP server");
+			fail++;
+			continue;
+		}
+		strncpy(sendbuf, "a1 login ", MAXDATASIZE);
+		strncat(sendbuf, mail->user,
+			MAXDATASIZE - strlen(sendbuf) - 1);
+		strncat(sendbuf, " ", MAXDATASIZE - strlen(sendbuf) - 1);
+		strncat(sendbuf, mail->pass,
+			MAXDATASIZE - strlen(sendbuf) - 1);
+		strncat(sendbuf, "\n", MAXDATASIZE - strlen(sendbuf) - 1);
+		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
+			perror("send a1");
+			fail++;
+			continue;
+		}
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv a1");
+				fail++;
+				continue;
+			}
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "a1 OK") == NULL) {
+			ERR("IMAP server login failed: %s", recvbuf);
+			fail++;
+			continue;
+		}
+		strncpy(sendbuf, "a2 STATUS ", MAXDATASIZE);
+		strncat(sendbuf, mail->folder,
+			MAXDATASIZE - strlen(sendbuf) - 1);
+		strncat(sendbuf, " (MESSAGES UNSEEN)\n",
+			MAXDATASIZE - strlen(sendbuf) - 1);
+		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
+			perror("send a2");
+			fail++;
+			continue;
+		}
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv a2");
+				fail++;
+				continue;
+			}
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "a2 OK") == NULL) {
+			ERR("IMAP status failed: %s", recvbuf);
+			fail++;
+			continue;
+		}
+		// now we get the data
+		reply = strstr(recvbuf, " (MESSAGES ");
+		reply += 2;
+		*strchr(reply, ')') = '\0';
+		if (reply == NULL) {
+			ERR("Error parsing IMAP response: %s", recvbuf);
+			fail++;
+			continue;
+		} else {
+			pthread_mutex_lock(&(mail->thread_info.mutex));
+			sscanf(reply, "MESSAGES %lu UNSEEN %lu",
+			       &mail->messages,
+			       &mail->unseen);
+			pthread_mutex_unlock(&(mail->thread_info.mutex));
+		}
+		strncpy(sendbuf, "a3 logout\n", MAXDATASIZE);
+		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
+			perror("send a3");
+			fail++;
+			continue;
+		}
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv a3");
+				fail++;
+				continue;
+			}
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "a3 OK") == NULL) {
+			ERR("IMAP logout failed: %s", recvbuf);
+			fail++;
+			continue;
+		}
+		close(sockfd);
+		if (strlen(mail->command) > 1 && (mail->unseen > old_unseen || (mail->messages > old_messages && mail->unseen > 0))) {	// new mail goodie
+			if (system(mail->command) == -1) {
+				perror("system()");
+			}
+		}
+		fail = 0;
+		old_unseen = mail->unseen;
+		old_messages = mail->messages;
+		mail->last_update = update_time;
+		usleep(100);	// prevent race condition
+		if (get_time() - mail->last_update >
+		    mail->interval) {
+			continue;
+		} else {
+			unsigned int delay =
+			    1000000.0 * (mail->interval -
+					 (get_time() -
+					  mail->last_update));
+			if (delay < update_interval * 500000) {
+				delay = update_interval * 1000000;
+			}
+			usleep(delay);
+		}
+	}
+	ERR("exiting imap thread");
+	pthread_exit(NULL);
+	return 0;
+}
+
+void *pop3_thread(struct mail_s *mail)
+{				// pthreads are really beginning to piss me off
+	double update_time;
+	int run_code = threads_runnable;
+	update_time = get_time();
+	int sockfd, numbytes;
+	char recvbuf[MAXDATASIZE];
+	char sendbuf[MAXDATASIZE];
+	char *reply;
+	int fail = 0;
+	unsigned int old_unseen = UINT_MAX;
+	struct hostent *he;
+	struct sockaddr_in their_addr;	// connector's address information
+	if ((he = gethostbyname(mail->host)) == NULL) {	// get the host info 
+		herror("gethostbyname");
+		exit(1);
+	}
+	while (threads_runnable == run_code && fail < 5) {
+		if (fail > 0) {
+			ERR("Trying POP3 connection again for %s@%s (try %i/5)", mail->user, mail->host, fail + 1);
+			sleep((int)mail->interval);
+		}
+		update_time = get_time();
+		if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+			perror("socket");
+			fail++;
+			continue;
+		}
+
+		their_addr.sin_family = AF_INET;	// host byte order 
+		their_addr.sin_port = htons(mail->port);	// short, network byte order 
+		their_addr.sin_addr = *((struct in_addr *) he->h_addr);
+		memset(&(their_addr.sin_zero), '\0', 8);	// zero the rest of the struct 
+
+		if (connect
+		    (sockfd, (struct sockaddr *) &their_addr,
+		     sizeof(struct sockaddr)) == -1) {
+			perror("connect");
+			fail++;
+			continue;
+		}
+		struct timeval timeout;
+		int res;
+		fd_set fdset;
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv");
+				fail++;
+				continue;
+			}
+		} else {
+			ERR("POP3 connection failed: timeout\n");
+			fail++;
+			continue;
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "+OK ") != recvbuf) {
+			ERR("POP3 connection failed, probably not a POP3 server");
+			fail++;
+			continue;
+		}
+		strncpy(sendbuf, "USER ", MAXDATASIZE);
+		strncat(sendbuf, mail->user,
+			MAXDATASIZE - strlen(sendbuf) - 1);
+		strncat(sendbuf, "\n", MAXDATASIZE - strlen(sendbuf) - 1);
+		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
+			perror("send USER");
+			fail++;
+			continue;
+		}
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv USER");
+				fail++;
+				continue;
+			}
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "+OK ") == NULL) {
+			ERR("POP3 server login failed: %s", recvbuf);
+			fail++;
+			continue;
+		}
+		strncpy(sendbuf, "PASS ", MAXDATASIZE);
+		strncat(sendbuf, mail->pass,
+			MAXDATASIZE - strlen(sendbuf) - 1);
+		strncat(sendbuf, "\n", MAXDATASIZE - strlen(sendbuf) - 1);
+		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
+			perror("send PASS");
+			fail++;
+			continue;
+		}
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv PASS");
+				fail++;
+				continue;
+			}
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "+OK ") == NULL) {
+			ERR("POP3 server login failed: %s", recvbuf);
+			fail++;
+			continue;
+		}
+		strncpy(sendbuf, "STAT\n", MAXDATASIZE);
+		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
+			perror("send STAT");
+			fail++;
+			continue;
+		}
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv STAT");
+				fail++;
+				continue;
+			}
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "+OK ") == NULL) {
+			ERR("POP3 status failed: %s", recvbuf);
+			fail++;
+			continue;
+		}
+		// now we get the data
+		reply = recvbuf + 4;
+		if (reply == NULL) {
+			ERR("Error parsing POP3 response: %s", recvbuf);
+			fail++;
+			continue;
+		} else {
+			pthread_mutex_lock(&(mail->thread_info.mutex));
+			sscanf(reply, "%lu %lu", &mail->unseen,
+			       &mail->used);
+//			sleep(60);
+			pthread_mutex_unlock(&(mail->thread_info.mutex));
+		}
+		strncpy(sendbuf, "QUIT\n", MAXDATASIZE);
+		if (send(sockfd, sendbuf, strlen(sendbuf), 0) == -1) {
+			perror("send QUIT");
+			fail++;
+			continue;
+		}
+		timeout.tv_sec = 60;	// 60 second timeout i guess
+		timeout.tv_usec = 0;
+		FD_ZERO(&fdset);
+		FD_SET(sockfd, &fdset);
+		res = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+		if (res > 0) {
+			if ((numbytes =
+			     recv(sockfd, recvbuf, MAXDATASIZE - 1,
+				  0)) == -1) {
+				perror("recv QUIT");
+				fail++;
+				continue;
+			}
+		}
+		recvbuf[numbytes] = '\0';
+		if (strstr(recvbuf, "+OK") == NULL) {
+			ERR("POP3 logout failed: %s", recvbuf);
+			fail++;
+			continue;
+		}
+		close(sockfd);
+		if (strlen(mail->command) > 1 && mail->unseen > old_unseen) {	// new mail goodie
+			if (system(mail->command) == -1) {
+				perror("system()");
+			}
+		}
+		fail = 0;
+		old_unseen = mail->unseen;
+		mail->last_update = update_time;
+		usleep(100);	// prevent race condition
+		if (get_time() - mail->last_update >
+		    mail->interval) {
+			continue;
+		} else {
+			unsigned int delay =
+			    1000000.0 * (mail->interval -
+					 (get_time() -
+					  mail->last_update));
+			if (delay < update_interval * 500000) {
+				delay = update_interval * 1000000;
+			}
+			usleep(delay);
+		}
+	}
+	ERR("exiting pop3 thread");
+	pthread_exit(NULL);
+	return 0;
+}
+
 
 void *threaded_exec(struct text_object *obj) { // pthreads are really beginning to piss me off
 	double update_time;
@@ -1037,6 +1633,7 @@ void *threaded_exec(struct text_object *obj) { // pthreads are really beginning 
 		update_time = get_time();
 		char *p2 = obj->data.execi.buffer;
 		FILE *fp = popen(obj->data.execi.cmd,"r");
+		pthread_mutex_lock(&(obj->data.execi.thread_info.mutex));
 		int n2 = fread(p2, 1, TEXT_BUFFER_SIZE, fp);
 		(void) pclose(fp);
 		p2[n2] = '\0';
@@ -1049,6 +1646,7 @@ void *threaded_exec(struct text_object *obj) { // pthreads are really beginning 
 			}
 			p2++;
 		}
+		pthread_mutex_unlock(&(obj->data.execi.thread_info.mutex));
 		obj->data.execi.last_update = update_time;
 		usleep(100); // prevent race condition
 		if (get_time() - obj->data.execi.last_update > obj->data.execi.interval) {
@@ -1101,6 +1699,32 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 				free(objs[i].data.s);
 				break;
 			case OBJ_utime:
+			case OBJ_imap:
+				free(info.mail);
+				break;
+			case OBJ_imap_unseen:
+				if (!objs[i].global_mode) {
+					free(objs[i].data.mail);
+				}
+				break;
+			case OBJ_imap_messages:
+				if (!objs[i].global_mode) {
+					free(objs[i].data.mail);
+				}
+				break;
+			case OBJ_pop3:
+				free(info.mail);
+				break;
+			case OBJ_pop3_unseen:
+				if (!objs[i].global_mode) {
+					free(objs[i].data.mail);
+				}
+				break;
+			case OBJ_pop3_used:
+				if (!objs[i].global_mode) {
+					free(objs[i].data.mail);
+				}
+				break;
 			case OBJ_if_existing:
 			case OBJ_if_mounted:
 			case OBJ_if_running:
@@ -1128,6 +1752,11 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 						case OBJ_execigraph:
 						free(objs[i].data.s);
 						break;*/
+#ifdef HAVE_ICONV
+			case OBJ_iconv_start:
+				free_iconv();
+				break;
+#endif
 #ifdef MPD
 			case OBJ_mpd_title:
 				if (info.mpd.title) {
@@ -1199,6 +1828,82 @@ static void free_text_objects(unsigned int count, struct text_object *objs)
 				break;
 			case OBJ_mpd_host:
 #endif
+#ifdef XMMS2
+			case OBJ_xmms2_artist:
+				if (info.xmms2.artist) {
+					free(info.xmms2.artist);
+					info.xmms2.artist = 0;
+				}
+				break;
+			case OBJ_xmms2_album:
+				if (info.xmms2.album) {
+					free(info.xmms2.album);
+					info.xmms2.album = 0;
+				}
+				break;
+			case OBJ_xmms2_title:
+				if (info.xmms2.title) {
+					free(info.xmms2.title);
+					info.xmms2.title = 0;
+				}
+				break;
+			case OBJ_xmms2_genre:
+				if (info.xmms2.genre) {
+					free(info.xmms2.genre);
+					info.xmms2.genre = 0;
+				}
+				break;
+			case OBJ_xmms2_comment:
+				if (info.xmms2.comment) {
+					free(info.xmms2.comment);
+					info.xmms2.comment = 0;
+				}
+				break;
+			case OBJ_xmms2_decoder:
+				if (info.xmms2.decoder) {
+					free(info.xmms2.decoder);
+					info.xmms2.url = 0;
+				}
+				break;
+			case OBJ_xmms2_transport:
+				if (info.xmms2.transport) {
+					free(info.xmms2.transport);
+					info.xmms2.url = 0;
+				}
+				break;
+			case OBJ_xmms2_url:
+				if (info.xmms2.url) {
+					free(info.xmms2.url);
+					info.xmms2.url = 0;
+				}
+				break;
+			case OBJ_xmms2_date:
+				if (info.xmms2.date) {
+					free(info.xmms2.date);
+					info.xmms2.date = 0;
+				}
+				break;
+			case OBJ_xmms2_status:
+				if (info.xmms2.status) {
+					free(info.xmms2.status);
+					info.xmms2.status = 0;
+				}
+				break;
+			case OBJ_xmms2_smart:
+				if (info.xmms2.artist) {
+					free(info.xmms2.artist);
+					info.xmms2.artist = 0;
+				}
+				if (info.xmms2.title) {
+					free(info.xmms2.title);
+					info.xmms2.title = 0;
+				}
+				if (info.xmms2.url) {
+					free(info.xmms2.url);
+					info.xmms2.url = 0;
+				}
+				break;
+#endif
 #ifdef BMPX
 			case OBJ_bmpx_title:
 			case OBJ_bmpx_artist:
@@ -1255,10 +1960,11 @@ void scan_mixer_bar(const char *arg, int *a, int *w, int *h)
 
 
 /* construct_text_object() creates a new text_object */
-static struct text_object *construct_text_object(const char *s, const char *arg, unsigned int object_count, struct text_object *text_objects)
+static struct text_object *construct_text_object(const char *s, const char *arg, unsigned int object_count, struct text_object *text_objects, long line)
 {
 	//struct text_object *obj = new_text_object();
 	struct text_object *obj = new_text_object_internal();
+	obj->line = line;
 
 #define OBJ(a, n) if (strcmp(s, #a) == 0) { obj->type = OBJ_##a; need_mask |= (1 << n); {
 #define END ; } } else
@@ -1296,6 +2002,31 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		END OBJ(i8k_right_fan_rpm, INFO_I8K)
 		END OBJ(i8k_ac_status, INFO_I8K)
 		END OBJ(i8k_buttons_status, INFO_I8K)
+	END OBJ(ibm_fan, 0)
+	END OBJ(ibm_temps, 0)
+	    if (!isdigit(arg[0])
+			 || strlen(arg) >=2
+			 || atoi(&arg[0]) >=8)
+	    {
+		obj->data.sensor=0;
+		ERR("Invalid temperature sensor! Sensor number must be 0 to 7. Using 0 (CPU temp sensor).");
+	    }
+		obj->data.sensor = atoi(&arg[0]);
+	END OBJ(ibm_volume, 0)
+	END OBJ(ibm_brightness, 0)
+	END OBJ(pb_battery, 0)
+                if (arg && strcmp(arg, "status") == 0) {
+                        obj->data.i = PB_BATT_STATUS;
+                } else if (arg && strcmp(arg, "percent") == 0) {
+                        obj->data.i = PB_BATT_PERCENT;
+                } else if (arg && strcmp(arg, "time") == 0) {
+                        obj->data.i = PB_BATT_TIME;
+                } else {
+                        ERR("pb_battery: needs one argument: status, percent or time");
+                        free(obj);
+                        return NULL;
+                }
+
 #endif /* __linux__ */
 		END OBJ(buffers, INFO_BUFFERS)
 		END OBJ(cached, INFO_BUFFERS)
@@ -1840,6 +2571,33 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 				obj->data.i2c.devtype);
 	END OBJ(time, 0) obj->data.s = strdup(arg ? arg : "%F %T");
 	END OBJ(utime, 0) obj->data.s = strdup(arg ? arg : "%F %T");
+#ifdef HAVE_ICONV
+	END OBJ(iconv_start, 0)
+		if (iconv_converting) {
+			CRIT_ERR("You must stop your last iconv conversion before starting another");
+		}
+		if (arg) {
+			char iconv_from[CODEPAGE_LENGTH];
+			char iconv_to[CODEPAGE_LENGTH];
+			if (sscanf(arg, "%s %s", iconv_from, iconv_to) != 2) {
+				CRIT_ERR("Invalid arguments for iconv_start");
+			} else {
+				iconv_t new_iconv;
+				new_iconv = iconv_open(iconv_to, iconv_from);
+				if (new_iconv == (iconv_t)(-1)) {
+					ERR("Can't convert from %s to %s.", iconv_from, iconv_to);
+				} else {
+					obj->a = register_iconv(&new_iconv);
+					iconv_converting = 1;
+				}
+			}
+		} else {
+			CRIT_ERR("Iconv requires arguments");
+		}
+	END OBJ(iconv_stop, 0)
+		iconv_converting = 0;
+	
+#endif
 	END OBJ(totaldown, INFO_NET)
 		if(arg) {
 			obj->data.net = get_net_stat(arg);
@@ -1895,6 +2653,42 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
 	END OBJ(seti_credit, INFO_SETI) END
 #endif
+		OBJ(imap_unseen, 0)
+		if (arg) {
+			// proccss
+			obj->data.mail = parse_mail_args(IMAP, arg);
+			obj->global_mode = 0;
+		} else {
+			obj->global_mode = 1;
+		}
+		END
+		OBJ(imap_messages, 0)
+		if (arg) {
+			// proccss
+			obj->data.mail = parse_mail_args(IMAP, arg);
+			obj->global_mode = 0;
+		} else {
+			obj->global_mode = 1;
+		}
+		END
+		OBJ(pop3_unseen, 0)
+		if (arg) {
+			// proccss
+			obj->data.mail = parse_mail_args(POP3, arg);
+			obj->global_mode = 0;
+		} else {
+			obj->global_mode = 1;
+		}
+		END
+		OBJ(pop3_used, 0)
+		if (arg) {
+			// proccss
+			obj->data.mail = parse_mail_args(POP3, arg);
+			obj->global_mode = 0;
+		} else {
+			obj->global_mode = 1;
+		}
+		END
 #ifdef MPD
 		OBJ(mpd_artist, INFO_MPD)
 		END OBJ(mpd_title, INFO_MPD)
@@ -1913,6 +2707,29 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		END OBJ(mpd_bar, INFO_MPD)
 		(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
 		END OBJ(mpd_smart, INFO_MPD) END
+#endif
+#ifdef XMMS2
+		OBJ(xmms2_artist, INFO_XMMS2)
+		END OBJ(xmms2_album, INFO_XMMS2)
+		END OBJ(xmms2_title, INFO_XMMS2)
+		END OBJ(xmms2_genre, INFO_XMMS2)
+		END OBJ(xmms2_comment, INFO_XMMS2)
+		END OBJ(xmms2_decoder, INFO_XMMS2)
+		END OBJ(xmms2_transport, INFO_XMMS2)
+		END OBJ(xmms2_url, INFO_XMMS2)
+		END OBJ(xmms2_tracknr, INFO_XMMS2)
+		END OBJ(xmms2_bitrate, INFO_XMMS2)
+		END OBJ(xmms2_date, INFO_XMMS2)
+		END OBJ(xmms2_id, INFO_XMMS2)
+		END OBJ(xmms2_duration, INFO_XMMS2)
+        END OBJ(xmms2_elapsed, INFO_XMMS2)
+		END OBJ(xmms2_size, INFO_XMMS2)
+		END OBJ(xmms2_status, INFO_XMMS2)
+		END OBJ(xmms2_percent, INFO_XMMS2)
+		END OBJ(xmms2_bar, INFO_XMMS2)
+		(void) scan_bar(arg, &obj->data.pair.a, &obj->data.pair.b);
+		END OBJ(xmms2_smart, INFO_XMMS2)
+		END
 #endif
 #if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
 		OBJ(xmms_status, INFO_XMMS) END
@@ -1982,6 +2799,8 @@ static struct text_object *construct_text_object(const char *s, const char *arg,
 		item=REMOTEHOST;
 	else if ( strncmp(itembuf,"rport",31) == 0 )
 		item=REMOTEPORT;
+	else if ( strncmp(itembuf,"rservice",31) == 0 )
+		item=REMOTESERVICE;
 	else if ( strncmp(itembuf,"lip",31) == 0 )
 		item=LOCALIP;
 	else if ( strncmp(itembuf,"lhost",31) == 0 )
@@ -2074,7 +2893,12 @@ static struct text_object_list *extract_variable_text_internal(const char *p)
 	memset(retval, 0, sizeof(struct text_object_list));
 	retval->text_object_count = 0;
 
+	long line = text_lines;
+
 	while (*p) {
+		if (*p == '\n') {
+			line++;
+		}
 		if (*p == '$') {
 			*(char *) p = '\0';
 			obj = create_plain_text(s);
@@ -2146,7 +2970,7 @@ static struct text_object_list *extract_variable_text_internal(const char *p)
 					}
 
 					// create new object
-					obj = construct_text_object(buf, arg, retval->text_object_count, retval->text_objects);
+					obj = construct_text_object(buf, arg, retval->text_object_count, retval->text_objects, line);
 					if(obj != NULL) {
 						// allocate memory for the object
 						retval->text_objects = realloc(retval->text_objects, 
@@ -2203,6 +3027,7 @@ static void extract_variable_text(const char *p)
 	ml_cleanup();
 #endif /* MLDONKEY */
 
+
 	list = extract_variable_text_internal(p);
 	text_objects = list->text_objects;
 	text_object_count = list->text_object_count;
@@ -2221,6 +3046,12 @@ void parse_conky_vars(char * text, char * p, struct information *cur) {
 static void generate_text_internal(char *p, int p_max_size, struct text_object *objs, unsigned int object_count, struct information *cur)
 {
 	unsigned int i;
+
+#ifdef HAVE_ICONV
+	char buff_in[P_MAX_SIZE] = {0};
+	iconv_converting = 0;
+#endif
+
 	for (i = 0; i < object_count; i++) {
 		struct text_object *obj = &objs[i];
 
@@ -2390,6 +3221,23 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 					snprintf(p, p_max_size, "%s", i8k.buttons_status); 
 
 				}
+                                OBJ(ibm_fan) {
+                                    get_ibm_acpi_fan(p, p_max_size);
+                                }
+				OBJ(ibm_temps) {
+                                    get_ibm_acpi_temps();
+                                    snprintf(p, p_max_size, "%d",
+                                             ibm_acpi.temps[obj->data.sensor]);
+                                }
+                                OBJ(ibm_volume) {
+                                    get_ibm_acpi_volume(p, p_max_size);
+                                }
+                                OBJ(ibm_brightness) {
+                                    get_ibm_acpi_brightness(p, p_max_size);
+                                }
+                                OBJ(pb_battery) {
+                                    get_powerbook_batt_info(p, p_max_size, obj->data.i);
+                                }
 #endif /* __linux__ */
 
 #ifdef X11
@@ -2459,11 +3307,9 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 							(obj->data.net->recv_speed /
 							 1024.0), obj->e, 1);
 				}
-				OBJ(
-						else
-				   ) {
+				OBJ(else) {
 					if (!if_jumped) {
-						i = obj->data.ifblock.pos - 2;
+						i = obj->data.ifblock.pos - 1;
 					} else {
 						if_jumped = 0;
 					}
@@ -2648,9 +3494,124 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 						}
 						obj->data.execi.pos = register_thread(&(obj->data.execi.thread_info));
 					}
+					pthread_mutex_lock(&(obj->data.execi.thread_info.mutex));
 					snprintf(p, p_max_size, "%s", obj->data.execi.buffer);
+					pthread_mutex_unlock(&(obj->data.execi.thread_info.mutex));
 				}
-#endif
+#endif /* HAVE_POPEN */
+				OBJ(imap_unseen) {
+					if (obj->global_mode && info.mail) { // this means we use info
+						if (info.mail->pos < 0) {
+							info.mail->last_update = current_update_time;
+							if (pthread_create(&(info.mail->thread_info.thread), NULL, (void*)imap_thread, (void*) info.mail)) {
+								ERR("Error starting thread");
+							}
+							info.mail->pos = register_thread(&(info.mail->thread_info));
+						}
+						// get a lock before reading
+						pthread_mutex_lock(&(info.mail->thread_info.mutex));
+						snprintf(p, p_max_size, "%lu", info.mail->unseen);
+						pthread_mutex_unlock(&(info.mail->thread_info.mutex));
+					} else if (obj->data.mail) { // this means we use obj
+						if (obj->data.mail->pos < 0) {
+							obj->data.mail->last_update = current_update_time;
+							if (pthread_create(&(obj->data.mail->thread_info.thread), NULL, (void*)imap_thread, (void*) obj->data.mail)) {
+								ERR("Error starting thread");
+							}
+							obj->data.mail->pos = register_thread(&(obj->data.mail->thread_info));
+						}
+						pthread_mutex_lock(&(obj->data.mail->thread_info.mutex));
+						snprintf(p, p_max_size, "%lu", obj->data.mail->unseen);
+						pthread_mutex_unlock(&(obj->data.mail->thread_info.mutex));
+					} else if (!obj->a) { // something is wrong, warn once then stop
+						ERR("Theres a problem with your imap_unseen settings.  Check that the global IMAP settings are defined properly (line %li).", obj->line);
+							obj->a++;
+					}
+				}
+				OBJ(imap_messages) {
+					if (obj->global_mode && info.mail) { // this means we use info
+						if (info.mail->pos < 0) {
+							info.mail->last_update = current_update_time;
+							if (pthread_create(&(info.mail->thread_info.thread), NULL, (void*)imap_thread, (void*) info.mail)) {
+								ERR("Error starting thread");
+							}
+							info.mail->pos = register_thread(&(info.mail->thread_info));
+						}
+						pthread_mutex_lock(&(info.mail->thread_info.mutex));
+						snprintf(p, p_max_size, "%lu", info.mail->messages);
+						pthread_mutex_unlock(&(info.mail->thread_info.mutex));
+					} else if (obj->data.mail) { // this means we use obj
+						if (obj->data.mail->pos < 0) {
+							obj->data.mail->last_update = current_update_time;
+							if (pthread_create(&(obj->data.mail->thread_info.thread), NULL, (void*)imap_thread, (void*) obj->data.mail)) {
+								ERR("Error starting thread");
+							}
+							obj->data.mail->pos = register_thread(&(obj->data.mail->thread_info));
+						}
+						pthread_mutex_lock(&(obj->data.mail->thread_info.mutex));
+						snprintf(p, p_max_size, "%lu", obj->data.mail->messages);
+						pthread_mutex_unlock(&(obj->data.mail->thread_info.mutex));
+					} else if (!obj->a) { // something is wrong, warn once then stop
+						ERR("Theres a problem with your imap_messages settings.  Check that the global IMAP settings are defined properly (line %li).", obj->line);
+							obj->a++;
+					}
+				}
+				OBJ(pop3_unseen) {
+					if (obj->global_mode && info.mail) { // this means we use info
+						if (info.mail->pos < 0) {
+							info.mail->last_update = current_update_time;
+							if (pthread_create(&(info.mail->thread_info.thread), NULL, (void*)pop3_thread, (void*) info.mail)) {
+								ERR("Error starting thread");
+							}
+							info.mail->pos = register_thread(&(info.mail->thread_info));
+						}
+						pthread_mutex_lock(&(info.mail->thread_info.mutex));
+						snprintf(p, p_max_size, "%lu", info.mail->unseen);
+						pthread_mutex_unlock(&(info.mail->thread_info.mutex));
+					} else if (obj->data.mail) { // this means we use obj
+						if (obj->data.mail->pos < 0) {
+							obj->data.mail->last_update = current_update_time;
+							if (pthread_create(&(obj->data.mail->thread_info.thread), NULL, (void*)pop3_thread, (void*) obj->data.mail)) {
+								ERR("Error starting thread");
+							}
+							obj->data.mail->pos = register_thread(&(obj->data.mail->thread_info));
+						}
+						pthread_mutex_lock(&(obj->data.mail->thread_info.mutex));
+						snprintf(p, p_max_size, "%lu", obj->data.mail->unseen);
+						pthread_mutex_unlock(&(obj->data.mail->thread_info.mutex));
+					} else if (!obj->a) { // something is wrong, warn once then stop
+						ERR("Theres a problem with your pop3_unseen settings.  Check that the global POP3 settings are defined properly (line %li).", obj->line);
+							obj->a++;
+					}
+				}
+				OBJ(pop3_used) {
+					if (obj->global_mode && info.mail) { // this means we use info
+						if (info.mail->pos < 0) {
+							info.mail->last_update = current_update_time;
+							if (pthread_create(&(info.mail->thread_info.thread), NULL, (void*)pop3_thread, (void*) info.mail)) {
+								ERR("Error starting thread");
+							}
+							info.mail->pos = register_thread(&(info.mail->thread_info));
+						}
+						pthread_mutex_lock(&(info.mail->thread_info.mutex));
+						snprintf(p, p_max_size, "%.1f", info.mail->used/1024.0/1024.0);
+						pthread_mutex_unlock(&(info.mail->thread_info.mutex));
+					} else if (obj->data.mail) { // this means we use obj
+						if (obj->data.mail->pos < 0) {
+							obj->data.mail->last_update = current_update_time;
+							if (pthread_create(&(obj->data.mail->thread_info.thread), NULL, (void*)pop3_thread, (void*) obj->data.mail)) {
+								ERR("Error starting thread");
+							}
+							obj->data.mail->pos = register_thread(&(obj->data.mail->thread_info));
+						}
+						pthread_mutex_lock(&(obj->data.mail->thread_info.mutex));
+						snprintf(p, p_max_size, "%.1f", obj->data.mail->used/1024.0/1024.0);
+						pthread_mutex_unlock(&(obj->data.mail->thread_info.mutex));
+					} else if (!obj->a) { // something is wrong, warn once then stop
+						ERR("Theres a problem with your pop3_used settings.  Check that the global POP3 settings are defined properly (line %li).", obj->line);
+							obj->a++;
+					}
+				}
 			OBJ(fs_bar) {
 				if (obj->data.fs != NULL) {
 					if (obj->data.fs->size == 0)
@@ -3209,6 +4170,78 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 				}
 			}
 #endif
+#ifdef XMMS2
+			OBJ(xmms2_artist) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.artist);
+			}
+			OBJ(xmms2_album) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.album);
+			}
+			OBJ(xmms2_title) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.title);
+			}
+			OBJ(xmms2_genre) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.genre);
+			}
+			OBJ(xmms2_comment) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.comment);
+			}
+			OBJ(xmms2_decoder) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.decoder);
+			}
+			OBJ(xmms2_transport) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.transport);
+			}
+			OBJ(xmms2_url) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.url);
+			}
+			OBJ(xmms2_status) {
+				snprintf(p, p_max_size, "%s", cur->xmms2.status);
+			}
+            OBJ(xmms2_date) {
+                    snprintf(p, p_max_size, "%s", cur->xmms2.date);
+			}
+			OBJ(xmms2_tracknr) {
+			    if (cur->xmms2.tracknr != -1)
+                    snprintf(p, p_max_size, "%i", cur->xmms2.tracknr);
+			}
+			OBJ(xmms2_bitrate) {
+				snprintf(p, p_max_size, "%i", cur->xmms2.bitrate);
+			}
+            OBJ(xmms2_id) {
+				snprintf(p, p_max_size, "%u", cur->xmms2.id);
+			}
+            OBJ(xmms2_size) {
+				snprintf(p, p_max_size, "%2.1f", cur->xmms2.size);
+			}
+			OBJ(xmms2_elapsed) {
+				int tmp = cur->xmms2.elapsed;
+				snprintf(p, p_max_size, "%02d:%02d",
+				    tmp / 60000, (tmp / 1000) % 60);
+			}
+			OBJ(xmms2_duration) {
+				int tmp = cur->xmms2.duration;
+				snprintf(p, p_max_size, "%02d:%02d",
+				    tmp / 60000, (tmp / 1000) % 60);
+			}
+			OBJ(xmms2_percent) {
+				snprintf(p, p_max_size, "%2.0f",
+					 cur->xmms2.progress * 100);
+			}
+			OBJ(xmms2_bar) {
+				new_bar(p, obj->data.pair.a,
+					obj->data.pair.b,
+					(int) (cur->xmms2.progress *
+					       255.0f));
+			}
+			OBJ(xmms2_smart) {
+				if (strlen(cur->xmms2.title) < 2 && strlen(cur->xmms2.title) < 2) {
+					snprintf(p, p_max_size, "%s", cur->xmms2.url);
+				} else {
+					snprintf(p, p_max_size, "%s - %s", cur->xmms2.artist, cur->xmms2.title);
+				}
+			}
+#endif
 #if defined(XMMS) || defined(BMP) || defined(AUDACIOUS) || defined(INFOPIPE)
 			OBJ(xmms_status) {
 			    snprintf(p, p_max_size, "%s", cur->xmms.items[XMMS_STATUS]);
@@ -3471,11 +4504,50 @@ static void generate_text_internal(char *p, int p_max_size, struct text_object *
 			}
 #endif
 
+#ifdef HAVE_ICONV
+			OBJ(iconv_start)
+			{
+				iconv_converting = 1;
+				iconv_selected = obj->a;
+				
+			}
+			OBJ(iconv_stop)
+			{
+				iconv_converting = 0;
+				iconv_selected = 0;
+			}
+#endif
+
 			break;
 		}
 
 		{
 			unsigned int a = strlen(p);
+
+#ifdef HAVE_ICONV
+			if (a > 0 && iconv_converting && iconv_selected > 0 && (iconv_cd[iconv_selected - 1] != (iconv_t)(-1))) {
+				int bytes;
+				size_t dummy1, dummy2;
+				char *ptr = buff_in;
+				char *outptr = p;
+
+				dummy1 = dummy2 = a;
+				
+				strncpy(buff_in, p, P_MAX_SIZE);
+
+				iconv(*iconv_cd[iconv_selected - 1], NULL, NULL, NULL, NULL);
+				while (dummy1 > 0) {
+					bytes = iconv(*iconv_cd[iconv_selected - 1], &ptr, &dummy1, &outptr, &dummy2);
+					if (bytes == -1) {
+						ERR("Iconv codeset conversion failed");
+						break;
+					}
+				}
+
+				/* It is nessecary when we are converting from multibyte to singlebyte codepage */
+				a = outptr - p;
+			}
+#endif
 			p += a;
 			p_max_size -= a;
 		}
@@ -3489,6 +4561,7 @@ static void generate_text()
 {
 	struct information *cur = &info;
 	char *p;
+
 
 	special_count = 0;
 
@@ -3515,6 +4588,7 @@ static void generate_text()
 			p++;
 		}
 	}
+
 
 	last_update_time = current_update_time;
 	total_updates++;
@@ -3647,9 +4721,9 @@ static void text_size_updater(char *s)
 		text_width = maximum_width;
 
 	text_height += h;
-	if (fontchange) {
+/*	if (fontchange) {
 		selected_font = 0;
-	}
+	}*/
 }
 #endif /* X11 */
 
@@ -4250,9 +5324,9 @@ static void draw_line(char *s)
 	draw_string(s);
 
 	cur_y += font_descent();
-	if (fontchange) {
+/*	if (fontchange) {
 		selected_font = 0;
-	}
+	}*/
 #endif /* X11 */
 }
 
@@ -4840,6 +5914,17 @@ static void set_default_configurations(void)
 	info.mpd.name = NULL;
 	info.mpd.file = NULL;
 #endif
+#ifdef XMMS2
+    info.xmms2.artist = NULL;
+    info.xmms2.album = NULL;
+    info.xmms2.title = NULL;
+    info.xmms2.genre = NULL;
+    info.xmms2.comment = NULL;
+    info.xmms2.decoder = NULL;
+    info.xmms2.transport = NULL;
+    info.xmms2.url = NULL;
+    info.xmms2.status = NULL;
+#endif
 	use_spacer = 0;
 #ifdef X11
 	out_to_console = 0;
@@ -5045,6 +6130,20 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 				CONF_ERR;
 		}
 #endif
+		CONF("imap") {
+			if (value) {
+				info.mail = parse_mail_args(IMAP, value);
+			} else {
+				CONF_ERR;
+			}
+		}
+		CONF("pop3") {
+			if (value) {
+				info.mail = parse_mail_args(POP3, value);
+			} else {
+				CONF_ERR;
+			}
+		}
 #ifdef MPD
 		CONF("mpd_host") {
 			if (value)
@@ -5381,6 +6480,7 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 					break;
 			}
 			fclose(fp);
+			text_lines = line + 1;
 			return;
 		}
 #ifdef TCP_PORT_MONITOR
@@ -5428,6 +6528,8 @@ else if (strcasecmp(name, a) == 0 || strcasecmp(name, b) == 0)
 
 	fclose(fp);
 #undef CONF_ERR
+
+
 }
 
 																							/* : means that character before that takes an argument */
@@ -5592,6 +6694,12 @@ int main(int argc, char **argv)
 #else
 	optind = 0;
 #endif
+
+#if defined(__FreeBSD__)
+	if ((kd = kvm_open("/dev/null", "/dev/null", "/dev/null",
+			O_RDONLY, "kvm_open")) == NULL)
+		CRIT_ERR( "cannot read kvm");
+#endif
 	
 	while (1) {
 		int c = getopt(argc,
@@ -5755,6 +6863,10 @@ int main(int argc, char **argv)
         }
 #endif	
 
+#if defined(__FreeBSD__)
+	kvm_close(kd);
+#endif
+	
 	return 0;
 }
 

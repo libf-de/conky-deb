@@ -36,9 +36,10 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS TODO config.guess config.sub depcomp \
-	install-sh ltmain.sh missing
+	$(srcdir)/Makefile.in $(top_srcdir)/configure ABOUT-NLS \
+	AUTHORS COPYING ChangeLog INSTALL NEWS TODO config.guess \
+	config.rpath config.sub depcomp install-sh ltmain.sh missing \
+	mkinstalldirs
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -46,7 +47,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 SOURCES =
@@ -82,6 +83,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BMPX_CFLAGS = @BMPX_CFLAGS@
+BMPX_LIBS = @BMPX_LIBS@
 BMP_CFLAGS = @BMP_CFLAGS@
 BMP_LIBS = @BMP_LIBS@
 BUILD_AUDACIOUS_FALSE = @BUILD_AUDACIOUS_FALSE@
@@ -110,6 +113,8 @@ BUILD_SOLARIS_FALSE = @BUILD_SOLARIS_FALSE@
 BUILD_SOLARIS_TRUE = @BUILD_SOLARIS_TRUE@
 BUILD_X11_FALSE = @BUILD_X11_FALSE@
 BUILD_X11_TRUE = @BUILD_X11_TRUE@
+BUILD_XMMS2_FALSE = @BUILD_XMMS2_FALSE@
+BUILD_XMMS2_TRUE = @BUILD_XMMS2_TRUE@
 BUILD_XMMS_FALSE = @BUILD_XMMS_FALSE@
 BUILD_XMMS_TRUE = @BUILD_XMMS_TRUE@
 CC = @CC@
@@ -122,8 +127,6 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DBUS_CFLAGS = @DBUS_CFLAGS@
-DBUS_LIBS = @DBUS_LIBS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 ECHO = @ECHO@
@@ -141,10 +144,12 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LIBICONV = @LIBICONV@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
+LTLIBICONV = @LTLIBICONV@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
