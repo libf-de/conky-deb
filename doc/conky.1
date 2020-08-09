@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH conky 1 2007-08-08 "" ""
+.TH conky 1 2008-03-31 "" ""
 .SH NAME
 conky \- A system monitor for X originally based on the torsmo code, but more kickass. It just keeps on given'er. Yeah.
 .SH SYNOPSIS
@@ -20,29 +20,34 @@ conky \- A system monitor for X originally based on the torsmo code, but more ki
 .ad b
 'hy
 .SH DESCRIPTION
-Conky is a system monitor for X originally based on the torsmo code. 
-Since it's original conception, Conky has changed a fair bit from it's predecessor. 
-Conky can display just about anything, either on your root desktop or in it's own window. 
-Conky has many built-in objects, as well as the ability to execute programs and scripts, 
+Conky is a system monitor for X originally based on torsmo.
+Since it's conception, Conky has changed significantly from it's predecessor.
+Conky can display just about anything, either on your root desktop or in it's own window.
+Conky has many built-in objects, as well as the ability to execute programs and scripts,
 then display the output from stdout.
 .PP
-We are always looking for help, and anyone interested in becoming a developer is welcome. 
+We are always looking for help, and anyone interested in becoming a developer is welcome.
 Please use the facilities at SourceForge to make bug reports, feature requests, and submit patches.
 .PP
 Thanks for your interest in Conky.
 .SH COMPILING
-For users compiling from source, make sure you have the X development libraries installed. 
-This should be a package along the lines of "libx11-dev or xorg-x11-dev". 
+For users compiling from source on a binary distro, make sure you have the X development
+libraries installed. This should be a package along the lines of "libx11-dev" or 
+"xorg-x11-dev" for X11 libs, and similar "-dev" format for the other libs required (depending
+on your configure options).
+.PP
+Conky has (for some time) been available in the repositories of most popular distributions. 
+Here are some installation instructions for a few:
 .PP
 Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
-There is also usually an up-to-date ebuild within Conky's package or in Svn.
+There is also usually an up-to-date ebuild within Conky's package or in SVN.
 .PP
-Debian,etc. users -- Conky will be in Debian's repositories soon (by mid-September, hopefully), and then 
-Ubuntu shortly thereafter. Until then, "dpkg -i" the .deb package to install. 
+Debian, etc. users -- Conky should be in your repositories, and can be installed by doing
+"aptitude install conky".
 .PP
 Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
 .TP 
-\fB\*(T<\fBsh autogen.sh\fR\*(T>\fR \*(T<\fB# Only required if building from Svn\fR\*(T> 
+\fB\*(T<\fBsh autogen.sh\fR\*(T>\fR \*(T<\fB# Only required if building from SVN\fR\*(T> 
 .TP 
 \fB\*(T<\fB\&./configure \fR\*(T>\fR\*(T<\fB\-\-prefix=/usr \-\-mandir=/usr/share/man \-\-infodir=/usr/share/info \-\-datadir=/usr/share \-\-sysconfdir=/etc \-\-localstatedir=/var/lib \-\-disable\-own\-window \-\-enable\-audacious[=yes|no|legacy] \-\-enable\-bmpx \-\-disable\-hddtemp \-\-disable\-mpd \-\-enable\-xmms2 \-\-disable\-portmon \-\-disable\-network \-\-enable\-debug \-\-disable\-x11 \-\-disable\-double\-buffer \-\-disable\-xdamage \-\-disable\-xft\fR\*(T> 
 .TP 
@@ -52,72 +57,59 @@ Example to compile and run Conky with all optional components (note that some co
 .TP 
 \fB\*(T<\fBsrc/conky\fR\*(T>\fR 
 .PP
-Conky probably doesn't compile with compilers other than gcc and icc. 
-It doesn't compile with C89 compiler and not even with pure C99.
-It uses a few things that might not exist: strdup(), strcasecmp(), strncasecmp(), 
-optarg variable with getopt() and long long (not in C89). Crashes in file system
-statistics stuff when compiled with icc, I don't know exactly why.
-.PP
-You can disable 'drawing to own window' feature in case you don't need it by passing 
---disable-own-window to configure -script.
+Conky has been tested to be compatible with C99 C, however it has not been tested
+with anything other than gcc, and is not guaranteed to work with other compilers.
 .PP
 .SH "YOU SHOULD KNOW"
-Conky is generally very good on resources. However, certain objects in
-Conky are harder on resources then others. In particular, the $tail,
-$top, $font, and $graph objects are quite costly in comparison to the rest of Conky.
-.PP
-If you do use them, please do not complain about memory or CPU usage, 
-unless you think something's seriously wrong (mem leak, etc.).
+Conky is generally very good on resources. That said, the more you try to make Conky
+do, the more resources it is going to consume.
 .PP
 An easy way to force Conky to reload your ~/.conkyrc: "killall -SIGUSR1 conky".
-Saves you the trouble of having to kill and then restart.
-.PP
-IMPORTANT: For previous Conky users, Conky 1.3 no longer supports the metar stuff. 
-mdsplib was causing way too many problems. Hopefully there'll be a better solution in Conky 2.x...
+Saves you the trouble of having to kill and then restart. You can now also do the same with SIGHUP.
 .SH OPTIONS
 Command line options override configurations defined in configuration file.
 .TP 
-\fB\*(T<\fB\-v | \-V\fR\*(T>\fR
+\fB\*(T<\fB\-v | \-V | \-\-verbose\fR\*(T>\fR
 Prints version and exits
 
 .TP 
-\fB\*(T<\fB\-a \fR\*(T>\fR\*(T<\fBALIGNMENT\fR\*(T>
+\fB\*(T<\fB\-a | \-\-alignment=\fR\*(T>\fR\*(T<\fBALIGNMENT\fR\*(T>
 Text alignment on screen, {top,bottom}_{left,right} or none
 
 .TP 
-\fB\*(T<\fB\-b\fR\*(T>\fR
+\fB\*(T<\fB\-b | \-\-double\-buffer\fR\*(T>\fR
 Use double buffering (eliminates "flicker")
 
 .TP 
-\fB\*(T<\fB\-c \fR\*(T>\fR\*(T<\fBFILE\fR\*(T>
+\fB\*(T<\fB\-c | \-\-config=\fR\*(T>\fR\*(T<\fBFILE\fR\*(T>
 Config file to load instead of $HOME/.conkyrc
 
 .TP 
-\fB\*(T<\fB\-d\fR\*(T>\fR
+\fB\*(T<\fB\-d | \-\-daemonize\fR\*(T>\fR
 Daemonize Conky, aka fork to background
 
 .TP 
-\fB\*(T<\fB\-f \fR\*(T>\fR\*(T<\fBFONT\fR\*(T>
+\fB\*(T<\fB\-f | \-\-font=\fR\*(T>\fR\*(T<\fBFONT\fR\*(T>
 Font to use
 
 .TP 
-\fB\*(T<\fB\-h\fR\*(T>\fR
+\fB\*(T<\fB\-h | \-\-help\fR\*(T>\fR
 Prints command line help and exits
 
 .TP 
-\fB\*(T<\fB\-o\fR\*(T>\fR
+\fB\*(T<\fB\-o | \-\-own\-window\fR\*(T>\fR
 Create own window to draw
 
 .TP 
-\fB\*(T<\fB\-t \fR\*(T>\fR\*(T<\fBTEXT\fR\*(T>
+\fB\*(T<\fB\-t | \-\-text=\fR\*(T>\fR\*(T<\fBTEXT\fR\*(T>
 Text to render, remember single quotes, like -t ' $uptime '
 
 .TP 
-\fB\*(T<\fB\-u \fR\*(T>\fR\*(T<\fBSECONDS\fR\*(T>
+\fB\*(T<\fB\-u | \-\-interval=\fR\*(T>\fR\*(T<\fBSECONDS\fR\*(T>
 Update interval
 
 .TP 
-\fB\*(T<\fB\-w \fR\*(T>\fR\*(T<\fBWIN_ID\fR\*(T>
+\fB\*(T<\fB\-w | \-\-window\-id=\fR\*(T>\fR\*(T<\fBWIN_ID\fR\*(T>
 Window id to draw
 
 .TP 
@@ -129,15 +121,15 @@ X position
 Y position
 
 .SH "CONFIGURATION SETTINGS"
-Default configuration file is $HOME/.conkyrc (can be changed from
-conky.c among other things). See conkyrc.sample. If installing from Debian package, 
-this should be in /usr/share/doc/conky/examples ("gunzip conkyrc.sample.gz" to get conkyrc.sample).
+Default configuration file location is $HOME/.conkyrc or 
+${sysconfdir}/conky/conky.conf. On most systems, sysconfdir is /etc,
+and you can find the sample config file there (/etc/conky/conky.conf).
 .PP
 You might want to copy it to $HOME/.conkyrc and then start modifying it.
-Other configs can be found at http://conky.sf.net
+Other configs can be found at http://conky.sf.net/
 .TP 
 \fB\*(T<\fBalignment\fR\*(T>\fR
-Aligned position on screen, may be top_left, top_right, bottom_left, bottom_right, or none
+Aligned position on screen, may be top_left, top_right, top_middle, bottom_left, bottom_right, bottom_middle, middle_left, middle_right, or none (also can be abreviated as tl, tr, tm, bl, br, bm, ml, mr)
 
 .TP 
 \fB\*(T<\fBbackground\fR\*(T>\fR
@@ -194,6 +186,10 @@ A color variable for use inside TEXT segments
 .TP 
 \fB\*(T<\fBcpu_avg_samples\fR\*(T>\fR
 The number of samples to average for CPU monitoring
+
+.TP 
+\fB\*(T<\fBtop_cpu_separate\fR\*(T>\fR
+If true, cpu in top will show usage of one processor's power. If false, cpu in top will show the usage of all processors' power combined.
 
 .TP 
 \fB\*(T<\fBdefault_color\fR\*(T>\fR
@@ -264,7 +260,7 @@ Maximum size of user text buffer, i.e. layout below TEXT line in config file
 
 .TP 
 \fB\*(T<\fBtext_buffer_size\fR\*(T>\fR \*(T<\fBbytes\fR\*(T> 
-Size of the standard text buffer (default is 1280 bytes).
+Size of the standard text buffer (default is 128 bytes). This buffer is used for intermediary text, such as individual lines, output from $exec vars, and various other variables. Increasing the size of this buffer can drastically reduce Conky's performance, but will allow for more text display per variable. The size of this buffer cannot be smaller than the default value of 128 bytes.
 
 .TP 
 \fB\*(T<\fBmaximum_width\fR\*(T>\fR \*(T<\fBpixels\fR\*(T> 
@@ -316,7 +312,7 @@ If own_window_transparent no, set a specified background colour (defaults to bla
 
 .TP 
 \fB\*(T<\fBown_window_hints\fR\*(T>\fR \*(T<\fBundecorated,below,above,sticky,skip_taskbar,skip_pager\fR\*(T> 
-If own_window is yes, you may use these window manager hints to affect the way Conky displays. 
+If own_window is yes, you may use these window manager hints to affect the way Conky displays.
 Notes: Use own_window_type desktop as another way to implement many of these hints implicitly.
 If you use own_window_type override, window manager hints have no meaning and are ignored.
 
@@ -331,7 +327,7 @@ Boolean, set pseudo-transparency?
 .TP 
 \fB\*(T<\fBown_window_type\fR\*(T>\fR
 if own_window is yes, you may specify type normal, desktop or override (default: normal).
-Desktop windows are special windows that have no window decorations; are always visible 
+Desktop windows are special windows that have no window decorations; are always visible
 on your desktop; do not appear in your pager or taskbar; and are sticky across all workspaces.
 Override windows are not under the control of the window manager. Hints are ignored. This type
 of window can be useful for certain situations.
@@ -347,6 +343,10 @@ Pad percentages to this many decimals (0 = no padding)
 .TP 
 \fB\*(T<\fBpop3\fR\*(T>\fR
 Default global POP3 server. Arguments are: "host user pass [-i interval] [-p port] [-e command]". Default port is 110, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
+
+.TP 
+\fB\*(T<\fBshort_units\fR\*(T>\fR
+Shortens units to a single character (kiB->k, GiB->G, etc.). Default is off.
 
 .TP 
 \fB\*(T<\fBstippled_borders\fR\*(T>\fR
@@ -366,7 +366,7 @@ Boolean value, if true, text is rendered in upper case
 
 .TP 
 \fB\*(T<\fBuse_spacer\fR\*(T>\fR
-Adds spaces after certain objects to stop them from moving other things around. Note that this only helps if you are using a mono font, such as Bitstream Vera Sans Mono.
+Adds spaces around certain objects to stop them from moving other things around. Arguments are left, right, and none (default). The old true/false values are deprecated and default to right/none respectively. Note that this only helps if you are using a mono font, such as Bitstream Vera Sans Mono.
 
 .TP 
 \fB\*(T<\fBuse_xft\fR\*(T>\fR
@@ -386,13 +386,15 @@ After this begins text to be formatted on screen
 
 .SH VARIABLES
 Colors are parsed using XParsecolor(), there might be a list of them:
-/usr/X11R6/lib/X11/rgb.txt. Also, \(lahttp://sedition.com/perl/rgb.html\(ra.
+/usr/share/X11/rgb.txt. Also, \(lahttp://sedition.com/perl/rgb.html\(ra.
 Color can be also in #rrggbb format (hex).
-Note that when displaying bytes, power is 1024 and not 1000 so 1M really
-means 1024*1024 bytes and not 1000*1000.
 .TP 
 \fB\*(T<\fBaddr\fR\*(T>\fR \*(T<\fBinterface\fR\*(T> 
 IP address for an interface
+
+.TP 
+\fB\*(T<\fBaddrs\fR\*(T>\fR \*(T<\fBinterface\fR\*(T> 
+IP addresses for an interface (if one - works like addr). Linux only.
 
 .TP 
 \fB\*(T<\fBacpiacadapter\fR\*(T>\fR 
@@ -584,6 +586,18 @@ Change drawing color to color8 configuration option
 Change drawing color to color9 configuration option
 
 .TP 
+\fB\*(T<\fBconky_version\fR\*(T>\fR 
+Conky version
+
+.TP 
+\fB\*(T<\fBconky_build_date\fR\*(T>\fR 
+Date Conky was built
+
+.TP 
+\fB\*(T<\fBconky_bulid_arch\fR\*(T>\fR 
+CPU architecture Conky was built for
+
+.TP 
 \fB\*(T<\fBcpu\fR\*(T>\fR \*(T<\fB(cpuN)\fR\*(T> 
 CPU usage in percents. For SMP machines, the CPU number can be provided as an argument. ${cpu cpu0} is the total usage, and ${cpu cpuX} (X >= 1) are individual CPUs.
 
@@ -596,28 +610,32 @@ Bar that shows CPU usage, height is bar's height in pixels. See $cpu for more in
 CPU usage graph, with optional colours in hex, minus the #. See $cpu for more info on SMP.
 
 .TP 
-\fB\*(T<\fBdiskio\fR\*(T>\fR 
-Displays current disk IO.
+\fB\*(T<\fBdiskio\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Displays current disk IO. Device is optional, and takes the form of sda for /dev/sda. Individual partitions are allowed.
 
 .TP 
-\fB\*(T<\fBdiskiograph\fR\*(T>\fR \*(T<\fB(height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+\fB\*(T<\fBdiskiograph\fR\*(T>\fR \*(T<\fB(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
 Disk IO graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
 
 .TP 
-\fB\*(T<\fBdiskio_read\fR\*(T>\fR 
-Displays current disk IO for reads.
+\fB\*(T<\fBdiskio_read\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Displays current disk IO for reads. Device as in diskio.
 
 .TP 
-\fB\*(T<\fBdiskiograph_read\fR\*(T>\fR \*(T<\fB(height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
-Disk IO graph for reads, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
+\fB\*(T<\fBdiskiograph_read\fR\*(T>\fR \*(T<\fB(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+Disk IO graph for reads, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Device as in diskio.
 
 .TP 
-\fB\*(T<\fBdiskio_write\fR\*(T>\fR 
-Displays current disk IO for writes.
+\fB\*(T<\fBdiskio_write\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Displays current disk IO for writes. Device as in diskio.
 
 .TP 
-\fB\*(T<\fBdiskiograph_write\fR\*(T>\fR \*(T<\fB(height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
-Disk IO graph for writes, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph.
+\fB\*(T<\fBdiskiograph_write\fR\*(T>\fR \*(T<\fB(device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+Disk IO graph for writes, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Device as in diskio.
+
+.TP 
+\fB\*(T<\fBdisk_protect\fR\*(T>\fR \*(T<\fBdevice\fR\*(T> 
+Disk protection status, if supported (needs kernel-patch). Prints either "frozen" or "free " (note the padding).
 
 .TP 
 \fB\*(T<\fBdownspeed\fR\*(T>\fR \*(T<\fBnet\fR\*(T> 
@@ -669,7 +687,16 @@ Same as execbar, except with an interval
 
 .TP 
 \fB\*(T<\fBexecigraph\fR\*(T>\fR \*(T<\fBinterval command\fR\*(T> 
-Same as execigraph, but takes an interval arg graphs values
+Same as execgraph, but takes an interval arg graphs values
+
+.TP 
+\fB\*(T<\fBexecp\fR\*(T>\fR \*(T<\fBcommand\fR\*(T> 
+Executes a shell command and displays the output in conky. warning: this takes a lot more resources than other variables. I'd recommend coding wanted behaviour in C and posting a patch. This differs from $exec in that it parses the output of the command, so you can insert things like ${color red}hi!${color} in your script and have it correctly parsed by Conky.
+Caveats: Conky parses and evaluates the output of $execp every time Conky loops, and then destroys all the objects. If you try to use anything like $execi within an $execp statement, it will functionally run at the same interval that the $execp statement runs, as it is created and destroyed at every interval.
+
+.TP 
+\fB\*(T<\fBexecpi\fR\*(T>\fR \*(T<\fBinterval command\fR\*(T> 
+Same as execp but with specific interval. Interval can't be less than update_interval in configuration. Note that the output from the $execpi command is still parsed and evaluated at every interval.
 
 .TP 
 \fB\*(T<\fBfont\fR\*(T>\fR \*(T<\fB(font)\fR\*(T> 
@@ -712,12 +739,24 @@ Free percentage of space on a file system available for users.
 File system size
 
 .TP 
+\fB\*(T<\fBfs_type\fR\*(T>\fR \*(T<\fB(fs)\fR\*(T> 
+File system type
+
+.TP 
 \fB\*(T<\fBfs_used\fR\*(T>\fR \*(T<\fB(fs)\fR\*(T> 
 File system used space
 
 .TP 
 \fB\*(T<\fBgoto\fR\*(T>\fR \*(T<\fBx\fR\*(T> 
 The next element will be printed at position 'x'.
+
+.TP 
+\fB\*(T<\fBgw_iface\fR\*(T>\fR 
+Displays the default route's interface or "multiple"/"none" accordingly.
+
+.TP 
+\fB\*(T<\fBgw_ip\fR\*(T>\fR 
+Displays the default gateway's IP or "multiple"/"none" accordingly.
 
 .TP 
 \fB\*(T<\fBhddtemp\fR\*(T>\fR \*(T<\fBdev, (host,(port))\fR\*(T> 
@@ -817,6 +856,10 @@ laptops's LCD (0-7).
 if conky variable VAR is empty, display everything between $if_empty and the matching $endif
 
 .TP 
+\fB\*(T<\fBif_gw\fR\*(T>\fR 
+if there is at least one default gateway, display everything between $if_gw and the matching $endif
+
+.TP 
 \fB\*(T<\fBif_running\fR\*(T>\fR \*(T<\fB(process)\fR\*(T> 
 if PROCESS is running, display everything $if_running and the matching $endif
 
@@ -829,6 +872,14 @@ if FILE exists, display everything between if_existing and the matching $endif. 
 if MOUNTPOINT is mounted, display everything between $if_mounted and the matching $endif
 
 .TP 
+\fB\*(T<\fBif_smapi_bat_installed\fR\*(T>\fR \*(T<\fB(INDEX)\fR\*(T> 
+when using smapi, if the battery with index INDEX is installed, display everything between $if_smapi_bat_installed and the matching $endif
+
+.TP 
+\fB\*(T<\fBif_up\fR\*(T>\fR \*(T<\fB(interface)\fR\*(T> 
+if INTERFACE exists and is up, display everything between $if_up and the matching $endif
+
+.TP 
 \fB\*(T<\fBimap_messages\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
 Displays the number of messages in your global IMAP inbox by default. You can define individual IMAP inboxes seperately by passing arguments to this object. Arguments are: "host user pass [-i interval] [-p port] [-e command]". Default port is 143, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 
@@ -837,8 +888,16 @@ Displays the number of messages in your global IMAP inbox by default. You can de
 Displays the number of unseen messages in your global IMAP inbox by default. You can define individual IMAP inboxes seperately by passing arguments to this object. Arguments are: "host user pass [-i interval] [-p port] [-e command]". Default port is 143, default interval is 5 minutes. If the password is supplied as '*', you will be prompted to enter the password when Conky starts.
 
 .TP 
+\fB\*(T<\fBioscheduler\fR\*(T>\fR \*(T<\fBdisk\fR\*(T> 
+Prints the current ioscheduler used for the given disk name (i.e. e.g. "hda" or "sdb")
+
+.TP 
 \fB\*(T<\fBkernel\fR\*(T>\fR 
 Kernel version
+
+.TP 
+\fB\*(T<\fBlaptop_mode\fR\*(T>\fR 
+The value of /proc/sys/vm/laptop_mode
 
 .TP 
 \fB\*(T<\fBloadavg\fR\*(T>\fR 
@@ -940,6 +999,10 @@ Prints the file name of the current MPD song
 Prints the song name in either the form "artist - title" or file name, depending on whats available
 
 .TP 
+\fB\*(T<\fBnameserver\fR\*(T>\fR \*(T<\fB(index)\fR\*(T> 
+Print a nameserver from /etc/resolv.conf. Index starts at and defaults to 0.
+
+.TP 
 \fB\*(T<\fBnew_mails\fR\*(T>\fR \*(T<\fB(mailbox)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
 Unread mail count in the specified mailbox or mail spool if
 not. Both mbox and maildir type mailboxes are supported.
@@ -1005,6 +1068,18 @@ Running processes (not sleeping), requires Linux 2.6
 Change shading color
 
 .TP 
+\fB\*(T<\fBsmapi\fR\*(T>\fR \*(T<\fB(ARGS)\fR\*(T> 
+when using smapi, display contents of the /sys/devices/platform/smapi directory. ARGS are either '(FILENAME)' or 'bat (INDEX) (FILENAME)' to display the corresponding files' content. This is a very raw method of accessing the smapi values. When available, better use one of the smapi_* variables instead.
+
+.TP 
+\fB\*(T<\fBsmapi_bat_perc\fR\*(T>\fR \*(T<\fB(INDEX)\fR\*(T> 
+when using smapi, display the remaining capacity in percent of the battery with index INDEX. This is a separate variable because it supports the 'use_spacer' configuration option.
+
+.TP 
+\fB\*(T<\fBsmapi_bat_bar\fR\*(T>\fR \*(T<\fB(INDEX),(height),(width)\fR\*(T> 
+when using smapi, display the remaining capacity of the battery with index INDEX as a bar.
+
+.TP 
 \fB\*(T<\fBstippled_hr\fR\*(T>\fR \*(T<\fB(space)\fR\*(T> 
 Stippled (dashed) horizontal line
 
@@ -1036,7 +1111,7 @@ TCP port monitor for specified local ports. Port numbers must be in the range 1 
 .br
 \fBrip\fR - remote ip address
 .br
-\fBrhost\fR - remote host name 
+\fBrhost\fR - remote host name
 .br
 \fBrport\fR - remote port number
 .br
@@ -1072,7 +1147,7 @@ displays the remote host port of the fifth connection on a privileged port
 \fB${tcp_portmon 1 65535 lservice 14}\fR -
 displays the local service name of the fifteenth connection in the range of all ports
 
-Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors. 
+Note that port monitor variables which share the same port range actually refer to the same monitor, so many references to a single port range for different items and different indexes all use the same monitor internally. In other words, the program avoids creating redundant monitors.
 .TP 
 \fB\*(T<\fBtexeci\fR\*(T>\fR \*(T<\fBinterval command\fR\*(T> 
 Runs a command at an interval inside a thread and displays the output. Same as $execi, except the command is run inside a thread. Use this if you have a slow script to keep Conky updating. You should make the interval slightly longer then the time it takes your script to execute. For example, if you have a script that take 5 seconds to execute, you should make the interval at least 6 seconds. See also $execi.
@@ -1111,7 +1186,7 @@ Total download, overflows at 4 GB on Linux with 32-bit arch and there doesn't se
 
 .TP 
 \fB\*(T<\fBtop\fR\*(T>\fR \*(T<\fBtype, num\fR\*(T> 
-This takes arguments in the form:top (name) (number) Basically, processes are ranked from highest to lowest in terms of cpu usage, which is what (num) represents. The types are: "name", "pid", "cpu", and "mem". There can be a max of 10 processes listed.
+This takes arguments in the form:top (name) (number) Basically, processes are ranked from highest to lowest in terms of cpu usage, which is what (num) represents. The types are: "name", "pid", "cpu", "mem", "mem_res", "mem_vsize", and "time". There can be a max of 10 processes listed.
 
 .TP 
 \fB\*(T<\fBtop_mem\fR\*(T>\fR \*(T<\fBtype, num\fR\*(T> 
@@ -1146,6 +1221,22 @@ Uptime
 Uptime in a shorter format
 
 .TP 
+\fB\*(T<\fBuser_number\fR\*(T>\fR 
+Number of users logged in
+
+.TP 
+\fB\*(T<\fBuser_names\fR\*(T>\fR 
+Lists the names of the users logged in
+
+.TP 
+\fB\*(T<\fBuser_terms\fR\*(T>\fR 
+Lists the consoles in use
+
+.TP 
+\fB\*(T<\fBuser_times\fR\*(T>\fR 
+Lists how long users have been logged in for
+
+.TP 
 \fB\*(T<\fBvoffset\fR\*(T>\fR \*(T<\fB(pixels)\fR\*(T> 
 Change vertical offset by N pixels. Negative values will cause text to overlap. See also $offset.
 
@@ -1153,7 +1244,7 @@ Change vertical offset by N pixels. Negative values will cause text to overlap. 
 \fB\*(T<\fBvoltage_mv\fR\*(T>\fR \*(T<\fB(n)\fR\*(T> 
 Returns CPU #n's voltage in mV. CPUs are
 counted from 1. If omitted, the parameter
-defaults to 1. 
+defaults to 1.
 
 .TP 
 \fB\*(T<\fBvoltage_v\fR\*(T>\fR \*(T<\fB(n)\fR\*(T> 
@@ -1275,19 +1366,24 @@ Start Conky to background at coordinates (5, 500).
 .SH FILES
 \*(T<\fI~/.conkyrc\fR\*(T> default configuration file
 .SH BUGS
-Drawing to root or some other desktop window directly doesn't work with 
-all window managers. Especially doesn't work well with Gnome and it has 
-been reported that it doesn't work with KDE either. Nautilus can be 
-disabled from drawing to desktop with program gconf-editor. Uncheck 
-show_desktop in /apps/nautilus/preferences/. There is -w switch in Conky 
-to set some specific window id. You might find xwininfo -tree useful to 
+Drawing to root or some other desktop window directly doesn't work with
+all window managers. Especially doesn't work well with Gnome and it has
+been reported that it doesn't work with KDE either. Nautilus can be
+disabled from drawing to desktop with program gconf-editor. Uncheck
+show_desktop in /apps/nautilus/preferences/. There is -w switch in Conky
+to set some specific window id. You might find xwininfo -tree useful to
 find the window to draw to. You can also use -o argument which makes
-Conky to create its own window.
+Conky to create its own window. If you do try running Conky in its own
+window, be sure to read up on the own_window_type settings and experiment.
 .SH "SEE ALSO"
-\(lahttp://conky.sourceforge.net\(ra
+\(lahttp://conky.sourceforge.net/\(ra
 .PP
 \(lahttp://www.sourceforge.net/projects/conky\(ra
 .PP
 #conky on irc.freenode.net
+.SH COPYING
+Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+Any original torsmo code is licensed under the BSD license (see LICENSE.BSD for a copy).
+All code written since the fork of torsmo is licensed under the GPL (see LICENSE.GPL for a copy), except where noted differently (such as in portmon code, timed thread code, and audacious code which are LGPL, and prss which is an MIT-style license).
 .SH AUTHORS
-The Conky dev team. What's up now!
+The Conky dev team (see AUTHORS for a full list of contributors).
