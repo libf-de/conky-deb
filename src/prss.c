@@ -1,4 +1,4 @@
-/* $Id: prss.c 1164 2008-06-19 06:17:53Z IQgryn $
+/*
  *
  * Copyright (c) 2007 Mikko Sysikaski <mikko.sysikaski@gmail.com>
  *					  Toni Spets <toni.spets@gmail.com>

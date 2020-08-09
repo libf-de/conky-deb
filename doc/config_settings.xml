@@ -1,5 +1,12 @@
 <variablelist>
 	<varlistentry>
+		<term><command><option>alias</option></command></term>
+		<listitem>
+			Use this to create aliases of variables. The first argument is the new name, the second the old name, and the other arguments are passed on to the variable. Example: If you want to use $alpha instead of ${beta gamma delta} then you have to write the following: alias alpha beta gamma delta . PS: Instead of creating an alias in the config you can also use environment variables. Example: Start conky like this: alpha="beta gamma delta" conky
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
 		<term><command><option>alignment</option></command></term>
 		<listitem>
 			Aligned position on screen, may be top_left, top_right, top_middle, bottom_left, bottom_right, bottom_middle, middle_left, middle_right, or none (also can be abreviated as tl, tr, tm, bl, br, bm, ml, mr)
@@ -316,6 +323,40 @@
 	</varlistentry>
 
 	<varlistentry>
+		<term><command><option>out_to_stderr</option></command>
+		</term>
+		<listitem>
+			Print text to stderr.
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term><command><option>out_to_x</option></command>
+		</term>
+		<listitem>
+			When set to no, there will be no output in X (useful when you also use things like out_to_console).
+			If you set it to no, make sure that it's placed before all other X-related setting (take the first
+			line of your configfile to be sure). Default value is yes
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term><command><option>overwrite_file</option></command>
+		</term>
+		<listitem>
+			Overwrite the file given as argument.
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term><command><option>append_file</option></command>
+		</term>
+		<listitem>
+			Append the file given as argument.
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
 		<term><command><option>pad_percents</option></command></term>
 		<listitem>
 			Pad percentages to this many decimals (0 = no padding)
@@ -354,6 +395,30 @@
 		<term><command><option>stippled_borders</option></command></term>
 		<listitem>
 			Border stippling (dashing) in pixels
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term><command><option>temperature_unit</option></command></term>
+		<listitem>
+			Desired output unit of all objects displaying a temperature.
+			Parameters are either "fahrenheit" or "celsius". The default
+			unit is degree Celsius.
+			<para></para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+		<term><command><option>templateN</option></command></term>
+		<listitem>
+			Define a template for later use inside TEXT segments. Substitute N by a digit between 0 and 9, inclusively.
+			The value of the variable is being inserted into the stuff below TEXT at the corresponding position,
+			but before some substitutions are applied:
+			<simplelist>
+				<member>'\n' -> newline</member>
+				<member>'\\' -> backslash</member>
+				<member>'\ ' -> space</member>
+				<member>'\N' -> template argument N</member>
+			</simplelist>
 			<para></para></listitem>
 	</varlistentry>
 
@@ -409,7 +474,7 @@
 	<varlistentry>
 		<term><command><option>TEXT</option></command></term>
 		<listitem>
-			After this begins text to be formatted on screen
+			After this begins text to be formatted on screen.  Backslash (\) escapes newlines in the text section.  This can be useful for cleaning up config files where conky is used to pipe input to dzen2.
 			<para></para></listitem>
 	</varlistentry>
 

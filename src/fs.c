@@ -7,7 +7,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -23,9 +23,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: fs.c 1155 2008-06-15 07:08:52Z mirrorbox $ */
+ */
 
 #include "conky.h"
+#include "logging.h"
+#include "fs.h"
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -44,7 +46,7 @@
 #include <sys/mount.h>
 #endif
 
-#if !defined(HAVE_STRUCT_STATFS_F_FSTYPENAME) && !defined(__FreeBSD__)
+#if !defined(HAVE_STRUCT_STATFS_F_FSTYPENAME) && !defined (__OpenBSD__) && !defined(__FreeBSD__)
 #include <mntent.h>
 #endif
 
@@ -124,7 +126,7 @@ static void update_fs_stat(struct fs_stat *fs)
 void get_fs_type(const char *path, char *result)
 {
 
-#if defined(HAVE_STRUCT_STATFS_F_FSTYPENAME) || defined(__FreeBSD__)
+#if defined(HAVE_STRUCT_STATFS_F_FSTYPENAME) || defined(__FreeBSD__) || defined (__OpenBSD__)
 
 	struct statfs s;
 	if (statfs(path, &s) == 0) {

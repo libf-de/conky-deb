@@ -7,7 +7,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: netbsd.c 1193 2008-06-21 20:37:58Z ngarofil $ */
+ */
 
 #include "netbsd.h"
 
@@ -302,11 +302,6 @@ void update_cpu_usage()
 	oldtotal = total;
 }
 
-double get_sysfs_info(int *fd, int div, char *devtype)
-{
-	return -1;
-}
-
 void update_load_average()
 {
 	double v[3];
@@ -325,12 +320,6 @@ double get_acpi_temperature(int fd)
 
 void get_battery_stuff(char *buf, unsigned int n, const char *bat, int item)
 {
-}
-
-int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
-		int *div, char *devtype)
-{
-	return -1;
 }
 
 int open_acpi_temperature(const char *name)

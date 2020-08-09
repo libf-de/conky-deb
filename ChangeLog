@@ -1,4 +1,156 @@
-# $Id: ChangeLog 1237 2008-08-14 17:16:31Z brenden1 $
+2009-05-01
+	* Conky 1.7.0 "Hungry Hobo" released!
+
+2009-04-28
+	* Various XMMS2 updates (thanks Lassi)
+
+2009-04-09
+	* Fix broken xmms2 compilation (thanks fusetak)
+	* Minor fix for fs_used_perc, fs_free and fs_free_perc (thanks
+	lightpriest)
+
+2009-03-28
+	* Applied FreeBSD patches (thanks Nikos)
+
+2009-03-16
+	* Fix bug with wacky netstat values on startup
+
+2009-03-15
+	* Added extra newline patch, sf.net id #2638601 (thanks Ali)
+	* Disk i/o support on FreeBSD patch, sf.net id #2657227 (thanks Nikos)
+
+2009-03-07
+	* Added alias patch ( sf.net id #2663691 ) changed it to prevent it from
+	overwriting existing environment variables and updated docs, syntaxfiles, ...
+
+2009-03-01
+	* Added if_updatenr
+	* Rewrite human_readable() to minimise amount of padding
+	* Fix padding in temp_print()
+	* Fix padding of $processes and $running_processes
+
+2009-02-17
+	* Added $battery_short patch, sf.net id #2300911 (thanks Swoog)
+	* Patch by Kim Holviala sf.net id #2484548:
+		* change the height of execbar and execibar to be the same as other
+		bars have by default (6 pixels)
+		* treat mixer values as percentages as they're usually 0-100 (switch
+		to spaced_print() with pad_percents)
+		* change temp_print() from snprintf() to spaced_print()
+		* remove decimals from temp_print() as none of the current sources can
+		supply values smaller than 1 degree (C or F, doesn't matter)
+		* fix number printing in human_readable()
+		* network $upspeed and $downspeed now use human_readable()
+	* Fix diskio_read/write patch sf.net id #2493084 (thanks Alexander)
+	* Fix nvidia memory frequency reading patch sf.net id #2493134
+	* Patch to clarify things in conky.conf sf.net id #2548805 (thanks
+	Carpathia).
+	* Fix shown battery status when the battery is not charging any more but
+	is not full charged patch sf.net id #2556056 (thanks Martin)
+	* Extended support for local Maildir patch sf.net id #2561323 (thanks
+	Nicolas)
+	* XMMS2 fix and refactoring patch sf.net id #2579357 (thanks Tamim)
+	* Null mpd variables should have an empty string patch sf.net id #2564747
+
+2009-02-15
+	* Added out_to_x
+
+2009-02-12
+	* Added overwrite_file and append_file
+
+2009-02-10
+	* Added out_to_stderr
+
+2009-02-08
+	* Refactor top code, add top_time to sort by process cpu time (thanks
+	sohalt).
+
+2009-01-04
+	* Drop --enable-smapi and use --enable-ibm instead
+	* Make ibm-acpi objects optional (--enable-ibm)
+
+2008-12-20
+	* Add if_match object comparing strings, floats and ints
+
+2008-12-18
+	* Fix segfault for diskiograph*, note the changed order of arguments
+	* Fix documentation for all graph objects
+
+2008-12-17
+	* Make gateway objects also detect routes with missing RTF_GATEWAY flag
+
+2008-12-15
+	* Have a maximum width for all variable length mpd vars
+	* Patch to allow escaping newlines in the config (thanks Itai)
+
+2008-12-14
+	* Fix disk_protect for linux-2.6.27 (and hopefully above)
+	* Improve behaviour of $pb_battery
+
+2008-12-09
+	* Add an option to timed_thread_test() to not wait for the interval period
+	(so that IMAP IDLE works better)
+
+2008-12-08
+	* Fix runtime debugging macros again
+	* Big hddtemp rewrite
+	* Remove README from git and ignore it
+	* Remove obsolete documentation
+
+2008-12-07
+	* Removing $freq_dyn and $freq_dyn_g due to license issues (see sf.net
+	tracker bug #2166612)
+	* Allow more than 9 CPUs for CPU stats (bug 2155500)
+	* Fix broken $execbar (bug 2133709)
+	* Don't put unit with hddtemp values for consistency (bug 2133107)
+	* Limit $battery_percent to 100 (bug 2145006)
+	* Fix runtime debugging macros
+	* Make unit of all temperature objects selectable
+	* Make Conky in dock mode a withdrawn window
+
+2008-12-06
+	* Switching from svn to git repository.  The repo can be viewed from
+	http://git.omp.am/?p=conky.git;a=summary and you can clone the repo with:
+	git clone git://git.omp.am/conky.git
+	* Fix for wrong usage of strncat (thanks Pavol)
+	* Adds a variable if_xmms2_connected to hide objects when xmms2d is not
+	running (thanks Lassi)
+	* Fix for buffer overflow with $execi (thanks Cesare)
+	* Fetch volume through Audacious API (thanks Erik)
+
+2008-12-06
+	* Removed duplicate sanity check for diskio
+
+2008-11-30
+	* Added runtime debugging output
+
+2008-11-29
+	* Added template support
+
+2008-10-08
+	* Applied OpenBSD patches
+	* Added $if_mpd_playing patch (thanks tarpman)
+
+2008-09-24
+	* Introduced (buggy) support for IMAP IDLE
+	* Added support for MOC (the console audio player) (thanks henux)
+	* Added scroll step patch (thanks asto)
+
+2008-09-11
+	* Maybe fix missing include bug
+	(http://bugs.gentoo.org/show_bug.cgi?id=235233)
+	* Improve timed_thread interval timing
+	* Improve Conky's overall interval timing
+	* Added small patch to support negative values (such as negative disk
+	capacity) (thanks hinokind)
+
+2008-09-10
+	* Improved hddtemp support
+
+2008-09-07
+	* Fixed bug with freq_dyn on x86_64 (thanks Miroslav)
+	* Fixed buffer overflow in update_net_stats() (thanks Miroslav)
+	* Small fix for nvidia mem freq (thanks Cezary)
 
 2008-08-14
 	* Conky 1.6.1 released
@@ -35,7 +187,7 @@
 
 2008-06-28
 	* Added sysfs AC adapter support patch (thanks Byron)
-	* Added support for EVE-Online skill monitoring (thanks Asbjørn)
+	* Added support for EVE-Online skill monitoring (thanks AsbjÃ¸rn)
 
 2008-06-25
 	* new variables smapi_bat_temp and smapi_bat_power
@@ -105,7 +257,7 @@
 
 2008-04-29
 	* own_window_type dock patch (thanks Morgan).
-	* Fix for $if_up memleak (thanks Micha¿).
+	* Fix for $if_up memleak (thanks MichaÂ¿).
 
 2008-04-12
 	* Added patch for the following (thanks larsko):
@@ -1073,10 +1225,10 @@
 	* Version 0.17 released
 
 2004-05-23
-	* battery number for ACPI battery (thanks Leszek Krupiñski)
+	* battery number for ACPI battery (thanks Leszek KrupiÃ±ski)
 	* default battery is now BAT0 instead of BAT1, set ${battery 1} if
 	  the old battery thing worked
-	* bug fix on load average reporting (thanks Leszek Krupiñski)
+	* bug fix on load average reporting (thanks Leszek KrupiÃ±ski)
 	* outlines to text, draw_outline and default_outline_color
 	  configurations and $outlinecolor (thanks adi)
 	* $acpifan, $acpiacadapter, $uptime_short (thanks adi)
@@ -1132,5 +1284,5 @@
 	* Version 0.15 released
 
 2004-05-06
-	* SIGHUP reloads config file (thanks Jørgen P. Tjernø)
+	* SIGHUP reloads config file (thanks JÃ¸rgen P. TjernÃ¸)
 	* Some other stuff

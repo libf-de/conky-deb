@@ -9,7 +9,7 @@
 # Please see COPYING for details
 #
 # Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
-# Copyright (c) 2005-2007 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+# Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
 # All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -24,9 +24,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# $Id: autogen.sh 1218 2008-07-07 20:09:37Z pkovacs $
-#
-# optional $1 = optional directory containing build tree or svn working copy
+# optional $1 = optional directory containing build tree or git working copy
 
 AUTOCONF=${AUTOCONF:-autoconf}
 AUTOMAKE=${AUTOMAKE:-automake}
@@ -34,15 +32,16 @@ ACLOCAL=${ACLOCAL:-aclocal}
 AUTOHEADER=${AUTOHEADER:-autoheader}
 LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
 
-# identify svn revision, if an svn working copy
-if test "$1" != "" && test -d "$1/.svn"; then
-    revision=`LC_ALL=C svn info $1 | awk '/^Revision: / {printf "%05d\n", $2}'`;
-elif test -d ".svn"; then
-    revision=`LC_ALL=C svn info | awk '/^Revision: / {printf "%05d\n", $2}'`;
+# identify a git revision similar to svn based on number of commits, if a git
+# working copy.  the last svn commit was rev 1274, so we'll pick up from there
+if test "$1" != "" && test -d "$1/.git"; then
+    revision=`git log --since=2008-12-06 --pretty=oneline | wc -l | awk '{print $1 + 1274}'`;
+elif test -d ".git"; then
+    revision=`git log --since=2008-12-06 --pretty=oneline | wc -l | awk '{print $1 + 1274}'`;
 else
     revision="NONE"; fi
 
-# generate configure.ac with substituted svn revision
+# generate configure.ac with substituted git revision
 sed -e "s/@REVISION@/${revision}/g" < "configure.ac.in" > "configure.ac"
 
 echo Running $ACLOCAL -I m4 ... && $ACLOCAL -I m4

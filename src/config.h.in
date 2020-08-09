@@ -12,11 +12,17 @@
 /* Configfile of the user */
 #undef CONFIG_FILE
 
+/* Define if you want conky to output a default config (with -C) */
+#undef CONFIG_OUTPUT
+
 /* Define for debugging */
 #undef DEBUG
 
 /* Default networkdevice */
 #undef DEFAULTNETDEV
+
+/* Default size used for temporary, static text buffers */
+#undef DEFAULT_TEXT_BUFFER_SIZE
 
 /* Define if you want Eve-Online Skill monitor support */
 #undef EVE
@@ -59,6 +65,9 @@
 
 /* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
+
+/* Define to 1 if you have the `fopencookie' function. */
+#undef HAVE_FOPENCOOKIE
 
 /* Define to 1 if you have the `free' function. */
 #undef HAVE_FREE
@@ -192,11 +201,28 @@
 /* Define if you want hddtemp support */
 #undef HDDTEMP
 
+/* Define if you want support for IBM/Lenovo notebooks (SMAPI) */
+#undef IBM
+
 /* Define as const if the declaration of iconv() needs const. */
 #undef ICONV_CONST
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Define if you want math support */
 #undef MATH
+
+/* Default maximum number of special things, e.g. fonts, offsets, aligns, etc.
+   */
+#undef MAX_SPECIALS_DEFAULT
+
+/* Default maximum size of config TEXT buffer, i.e. below TEXT line. */
+#undef MAX_USER_TEXT_DEFAULT
+
+/* Define if you want MOC support */
+#undef MOC
 
 /* Define if you want MPD support */
 #undef MPD
@@ -230,9 +256,6 @@
 
 /* Define if you want rss support */
 #undef RSS
-
-/* Define if you want smapi support */
-#undef SMAPI
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

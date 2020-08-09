@@ -17,11 +17,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
  * USA.
  *
- * $Id: smapi.c 1156 2008-06-15 18:38:33Z IQgryn $
- *
  */
-
+#define _GNU_SOURCE
+#include "conky.h"	/* text_buffer_size, PACKAGE_NAME, maybe more */
 #include "smapi.h"
+#include "logging.h"
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #define SYS_SMAPI_PATH "/sys/devices/platform/smapi"
 

@@ -1,12 +1,8 @@
-#ifndef LINUX_H_
-#define LINUX_H_
+#ifndef _LINUX_H
+#define _LINUX_H
 
 #include "common.h"
 
-void get_ibm_acpi_fan(char *buf, size_t client_buffer_size);
-void get_ibm_acpi_temps(void);
-void get_ibm_acpi_volume(char *buf, size_t client_buffer_size);
-void get_ibm_acpi_brightness(char *buf, size_t client_buffer_size);
 const char *get_disk_protect_queue(const char *);
 
 struct i8k_struct {
@@ -24,12 +20,6 @@ struct i8k_struct {
 
 struct i8k_struct i8k;
 
-struct ibm_acpi_struct {
-	int temps[8];
-};
-
-struct ibm_acpi_struct ibm_acpi;
-
 int interface_up(const char *dev);
 char *get_ioscheduler(char *);
 int get_laptop_mode(void);
@@ -38,4 +28,16 @@ void update_gateway_info(void);
 enum { PB_BATT_STATUS, PB_BATT_PERCENT, PB_BATT_TIME };
 void get_powerbook_batt_info(char *, size_t, int);
 
-#endif /*LINUX_H_*/
+int open_sysfs_sensor(const char *dir, const char *dev, const char *type, int n,
+	int *divisor, char *devtype);
+
+#define open_i2c_sensor(dev, type, n, divisor, devtype) \
+	open_sysfs_sensor("/sys/bus/i2c/devices/", dev, type, n, divisor, devtype)
+#define open_platform_sensor(dev, type, n, divisor, devtype) \
+	open_sysfs_sensor("/sys/bus/platform/devices/", dev, type, n, divisor, devtype)
+#define open_hwmon_sensor(dev, type, n, divisor, devtype) \
+	open_sysfs_sensor("/sys/class/hwmon/", dev, type, n, divisor, devtype)
+
+double get_sysfs_info(int *fd, int arg, char *devtype, char *type);
+
+#endif /* _LINUX_H */

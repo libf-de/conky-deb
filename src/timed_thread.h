@@ -1,5 +1,3 @@
-/* $Id: timed_thread.h 1154 2008-06-14 18:41:12Z IQgryn $ */
-
 /* timed_thread.h: Abstraction layer for timed threads
  *
  * Copyright (C) 2006-2007 Philip Kovacs pkovacs@users.sourceforge.net
@@ -47,10 +45,9 @@ int timed_thread_lock(timed_thread *p_timed_thread);
 /* unlock a timed thread after critical section activity */
 int timed_thread_unlock(timed_thread *p_timed_thread);
 
-/* waits required interval for termination signal
- * returns 1 if received,
- * 0 otherwise */
-int timed_thread_test(timed_thread *p_timed_thread);
+/* waits required interval (unless override_wait_time is non-zero) for
+ * termination signal returns 1 if received, 0 otherwise. */
+int timed_thread_test(timed_thread *p_timed_thread, int override_wait_time);
 
 /* exit a timed thread */
 void timed_thread_exit(timed_thread *p_timed_thread) __attribute__((noreturn));
@@ -62,5 +59,8 @@ int timed_thread_register(timed_thread *p_timed_thread,
 
 /* destroy all registered timed threads */
 void timed_thread_destroy_registered_threads(void);
+
+/* returns read file descriptor for thread pipe */
+int timed_thread_readfd(timed_thread *p_timed_thread);
 
 #endif /* #ifdef _TIMED_THREAD_H_ */

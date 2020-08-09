@@ -1,11 +1,11 @@
-.\" -*- coding: us-ascii -*-
+'\" t -*- coding: us-ascii -*-
 .if \n(.g .ds T< \\FC
 .if \n(.g .ds T> \\F[\n[.fam]]
 .de URL
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH conky 1 2008-08-14 "" ""
+.TH conky 1 2009-05-01 "" ""
 .SH NAME
 conky \- A system monitor for X originally based on the torsmo code, but more kickass. It just keeps on given'er. Yeah.
 .SH SYNOPSIS
@@ -50,14 +50,14 @@ Conky has (for some time) been available in the repositories of most popular dis
 Here are some installation instructions for a few:
 .PP
 Gentoo users -- Conky is in Gentoo's Portage... simply use "emerge app-admin/conky" for installation.
-There is also usually an up-to-date ebuild within Conky's package or in SVN.
+There is also usually an up-to-date ebuild within Conky's package or in the git repo.
 .PP
 Debian, etc. users -- Conky should be in your repositories, and can be installed by doing
 "aptitude install conky".
 .PP
 Example to compile and run Conky with all optional components (note that some configure options may differ for your system):
 .TP 
-\fB\*(T<\fBsh autogen.sh\fR\*(T>\fR \*(T<\fB# Only required if building from SVN\fR\*(T> 
+\fB\*(T<\fBsh autogen.sh\fR\*(T>\fR \*(T<\fB# Only required if building from the git repo\fR\*(T> 
 .TP 
 \fB\*(T<\fB\&./configure \fR\*(T>\fR\*(T<\fB\-\-prefix=/usr \-\-mandir=/usr/share/man \-\-infodir=/usr/share/info \-\-datadir=/usr/share \-\-sysconfdir=/etc \-\-localstatedir=/var/lib \-\-disable\-own\-window \-\-enable\-audacious[=yes|no|legacy] \-\-enable\-bmpx \-\-disable\-hddtemp \-\-disable\-mpd \-\-enable\-xmms2 \-\-disable\-portmon \-\-disable\-network \-\-enable\-debug \-\-disable\-x11 \-\-disable\-double\-buffer \-\-disable\-xdamage \-\-disable\-xft\fR\*(T> 
 .TP 
@@ -145,6 +145,10 @@ and you can find the sample config file there (/etc/conky/conky.conf).
 .PP
 You might want to copy it to $HOME/.conkyrc and then start modifying it.
 Other configs can be found at http://conky.sf.net/
+.TP 
+\fB\*(T<\fBalias\fR\*(T>\fR
+Use this to create aliases of variables. The first argument is the new name, the second the old name, and the other arguments are passed on to the variable. Example: If you want to use $alpha instead of ${beta gamma delta} then you have to write the following: alias alpha beta gamma delta . PS: Instead of creating an alias in the config you can also use environment variables. Example: Start conky like this: alpha="beta gamma delta" conky
+
 .TP 
 \fB\*(T<\fBalignment\fR\*(T>\fR
 Aligned position on screen, may be top_left, top_right, top_middle, bottom_left, bottom_right, bottom_middle, middle_left, middle_right, or none (also can be abreviated as tl, tr, tm, bl, br, bm, ml, mr)
@@ -323,6 +327,24 @@ of window can be useful for certain situations.
 Print text to stdout.
 
 .TP 
+\fB\*(T<\fBout_to_stderr\fR\*(T>\fR 
+Print text to stderr.
+
+.TP 
+\fB\*(T<\fBout_to_x\fR\*(T>\fR 
+When set to no, there will be no output in X (useful when you also use things like out_to_console).
+If you set it to no, make sure that it's placed before all other X-related setting (take the first
+line of your configfile to be sure). Default value is yes
+
+.TP 
+\fB\*(T<\fBoverwrite_file\fR\*(T>\fR 
+Overwrite the file given as argument.
+
+.TP 
+\fB\*(T<\fBappend_file\fR\*(T>\fR 
+Append the file given as argument.
+
+.TP 
 \fB\*(T<\fBpad_percents\fR\*(T>\fR
 Pad percentages to this many decimals (0 = no padding)
 
@@ -345,6 +367,26 @@ Shows the time range covered by a graph.
 .TP 
 \fB\*(T<\fBstippled_borders\fR\*(T>\fR
 Border stippling (dashing) in pixels
+
+.TP 
+\fB\*(T<\fBtemperature_unit\fR\*(T>\fR
+Desired output unit of all objects displaying a temperature.
+Parameters are either "fahrenheit" or "celsius". The default
+unit is degree Celsius.
+
+.TP 
+\fB\*(T<\fBtemplateN\fR\*(T>\fR
+Define a template for later use inside TEXT segments. Substitute N by a digit between 0 and 9, inclusively.
+The value of the variable is being inserted into the stuff below TEXT at the corresponding position,
+but before some substitutions are applied:
+
+\&'\en' -> newline
+.br
+\&'\e\e' -> backslash
+.br
+\&'\e ' -> space
+.br
+\&'\eN' -> template argument N
 
 .TP 
 \fB\*(T<\fBtotal_run_times\fR\*(T>\fR
@@ -376,7 +418,7 @@ Xft font to use.
 
 .TP 
 \fB\*(T<\fBTEXT\fR\*(T>\fR
-After this begins text to be formatted on screen
+After this begins text to be formatted on screen. Backslash (\e) escapes newlines in the text section. This can be useful for cleaning up config files where conky is used to pipe input to dzen2.
 
 .SH VARIABLES
 Colors are parsed using XParsecolor(), there might be a list of them:
@@ -401,10 +443,6 @@ ACPI fan state
 .TP 
 \fB\*(T<\fBacpitemp\fR\*(T>\fR 
 ACPI temperature in C.
-
-.TP 
-\fB\*(T<\fBacpitempf\fR\*(T>\fR 
-ACPI temperature in F.
 
 .TP 
 \fB\*(T<\fBadt746xcpu\fR\*(T>\fR 
@@ -488,8 +526,17 @@ Player status (Playing/Paused/Stopped/Not running)
 Title of current tune with optional maximum length specifier
 
 .TP 
+\fB\*(T<\fBaudacious_main_volume\fR\*(T>\fR 
+The current volume fetched from Audacious
+
+.TP 
 \fB\*(T<\fBbattery\fR\*(T>\fR \*(T<\fB(num)\fR\*(T> 
 Battery status and remaining percentage capacity of ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+
+.TP 
+\fB\*(T<\fBbattery_short\fR\*(T>\fR \*(T<\fB(num)\fR\*(T> 
+Battery status and remaining percentage capacity of ACPI or APM battery. ACPI battery number can be given as argument (default is BAT0).
+This mode display a short status, which means that C is displayed instead of charging and D is displayed instead of discharging.
 
 .TP 
 \fB\*(T<\fBbattery_bar\fR\*(T>\fR \*(T<\fB(height),(width) (num)\fR\*(T> 
@@ -552,7 +599,7 @@ Conky version
 Date Conky was built
 
 .TP 
-\fB\*(T<\fBconky_bulid_arch\fR\*(T>\fR 
+\fB\*(T<\fBconky_build_arch\fR\*(T>\fR 
 CPU architecture Conky was built for
 
 .TP 
@@ -560,11 +607,11 @@ CPU architecture Conky was built for
 CPU usage in percents. For SMP machines, the CPU number can be provided as an argument. ${cpu cpu0} is the total usage, and ${cpu cpuX} (X >= 1) are individual CPUs.
 
 .TP 
-\fB\*(T<\fBcpubar\fR\*(T>\fR \*(T<\fB(cpu number) (height),(width)\fR\*(T> 
+\fB\*(T<\fBcpubar\fR\*(T>\fR \*(T<\fB(cpuN) (height),(width)\fR\*(T> 
 Bar that shows CPU usage, height is bar's height in pixels. See $cpu for more info on SMP.
 
 .TP 
-\fB\*(T<\fBcpugraph\fR\*(T>\fR \*(T<\fBnormal|log (cpu number) (height),(width) (gradient colour 1) (gradient colour 2)\fR\*(T> 
+\fB\*(T<\fBcpugraph\fR\*(T>\fR \*(T<\fB(cpuN) ("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
 CPU usage graph, with optional colours in hex, minus the #. See $cpu for more info on SMP. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
@@ -572,7 +619,7 @@ CPU usage graph, with optional colours in hex, minus the #. See $cpu for more in
 Displays current disk IO. Device is optional, and takes the form of sda for /dev/sda. Individual partitions are allowed.
 
 .TP 
-\fB\*(T<\fBdiskiograph\fR\*(T>\fR \*(T<\fBnormal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+\fB\*(T<\fBdiskiograph\fR\*(T>\fR \*(T<\fB("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (device)\fR\*(T> 
 Disk IO graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
@@ -580,7 +627,7 @@ Disk IO graph, colours defined in hex, minus the #. If scale is non-zero, it bec
 Displays current disk IO for reads. Device as in diskio.
 
 .TP 
-\fB\*(T<\fBdiskiograph_read\fR\*(T>\fR \*(T<\fBnormal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+\fB\*(T<\fBdiskiograph_read\fR\*(T>\fR \*(T<\fB("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (device)\fR\*(T> 
 Disk IO graph for reads, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
@@ -588,7 +635,7 @@ Disk IO graph for reads, colours defined in hex, minus the #. If scale is non-ze
 Displays current disk IO for writes. Device as in diskio.
 
 .TP 
-\fB\*(T<\fBdiskiograph_write\fR\*(T>\fR \*(T<\fBnormal|log (device) (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+\fB\*(T<\fBdiskiograph_write\fR\*(T>\fR \*(T<\fB("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (device)\fR\*(T> 
 Disk IO graph for writes, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Device as in diskio. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
@@ -604,7 +651,7 @@ Download speed in KiB
 Download speed in KiB with one decimal
 
 .TP 
-\fB\*(T<\fBdownspeedgraph\fR\*(T>\fR \*(T<\fBnormal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+\fB\*(T<\fBdownspeedgraph\fR\*(T>\fR \*(T<\fB("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (net)\fR\*(T> 
 Download speed graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
@@ -632,7 +679,7 @@ Executes a shell command and displays the output in conky. warning: this takes a
 Same as exec, except if the first value return is a value between 0-100, it will use that number for a bar. The size for the bar is currently fixed, but that may change in the future.
 
 .TP 
-\fB\*(T<\fBexecgraph\fR\*(T>\fR \*(T<\fB(normal|log) command\fR\*(T> 
+\fB\*(T<\fBexecgraph\fR\*(T>\fR \*(T<\fB("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) command\fR\*(T> 
 Same as execbar, but graphs values. Uses a logaritmic scale when the log option is given (to see small numbers). Values still have to be between 0 and 100.
 
 .TP 
@@ -669,16 +716,12 @@ Returns CPU #n's frequency in MHz. CPUs are counted from 1. If omitted, the para
 Returns CPU #n's frequency in GHz. CPUs are counted from 1. If omitted, the parameter defaults to 1.
 
 .TP 
-\fB\*(T<\fBfreq_dyn\fR\*(T>\fR \*(T<\fB(n)\fR\*(T> 
-Returns CPU #n's frequency in MHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction. Only available for x86/amd64.
-
-.TP 
-\fB\*(T<\fBfreq_dyn_g\fR\*(T>\fR \*(T<\fB(n)\fR\*(T> 
-Returns CPU #n's frequency in GHz (defaults to 1), but is calculated by counting to clock cycles to complete an instruction. Only available for x86/amd64.
-
-.TP 
 \fB\*(T<\fBfs_bar\fR\*(T>\fR \*(T<\fB(height),(width) fs\fR\*(T> 
 Bar that shows how much space is used on a file system. height is the height in pixels. fs is any file on that file system.
+
+.TP 
+\fB\*(T<\fBfs_bar_free\fR\*(T>\fR \*(T<\fB(height),(width) fs\fR\*(T> 
+Bar that shows how much space is free on a file system. height is the height in pixels. fs is any file on that file system.
 
 .TP 
 \fB\*(T<\fBfs_free\fR\*(T>\fR \*(T<\fB(fs)\fR\*(T> 
@@ -690,15 +733,19 @@ Free percentage of space on a file system available for users.
 
 .TP 
 \fB\*(T<\fBfs_size\fR\*(T>\fR \*(T<\fB(fs)\fR\*(T> 
-File system size
+File system size.
 
 .TP 
 \fB\*(T<\fBfs_type\fR\*(T>\fR \*(T<\fB(fs)\fR\*(T> 
-File system type
+File system type.
 
 .TP 
 \fB\*(T<\fBfs_used\fR\*(T>\fR \*(T<\fB(fs)\fR\*(T> 
-File system used space
+File system used space.
+
+.TP 
+\fB\*(T<\fBfs_used_perc\fR\*(T>\fR \*(T<\fB(fs)\fR\*(T> 
+Percent of file system used space.
 
 .TP 
 \fB\*(T<\fBgoto\fR\*(T>\fR \*(T<\fBx\fR\*(T> 
@@ -727,7 +774,7 @@ Horizontal line, height is the height in pixels
 
 .TP 
 \fB\*(T<\fBhwmon\fR\*(T>\fR \*(T<\fB(dev) type n\fR\*(T> 
-Hwmon sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one hwmon device. Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/class/hwmon/ on your local computer.
+Hwmon sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one hwmon device. Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning temperature. Parameter n is number of the sensor. See /sys/class/hwmon/ on your local computer.
 
 .TP 
 \fB\*(T<\fBiconv_start\fR\*(T>\fR \*(T<\fBcodeset_from codeset_to\fR\*(T> 
@@ -739,7 +786,7 @@ Stop iconv codeset conversion.
 
 .TP 
 \fB\*(T<\fBi2c\fR\*(T>\fR \*(T<\fB(dev) type n\fR\*(T> 
-I2C sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one I2C device. Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
+I2C sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one I2C device. Parameter type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning temperature. Parameter n is number of the sensor. See /sys/bus/i2c/devices/ on your local computer.
 
 .TP 
 \fB\*(T<\fBi8k_ac_status\fR\*(T>\fR 
@@ -756,10 +803,6 @@ If running the i8k kernel driver for Inspiron laptops, displays the volume butto
 .TP 
 \fB\*(T<\fBi8k_cpu_temp\fR\*(T>\fR 
 If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Celsius, as reported by /proc/i8k.
-
-.TP 
-\fB\*(T<\fBi8k_cpu_tempf\fR\*(T>\fR 
-If running the i8k kernel driver for Inspiron laptops, displays the cpu temperature in Fahrenheit, as reported by /proc/i8k.
 
 .TP 
 \fB\*(T<\fBi8k_left_fan_rpm\fR\*(T>\fR 
@@ -807,31 +850,75 @@ laptops's LCD (0-7).
 
 .TP 
 \fB\*(T<\fBif_empty\fR\*(T>\fR \*(T<\fB(var)\fR\*(T> 
-if conky variable VAR is empty, display everything between $if_empty and the matching $endif
-
-.TP 
-\fB\*(T<\fBif_gw\fR\*(T>\fR 
-if there is at least one default gateway, display everything between $if_gw and the matching $endif
-
-.TP 
-\fB\*(T<\fBif_running\fR\*(T>\fR \*(T<\fB(process)\fR\*(T> 
-if PROCESS is running, display everything $if_running and the matching $endif
+if conky variable VAR is empty, display everything
+between $if_empty and the matching $endif
 
 .TP 
 \fB\*(T<\fBif_existing\fR\*(T>\fR \*(T<\fBfile (string)\fR\*(T> 
-if FILE exists, display everything between if_existing and the matching $endif. The optional second paramater checks for FILE containing the specified string and prints everything between $if_existing and the matching $endif.
+if FILE exists, display everything between if_existing
+and the matching $endif. The optional second paramater
+checks for FILE containing the specified string and
+prints everything between $if_existing and the matching
+$endif.
+
+.TP 
+\fB\*(T<\fBif_gw\fR\*(T>\fR 
+if there is at least one default gateway, display
+everything between $if_gw and the matching $endif
+
+.TP 
+\fB\*(T<\fBif_match\fR\*(T>\fR \*(T<\fBexpression\fR\*(T> 
+Evaluates the given boolean expression, printing
+everything between $if_match and the matching $endif
+depending on whether the evaluation returns true or not.
+Valid expressions consist of a left side, an operator
+and a right side. Left and right sides are being parsed
+for contained text objects before evaluation. Recognised
+left and right side types are:
+
+\fBdouble\fR:
+argument consists of only digits and a
+single dot.
+.br
+\fBlong\fR:
+argument consists of only digits.
+.br
+\fBstring\fR:
+argument is enclosed in quotation mark
+or the checks for double and long failed
+before.
+
+Valid operands are:
+\&'>', '<', '>=', '<=', '==', '!='.
+
+.TP 
+\fB\*(T<\fBif_running\fR\*(T>\fR \*(T<\fB(process)\fR\*(T> 
+if PROCESS is running, display everything $if_running
+and the matching $endif. This uses the ``pidof'' command, so the
+-x switch is also supported.
 
 .TP 
 \fB\*(T<\fBif_mounted\fR\*(T>\fR \*(T<\fB(mountpoint)\fR\*(T> 
-if MOUNTPOINT is mounted, display everything between $if_mounted and the matching $endif
+if MOUNTPOINT is mounted, display everything between
+$if_mounted and the matching $endif
 
 .TP 
 \fB\*(T<\fBif_smapi_bat_installed\fR\*(T>\fR \*(T<\fB(INDEX)\fR\*(T> 
-when using smapi, if the battery with index INDEX is installed, display everything between $if_smapi_bat_installed and the matching $endif
+when using smapi, if the battery with index INDEX is
+installed, display everything between
+$if_smapi_bat_installed and the matching $endif
 
 .TP 
 \fB\*(T<\fBif_up\fR\*(T>\fR \*(T<\fB(interface)\fR\*(T> 
 if INTERFACE exists and is up, display everything between $if_up and the matching $endif
+
+.TP 
+\fB\*(T<\fBif_updatenr\fR\*(T>\fR \*(T<\fB(updatenr)\fR\*(T> 
+If it's the UPDATENR-th time that conky updates, 
+display everything between $if_updatenr and the matching $endif.
+The counter resets when the highest UPDATENR is reached.
+Example : "{$if_updatenr 1}foo$endif{$if_updatenr 2}bar$endif{$if_updatenr 4}$endif"
+shows foo 25% of the time followed by bar 25% of the time followed by nothing the other half of the time.
 
 .TP 
 \fB\*(T<\fBimap_messages\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -858,7 +945,7 @@ The value of /proc/sys/vm/laptop_mode
 (1,2,3)> System load average, 1 is for past 1 minute, 2 for past 5 minutes and 3 for past 15 minutes.
 
 .TP 
-\fB\*(T<\fBloadgraph\fR\*(T>\fR \*(T<\fBnormal|log (height),(width) (gradient colour 1) (gradient colour 2)\fR\*(T> 
+\fB\*(T<\fBloadgraph\fR\*(T>\fR \*(T<\fB("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
 Load1 average graph, similar to xload, with optional colours in hex, minus the #. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
@@ -877,6 +964,61 @@ use a program like fetchmail to get mails from some server
 using your favourite protocol. See also new_mails.
 
 .TP 
+\fB\*(T<\fBnew_mails\fR\*(T>\fR \*(T<\fB(mailbox)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Unread mail count in the specified mailbox or mail spool if
+not. Both mbox and maildir type mailboxes are supported.
+
+.TP 
+\fB\*(T<\fBseen_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails marked as seen in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBunseen_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of new or unseen mails in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBflagged_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails marked as flagged in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBunflagged_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails not marked as flagged in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBforwarded_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails marked as forwarded in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBunforwarded_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails not marked as forwarded in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBreplied_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails marked as replied in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBunreplied_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails not marked as replied in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBdraft_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails marked as draft in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
+\fB\*(T<\fBtrashed_mails\fR\*(T>\fR \*(T<\fB(maildir)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
+Number of mails marked as trashed in the specified mailbox or mail spool if
+not. Only maildir type mailboxes are supported, mbox type will return -1.
+
+.TP 
 \fB\*(T<\fBmboxscan\fR\*(T>\fR \*(T<\fB(\-n number of messages to print) (\-fw from width) (\-sw subject width) mbox\fR\*(T> 
 Print a summary of recent messages in an mbox format mailbox. mbox parameter is the filename of the mailbox (can be encapsulated using '"', ie. ${mboxscan -n 10 "/home/brenden/some box"}
 
@@ -889,7 +1031,7 @@ Amount of memory in use
 Bar that shows amount of memory in use
 
 .TP 
-\fB\*(T<\fBmemgraph\fR\*(T>\fR \*(T<\fBnormal|log (height),(width) (gradient colour 1) (gradient colour 2)\fR\*(T> 
+\fB\*(T<\fBmemgraph\fR\*(T>\fR \*(T<\fB("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
 Memory usage graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
@@ -907,6 +1049,74 @@ Total amount of memory
 .TP 
 \fB\*(T<\fBmemperc\fR\*(T>\fR 
 Percentage of memory in use
+
+.TP 
+\fB\*(T<\fBmixer\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Prints the mixer value as reported by the OS. Default mixer is "vol", but you can specify one of the following optional arguments: "vol", "bass", "treble", "synth", "pcm", "speaker", "line", "mic", "cd", "mix", "pcm2", "rec", "igain", "ogain", "line1", "line2", "line3", "dig1", "dig2", "dig3", "phin", "phout", "video", "radio", "monitor". Refer to the definition of SOUND_DEVICE_NAMES in <linux/soundcard.h> (on Linux), <soundcard.h> (on OpenBSD), or <sys/soundcard.h> to find the exact options available on your system.
+
+.TP 
+\fB\*(T<\fBmixerbar\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Displays mixer value in a bar as reported by the OS. See docs for $mixer for details on arguments.
+
+.TP 
+\fB\*(T<\fBmixerr\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Prints the right channel mixer value as reported by the OS. See docs for $mixer for details on arguments.
+
+.TP 
+\fB\*(T<\fBmixerrbar\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Displays the right channel mixer value in a bar as reported by the OS. See docs for $mixer for details on arguments.
+
+.TP 
+\fB\*(T<\fBmixerl\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Prints the left channel mixer value as reported by the OS. See docs for $mixer for details on arguments.
+
+.TP 
+\fB\*(T<\fBmixerlbar\fR\*(T>\fR \*(T<\fB(device)\fR\*(T> 
+Displays the left channel mixer value in a bar as reported by the OS. See docs for $mixer for details on arguments.
+
+.TP 
+\fB\*(T<\fBmoc_state\fR\*(T>\fR 
+Current state of MOC; playing, stopped etc.
+
+.TP 
+\fB\*(T<\fBmoc_file\fR\*(T>\fR 
+File name of the current MOC song
+
+.TP 
+\fB\*(T<\fBmoc_title\fR\*(T>\fR 
+Title of the current MOC song
+
+.TP 
+\fB\*(T<\fBmoc_artist\fR\*(T>\fR 
+Artist of the current MOC song
+
+.TP 
+\fB\*(T<\fBmoc_song\fR\*(T>\fR 
+The current song name being played in MOC.
+
+.TP 
+\fB\*(T<\fBmoc_album\fR\*(T>\fR 
+Album of the current MOC song
+
+.TP 
+\fB\*(T<\fBmoc_totaltime\fR\*(T>\fR 
+Total length of the current MOC song
+
+.TP 
+\fB\*(T<\fBmoc_timeleft\fR\*(T>\fR 
+Time left in the current MOC song
+
+.TP 
+\fB\*(T<\fBmoc_curtime\fR\*(T>\fR 
+Current time of the current MOC song
+
+.TP 
+\fB\*(T<\fBmoc_bitrate\fR\*(T>\fR 
+Bitrate in the current MOC song
+
+.TP 
+\fB\*(T<\fBmoc_rate\fR\*(T>\fR 
+Rate of the current MOC song
 
 .TP 
 \fB\*(T<\fBmonitor\fR\*(T>\fR 
@@ -977,24 +1187,23 @@ Prints the MPD name field
 Prints the file name of the current MPD song
 
 .TP 
-\fB\*(T<\fBmpd_smart\fR\*(T>\fR 
+\fB\*(T<\fBmpd_smart\fR\*(T>\fR \*(T<\fB(max length)\fR\*(T> 
 Prints the song name in either the form "artist - title" or file name, depending on whats available
+
+.TP 
+\fB\*(T<\fBif_mpd_playing\fR\*(T>\fR 
+if mpd is playing or paused, display everything between $if_mpd_playing and the matching $endif
 
 .TP 
 \fB\*(T<\fBnameserver\fR\*(T>\fR \*(T<\fB(index)\fR\*(T> 
 Print a nameserver from /etc/resolv.conf. Index starts at and defaults to 0.
 
 .TP 
-\fB\*(T<\fBnew_mails\fR\*(T>\fR \*(T<\fB(mailbox)\fR\*(T> \*(T<\fB(interval)\fR\*(T> 
-Unread mail count in the specified mailbox or mail spool if
-not. Both mbox and maildir type mailboxes are supported.
-
-.TP 
 \fB\*(T<\fBnodename\fR\*(T>\fR 
 Hostname
 
 .TP 
-\fB\*(T<\fBnvidia\fR\*(T>\fR \*(T<\fBthreshold\fR\*(T> \*(T<\fBtemp\fR\*(T> \*(T<\fBgpufreq\fR\*(T> \*(T<\fBmemfreq\fR\*(T> \*(T<\fBimagequality\fR\*(T> 
+\fB\*(T<\fBnvidia\fR\*(T>\fR \*(T<\fBthreshold\fR\*(T> \*(T<\fBtemp\fR\*(T> \*(T<\fBambient\fR\*(T> \*(T<\fBgpufreq\fR\*(T> \*(T<\fBmemfreq\fR\*(T> \*(T<\fBimagequality\fR\*(T> 
 Nvidia graficcard support for the XNVCtrl library.
 Each option can be shortened to the least significant part.
 Temperatures are printed as float, all other values as integer.
@@ -1004,6 +1213,9 @@ the thresholdtemperature at which the gpu slows down
 .br
 \fBtemp\fR:
 gives the gpu current temperature
+.br
+\fBambient\fR:
+gives current air temperature near GPU case
 .br
 \fBgpufreq\fR:
 gives the current gpu frequency
@@ -1044,7 +1256,7 @@ and not discharging.
 
 .TP 
 \fB\*(T<\fBplatform\fR\*(T>\fR \*(T<\fB(dev) type n\fR\*(T> 
-Platform sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one platform device. Platform type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' (Celsius) or 'tempf' (Fahrenheit) meaning temperature. Parameter n is number of the sensor. See /sys/bus/platform/devices/ on your local computer.
+Platform sensor from sysfs (Linux 2.6). Parameter dev may be omitted if you have only one platform device. Platform type is either 'in' or 'vol' meaning voltage; 'fan' meaning fan; 'temp' meaning temperature. Parameter n is number of the sensor. See /sys/bus/platform/devices/ on your local computer.
 
 .TP 
 \fB\*(T<\fBpop3_unseen\fR\*(T>\fR \*(T<\fB(args)\fR\*(T> 
@@ -1067,8 +1279,8 @@ Total processes (sleeping and running)
 Running processes (not sleeping), requires Linux 2.6
 
 .TP 
-\fB\*(T<\fBscroll\fR\*(T>\fR \*(T<\fBlength text\fR\*(T> 
-Scroll 'text' showing 'length' number of characters at the same time. The text may also contain variables. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
+\fB\*(T<\fBscroll\fR\*(T>\fR \*(T<\fBlength (step) text\fR\*(T> 
+Scroll 'text' by 'step' characters showing 'length' number of characters at the same time. The text may also contain variables. 'step' is optional and defaults to 1 if not set. If a var creates output on multiple lines then the lines are placed behind each other separated with a '|'-sign. Do NOT use vars that change colors or otherwise affect the design inside a scrolling text. If you want spaces between the start and the end of 'text', place them at the end of 'text' not at the front ("foobar" and " foobar" can both generate "barfoo" but "foobar " will keep the spaces like this "bar foo").
 
 .TP 
 \fB\*(T<\fBshadecolor\fR\*(T>\fR \*(T<\fB(color)\fR\*(T> 
@@ -1177,11 +1389,62 @@ Download and parse RSS feeds. Action may be one of the following: feed_title, it
 
 .TP 
 \fB\*(T<\fBtab\fR\*(T>\fR \*(T<\fB(width, (start))\fR\*(T> 
-Puts a tab of the specified width, starting from column 'start'.
+Puts a tab of the specified width, starting from column 'start'. The unit is pixels for both arguments.
 
 .TP 
 \fB\*(T<\fBtail\fR\*(T>\fR \*(T<\fBlogfile lines (interval)\fR\*(T> 
 Displays last N lines of supplied text text file. If interval is not supplied, Conky assumes 2x Conky's interval. Max of 30 lines can be displayed, or until the text buffer is filled.
+
+.TP 
+\fB\*(T<\fBtemplateN\fR\*(T>\fR \*(T<\fB(arg1)\fR\*(T> \*(T<\fB(arg2)\fR\*(T> \*(T<\fB(arg3 ...)\fR\*(T> 
+Evaluate the content of the templateN configuration variable (where N is a value between 0 and 9, inclusively),
+applying substitutions as described in the documentation of the corresponding configuration variable.
+The number of arguments is optional, but must match the highest referred index in the template. You can use the
+same special sequences in each argument as the ones valid for a template definition, e.g. to allow an argument
+to contain a whitespace. Also simple nesting of templates is possible this way.
+
+Here are some examples of template definitions:
+
+template0 $\e1\e2
+.br
+template1 \e1: ${fs_used \e2} / ${fs_size \e2}
+.br
+template2 \e1 \e2
+
+The following list shows sample usage of the templates defined above,
+with the equivalent syntax when not using any template at all:
+.TS
+l l.
+T{
+using template
+T}	T{
+same without template
+T}
+.T&
+_ _
+l l
+l l
+l l.
+T{
+${template0 node name}
+T}	T{
+$nodename
+T}
+T{
+${template1 root /}
+T}	T{
+root: ${fs_free /} / ${fs_size /}
+T}
+T{
+.nf
+\*(T<${template1 ${template2\e disk\e root} /}\*(T>
+.fi
+T}	T{
+.nf
+\*(T<disk root: ${fs_free /} / ${fs_size /}\*(T>
+.fi
+T}
+.TE
 
 .TP 
 \fB\*(T<\fBtime\fR\*(T>\fR \*(T<\fB(format)\fR\*(T> 
@@ -1208,6 +1471,10 @@ This takes arguments in the form:top (name) (number) Basically, processes are ra
 Same as top, except sorted by mem usage instead of cpu
 
 .TP 
+\fB\*(T<\fBtop_time\fR\*(T>\fR \*(T<\fBtype, num\fR\*(T> 
+Same as top, except sorted by total CPU time instead of current CPU usage
+
+.TP 
 \fB\*(T<\fBtotalup\fR\*(T>\fR \*(T<\fBnet\fR\*(T> 
 Total upload, this one too, may overflow
 
@@ -1224,7 +1491,7 @@ Upload speed in KiB
 Upload speed in KiB with one decimal
 
 .TP 
-\fB\*(T<\fBupspeedgraph\fR\*(T>\fR \*(T<\fBnormal|log net (height),(width) (gradient colour 1) (gradient colour 2) (scale)\fR\*(T> 
+\fB\*(T<\fBupspeedgraph\fR\*(T>\fR \*(T<\fB("normal"|"log") (height),(width) (gradient colour 1) (gradient colour 2) (scale) (net)\fR\*(T> 
 Upload speed graph, colours defined in hex, minus the #. If scale is non-zero, it becomes the scale for the graph. Uses a logarithmic scale (to see small numbers) when you use "log" instead of "normal".
 
 .TP 
@@ -1324,14 +1591,6 @@ Genre in current XMMS2 song
 Comment in current XMMS2 song
 
 .TP 
-\fB\*(T<\fBxmms2_decoder\fR\*(T>\fR 
-Decoder plugin used
-
-.TP 
-\fB\*(T<\fBxmms2_transport\fR\*(T>\fR 
-Transport plugin used
-
-.TP 
 \fB\*(T<\fBxmms2_url\fR\*(T>\fR 
 Full path to current song
 
@@ -1364,6 +1623,18 @@ Size of current song
 Percent of song's progress
 
 .TP 
+\fB\*(T<\fBxmms2_date\fR\*(T>\fR 
+Returns song's date.
+
+.TP 
+\fB\*(T<\fBxmms2_playlist\fR\*(T>\fR 
+Returns the XMMS2 playlist.
+
+.TP 
+\fB\*(T<\fBxmms2_timesplayed\fR\*(T>\fR 
+Number of times a song was played (presumably).
+
+.TP 
 \fB\*(T<\fBxmms2_status\fR\*(T>\fR 
 XMMS2 status (Playing, Paused, Stopped, or Disconnected)
 
@@ -1376,8 +1647,16 @@ Bar of XMMS2's progress
 Prints the song name in either the form "artist - title" or file name, depending on whats available
 
 .TP 
+\fB\*(T<\fBif_xmms2_connected\fR\*(T>\fR 
+Display everything between $if_xmms2_connected and the matching $endif if xmms2 is running.
+
+.TP 
 \fB\*(T<\fBeve\fR\*(T>\fR \*(T<\fBapi_userid api_key character_id\fR\*(T> 
 Fetches your currently training skill from the Eve Online API servers (http://www.eve-online.com/) and displays the skill along with the remaining training time.
+
+.TP 
+\fB\*(T<\fBendif\fR\*(T>\fR 
+Ends an $if block.
 
 .SH EXAMPLES
 .TP 
@@ -1405,7 +1684,7 @@ window, be sure to read up on the own_window_type settings and experiment.
 .PP
 #conky on irc.freenode.net
 .SH COPYING
-Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
 Any original torsmo code is licensed under the BSD license (see LICENSE.BSD for a copy).
 All code written since the fork of torsmo is licensed under the GPL (see LICENSE.GPL for a copy), except where noted differently (such as in portmon code, timed thread code, and audacious code which are LGPL, and prss which is an MIT-style license).
 .SH AUTHORS

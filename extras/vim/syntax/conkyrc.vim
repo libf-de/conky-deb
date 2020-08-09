@@ -5,7 +5,6 @@
 " Copyright:  Copyright (c) 2005 Ciaran McCreesh
 " Licence:    You may redistribute this under the same terms as Vim itself
 "
-" $Id: conkyrc.vim 1193 2008-06-21 20:37:58Z ngarofil $
 
 if exists("b:current_syntax")
 	finish
@@ -14,6 +13,7 @@ endif
 syn region ConkyrcComment start=/^\s*#/ end=/$/
 
 syn keyword ConkyrcSetting
+			\ alias
 			\ alignment
 			\ background
 			\ show_graph_scale
@@ -51,6 +51,10 @@ syn keyword ConkyrcSetting
 			\ draw_shades
 			\ draw_outline
 			\ out_to_console
+			\ out_to_stderr
+			\ out_to_x
+			\ overwrite_file
+			\ append_file
 			\ use_spacer
 			\ use_xft
 			\ font
@@ -77,6 +81,16 @@ syn keyword ConkyrcSetting
 			\ temp1
 			\ temp2
 			\ update_interval
+			\ template0
+			\ template1
+			\ template2
+			\ template3
+			\ template4
+			\ template5
+			\ template6
+			\ template7
+			\ template8
+			\ template9
 			\ total_run_times
 			\ uppercase
 			\ max_specials
@@ -92,6 +106,7 @@ syn keyword ConkyrcConstant
 			\ bottom_right
 			\ bottom_middle
 			\ desktop
+			\ dock
 			\ no
 			\ none
 			\ normal
@@ -181,6 +196,7 @@ syn keyword ConkyrcVarName contained nextgroup=ConkyrcNumber,ConkyrcColour skipw
 			\ ibm_volume
 			\ ibm_brightness
 			\ if_up
+			\ if_updatenr
 			\ if_gw
 			\ gw_iface
 			\ gw_ip
@@ -278,6 +294,16 @@ syn keyword ConkyrcVarName contained nextgroup=ConkyrcNumber,ConkyrcColour skipw
 			\ swapperc
 			\ swapbar
 			\ sysname
+			\ template0
+			\ template1
+			\ template2
+			\ template3
+			\ template4
+			\ template5
+			\ template6
+			\ template7
+			\ template8
+			\ template9
 			\ time
 			\ utime
 			\ tztime

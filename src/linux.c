@@ -8,7 +8,7 @@
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
  * Copyright (c) 2007 Toni Spets
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -24,9 +24,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: linux.c 1223 2008-07-12 10:25:05Z ngarofil $ */
+ */
 
 #include "conky.h"
+#include "logging.h"
+#include "common.h"
+#include "linux.h"
 #include <dirent.h>
 #include <ctype.h>
 #include <errno.h>
@@ -269,6 +272,10 @@ void update_gateway_info_failure(const char *reason)
 	info.gw_info.ip = strndup("failed", text_buffer_size);
 }
 
+
+/* Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT */
+#define RT_ENTRY_FORMAT "%63s %lx %lx %x %*d %*d %*d %lx %*d %*d %*d\n"
+
 void update_gateway_info(void)
 {
 	FILE *fp;
@@ -276,7 +283,6 @@ void update_gateway_info(void)
 	char iface[64];
 	unsigned long dest, gate, mask;
 	unsigned int flags;
-	short ref, use, metric, mtu, win, irtt;
 
 	struct gateway_info *gw_info = &info.gw_info;
 
@@ -286,27 +292,22 @@ void update_gateway_info(void)
 
 	if ((fp = fopen("/proc/net/route", "r")) == NULL) {
 		update_gateway_info_failure("fopen()");
- 		return;
-	}
-	if (fscanf(fp, "%*[^\n]\n") == EOF) {
-		//NULL because a empty table is not a error
-		update_gateway_info_failure(NULL);
-		fclose(fp);
 		return;
 	}
+
+	/* skip over the table header line, which is always present */
+	fscanf(fp, "%*[^\n]\n");
+
 	while (!feof(fp)) {
-		// Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT
-		if(fscanf(fp, "%63s %lx %lx %x %hd %hd %hd %lx %hd %hd %hd\n",
-					iface, &dest, &gate, &flags, &ref, &use,
-					&metric, &mask, &mtu, &win, &irtt) != 11) {
+		if(fscanf(fp, RT_ENTRY_FORMAT,
+			  iface, &dest, &gate, &flags, &mask) != 5) {
 			update_gateway_info_failure("fscanf()");
-			fclose(fp);
-			return;
+			break;
 		}
-		if (flags & RTF_GATEWAY && dest == 0 && mask == 0) {
+		if (!(dest || mask) && ((flags & RTF_GATEWAY) || !gate) ) {
 			gw_info->count++;
 			SAVE_SET_STRING(gw_info->iface, iface)
-				ina.s_addr = gate;
+			ina.s_addr = gate;
 			SAVE_SET_STRING(gw_info->ip, inet_ntoa(ina))
 		}
 	}
@@ -318,6 +319,7 @@ void update_net_stats(void)
 {
 	FILE *net_dev_fp;
 	static int rep = 0;
+	static char first = 1;
 
 	// FIXME: arbitrary size chosen to keep code simple.
 	int i, i2;
@@ -353,7 +355,7 @@ void update_net_stats(void)
 	for (i2 = 0; i2 < 16; i2++) {
 		struct net_stat *ns;
 		char *s, *p;
-		char temp_addr[17];
+		char temp_addr[18];
 		long long r, t, last_recv, last_trans;
 
 		if (fgets(buf, 255, net_dev_fp) == NULL) {
@@ -379,10 +381,7 @@ void update_net_stats(void)
 		ns->up = 1;
 		memset(&(ns->addr.sa_data), 0, 14);
 
-		if(NULL == ns->addrs)
-			ns->addrs = (char*) malloc(17 * 16);
-		if(NULL != ns->addrs)
-			memset(ns->addrs, 0, 17 * 16); /* Up to 17 chars per ip, max 16 interfaces. Nasty memory usage... */
+		memset(ns->addrs, 0, 17 * 16 + 1); /* Up to 17 chars per ip, max 16 interfaces. Nasty memory usage... */
 
 		last_recv = ns->recv;
 		last_trans = ns->trans;
@@ -422,17 +421,15 @@ void update_net_stats(void)
 				break;
 
 			ns2 = get_net_stat(
-				((struct ifreq *) conf.ifc_buf)[k].ifr_ifrn.ifrn_name);
+					((struct ifreq *) conf.ifc_buf)[k].ifr_ifrn.ifrn_name);
 			ns2->addr = ((struct ifreq *) conf.ifc_buf)[k].ifr_ifru.ifru_addr;
-			if(NULL != ns2->addrs) {
-				sprintf(temp_addr, "%u.%u.%u.%u, ",
+			sprintf(temp_addr, "%u.%u.%u.%u, ",
 					ns2->addr.sa_data[2] & 255,
 					ns2->addr.sa_data[3] & 255,
 					ns2->addr.sa_data[4] & 255,
 					ns2->addr.sa_data[5] & 255);
-				if(NULL == strstr(ns2->addrs, temp_addr))
-					strncpy(ns2->addrs + strlen(ns2->addrs), temp_addr, 17);
-			}
+			if(NULL == strstr(ns2->addrs, temp_addr))
+				strncpy(ns2->addrs + strlen(ns2->addrs), temp_addr, 17);
 		}
 
 		close((long) i);
@@ -441,9 +438,12 @@ void update_net_stats(void)
 
 		/*** end ip addr patch ***/
 
-		/* calculate speeds */
-		ns->net_rec[0] = (ns->recv - last_recv) / delta;
-		ns->net_trans[0] = (ns->trans - last_trans) / delta;
+		if (!first) {
+			/* calculate speeds */
+			ns->net_rec[0] = (ns->recv - last_recv) / delta;
+			ns->net_trans[0] = (ns->trans - last_trans) / delta;
+		}
+
 		curtmp1 = 0;
 		curtmp2 = 0;
 		// get an average
@@ -524,6 +524,7 @@ void update_net_stats(void)
 		free(winfo);
 #endif
 	}
+	first = 0;
 
 	fclose(net_dev_fp);
 
@@ -675,7 +676,11 @@ inline static void update_stat(void)
 			info.mask |= (1 << INFO_RUN_PROCS);
 		} else if (strncmp(buf, "cpu", 3) == 0) {
 			double delta;
-			idx = isdigit(buf[3]) ? ((int) buf[3]) - 0x2F : 0;
+			if (isdigit(buf[3])) {
+				idx = atoi(&buf[3]) + 1;
+			} else {
+				idx = 0;
+			}
 			sscanf(buf, stat_template, &(cpu[idx].cpu_user),
 				&(cpu[idx].cpu_nice), &(cpu[idx].cpu_system),
 				&(cpu[idx].cpu_idle), &(cpu[idx].cpu_iowait),
@@ -1044,69 +1049,6 @@ void get_adt746x_cpu(char *p_client_buffer, size_t client_buffer_size)
 	}
 
 	snprintf(p_client_buffer, client_buffer_size, "%s", adt746x_cpu_state);
-}
-
-/* Thanks to "Walt Nelson" <wnelsonjr@comcast.net> */
-
-/***********************************************************************/
-/* This file is part of x86info.
- * (C) 2001 Dave Jones.
- *
- * Licensed under the terms of the GNU GPL License version 2.
- *
- * Estimate CPU MHz routine by Andrea Arcangeli <andrea@suse.de>
- * Small changes by David Sterba <sterd9am@ss1000.ms.mff.cuni.cz> */
-
-#if  defined(__i386) || defined(__x86_64)
-unsigned long long int rdtsc(void)
-{
-	unsigned long long int x;
-
-	__asm__ volatile(".byte 0x0f, 0x31":"=A" (x));
-	return x;
-}
-#endif
-
-/* return system frequency in MHz (use divisor=1) or GHz (use divisor=1000) */
-void get_freq_dynamic(char *p_client_buffer, size_t client_buffer_size,
-		const char *p_format, int divisor)
-{
-#if  defined(__i386) || defined(__x86_64)
-	struct timezone tz;
-	struct timeval tvstart, tvstop;
-	unsigned long long cycles[2];	/* gotta be 64 bit */
-	unsigned int microseconds;	/* total time taken */
-
-	if (!p_client_buffer || client_buffer_size <= 0 || !p_format
-			|| divisor <= 0) {
-		return;
-	}
-
-	memset(&tz, 0, sizeof(tz));
-
-	/* get this function in cached memory */
-	gettimeofday(&tvstart, &tz);
-	cycles[0] = rdtsc();
-	gettimeofday(&tvstart, &tz);
-
-	/* we don't trust that this is any specific length of time */
-	usleep(100);
-	cycles[1] = rdtsc();
-	gettimeofday(&tvstop, &tz);
-	microseconds = ((tvstop.tv_sec - tvstart.tv_sec) * 1000000) +
-		(tvstop.tv_usec - tvstart.tv_usec);
-
-	snprintf(p_client_buffer, client_buffer_size, p_format,
-		(float) ((cycles[1] - cycles[0]) / microseconds) / divisor);
-	return;
-#else
-	/* FIXME: hardwired: get freq for first cpu!
-	 * this whole function needs to be rethought and redone for
-	 * multi-cpu/multi-core/multi-threaded environments and
-	 * arbitrary combinations thereof */
-	get_freq(p_client_buffer, client_buffer_size, p_format, divisor, 1);
-	return;
-#endif
 }
 
 #define CPUFREQ_PREFIX "/sys/devices/system/cpu"
@@ -1582,7 +1524,7 @@ void set_return_value(char *buffer, unsigned int n, int item, int idx);
 
 void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 {
-	static int idx, rep = 0, rep2 = 0;
+	static int idx, rep = 0, rep1 = 0, rep2 = 0;
 	char acpi_path[128];
 	char sysfs_path[128];
 
@@ -1608,11 +1550,10 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 
  	if (sysfs_bat_fp[idx] == NULL && acpi_bat_fp[idx] == NULL && apm_bat_fp[idx] == NULL) {
  		sysfs_bat_fp[idx] = open_file(sysfs_path, &rep);
-		rep = 0;
 	}
 
  	if (sysfs_bat_fp[idx] == NULL && acpi_bat_fp[idx] == NULL && apm_bat_fp[idx] == NULL) {
-  		acpi_bat_fp[idx] = open_file(acpi_path, &rep);
+  		acpi_bat_fp[idx] = open_file(acpi_path, &rep1);
 	}
 
  	if (sysfs_bat_fp[idx] != NULL) {
@@ -1724,8 +1665,8 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
  			else
  				strncpy(last_battery_str[idx], "AC", 64);
  		}
- 	} else if (acpi_bat_fp[idx] != NULL) {
- 		/* ACPI */
+	} else if (acpi_bat_fp[idx] != NULL) {
+		/* ACPI */
 		int present_rate = -1;
 		int remaining_capacity = -1;
 		char charging_state[64];
@@ -1747,7 +1688,7 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 						break;
 					}
 					if (sscanf(b, "last full capacity: %d",
-							&acpi_last_full[idx]) != 0) {
+								&acpi_last_full[idx]) != 0) {
 						break;
 					}
 				}
@@ -1787,54 +1728,54 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 		/* not present */
 		if (strcmp(present, "no") == 0) {
 			strncpy(last_battery_str[idx], "not present", 64);
-		/* charging */
+			/* charging */
 		} else if (strcmp(charging_state, "charging") == 0) {
 			if (acpi_last_full[idx] != 0 && present_rate > 0) {
 				/* e.g. charging 75% */
 				snprintf(last_battery_str[idx],
-					sizeof(last_battery_str[idx]) - 1, "charging %i%%",
-					(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
+						sizeof(last_battery_str[idx]) - 1, "charging %i%%",
+						(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
 				/* e.g. 2h 37m */
 				format_seconds(last_battery_time_str[idx],
-					sizeof(last_battery_time_str[idx]) - 1,
-					(long) (((acpi_last_full[idx] - remaining_capacity) *
-					3600) / present_rate));
+						sizeof(last_battery_time_str[idx]) - 1,
+						(long) (((acpi_last_full[idx] - remaining_capacity) *
+								3600) / present_rate));
 			} else if (acpi_last_full[idx] != 0 && present_rate <= 0) {
 				snprintf(last_battery_str[idx],
-					sizeof(last_battery_str[idx]) - 1, "charging %d%%",
-					(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
+						sizeof(last_battery_str[idx]) - 1, "charging %d%%",
+						(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
 				snprintf(last_battery_time_str[idx],
-					sizeof(last_battery_time_str[idx]) - 1, "unknown");
+						sizeof(last_battery_time_str[idx]) - 1, "unknown");
 			} else {
 				strncpy(last_battery_str[idx], "charging",
-					sizeof(last_battery_str[idx]) - 1);
+						sizeof(last_battery_str[idx]) - 1);
 				snprintf(last_battery_time_str[idx],
-					sizeof(last_battery_time_str[idx]) - 1, "unknown");
+						sizeof(last_battery_time_str[idx]) - 1, "unknown");
 			}
-		/* discharging */
+			/* discharging */
 		} else if (strncmp(charging_state, "discharging", 64) == 0) {
 			if (present_rate > 0) {
 				/* e.g. discharging 35% */
 				snprintf(last_battery_str[idx],
-					sizeof(last_battery_str[idx]) - 1, "discharging %i%%",
-					(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
+						sizeof(last_battery_str[idx]) - 1, "discharging %i%%",
+						(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
 				/* e.g. 1h 12m */
 				format_seconds(last_battery_time_str[idx],
-					sizeof(last_battery_time_str[idx]) - 1,
-					(long) ((remaining_capacity * 3600) / present_rate));
+						sizeof(last_battery_time_str[idx]) - 1,
+						(long) ((remaining_capacity * 3600) / present_rate));
 			} else if (present_rate == 0) {	/* Thanks to Nexox for this one */
 				snprintf(last_battery_str[idx],
-					sizeof(last_battery_str[idx]) - 1, "full");
+						sizeof(last_battery_str[idx]) - 1, "full");
 				snprintf(last_battery_time_str[idx],
-					sizeof(last_battery_time_str[idx]) - 1, "unknown");
+						sizeof(last_battery_time_str[idx]) - 1, "unknown");
 			} else {
 				snprintf(last_battery_str[idx],
-					sizeof(last_battery_str[idx]) - 1, "discharging %d%%",
-					(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
+						sizeof(last_battery_str[idx]) - 1, "discharging %d%%",
+						(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
 				snprintf(last_battery_time_str[idx],
-					sizeof(last_battery_time_str[idx]) - 1, "unknown");
+						sizeof(last_battery_time_str[idx]) - 1, "unknown");
 			}
-		/* charged */
+			/* charged */
 		} else if (strncmp(charging_state, "charged", 64) == 0) {
 			/* thanks to Lukas Zapletal <lzap@seznam.cz> */
 			/* Below happens with the second battery on my X40,
@@ -1844,12 +1785,14 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 			} else {
 				strcpy(last_battery_str[idx], "charged");
 			}
-		/* unknown, probably full / AC */
+			/* unknown, probably full / AC */
 		} else {
-			if (acpi_last_full[idx] != 0
+			if (strncmp(charging_state, "Full", 64) == 0) {
+				strncpy(last_battery_str[idx], "full", 64);
+			} else if (acpi_last_full[idx] != 0
 					&& remaining_capacity != acpi_last_full[idx]) {
 				snprintf(last_battery_str[idx], 64, "unknown %d%%",
-					(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
+						(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
 			} else {
 				strncpy(last_battery_str[idx], "AC", 64);
 			}
@@ -1898,6 +1841,18 @@ void set_return_value(char *buffer, unsigned int n, int item, int idx)
 			break;
 		default:
 			break;
+	}
+}
+
+void get_battery_short_status(char *buffer, unsigned int n, const char *bat)
+{
+	get_battery_stuff(buffer, n, bat, BATTERY_STATUS);
+	if (0 == strncmp("charging", buffer, 8)) {
+		buffer[0] = 'C';
+		memmove(buffer + 1, buffer + 8, n - 8);
+	} else if (0 == strncmp("discharging", buffer, 11)) {
+		buffer[0] = 'D';
+		memmove(buffer + 1, buffer + 11, n - 11);
 	}
 }
 
@@ -2000,6 +1955,7 @@ int get_battery_perct(const char *bat)
 	/* compute the battery percentage */
 	last_battery_perct[idx] =
 		(int) (((float) remaining_capacity / acpi_design_capacity[idx]) * 100);
+	if (last_battery_perct[idx] > 100) last_battery_perct[idx] = 100;
 	return last_battery_perct[idx];
 }
 
@@ -2055,6 +2011,9 @@ void get_powerbook_batt_info(char *buffer, size_t n, int i)
 
 	if (pmu_battery_fp == NULL) {
 		pmu_battery_fp = open_file(batt_path, &rep);
+		if (pmu_battery_fp == NULL) {
+			return;
+		}
 	}
 
 	if (pmu_battery_fp != NULL) {
@@ -2079,6 +2038,9 @@ void get_powerbook_batt_info(char *buffer, size_t n, int i)
 	}
 	if (pmu_info_fp == NULL) {
 		pmu_info_fp = open_file(info_path, &rep);
+		if (pmu_info_fp == NULL) {
+			return;
+		}
 	}
 
 	if (pmu_info_fp != NULL) {
@@ -2096,19 +2058,24 @@ void get_powerbook_batt_info(char *buffer, size_t n, int i)
 	}
 	/* update status string */
 	if ((ac && !(flags & PMU_BATT_PRESENT))) {
-		strcpy(pb_battery_info[PB_BATT_STATUS], "AC");
+		strncpy(pb_battery_info[PB_BATT_STATUS], "AC", sizeof(pb_battery_info[PB_BATT_STATUS]));
 	} else if (ac && (flags & PMU_BATT_PRESENT)
 			&& !(flags & PMU_BATT_CHARGING)) {
-		strcpy(pb_battery_info[PB_BATT_STATUS], "charged");
+		strncpy(pb_battery_info[PB_BATT_STATUS], "charged", sizeof(pb_battery_info[PB_BATT_STATUS]));
 	} else if ((flags & PMU_BATT_PRESENT) && (flags & PMU_BATT_CHARGING)) {
-		strcpy(pb_battery_info[PB_BATT_STATUS], "charging");
+		strncpy(pb_battery_info[PB_BATT_STATUS], "charging", sizeof(pb_battery_info[PB_BATT_STATUS]));
 	} else {
-		strcpy(pb_battery_info[PB_BATT_STATUS], "discharging");
+		strncpy(pb_battery_info[PB_BATT_STATUS], "discharging", sizeof(pb_battery_info[PB_BATT_STATUS]));
 	}
 
 	/* update percentage string */
-	if (timeval == 0) {
-		pb_battery_info[PB_BATT_PERCENT][0] = 0;
+	if (timeval == 0 && ac && (flags & PMU_BATT_PRESENT)
+			&& !(flags & PMU_BATT_CHARGING)) {
+		snprintf(pb_battery_info[PB_BATT_PERCENT],
+			sizeof(pb_battery_info[PB_BATT_PERCENT]), "100%%");
+	} else if (timeval == 0) {
+		snprintf(pb_battery_info[PB_BATT_PERCENT],
+			sizeof(pb_battery_info[PB_BATT_PERCENT]), "unknown");
 	} else {
 		snprintf(pb_battery_info[PB_BATT_PERCENT],
 			sizeof(pb_battery_info[PB_BATT_PERCENT]), "%d%%",
@@ -2117,7 +2084,8 @@ void get_powerbook_batt_info(char *buffer, size_t n, int i)
 
 	/* update time string */
 	if (timeval == 0) {			/* fully charged or battery not present */
-		pb_battery_info[PB_BATT_TIME][0] = 0;
+		snprintf(pb_battery_info[PB_BATT_TIME],
+			sizeof(pb_battery_info[PB_BATT_TIME]), "unknown");
 	} else if (timeval < 60 * 60) {	/* don't show secs */
 		format_seconds_short(pb_battery_info[PB_BATT_TIME],
 			sizeof(pb_battery_info[PB_BATT_TIME]), timeval);
@@ -2132,234 +2100,8 @@ void get_powerbook_batt_info(char *buffer, size_t n, int i)
 void update_top(void)
 {
 	show_nice_processes = 1;
-	process_find_top(info.cpu, info.memu);
+	process_find_top(info.cpu, info.memu, info.time);
 	info.first_process = get_first_process();
-}
-
-/* Here come the IBM ACPI-specific things. For reference, see
- * http://ibm-acpi.sourceforge.net/README
- * If IBM ACPI is installed, /proc/acpi/ibm contains the following files:
-bay
-beep
-bluetooth
-brightness
-cmos
-dock
-driver
-ecdump
-fan
-hotkey
-led
-light
-thermal
-video
-volume
- * The content of these files is described in detail in the aforementioned
- * README - some of them also in the following functions accessing them.
- * Peter Tarjan (ptarjan@citromail.hu) */
-
-#define IBM_ACPI_DIR "/proc/acpi/ibm"
-
-/* get fan speed on IBM/Lenovo laptops running the ibm acpi.
- * /proc/acpi/ibm/fan looks like this (3 lines):
-status:         disabled
-speed:          2944
-commands:       enable, disable
- * Peter Tarjan (ptarjan@citromail.hu) */
-
-void get_ibm_acpi_fan(char *p_client_buffer, size_t client_buffer_size)
-{
-	FILE *fp;
-	unsigned int speed = 0;
-	char fan[128];
-
-	if (!p_client_buffer || client_buffer_size <= 0) {
-		return;
-	}
-
-	snprintf(fan, 127, "%s/fan", IBM_ACPI_DIR);
-
-	fp = fopen(fan, "r");
-	if (fp != NULL) {
-		while (!feof(fp)) {
-			char line[256];
-
-			if (fgets(line, 255, fp) == NULL) {
-				break;
-			}
-			if (sscanf(line, "speed: %u", &speed)) {
-				break;
-			}
-		}
-	} else {
-		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
-			"ibm* from your "PACKAGE_NAME" config file.", fan, strerror(errno));
-	}
-
-	fclose(fp);
-	snprintf(p_client_buffer, client_buffer_size, "%d", speed);
-}
-
-/* get the measured temperatures from the temperature sensors
- * on IBM/Lenovo laptops running the ibm acpi.
- * There are 8 values in /proc/acpi/ibm/thermal, and according to
- * http://ibm-acpi.sourceforge.net/README
- * these mean the following (at least on an IBM R51...)
- * 0:  CPU (also on the T series laptops)
- * 1:  Mini PCI Module (?)
- * 2:  HDD (?)
- * 3:  GPU (also on the T series laptops)
- * 4:  Battery (?)
- * 5:  N/A
- * 6:  Battery (?)
- * 7:  N/A
- * I'm not too sure about those with the question mark, but the values I'm
- * reading from *my* thermal file (on a T42p) look realistic for the
- * hdd and the battery.
- * #5 and #7 are always -128.
- * /proc/acpi/ibm/thermal looks like this (1 line):
-temperatures:   41 43 31 46 33 -128 29 -128
- * Peter Tarjan (ptarjan@citromail.hu) */
-
-static double last_ibm_acpi_temp_time;
-void get_ibm_acpi_temps(void)
-{
-
-	FILE *fp;
-	char thermal[128];
-
-	/* don't update too often */
-	if (current_update_time - last_ibm_acpi_temp_time < 10.00) {
-		return;
-	}
-	last_ibm_acpi_temp_time = current_update_time;
-
-	/* if (!p_client_buffer || client_buffer_size <= 0) {
-		return;
-	} */
-
-	snprintf(thermal, 127, "%s/thermal", IBM_ACPI_DIR);
-	fp = fopen(thermal, "r");
-
-	if (fp != NULL) {
-		while (!feof(fp)) {
-			char line[256];
-
-			if (fgets(line, 255, fp) == NULL) {
-				break;
-			}
-			if (sscanf(line, "temperatures: %d %d %d %d %d %d %d %d",
-					&ibm_acpi.temps[0], &ibm_acpi.temps[1], &ibm_acpi.temps[2],
-					&ibm_acpi.temps[3], &ibm_acpi.temps[4], &ibm_acpi.temps[5],
-					&ibm_acpi.temps[6], &ibm_acpi.temps[7])) {
-				break;
-			}
-		}
-	} else {
-		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
-			"ibm* from your "PACKAGE_NAME" config file.", thermal, strerror(errno));
-	}
-
-	fclose(fp);
-}
-
-/* get volume (0-14) on IBM/Lenovo laptops running the ibm acpi.
- * "Volume" here is none of the mixer volumes, but a "master of masters"
- * volume adjusted by the IBM volume keys.
- * /proc/acpi/ibm/fan looks like this (4 lines):
-level:          4
-mute:           off
-commands:       up, down, mute
-commands:       level <level> (<level> is 0-15)
- * Peter Tarjan (ptarjan@citromail.hu) */
-
-void get_ibm_acpi_volume(char *p_client_buffer, size_t client_buffer_size)
-{
-	FILE *fp;
-	char volume[128];
-	unsigned int vol = -1;
-	char mute[3] = "";
-
-	if (!p_client_buffer || client_buffer_size <= 0) {
-		return;
-	}
-
-	snprintf(volume, 127, "%s/volume", IBM_ACPI_DIR);
-
-	fp = fopen(volume, "r");
-	if (fp != NULL) {
-		while (!feof(fp)) {
-			char line[256];
-			unsigned int read_vol = -1;
-
-			if (fgets(line, 255, fp) == NULL) {
-				break;
-			}
-			if (sscanf(line, "level: %u", &read_vol)) {
-				vol = read_vol;
-				continue;
-			}
-			if (sscanf(line, "mute: %s", mute)) {
-				break;
-			}
-		}
-	} else {
-		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
-			"ibm* from your "PACKAGE_NAME" config file.", volume, strerror(errno));
-	}
-
-	fclose(fp);
-
-	if (strcmp(mute, "on") == 0) {
-		snprintf(p_client_buffer, client_buffer_size, "%s", "mute");
-		return;
-	} else {
-		snprintf(p_client_buffer, client_buffer_size, "%d", vol);
-		return;
-	}
-}
-
-/* static FILE *fp = NULL; */
-
-/* get LCD brightness on IBM/Lenovo laptops running the ibm acpi.
- * /proc/acpi/ibm/brightness looks like this (3 lines):
-level:          7
-commands:       up, down
-commands:       level <level> (<level> is 0-7)
- * Peter Tarjan (ptarjan@citromail.hu) */
-
-void get_ibm_acpi_brightness(char *p_client_buffer, size_t client_buffer_size)
-{
-	FILE *fp;
-	unsigned int brightness = 0;
-	char filename[128];
-
-	if (!p_client_buffer || client_buffer_size <= 0) {
-		return;
-	}
-
-	snprintf(filename, 127, "%s/brightness", IBM_ACPI_DIR);
-
-	fp = fopen(filename, "r");
-	if (fp != NULL) {
-		while (!feof(fp)) {
-			char line[256];
-
-			if (fgets(line, 255, fp) == NULL) {
-				break;
-			}
-			if (sscanf(line, "level: %u", &brightness)) {
-				break;
-			}
-		}
-	} else {
-		CRIT_ERR("can't open '%s': %s\nYou are not using the IBM ACPI. Remove "
-			"ibm* from your "PACKAGE_NAME" config file.", filename, strerror(errno));
-	}
-
-	fclose(fp);
-
-	snprintf(p_client_buffer, client_buffer_size, "%d", brightness);
 }
 
 void update_entropy(void)
@@ -2396,7 +2138,10 @@ const char *get_disk_protect_queue(const char *disk)
 	char path[128];
 	int state;
 
-	snprintf(path, 127, "/sys/block/%s/queue/protect", disk);
+	snprintf(path, 127, "/sys/block/%s/device/unload_heads", disk);
+	if (access(path, F_OK)) {
+		snprintf(path, 127, "/sys/block/%s/queue/protect", disk);
+	}
 	if ((fp = fopen(path, "r")) == NULL)
 		return "n/a   ";
 	if (fscanf(fp, "%d\n", &state) != 1) {
@@ -2404,6 +2149,6 @@ const char *get_disk_protect_queue(const char *disk)
 		return "failed";
 	}
 	fclose(fp);
-	return state ? "frozen" : "free  ";
+	return (state > 0) ? "frozen" : "free  ";
 }
 

@@ -8,7 +8,7 @@
  *
  * Copyright (c) 2005 Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>,
  *					  Dave Clark <clarkd@skynet.ca>
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: top.c 1187 2008-06-21 14:18:44Z ngarofil $ */
+ */
 
 #include "top.h"
 
@@ -400,13 +400,13 @@ inline static void calc_cpu_each(unsigned long long total)
  ******************************************/
 
 /* free a sp_process structure */
-void free_sp(struct sorted_process *sp)
+static void free_sp(struct sorted_process *sp)
 {
 	free(sp);
 }
 
 /* create a new sp_process structure */
-struct sorted_process *malloc_sp(struct process *proc)
+static struct sorted_process *malloc_sp(struct process *proc)
 {
 	struct sorted_process *sp;
 	sp = malloc(sizeof(struct sorted_process));
@@ -417,7 +417,7 @@ struct sorted_process *malloc_sp(struct process *proc)
 }
 
 /* cpu comparison function for insert_sp_element */
-int compare_cpu(struct process *a, struct process *b)
+static int compare_cpu(struct process *a, struct process *b)
 {
 	if (a->amount < b->amount) {
 		return 1;
@@ -429,7 +429,7 @@ int compare_cpu(struct process *a, struct process *b)
 }
 
 /* mem comparison function for insert_sp_element */
-int compare_mem(struct process *a, struct process *b)
+static int compare_mem(struct process *a, struct process *b)
 {
 	if (a->totalmem < b->totalmem) {
 		return 1;
@@ -440,9 +440,15 @@ int compare_mem(struct process *a, struct process *b)
 	}
 }
 
+/* CPU time comparision function for insert_sp_element */
+static int compare_time(struct process *a, struct process *b)
+{
+	return b->total_cpu_time - a->total_cpu_time;
+}
+
 /* insert this process into the list in a sorted fashion,
  * or destroy it if it doesn't fit on the list */
-int insert_sp_element(struct sorted_process *sp_cur,
+static int insert_sp_element(struct sorted_process *sp_cur,
 		struct sorted_process **p_sp_head, struct sorted_process **p_sp_tail,
 		int max_elements, int compare_funct(struct process *, struct process *))
 {
@@ -498,7 +504,7 @@ int insert_sp_element(struct sorted_process *sp_cur,
 }
 
 /* copy the procs in the sorted list to the array, and destroy the list */
-void sp_acopy(struct sorted_process *sp_head, struct process **ar, int max_size)
+static void sp_acopy(struct sorted_process *sp_head, struct process **ar, int max_size)
 {
 	struct sorted_process *sp_cur, *sp_tmp;
 	int x;
@@ -517,14 +523,16 @@ void sp_acopy(struct sorted_process *sp_head, struct process **ar, int max_size)
  * Results are stored in the cpu,mem arrays in decreasing order[0-9]. *
  * ****************************************************************** */
 
-void process_find_top(struct process **cpu, struct process **mem)
+void process_find_top(struct process **cpu, struct process **mem,
+		struct process **ptime)
 {
 	struct sorted_process *spc_head = NULL, *spc_tail = NULL, *spc_cur = NULL;
 	struct sorted_process *spm_head = NULL, *spm_tail = NULL, *spm_cur = NULL;
+	struct sorted_process *spt_head = NULL, *spt_tail = NULL, *spt_cur = NULL;
 	struct process *cur_proc = NULL;
 	unsigned long long total = 0;
 
-	if (!top_cpu && !top_mem) {
+	if (!top_cpu && !top_mem && !top_time) {
 		return;
 	}
 
@@ -546,8 +554,18 @@ void process_find_top(struct process **cpu, struct process **mem)
 			insert_sp_element(spm_cur, &spm_head, &spm_tail, MAX_SP,
 				&compare_mem);
 		}
+		if (top_time) {
+			spt_cur = malloc_sp(cur_proc);
+			insert_sp_element(spt_cur, &spt_head, &spt_tail, MAX_SP,
+				&compare_time);
+		}
 		cur_proc = cur_proc->next;
 	}
-	sp_acopy(spc_head, cpu, MAX_SP);
-	sp_acopy(spm_head, mem, MAX_SP);
+
+	if (top_cpu)
+		sp_acopy(spc_head, cpu, MAX_SP);
+	if (top_mem)
+		sp_acopy(spm_head, mem, MAX_SP);
+	if (top_time)
+		sp_acopy(spt_head, ptime, MAX_SP);
 }

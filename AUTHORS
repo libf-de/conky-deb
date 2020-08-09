@@ -1,4 +1,4 @@
-# $Id: AUTHORS 1197 2008-06-28 20:14:04Z brenden1 $
+NOTE: Since moving to Git, I am no longer going to continue to update this file (in favour of Git's log stuff).
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -115,6 +115,12 @@ Gwenhael LE MOINE <cycojesus at yahoo dot fr>
 Hannu Saransaari <hipo at users dot sourceforge dot net>
   Main code
 
+Henri Häkkinen <henux at users dot sourceforge dot net>
+  MOC support
+
+hinokind <hinokind at users dot sourceforge dot net>
+  support negative values in human_readable()
+
 Jason Mitchell <jason.mitchell03 at saintleo dot edu>
   developer
   UTF8 fix
@@ -211,6 +217,8 @@ Michal Ziabkowski <mziab at o2 dot pl>
 
 Miroslav Lichvar <lichvarm at gmail dot com>
   move audacious thread init to update_audacious() patch
+  x86_64 freq_dyn patch
+  buffer overflow in update_net_stats() patch
 
 Moncelier Camille <pixdamix at users dot sourceforge dot net>
   METAR patch
@@ -262,6 +270,7 @@ roiban adi <adiroiban at users dot sourceforge dot net>
 
 Ryan Tandy <tarpman at users dot sourceforge dot net>
   fs_type patch
+  if_mpd_playing patch
 
 Rui Paulo <rpaulo at netbsd-pt dot org>
   NetBSD support
@@ -299,6 +308,9 @@ Toni Spets hifi <spets at users dot sourceforge dot net>
   OpenBSD support
   Linux wifi code
   RSS code (created with Mikko Sysikaski)
+
+Tris <asto at users dot sourceforge dot net>
+  Scroll step patch
 
 tyir <tyir at users dot sourceforge dot net>
   MPD features patch 1319461

@@ -17,15 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
  * USA.
  *
- * $Id: smapi.h 1156 2008-06-15 18:38:33Z IQgryn $
- *
  */
 
-#ifndef SMAPI_H
-#define SMAPI_H
-
-#include "conky.h"
-#include <sys/stat.h>
+#ifndef _SMAPI_H
+#define _SMAPI_H
 
 int smapi_bat_installed(int);
 
@@ -39,4 +34,4 @@ char *smapi_get_bat_str(int, const char *);
 int smapi_get_bat_int(int, const char *);
 char *smapi_get_bat_val(const char *);
 
-#endif /* SMAPI_H */
+#endif /* _SMAPI_H */

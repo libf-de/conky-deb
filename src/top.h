@@ -8,7 +8,7 @@
  *
  * Copyright (c) 2005 Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>,
  *					  Dave Clark <clarkd@skynet.ca>
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -24,7 +24,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: top.h 1154 2008-06-14 18:41:12Z IQgryn $ */
+ */
 
 #ifndef _top_h_
 #define _top_h_
@@ -116,6 +116,6 @@ struct sorted_process {
 };
 
 /* Pointer to head of process list */
-void process_find_top(struct process **, struct process **);
+void process_find_top(struct process **, struct process **, struct process **);
 
 #endif /* _top_h_ */

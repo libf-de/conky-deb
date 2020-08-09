@@ -6,7 +6,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -22,10 +22,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: solaris.c 1090 2008-03-31 04:56:39Z brenden1 $ */
+ */
 
 /* doesn't work, feel free to finish this */
 #include "conky.h"
+#include "common.h"
 #include <kstat.h>
 
 static kstat_ctl_t *kstat;

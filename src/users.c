@@ -7,7 +7,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -22,8 +22,6 @@
  * GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * $Id: users.c 1162 2008-06-17 20:44:06Z ngarofil $
  *
  */
 
@@ -101,7 +99,7 @@ static void user_time(char *ptr)
 				strftime(buf, BUFLEN, "%Mm", dtime);
 			}
 			if (strlen(ptr) + strlen(buf) + 1 <= BUFLEN) {
-				strncat(ptr, buf, BUFLEN);
+				strncat(ptr, buf, BUFLEN-strlen(ptr)-1);
 			}
 		}
 	}

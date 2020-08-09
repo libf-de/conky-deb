@@ -7,7 +7,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2008 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2009 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -23,12 +23,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: conky.h 1234 2008-08-05 18:43:24Z brenden1 $
- *
  */
 
 #ifndef _conky_h_
 #define _conky_h_
+
+#include "config.h"	/* defines */
+#include "common.h"	/* at least for struct dns_data */
+#include <sys/utsname.h> /* struct uname_s */
 
 #if defined(HAS_MCHECK_H)
 #include <mcheck.h>
@@ -41,145 +43,20 @@
 #define FALSE 0
 #define TRUE 1
 
-#include "config.h"
-#include <sys/utsname.h>
-#include <stdlib.h>
-#include <string.h>
-#include <locale.h>
-#include <langinfo.h>
-#include <wchar.h>
-#include <sys/param.h>
 
 #if !defined(__GNUC__)
 #  define __attribute__(x) /* nothing */
 #endif
-
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-#include "freebsd.h"
-#endif /* __FreeBSD__ || __FreeBSD_kernel__ */
-
-#if defined(__OpenBSD__)
-#include "openbsd.h"
-#endif /* __OpenBSD__ */
 
 #ifndef HAVE_STRNDUP
 // use our own strndup() if it's not available
 char *strndup(const char *s, size_t n);
 #endif /* HAVE_STRNDUP */
 
-#ifdef AUDACIOUS
-#include "audacious.h"
-#endif
-
-#ifdef XMMS2
-#include <xmmsclient/xmmsclient.h>
-#endif
-
-#ifdef RSS
-#include "rss.h"
-#endif
-
-#ifdef EVE
-#include "eve.h"
-#endif
-
-#ifdef SMAPI
-#include "smapi.h"
-#endif
-
-#ifdef NVIDIA
-#include "nvidia.h"
-#endif
-
-#include "mboxscan.h"
-#include "timed_thread.h"
-#include "top.h"
-
-#define DEFAULT_TEXT_BUFFER_SIZE 256
-extern unsigned int text_buffer_size;
-
-/* maximum number of special things, e.g. fonts, offsets, aligns, etc. */
-#define MAX_SPECIALS_DEFAULT 512
-
-/* maximum size of config TEXT buffer, i.e. below TEXT line. */
-#define MAX_USER_TEXT_DEFAULT 16384
-
-#include <sys/socket.h>
-
-#define ERR(...) { \
-	fprintf(stderr, PACKAGE_NAME": "); \
-	fprintf(stderr, __VA_ARGS__); \
-	fprintf(stderr, "\n"); \
-}
-
-/* critical error */
-#define CRIT_ERR(...) \
-	{ ERR(__VA_ARGS__); exit(EXIT_FAILURE); }
-
-struct net_stat {
-	const char *dev;
-	int up;
-	long long last_read_recv, last_read_trans;
-	long long recv, trans;
-	double recv_speed, trans_speed;
-	struct sockaddr addr;
-	char* addrs;
-	double net_rec[15], net_trans[15];
-	// wireless extensions
-	char essid[32];
-	char bitrate[16];
-	char mode[16];
-	int link_qual;
-	int link_qual_max;
-	char ap[18];
-};
-
-struct dns_data {
-	int nscount;
-	char **ns_list;
-};
-
-struct fs_stat {
-	char path[DEFAULT_TEXT_BUFFER_SIZE];
-	char type[DEFAULT_TEXT_BUFFER_SIZE];
-	long long size;
-	long long avail;
-	long long free;
-	char set;
-};
-
-#include "diskio.h"
-
-struct mail_s {			// for imap and pop3
-	unsigned long unseen;
-	unsigned long messages;
-	unsigned long used;
-	unsigned long quota;
-	unsigned long port;
-	unsigned int retries;
-	float interval;
-	double last_update;
-	char host[128];
-	char user[128];
-	char pass[128];
-	char command[1024];
-	char folder[128];
-	timed_thread *p_timed_thread;
-	char secure;
-};
-
-/* struct cpu_stat {
-	unsigned int user, nice, system, idle, iowait, irq, softirq;
-	int cpu_avg_samples;
-}; */
-
-#ifdef MPD
-#include "mpd.h"
-#endif
-
-#ifdef XMMS2
-#include "xmms2.h"
-#endif
+/* headers of optional features
+ * include them here, so we don't need to run the check
+ * in every code file optionally using the feature
+ */
 
 #ifdef AUDACIOUS
 #include "audacious.h"
@@ -189,7 +66,47 @@ struct mail_s {			// for imap and pop3
 #include "bmpx.h"
 #endif
 
-void update_entropy(void);
+#ifdef EVE
+#include "eve.h"
+#endif
+
+#ifdef HDDTEMP
+#include "hddtemp.h"
+#endif /* HDDTEMP */
+
+#ifdef MOC
+#include "moc.h"
+#endif
+
+#ifdef MPD
+#include "mpd.h"
+#endif
+
+#ifdef NVIDIA
+#include "nvidia.h"
+#endif
+
+#ifdef RSS
+#include "rss.h"
+#endif
+
+#ifdef TCP_PORT_MONITOR
+#include "tcp-portmon.h"
+#endif
+
+#ifdef XMMS2
+#include "xmms2.h"
+#endif
+
+#ifdef IBM
+#include "ibm.h"
+#include "smapi.h"
+#endif
+
+/* A size for temporary, static buffers to use when
+ * one doesn't know what to choose. Defaults to 256.  */
+extern unsigned int text_buffer_size;
+
 struct entropy_s {
 	unsigned int entropy_avail;
 	unsigned int poolsize;
@@ -217,10 +134,6 @@ struct monitor_info {
 struct x11_info {
 	struct monitor_info monitor;
 };
-#endif
-
-#ifdef TCP_PORT_MONITOR
-#include "libtcp-portmon.h"
 #endif
 
 enum {
@@ -261,7 +174,7 @@ enum {
 #ifdef RSS
 	INFO_RSS = 24,
 #endif
-#ifdef SMAPI
+#ifdef IBM
 	INFO_SMAPI = 25,
 #endif
 	INFO_USERS = 26,
@@ -272,27 +185,26 @@ enum {
 #ifdef X11
 	INFO_X11 = 29,
 #endif
-	INFO_DNS = 30
-
+	INFO_DNS = 30,
+#ifdef MOC
+  INFO_MOC = 31
+#endif
 };
 
-/* get_battery_stuff() item selector */
+/* get_battery_stuff() item selector
+ * needed by conky.c, linux.c and freebsd.c */
 enum {
 	BATTERY_STATUS,
 	BATTERY_TIME
 };
 
-/* if_up strictness selector */
+/* if_up strictness selector
+ * needed by conky.c and linux.c (and potentially others) */
 enum {
 	IFUP_UP,
 	IFUP_LINK,
 	IFUP_ADDR
 } ifup_strictness;
-
-/* Update interval */
-double update_interval;
-
-volatile int g_signal_pending;
 
 struct information {
 	unsigned int mask;
@@ -321,15 +233,8 @@ struct information {
 
 	struct mail_s *mail;
 	int mail_running;
-#ifdef MPD
-	struct mpd_s mpd;
-#endif
 #ifdef XMMS2
 	struct xmms2_s xmms2;
-	int xmms2_conn_state;
-	xmms_socket_t xmms2_fd;
-	fd_set xmms2_fdset;
-	xmmsc_connection_t *xmms2_conn;
 #endif
 #ifdef AUDACIOUS
 	AUDACIOUS_S audacious;
@@ -342,11 +247,9 @@ struct information {
 	struct dns_data nameserver_info;
 	struct process *cpu[10];
 	struct process *memu[10];
+	struct process *time[10];
 	struct process *first_process;
 	unsigned long looped;
-#ifdef TCP_PORT_MONITOR
-	tcp_port_monitor_collection_t *p_tcp_port_monitor_collection;
-#endif
 	struct entropy_s entropy;
 	double music_player_interval;
 
@@ -355,12 +258,9 @@ struct information {
 #endif
 
 	short kflags;	/* kernel settings, see enum KFLAG */
-
-	unsigned int diskio_value;
-	unsigned int diskio_read_value;
-	unsigned int diskio_write_value;
 };
 
+/* needed by linux.c and top.c -> outsource somewhere */
 enum {
 	/* set to true if kernel uses "long" format for /proc/stats */
 	KFLAG_IS_LONGSTAT = 0x01,
@@ -370,84 +270,42 @@ enum {
 	/* bits 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 available for future use */
 	/* KFLAG_NEXT_ONE = 0x04 */
 };
-
 #define KFLAG_SETON(a) info.kflags |= a
 #define KFLAG_SETOFF(a) info.kflags &= (~a)
 #define KFLAG_FLIP(a) info.kflags ^= a
 #define KFLAG_ISSET(a) info.kflags & a
 
-#define TO_X 1
-#define TO_STDOUT 2
-int output_methods;
+/* defined in conky.c, needed by top.c */
+extern int top_cpu, top_mem, top_time;
 
-int top_cpu;
-int top_mem;
+/* defined in conky.c, needed by top.c */
+extern int cpu_separate;
 
-int use_spacer;
+/* struct that has all info to be shared between
+ * instances of the same text object */
+extern struct information info;
 
-enum spacer_opts { NO_SPACER = 0, LEFT_SPACER, RIGHT_SPACER };
-
-char *tmpstring1;
-char *tmpstring2;
-
-#ifdef X11
-#include "x11.h"
-#endif /* X11 */
-
-int cpu_separate;
-int short_units;
-
-/* struct that has all info */
-struct information info;
-
-void signal_handler(int);
-void reload_config(void);
-void clean_up(void);
-
-void update_uname(void);
-double get_time(void);
-FILE *open_file(const char *file, int *reported);
-void variable_substitute(const char *s, char *dest, unsigned int n);
-void format_seconds(char *buf, unsigned int n, long t);
-void format_seconds_short(char *buf, unsigned int n, long t);
-struct net_stat *get_net_stat(const char *dev);
-void clear_net_stats(void);
-void free_dns_data(void);
-void update_dns_data(void);
+/* defined in users.c */
 void update_users(void);
 
-#ifdef X11
-void update_x11info(void);
-#endif
+/* defined in conky.c */
+extern double current_update_time, last_update_time, update_interval;
 
-void update_stuff(void);
+/* defined in conky.c */
+int spaced_print(char *, int, const char *, int, ...)
+	__attribute__((format(printf, 3, 5)));
 
-int round_to_int(float f);
+#define TO_X 1
+#define TO_STDOUT 2
+#define TO_STDERR 4
+#define OVERWRITE_FILE 8
+#define APPEND_FILE 16
+enum x_initialiser_state {
+	NO = 0,
+	YES = 1,
+	NEVER = 2
+};
+extern int output_methods;
+extern enum x_initialiser_state x_initialised;
 
-extern unsigned long long need_mask;
-
-extern double current_update_time, last_update_time;
-
-extern int no_buffers;
-
-#if defined(__linux__)
-#include "linux.h"
-#endif
-
-#include "fs.h"
-#include "mixer.h"
-#include "mail.h"
-
-#if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__) \
-		|| defined(__OpenBSD__)) && (defined(i386) || defined(__i386__))
-int apm_getinfo(int fd, apm_info_t aip);
-char *get_apm_adapter(void);
-char *get_apm_battery_life(void);
-char *get_apm_battery_time(void);
-#endif
-
-#ifdef HDDTEMP
-#include "hddtemp.h"
-#endif /* HDDTEMP */
-
-#endif
+#endif /* _conky_h_ */
