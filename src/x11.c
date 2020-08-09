@@ -3,7 +3,7 @@
  *
  * This program is licensed under BSD license, read COPYING
  *
- *  $Id: x11.c,v 1.7 2005/08/30 00:22:55 brenden1 Exp $
+ *  $Id: x11.c,v 1.8 2005/09/11 23:07:28 brenden1 Exp $
  */
 
 
@@ -166,7 +166,7 @@ inline void set_transparent_background(Window win)
 	} else if (colour_set != background_colour) {
 		XSetWindowBackground(display, win, background_colour);
 		colour_set = background_colour;
-	}
+}
 	//XClearWindow(display, win); not sure why this was here
 }
 

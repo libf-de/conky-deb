@@ -408,6 +408,8 @@ uninstall-man: uninstall-man1
 @HAVE_DOCSTUFF_TRUE@	mv README ${top_srcdir}
 @HAVE_DOCSTUFF_TRUE@	xsltproc ${srcdir}/variables.xsl ${srcdir}/variables.xml > variables.html
 @HAVE_DOCSTUFF_TRUE@	xsltproc ${srcdir}/config_settings.xsl ${srcdir}/config_settings.xml > config_settings.html
+
+@HAVE_DOCSTUFF_FALSE@conky.1:
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

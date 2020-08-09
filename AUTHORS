@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 1.15 2005/08/30 04:19:16 mirrorbox Exp $
+# $Id: AUTHORS,v 1.16 2005/09/04 03:43:18 brenden1 Exp $
 
 Authors of conky in alphapetical order (please, send mail if I forgot
 somebody or email address / name is wrong):
@@ -100,6 +100,9 @@ Lucas Brutschy <lbrutschy at users dot sourceforge dot net>
 
 Moncelier Camille <pixdamix at users dot sourceforge dot net>
   METAR patch
+
+nathanj439 <nathanj439 at users dot sourceforge dot net>
+  MPD time fix
 
 roiban adi <adiroiban at users dot sourceforge dot net>
   hex colour patch
