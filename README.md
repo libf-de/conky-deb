@@ -20,7 +20,7 @@ Conky can display more than 300 built-in objects, including support for:
  * Can be extended using built-in [**Lua**](lua) support, or any of your
    own scripts and programs ([more](Lua Interface)).
  * Built-in [**Imlib2**][Imlib2] and [**Cairo**][cairo] bindings for arbitrary drawing
-   with Lua ([more](wiki/Lua-Interface)).
+   with Lua ([more](wiki/Lua-API)).
 
 ... and much much more.
 
@@ -42,7 +42,7 @@ The [GitHub Wiki](https://github.com/brndnmtthws/conky/wiki) serves as a central
 Conky's documentation. Quick links:
 
 * [Install](https://github.com/brndnmtthws/conky/wiki/Installation)
-* [Configure](https://github.com/brndnmtthws/conky/wiki/Configure)
+* [Configure](https://github.com/brndnmtthws/conky/wiki/Configuration-Settings)
 * [User Configs](https://github.com/brndnmtthws/conky/wiki/User-Configs)
 * [Frequently Asked Questions](https://github.com/brndnmtthws/conky/wiki/FAQ)
 

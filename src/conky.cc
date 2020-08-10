@@ -83,6 +83,7 @@
 #ifdef BUILD_X11
 #include "fonts.h"
 #endif
+#include "fs.h"
 #ifdef BUILD_ICONV
 #include "iconv_tools.h"
 #endif
@@ -321,6 +322,9 @@ static void print_version(void)
 #ifdef BUILD_I18N
                 << _("  * Internationalization support\n")
 #endif
+#ifdef BUILD_PULSEAUDIO
+				<< _("  * PulseAudio\n")
+#endif /* BUIL_PULSEAUDIO */
 #ifdef DEBUG
                 << _("  * Debugging extensions\n")
 #endif
@@ -341,6 +345,9 @@ static void print_version(void)
 # ifdef BUILD_XDAMAGE
                 << _("  * Xdamage extension\n")
 # endif /* BUILD_XDAMAGE */
+# ifdef BUILD_XINERAMA
+                << _("  * Xinerama extension (virtual display)\n")
+# endif /* BUILD_XINERAMA */
 # ifdef BUILD_XSHAPE
                 << _("  * Xshape extension (click through)\n")
 # endif /* BUILD_XSHAPE */
@@ -2594,6 +2601,7 @@ void clean_up_without_threads(void *memtofree1, void* memtofree2)
 	free_specials(specials);
 
 	clear_net_stats();
+	clear_fs_stats();
 	clear_diskio_stats();
 	free_and_zero(global_cpu);
 

@@ -99,6 +99,12 @@
 #ifdef BUILD_CMUS
 #include "cmus.h"
 #endif
+#ifdef BUILD_JOURNAL
+#include "journal.h"
+#endif
+#ifdef BUILD_PULSEAUDIO
+#include "pulseaudio.h"
+#endif
 
 /* check for OS and include appropriate headers */
 #if defined(__linux__)
@@ -304,12 +310,12 @@ struct text_object *construct_text_object(char *s, const char *arg,
 		if(arg) {
 #ifdef __linux__
 			if(strpbrk(arg, "/.") != NULL) {
-				/* 
+				/*
 				 * a bit of paranoia. screen out funky paths
 				 * i hope no device will have a '.' in its name
 				 */
 				NORM_ERR("acpiacadapter: arg must not contain '/' or '.'");
-			} else 
+			} else
 				obj->data.opaque = strdup(arg);
 #else
 			NORM_ERR("acpiacadapter: arg is only used on linux");
@@ -1796,30 +1802,30 @@ struct text_object *construct_text_object(char *s, const char *arg,
 		obj->callbacks.free = &free_combine;
 #ifdef BUILD_NVIDIA
 	END OBJ_ARG(nvidia, 0, "nvidia needs an argument")
-		if (set_nvidia_type(obj, arg)) {
+		if (set_nvidia_query(obj, arg, NONSPECIAL)) {
 			CRIT_ERR(obj, free_at_crash, "nvidia: invalid argument"
-				 " specified: '%s'\n", arg);
+				 " specified: '%s'", arg);
 		}
 		obj->callbacks.print = &print_nvidia_value;
 		obj->callbacks.free = &free_nvidia;
 	END OBJ_ARG(nvidiabar, 0, "nvidiabar needs an argument")
-		if (scan_nvidia_args(obj, arg, BAR)) {
+		if (set_nvidia_query(obj, arg, BAR)) {
 			CRIT_ERR(obj, free_at_crash, "nvidiabar: invalid argument"
-				 " specified: '%s'\n", arg);
+				 " specified: '%s'", arg);
 		}
 		obj->callbacks.barval = &get_nvidia_barval;
 		obj->callbacks.free = &free_nvidia;
 	END OBJ_ARG(nvidiagraph, 0, "nvidiagraph needs an argument")
-		if (scan_nvidia_args(obj, arg, GRAPH)) {
+		if (set_nvidia_query(obj, arg, GRAPH)) {
 			CRIT_ERR(obj, free_at_crash, "nvidiagraph: invalid argument"
-				 " specified: '%s'\n", arg);
+				 " specified: '%s'", arg);
 		}
 		obj->callbacks.graphval = &get_nvidia_barval;
 		obj->callbacks.free = &free_nvidia;
 	END OBJ_ARG(nvidiagauge, 0, "nvidiagauge needs an argument")
-		if (scan_nvidia_args(obj, arg, GAUGE)) {
+		if (set_nvidia_query(obj, arg, GAUGE)) {
 			CRIT_ERR(obj, free_at_crash, "nvidiagauge: invalid argument"
-				 " specified: '%s'\n", arg);
+				 " specified: '%s'", arg);
 		}
 		obj->callbacks.gaugeval = &get_nvidia_barval;
 		obj->callbacks.free = &free_nvidia;
@@ -1866,6 +1872,39 @@ struct text_object *construct_text_object(char *s, const char *arg,
 	END OBJ(apcupsd_lastxfer, &update_apcupsd)
 		obj->callbacks.print = &print_apcupsd_lastxfer;
 #endif /* BUILD_APCUPSD */
+#ifdef BUILD_JOURNAL
+	END OBJ_ARG(journal, 0, "journal needs arguments")
+		init_journal("journal", arg, obj, free_at_crash);
+		obj->callbacks.print = &print_journal;
+		obj->callbacks.free = &free_journal;
+#endif /* BUILD_JOURNAL */
+#ifdef BUILD_PULSEAUDIO
+	END OBJ_IF(if_pa_sink_muted, 0)
+		obj->callbacks.iftest = &puau_muted;
+        obj->callbacks.free = &free_pulseaudio;
+	    init_pulseaudio(obj);
+	END OBJ(pa_sink_description, 0)
+		obj->callbacks.print = &print_puau_sink_description;
+        obj->callbacks.free = &free_pulseaudio;
+	    init_pulseaudio(obj);
+	END OBJ(pa_sink_volume, 0)
+		obj->callbacks.percentage = &puau_vol;
+        obj->callbacks.free = &free_pulseaudio;
+	    init_pulseaudio(obj);
+	END OBJ(pa_sink_volumebar, 0)
+		scan_bar(obj, arg, 1);
+	    init_pulseaudio(obj);
+		obj->callbacks.barval = &puau_volumebarval;
+        obj->callbacks.free = &free_pulseaudio;
+	END OBJ(pa_card_active_profile, 0)
+		obj->callbacks.print = &print_puau_card_active_profile;
+        obj->callbacks.free = &free_pulseaudio;
+	    init_pulseaudio(obj);
+	END OBJ(pa_card_name, 0)
+		obj->callbacks.print = &print_puau_card_name;
+	    obj->callbacks.free = &free_pulseaudio;
+	    init_pulseaudio(obj);
+#endif /* BUILD_PULSEAUDIO */
 	END {
 		char *buf = (char *)malloc(text_buffer_size.get(*state));
 
@@ -2112,4 +2151,3 @@ void free_text_objects(struct text_object *root)
 		}
 	}
 }
-

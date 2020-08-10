@@ -112,6 +112,11 @@ if(BUILD_CMUS)
        set(optional_sources ${optional_sources} ${cmus})
 endif(BUILD_CMUS)
 
+if(BUILD_JOURNAL)
+       set(journal journal.cc)
+       set(optional_sources ${optional_sources} ${journal})
+endif(BUILD_JOURNAL)
+
 if(BUILD_XMMS2)
 	set(xmms2 xmms2.cc)
 	set(optional_sources ${optional_sources} ${xmms2})
@@ -192,6 +197,11 @@ endif(BUILD_ICONV)
 if(BUILD_NCURSES)
 	 set(optional_sources ${optional_sources} nc.cc)
 endif(BUILD_NCURSES)
+
+if(BUILD_PULSEAUDIO)
+	set(pulseaudio pulseaudio.cc)
+	set(optional_sources ${optional_sources} ${pulseaudio})
+endif(BUILD_PULSEAUDIO)
 
 add_executable(conky ${conky_sources} ${optional_sources})
 
