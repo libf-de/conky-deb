@@ -728,13 +728,6 @@ int percent_print(char *buf, int size, unsigned value)
 	return spaced_print(buf, size, "%u", pad_percents.get(*state), value);
 }
 
-#if defined(__FreeBSD__)
-unsigned long long llabs(long long num) {
-       if(num < 0) return -num;
-       else return num;
-}
-#endif
-
 /* converts from bytes to human readable format (K, M, G, T)
  *
  * The algorithm always divides by 1024, as unit-conversion of byte
@@ -1404,6 +1397,9 @@ static void draw_string(const char *s)
 
 int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 {
+#ifndef BUILD_X11
+	static int cur_x, cur_y;	/* current x and y for drawing */
+#endif
 #ifdef BUILD_X11
 	int font_h = 0;
 	int cur_y_add = 0;
@@ -1811,8 +1807,8 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 #endif /* BUILD_X11 */
 				case GOTO:
 					if (current->arg >= 0) {
-						cur_x = (int) current->arg;
 #ifdef BUILD_X11
+						cur_x = (int) current->arg;
 						//make sure shades are 1 pixel to the right of the text
 						if(draw_mode == BG) cur_x++;
 #endif /* BUILD_X11 */
@@ -1934,6 +1930,7 @@ static void draw_text(void)
 
 static void draw_stuff(void)
 {
+	static int text_offset_x, text_offset_y; /* offset for start position */
 	text_offset_x = text_offset_y = 0;
 #ifdef BUILD_IMLIB2
 	cimlib_render(text_start_x, text_start_y, window.width, window.height);
