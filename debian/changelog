@@ -1,4 +1,4 @@
-conky (1.11.6-1) UNRELEASED; urgency=medium
+conky (1.11.6-1) unstable; urgency=medium
 
   * Acknowledge NMU, thanks to Boyuan Yang!
   * New upstream release. (Closes: #950400)
