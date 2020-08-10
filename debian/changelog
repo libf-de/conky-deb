@@ -15,6 +15,7 @@ conky (1.11.6-1) UNRELEASED; urgency=medium
   * Update Vcs-* links to point to salsa.
   * Add upstream metadata file.
   * Drop debug packages and migrate to auto-generated dbgsym instead.
+  * Enable all build hardening flags.
 
  -- Vincent Cheng <vcheng@debian.org>  Sun, 09 Aug 2020 19:46:49 -0700
 
