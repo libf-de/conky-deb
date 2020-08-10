@@ -9,6 +9,7 @@ conky (1.11.6-1) UNRELEASED; urgency=medium
     - IRC (add build-dep on libircclient-dev)
     - iconv
     - systemd journal (add build-dep on libsystemd-dev)
+  * Update to debhelper compat level 12.
 
  -- Vincent Cheng <vcheng@debian.org>  Sun, 09 Aug 2020 19:46:49 -0700
 

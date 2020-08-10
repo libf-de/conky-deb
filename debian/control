@@ -5,7 +5,7 @@ Maintainer: Vincent Cheng <vcheng@debian.org>
 Build-Depends:
  audacious-dev,
  cmake (>= 2.6),
- debhelper (>= 9),
+ debhelper-compat (= 12),
  docbook-xml,
  docbook-xsl,
  docbook2x,
