@@ -18,13 +18,16 @@ Build-Depends:
  libdbus-glib-1-dev,
  libdevstat-dev [kfreebsd-any],
  libglib2.0-dev,
+ libical-dev,
  libimlib2-dev,
+ libircclient-dev,
  libiw-dev [linux-any],
  libkvm-dev [kfreebsd-any],
  liblua5.3-dev,
  libncurses5-dev,
  libpulse-dev,
  librsvg2-dev,
+ libsystemd-dev [linux-any],
  libtool,
  libx11-dev,
  libxdamage-dev,
@@ -136,7 +139,7 @@ Description: highly configurable system monitor (all features enabled)
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
  Weather, wireless, IBM, nvidia, eve-online, Imlib2,
  apcupsd, I/O stats, argb, Lua and the cairo and imlib2 Lua bindings,
- Audacious, XMMS2, and PulseAudio.
+ Audacious, XMMS2, PulseAudio, iCal, iconv, IRC, and systemd journal.
 
 Package: conky-all-dbg
 Section: debug
@@ -154,7 +157,7 @@ Description: highly configurable system monitor (all features enabled - debug)
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
  Weather, wireless, IBM, nvidia, eve-online, Imlib2,
  apcupsd, I/O stats, argb, Lua and the cairo and imlib2 Lua bindings,
- Audacious, XMMS2, and PulseAudio.
+ Audacious, XMMS2, PulseAudio, iCal, iconv, IRC, and systemd journal.
  .
  This package contains debugging symbols only.
 
