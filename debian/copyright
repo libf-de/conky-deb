@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: conky
 Upstream-Contact: Brenden Matthews <brenden@rty.ca>
-Source: http://sourceforge.net/projects/conky/files/
+Source: https://github.com/brndnmtthws/conky
 
 Files: *
 Copyright: 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
