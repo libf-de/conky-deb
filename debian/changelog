@@ -2,6 +2,8 @@ conky (1.11.6-1) UNRELEASED; urgency=medium
 
   * Acknowledge NMU, thanks to Boyuan Yang!
   * New upstream release.
+    - Add build-dep on liblua5.3-dev.
+    - Drop build-dep on liblua5.1-0-dev, libtolua++5.1-dev.
 
  -- Vincent Cheng <vcheng@debian.org>  Sun, 09 Aug 2020 19:46:49 -0700
 
