@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -28,6 +27,8 @@
  *
  */
 
+#include <inttypes.h>
+#include <time.h>
 #include "config.h"
 #include "conky.h"
 #include "text_object.h"
@@ -45,44 +46,60 @@
 #include "solaris.h"
 #elif defined(__HAIKU__)
 #include "haiku.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "darwin.h"
 #endif
 
 struct _entropy {
-	_entropy() : avail(0), poolsize(0) {}
-	unsigned int avail;
-	unsigned int poolsize;
+  _entropy() = default;
+  unsigned int avail{0};
+  unsigned int poolsize{0};
 };
 
 static _entropy entropy;
 
-int update_entropy(void)
-{
-	get_entropy_avail(&entropy.avail);
-	get_entropy_poolsize(&entropy.poolsize);
-	return 0;
+int update_entropy() {
+  get_entropy_avail(&entropy.avail);
+  get_entropy_poolsize(&entropy.poolsize);
+  return 0;
 }
 
-void print_entropy_avail(struct text_object *obj, char *p, int p_max_size)
-{
-	(void)obj;
-	snprintf(p, p_max_size, "%u", entropy.avail);
+void print_entropy_avail(struct text_object *obj, char *p,
+                         unsigned int p_max_size) {
+  (void)obj;
+  snprintf(p, p_max_size, "%u", entropy.avail);
 }
 
-uint8_t entropy_percentage(struct text_object *obj)
-{
-	(void)obj;
-	return round_to_int((double)entropy.avail * 100.0 / (double)entropy.poolsize);
+uint8_t entropy_percentage(struct text_object *obj) {
+  (void)obj;
+  return round_to_positive_int(static_cast<double>(entropy.avail) * 100.0 /
+                               static_cast<double>(entropy.poolsize));
 }
 
-void print_entropy_poolsize(struct text_object *obj, char *p, int p_max_size)
-{
-	(void)obj;
-	snprintf(p, p_max_size, "%u", entropy.poolsize);
+void print_entropy_poolsize(struct text_object *obj, char *p,
+                            unsigned int p_max_size) {
+  (void)obj;
+  snprintf(p, p_max_size, "%u", entropy.poolsize);
 }
 
-double entropy_barval(struct text_object *obj)
-{
-	(void)obj;
+double entropy_barval(struct text_object *obj) {
+  (void)obj;
 
-	return (double)entropy.avail / entropy.poolsize;
+  return static_cast<double>(entropy.avail) / entropy.poolsize;
+}
+
+void print_password(struct text_object *obj, char *p, unsigned int p_max_size) {
+  time_t t;
+  static const char letters[] =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*("
+      ")_";
+  static const int len = static_cast<int>(sizeof(letters)) - 1;
+  uintmax_t x = strtoumax(obj->data.s, (char **)NULL, 10);
+  uintmax_t z = 0;
+
+  if (-1 == (t = time(NULL))) { return; }
+  srandom(static_cast<unsigned int>(t));
+
+  for (; z < x && p_max_size - 1 > z; z++) { *p++ = letters[random() % len]; }
+  *p = '\0';
 }

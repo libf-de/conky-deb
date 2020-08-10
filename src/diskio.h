@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  * (see AUTHORS)
  * All rights reserved.
  *
@@ -32,32 +31,32 @@
 #define DISKIO_H_
 
 #include <limits.h>
+#include <cstring>
 
 struct diskio_stat {
-	diskio_stat() :
-		next(NULL),
-		current(0),
-		current_read(0),
-		current_write(0),
-		last(UINT_MAX),
-		last_read(UINT_MAX),
-		last_write(UINT_MAX)
-	{
-		memset(sample, 0, sizeof(sample) / sizeof(sample[0]));
-		memset(sample_read, 0, sizeof(sample_read) / sizeof(sample_read[0]));
-		memset(sample_write, 0, sizeof(sample_write) / sizeof(sample_write[0]));
-	}
-	struct diskio_stat *next;
-	char *dev;
-	double sample[15];
-	double sample_read[15];
-	double sample_write[15];
-	double current;
-	double current_read;
-	double current_write;
-	double last;
-	double last_read;
-	double last_write;
+  diskio_stat()
+      : next(nullptr),
+        current(0),
+        current_read(0),
+        current_write(0),
+        last(UINT_MAX),
+        last_read(UINT_MAX),
+        last_write(UINT_MAX) {
+    std::memset(sample, 0, sizeof(sample));
+    std::memset(sample_read, 0, sizeof(sample_read));
+    std::memset(sample_write, 0, sizeof(sample_write));
+  }
+  struct diskio_stat *next;
+  char *dev;
+  double sample[15];
+  double sample_read[15];
+  double sample_write[15];
+  double current;
+  double current_read;
+  double current_write;
+  double last;
+  double last_read;
+  double last_write;
 };
 
 extern struct diskio_stat stats;
@@ -68,9 +67,9 @@ void clear_diskio_stats(void);
 void update_diskio_values(struct diskio_stat *, unsigned int, unsigned int);
 
 void parse_diskio_arg(struct text_object *, const char *);
-void print_diskio(struct text_object *, char *, int);
-void print_diskio_read(struct text_object *, char *, int);
-void print_diskio_write(struct text_object *, char *, int);
+void print_diskio(struct text_object *, char *, unsigned int);
+void print_diskio_read(struct text_object *, char *, unsigned int);
+void print_diskio_write(struct text_object *, char *, unsigned int);
 #ifdef BUILD_X11
 void parse_diskiograph_arg(struct text_object *, const char *);
 double diskiographval(struct text_object *);

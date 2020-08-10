@@ -1,11 +1,10 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -31,7 +30,7 @@
 void parse_local_mail_args(struct text_object *, const char *);
 
 #define PRINT_MAILS_PROTO_GENERATOR(x) \
-void print_##x##mails(struct text_object *, char *, int);
+  void print_##x##mails(struct text_object *, char *, unsigned int);
 
 PRINT_MAILS_PROTO_GENERATOR()
 PRINT_MAILS_PROTO_GENERATOR(new_)
@@ -54,24 +53,23 @@ void parse_global_pop3_mail_args(const char *);
 void parse_imap_mail_args(struct text_object *, const char *);
 void parse_pop3_mail_args(struct text_object *, const char *);
 void free_mail_obj(struct text_object *);
-void print_imap_unseen(struct text_object *, char *, int);
-void print_imap_messages(struct text_object *, char *, int);
-void print_pop3_unseen(struct text_object *, char *, int);
-void print_pop3_used(struct text_object *, char *, int);
+void print_imap_unseen(struct text_object *, char *, unsigned int);
+void print_imap_messages(struct text_object *, char *, unsigned int);
+void print_pop3_unseen(struct text_object *, char *, unsigned int);
+void print_pop3_used(struct text_object *, char *, unsigned int);
 
 namespace priv {
-	class current_mail_spool_setting: public conky::simple_config_setting<std::string> {
-		typedef conky::simple_config_setting<std::string> Base;
-		
-	protected:
-		virtual std::pair<std::string, bool> do_convert(lua::state &l, int index);
+class current_mail_spool_setting
+    : public conky::simple_config_setting<std::string> {
+  typedef conky::simple_config_setting<std::string> Base;
 
-	public:
-		current_mail_spool_setting()
-			: Base("current_mail_spool", "$MAIL", true)
-		{}
-	};
-}
+ protected:
+  virtual std::pair<std::string, bool> do_convert(lua::state &l, int index);
+
+ public:
+  current_mail_spool_setting() : Base("current_mail_spool", "$MAIL", true) {}
+};
+}  // namespace priv
 
 extern priv::current_mail_spool_setting current_mail_spool;
 

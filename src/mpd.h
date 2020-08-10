@@ -1,11 +1,10 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -26,25 +25,28 @@
 #ifndef MPD_H_
 #define MPD_H_
 
+#include <cstdint>
+
 /* text object functions */
-void print_mpd_elapsed(struct text_object *, char *, int);
-void print_mpd_length(struct text_object *, char *, int);
-uint8_t mpd_percentage(struct text_object *);
 double mpd_barval(struct text_object *);
-void print_mpd_smart(struct text_object *, char *, int);
-void print_mpd_title(struct text_object *, char *, int);
-void print_mpd_artist(struct text_object *, char *, int);
-void print_mpd_albumartist(struct text_object *, char *, int);
-void print_mpd_album(struct text_object *, char *, int);
-void print_mpd_date(struct text_object *, char *, int);
-void print_mpd_random(struct text_object *, char *, int);
-void print_mpd_repeat(struct text_object *, char *, int);
-void print_mpd_track(struct text_object *, char *, int);
-void print_mpd_name(struct text_object *, char *, int);
-void print_mpd_file(struct text_object *, char *, int);
-void print_mpd_vol(struct text_object *, char *, int);
-void print_mpd_bitrate(struct text_object *, char *, int);
-void print_mpd_status(struct text_object *, char *, int);
 int check_mpd_playing(struct text_object *);
+uint8_t mpd_percentage(struct text_object *);
+void print_mpd_album(struct text_object *, char *, unsigned int);
+void print_mpd_albumartist(struct text_object *, char *, unsigned int);
+void print_mpd_artist(struct text_object *, char *, unsigned int);
+void print_mpd_bitrate(struct text_object *, char *, unsigned int);
+void print_mpd_comment(struct text_object *, char *, unsigned int);
+void print_mpd_date(struct text_object *, char *, unsigned int);
+void print_mpd_elapsed(struct text_object *, char *, unsigned int);
+void print_mpd_file(struct text_object *, char *, unsigned int);
+void print_mpd_length(struct text_object *, char *, unsigned int);
+void print_mpd_name(struct text_object *, char *, unsigned int);
+void print_mpd_random(struct text_object *, char *, unsigned int);
+void print_mpd_repeat(struct text_object *, char *, unsigned int);
+void print_mpd_smart(struct text_object *, char *, unsigned int);
+void print_mpd_status(struct text_object *, char *, unsigned int);
+void print_mpd_title(struct text_object *, char *, unsigned int);
+void print_mpd_track(struct text_object *, char *, unsigned int);
+void print_mpd_vol(struct text_object *, char *, unsigned int);
 
 #endif /*MPD_H_*/

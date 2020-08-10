@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * CMUS Conky integration
  *
@@ -24,23 +23,22 @@
 #ifndef CMUS_H_
 #define CMUS_H_
 
-void print_cmus_state(struct text_object *, char *, int);
-void print_cmus_file(struct text_object *, char *, int);
-void print_cmus_title(struct text_object *, char *, int);
-void print_cmus_artist(struct text_object *, char *, int);
-void print_cmus_album(struct text_object *, char *, int);
-void print_cmus_totaltime(struct text_object *, char *, int);
-void print_cmus_timeleft(struct text_object *, char *, int);
-void print_cmus_curtime(struct text_object *, char *, int);
-void print_cmus_random(struct text_object *, char *, int);
-void print_cmus_repeat(struct text_object *, char *, int);
-void print_cmus_aaa(struct text_object *, char *, int);
-void print_cmus_track(struct text_object *, char *, int);
-void print_cmus_genre(struct text_object *, char *, int);
-void print_cmus_date(struct text_object *, char *, int);
-void print_cmus_bar(struct text_object *, char *, int);
+void print_cmus_state(struct text_object *, char *, unsigned int);
+void print_cmus_file(struct text_object *, char *, unsigned int);
+void print_cmus_title(struct text_object *, char *, unsigned int);
+void print_cmus_artist(struct text_object *, char *, unsigned int);
+void print_cmus_album(struct text_object *, char *, unsigned int);
+void print_cmus_totaltime(struct text_object *, char *, unsigned int);
+void print_cmus_timeleft(struct text_object *, char *, unsigned int);
+void print_cmus_curtime(struct text_object *, char *, unsigned int);
+void print_cmus_random(struct text_object *, char *, unsigned int);
+void print_cmus_repeat(struct text_object *, char *, unsigned int);
+void print_cmus_aaa(struct text_object *, char *, unsigned int);
+void print_cmus_track(struct text_object *, char *, unsigned int);
+void print_cmus_genre(struct text_object *, char *, unsigned int);
+void print_cmus_date(struct text_object *, char *, unsigned int);
+void print_cmus_bar(struct text_object *, char *, unsigned int);
 double cmus_progress(struct text_object *obj);
 uint8_t cmus_percent(struct text_object *obj);
 
 #endif /* CMUS_H_ */
-

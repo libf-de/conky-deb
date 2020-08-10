@@ -1,5 +1,4 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=c
+/*
  *
  * apcupsd.h:  conky module for APC UPS daemon monitoring
  *
@@ -32,16 +31,16 @@ int update_apcupsd(void);
 
 double apcupsd_loadbarval(struct text_object *);
 
-void print_apcupsd_name(struct text_object *, char *, int);
-void print_apcupsd_model(struct text_object *, char *, int);
-void print_apcupsd_upsmode(struct text_object *, char *, int);
-void print_apcupsd_cable(struct text_object *, char *, int);
-void print_apcupsd_status(struct text_object *, char *, int);
-void print_apcupsd_linev(struct text_object *, char *, int);
-void print_apcupsd_load(struct text_object *, char *, int);
-void print_apcupsd_charge(struct text_object *, char *, int);
-void print_apcupsd_timeleft(struct text_object *, char *, int);
-void print_apcupsd_temp(struct text_object *, char *, int);
-void print_apcupsd_lastxfer(struct text_object *, char *, int);
+void print_apcupsd_name(struct text_object *, char *, unsigned int);
+void print_apcupsd_model(struct text_object *, char *, unsigned int);
+void print_apcupsd_upsmode(struct text_object *, char *, unsigned int);
+void print_apcupsd_cable(struct text_object *, char *, unsigned int);
+void print_apcupsd_status(struct text_object *, char *, unsigned int);
+void print_apcupsd_linev(struct text_object *, char *, unsigned int);
+void print_apcupsd_load(struct text_object *, char *, unsigned int);
+void print_apcupsd_charge(struct text_object *, char *, unsigned int);
+void print_apcupsd_timeleft(struct text_object *, char *, unsigned int);
+void print_apcupsd_temp(struct text_object *, char *, unsigned int);
+void print_apcupsd_lastxfer(struct text_object *, char *, unsigned int);
 
 #endif /*APCUPSD_H_*/

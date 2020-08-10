@@ -40,6 +40,8 @@
 #cmakedefine HAVE_PIPE2 1
 #cmakedefine HAVE_O_CLOEXEC 1
 
+#cmakedefine HAVE_CLOCK_GETTIME 1
+
 #cmakedefine BUILD_X11 1
 
 #cmakedefine OWN_WINDOW 1
@@ -74,16 +76,11 @@
 
 #cmakedefine BUILD_HDDTEMP 1
 
-#cmakedefine BUILD_EVE 1
-
 #cmakedefine BUILD_LIBXML2 1
 
 #cmakedefine BUILD_CURL 1
 
-#cmakedefine BUILD_WEATHER_XOAP 1
 #cmakedefine BUILD_WEATHER_METAR 1
-
-#define XOAP_FILE "@XOAP_FILE@"
 
 #cmakedefine BUILD_IMLIB2 1
 
@@ -99,6 +96,8 @@
 #cmakedefine BUILD_APCUPSD 1
 
 #cmakedefine BUILD_IOSTATS 1
+
+#cmakedefine BUILD_IPGFREQ 0
 
 #cmakedefine BUILD_WLAN 1
 
@@ -119,10 +118,6 @@
 #cmakedefine BUILD_LUA_IMLIB2 1
 
 #cmakedefine BUILD_LUA_RSVG 1
-
-#if defined(BUILD_LUA_CAIRO) || defined(BUILD_LUA_IMLIB2) || defined(BUILD_LUA_RSVG)
-#define BUILD_LUA_EXTRAS
-#endif
 
 #cmakedefine BUILD_IBM 1
 

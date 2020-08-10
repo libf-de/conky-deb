@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * smapi.h:  conky support for IBM Thinkpad smapi
  *
@@ -25,10 +24,10 @@
 #ifndef _SMAPI_H
 #define _SMAPI_H
 
-void print_smapi(struct text_object *, char *, int);
+void print_smapi(struct text_object *, char *, unsigned int);
 uint8_t smapi_bat_percentage(struct text_object *);
-void print_smapi_bat_temp(struct text_object *, char *, int);
-void print_smapi_bat_power(struct text_object *, char *, int);
+void print_smapi_bat_temp(struct text_object *, char *, unsigned int);
+void print_smapi_bat_power(struct text_object *, char *, unsigned int);
 double smapi_bat_barval(struct text_object *);
 int smapi_bat_installed(struct text_object *obj);
 

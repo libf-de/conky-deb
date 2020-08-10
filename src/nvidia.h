@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2008 Markus Meissner
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -28,12 +27,11 @@
  *
  */
 
-
 #ifndef NVIDIA_CONKY_H
 #define NVIDIA_CONKY_H
 
 int set_nvidia_query(struct text_object *, const char *, unsigned int);
-void print_nvidia_value(struct text_object *, char *, int);
+void print_nvidia_value(struct text_object *, char *, unsigned int);
 double get_nvidia_barval(struct text_object *);
 void free_nvidia(struct text_object *);
 

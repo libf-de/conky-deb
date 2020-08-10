@@ -1,5 +1,4 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=c
+/*
  *
  * prioqueue:  a simple priority queue implementation
  *
@@ -57,7 +56,7 @@ void insert_prio_elem(prio_queue_t, void *);
 int pq_get_cur_size(prio_queue_t queue);
 
 /* pop the top-most element from the queue
- * returns NULL if queue is empty */
+ * returns nullptr if queue is empty */
 void *pop_prio_elem(prio_queue_t);
 
 /* clear and free the given queue */

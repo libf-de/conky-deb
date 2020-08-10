@@ -113,6 +113,8 @@ flitsch <flitsch at users dot sourceforge dot net>
 fow <facadedewalls at yahoo dot com>
   mpd_title max length
 
+Google LLC
+
 Gwenhael LE MOINE <cycojesus at yahoo dot fr>
   Manual setting of the position
   WM_CLASS for window when drawing to own window
@@ -242,6 +244,9 @@ nathanj439 <nathanj439 at users dot sourceforge dot net>
 
 Nikos Ntarmos <ntarmos at users dot sourceforge dot net>
   FreeBSD total memory patch
+
+Nikos Pylarinos <n dot pylarinos at hotmail dot com>
+  macOS support
 
 norsetto <norsetto at ubuntu dot com>
   fix SIGUSR1/SIGHUP segfault

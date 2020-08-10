@@ -1,16 +1,16 @@
+.DS_Store
 *~
 .*.swp
 Doxyfile
 patches/
 doc/conky.1
 README
-build*
+build*/
 doc/*.html
 
 Makefile
 CMakeCache.txt
 CMakeFiles
-*.cmake
 data/convertconf.h
 data/defconfig.h
 lua/libcairo-orig.c
@@ -19,3 +19,7 @@ lua/libimlib2.c
 *.so
 *.a
 /config.h
+
+# Ignore vscode stuff
+.vscode
+*.code-workspace

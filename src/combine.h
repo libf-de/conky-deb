@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -31,7 +30,7 @@
 #define _COMBINE_H
 
 void parse_combine_arg(struct text_object *, const char *);
-void print_combine(struct text_object *, char *, int);
+void print_combine(struct text_object *, char *, unsigned int);
 void free_combine(struct text_object *);
 
 #endif /* _COMBINE_H */

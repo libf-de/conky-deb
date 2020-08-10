@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -29,47 +28,89 @@
 #include <cstring>
 #include <stdexcept>
 
+#if defined(__APPLE__) && defined(__MACH__)
+
+/*
+ *  On Darwin, unnamed semaphores are not supported!
+ *  The only close equivalent to unnamed semaphores is using
+ *      GCD!
+ */
+
+#include <dispatch/dispatch.h>
+
+class semaphore {
+  dispatch_semaphore_t sem;
+
+  semaphore(const semaphore &) = delete;
+  semaphore &operator=(const semaphore &) = delete;
+
+ public:
+  explicit semaphore(unsigned int value = 0) {
+    sem = dispatch_semaphore_create(value);
+
+    if (!sem) throw std::logic_error(strerror(errno));
+  }
+
+  ~semaphore() { dispatch_release(sem); }
+  void post() { dispatch_semaphore_signal(sem); }
+
+  void wait() { dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER); }
+
+  bool trywait() {
+    /* XXX Quick patch */
+#define DISPATCH_EAGAIN 49
+
+    int ret = dispatch_semaphore_wait(sem, DISPATCH_TIME_NOW);
+
+    while (ret > 0) {
+      if (ret == DISPATCH_EAGAIN) {
+        return false;
+      } else if (errno != EINTR) {
+        abort();
+      }
+    }
+    return true;
+  }
+};
+
+#else
+
 #include <semaphore.h>
 
 class semaphore {
-	sem_t sem;
+  sem_t sem;
 
-	semaphore(const semaphore &) = delete;
-	semaphore& operator=(const semaphore &) = delete;
-public:
-	semaphore(unsigned int value = 0) throw(std::logic_error)
-	{
-		if(sem_init(&sem, 0, value))
-			throw std::logic_error(strerror(errno));
-	}
+  semaphore(const semaphore &) = delete;
+  semaphore &operator=(const semaphore &) = delete;
 
-	~semaphore() throw()
-	{ sem_destroy(&sem); }
+ public:
+  semaphore(unsigned int value = 0) {
+    if (sem_init(&sem, 0, value)) throw std::logic_error(strerror(errno));
+  }
 
-	void post() throw(std::overflow_error)
-	{
-		if(sem_post(&sem))
-			throw std::overflow_error(strerror(errno));
-	}
+  ~semaphore() { sem_destroy(&sem); }
 
-	void wait() throw()
-	{
-		while(sem_wait(&sem)) {
-			if(errno != EINTR)
-				abort();
-		}
-	}
+  void post() {
+    if (sem_post(&sem)) throw std::overflow_error(strerror(errno));
+  }
 
-	bool trywait() throw()
-	{
-		while(sem_trywait(&sem)) {
-			if(errno == EAGAIN)
-				return false;
-			else if(errno != EINTR)
-				abort();
-		}
-		return true;
-	}
+  void wait() {
+    while (sem_wait(&sem)) {
+      if (errno != EINTR) abort();
+    }
+  }
+
+  bool trywait() {
+    while (sem_trywait(&sem)) {
+      if (errno == EAGAIN)
+        return false;
+      else if (errno != EINTR)
+        abort();
+    }
+    return true;
+  }
 };
+
+#endif /* defined(__APPLE__) && defined(__MACH__) */
 
 #endif

@@ -1,11 +1,10 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -26,13 +25,13 @@
 #ifndef _IBM_H
 #define _IBM_H
 
-void get_ibm_acpi_fan(struct text_object *, char *, int);
+void get_ibm_acpi_fan(struct text_object *, char *, unsigned int);
 int get_ibm_acpi_temps(void);
-void get_ibm_acpi_volume(struct text_object *, char *, int);
-void get_ibm_acpi_brightness(struct text_object *, char *, int);
-void get_ibm_acpi_thinklight(struct text_object *, char *, int);
+void get_ibm_acpi_volume(struct text_object *, char *, unsigned int);
+void get_ibm_acpi_brightness(struct text_object *, char *, unsigned int);
+void get_ibm_acpi_thinklight(struct text_object *, char *, unsigned int);
 
 void parse_ibm_temps_arg(struct text_object *, const char *);
-void print_ibm_temps(struct text_object *, char *, int);
+void print_ibm_temps(struct text_object *, char *, unsigned int);
 
 #endif /* _IBM_H */

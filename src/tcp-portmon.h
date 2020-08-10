@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * tcp-portmon.h - libtcp-portmon hooks protoypes
  *
@@ -24,21 +23,21 @@
 #include "libtcp-portmon.h"
 
 struct tcp_port_monitor_data {
-	/* starting port to monitor */
-	in_port_t port_range_begin;
-	/* ending port to monitor */
-	in_port_t port_range_end;
-	/* enum from libtcp-portmon.h, e.g. COUNT, etc. */
-	int item;
-	/* 0 to n-1 connections. */
-	int connection_index;
+  /* starting port to monitor */
+  in_port_t port_range_begin;
+  /* ending port to monitor */
+  in_port_t port_range_end;
+  /* enum from libtcp-portmon.h, e.g. COUNT, etc. */
+  int item;
+  /* 0 to n-1 connections. */
+  int connection_index;
 };
 
 /* forward declare to make gcc happy */
 struct text_object;
 
 int tcp_portmon_init(struct text_object *, const char *);
-void tcp_portmon_action(struct text_object *, char *, int);
+void tcp_portmon_action(struct text_object *, char *, unsigned int);
 int tcp_portmon_update(void);
 int tcp_portmon_clear(void);
 void tcp_portmon_free(struct text_object *);

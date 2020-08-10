@@ -1,5 +1,4 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=c
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -36,7 +35,7 @@ void iconv_convert(size_t *, char *, char *, size_t);
 void init_iconv_start(struct text_object *, void *, const char *);
 void init_iconv_stop(void);
 
-void print_iconv_start(struct text_object *, char *, int);
-void print_iconv_stop(struct text_object *, char *, int);
+void print_iconv_start(struct text_object *, char *, unsigned int);
+void print_iconv_stop(struct text_object *, char *, unsigned int);
 
 #endif /* _ICONV_TOOLS_H */

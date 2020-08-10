@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * audacious.h:  conky support for audacious music player
  *
@@ -25,19 +24,22 @@
 #ifndef AUDACIOUS_H
 #define AUDACIOUS_H
 
-void print_audacious_status(struct text_object *, char *, int);
-void print_audacious_title(struct text_object *, char *, int);
-void print_audacious_length(struct text_object *, char *, int);
-void print_audacious_length_seconds(struct text_object *, char *, int);
-void print_audacious_position(struct text_object *, char *, int);
-void print_audacious_position_seconds(struct text_object *, char *, int);
-void print_audacious_bitrate(struct text_object *, char *, int);
-void print_audacious_frequency(struct text_object *, char *, int);
-void print_audacious_channels(struct text_object *, char *, int);
-void print_audacious_filename(struct text_object *, char *, int);
-void print_audacious_playlist_length(struct text_object *, char *, int);
-void print_audacious_playlist_position(struct text_object *, char *, int);
-void print_audacious_main_volume(struct text_object *, char *, int);
+void print_audacious_status(struct text_object *, char *, unsigned int);
+void print_audacious_title(struct text_object *, char *, unsigned int);
+void print_audacious_length(struct text_object *, char *, unsigned int);
+void print_audacious_length_seconds(struct text_object *, char *, unsigned int);
+void print_audacious_position(struct text_object *, char *, unsigned int);
+void print_audacious_position_seconds(struct text_object *, char *,
+                                      unsigned int);
+void print_audacious_bitrate(struct text_object *, char *, unsigned int);
+void print_audacious_frequency(struct text_object *, char *, unsigned int);
+void print_audacious_channels(struct text_object *, char *, unsigned int);
+void print_audacious_filename(struct text_object *, char *, unsigned int);
+void print_audacious_playlist_length(struct text_object *, char *,
+                                     unsigned int);
+void print_audacious_playlist_position(struct text_object *, char *,
+                                       unsigned int);
+void print_audacious_main_volume(struct text_object *, char *, unsigned int);
 double audacious_barval(struct text_object *);
 
 #endif /* AUDACIOUS_H */

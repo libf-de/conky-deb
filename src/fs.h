@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -31,16 +30,16 @@
 #ifndef _FS_H
 #define _FS_H
 
-#include "conky.h"	/* DEFAULT_TEXT_BUFFER_SIZE */
+#include "conky.h" /* DEFAULT_TEXT_BUFFER_SIZE */
 
 /* needed here and by fs.c */
 struct fs_stat {
-	char path[DEFAULT_TEXT_BUFFER_SIZE];
-	char type[DEFAULT_TEXT_BUFFER_SIZE];
-	long long size;
-	long long avail;
-	long long free;
-	char set;
+  char path[DEFAULT_TEXT_BUFFER_SIZE];
+  char type[DEFAULT_TEXT_BUFFER_SIZE];
+  long long size;
+  long long avail;
+  long long free;
+  char set;
 };
 
 /* forward declare to make gcc happy (fs.h <-> text_object.h include) */
@@ -53,13 +52,13 @@ double fs_free_barval(struct text_object *);
 void init_fs(struct text_object *, const char *);
 uint8_t fs_free_percentage(struct text_object *);
 uint8_t fs_used_percentage(struct text_object *);
-void print_fs_free(struct text_object *, char *, int);
-void print_fs_size(struct text_object *, char *, int);
-void print_fs_used(struct text_object *, char *, int);
-void print_fs_type(struct text_object *, char *, int);
+void print_fs_free(struct text_object *, char *, unsigned int);
+void print_fs_size(struct text_object *, char *, unsigned int);
+void print_fs_used(struct text_object *, char *, unsigned int);
+void print_fs_type(struct text_object *, char *, unsigned int);
 
 int update_fs_stats(void);
-struct fs_stat *prepare_fs_stat(const char *path);
+struct fs_stat *prepare_fs_stat(const char *s);
 void clear_fs_stats(void);
 
 #endif /* _FS_H */
