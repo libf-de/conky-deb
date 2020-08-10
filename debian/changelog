@@ -1,7 +1,8 @@
 conky (1.11.6-1) UNRELEASED; urgency=medium
 
   * Acknowledge NMU, thanks to Boyuan Yang!
-  * New upstream release.
+  * New upstream release. (Closes: #950400)
+    - Fix crash caused by temporary virtual net interfaces. (Closes: #900001)
     - Add build-dep on liblua5.3-dev.
     - Drop build-dep on liblua5.1-0-dev, libtolua++5.1-dev.
   * Enable previously disabled features in conky-all:
