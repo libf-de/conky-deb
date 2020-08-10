@@ -39,8 +39,9 @@ Build-Depends:
  pkg-config (>= 0.19)
 Homepage: https://github.com/brndnmtthws/conky
 Standards-Version: 4.5.0
-Vcs-Svn: svn://anonscm.debian.org/collab-maint/deb-maint/conky/trunk
-Vcs-Browser: https://anonscm.debian.org/viewvc/collab-maint/deb-maint/conky/trunk
+Vcs-Git: https://salsa.debian.org/debian/conky.git
+Vcs-Browser: https://salsa.debian.org/debian/conky
+Rules-Requires-Root: no
 
 Package: conky-std
 Architecture: any

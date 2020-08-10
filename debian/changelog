@@ -11,6 +11,7 @@ conky (1.11.6-1) UNRELEASED; urgency=medium
     - systemd journal (add build-dep on libsystemd-dev)
   * Update to debhelper compat level 12.
   * Update Standards version to 4.5.0.
+  * Update Vcs-* links to point to salsa.
 
  -- Vincent Cheng <vcheng@debian.org>  Sun, 09 Aug 2020 19:46:49 -0700
 
