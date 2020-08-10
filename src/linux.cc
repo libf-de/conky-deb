@@ -144,7 +144,7 @@ int check_mount(struct text_object *obj)
 		return 0;
 
 	if ((mtab = fopen("/etc/mtab", "r"))) {
-		char buf1[256], buf2[128];
+		char buf1[256], buf2[129];
 
 		while (fgets(buf1, 256, mtab)) {
 			sscanf(buf1, "%*s %128s", buf2);
@@ -593,7 +593,7 @@ int update_net_stats(void)
 
 #ifdef BUILD_IPV6
 	FILE *file;
-	char v6addr[32];
+	char v6addr[33];
 	char devname[21];
 	unsigned int netmask, scope;
 	struct net_stat *ns;
@@ -643,8 +643,8 @@ int update_net_stats(void)
 			}
 			lastv6->next = NULL;
 		}
+		fclose(file);
 	}
-	fclose(file);
 #endif /* BUILD_IPV6 */
 
 	first = 0;
@@ -1898,14 +1898,14 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 				snprintf(last_battery_str[idx], 64, "unknown %d%%",
 					(int) (((float)remaining_capacity / acpi_last_full[idx]) * 100));
 			else
-				strncpy(last_battery_str[idx], "AC", 64);
+				strncpy(last_battery_str[idx], "not present", 64);
 		}
 	} else if (acpi_bat_fp[idx] != NULL) {
 		/* ACPI */
 		int present_rate = -1;
 		int remaining_capacity = -1;
 		char charging_state[64];
-		char present[4];
+		char present[5];
 
 		/* read last full capacity if it's zero */
 		if (acpi_last_full[idx] == 0) {
@@ -2000,7 +2000,7 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 						(long) ((remaining_capacity * 3600) / present_rate));
 			} else if (present_rate == 0) {	/* Thanks to Nexox for this one */
 				snprintf(last_battery_str[idx],
-						sizeof(last_battery_str[idx]) - 1, "full");
+						sizeof(last_battery_str[idx]) - 1, "charged");
 				snprintf(last_battery_time_str[idx],
 						sizeof(last_battery_time_str[idx]) - 1, "unknown");
 			} else {
@@ -2023,13 +2023,13 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 			/* unknown, probably full / AC */
 		} else {
 			if (strncmp(charging_state, "Full", 64) == 0) {
-				strncpy(last_battery_str[idx], "full", 64);
+				strncpy(last_battery_str[idx], "charged", 64);
 			} else if (acpi_last_full[idx] != 0
 					&& remaining_capacity != acpi_last_full[idx]) {
 				snprintf(last_battery_str[idx], 64, "unknown %d%%",
 						(int) ((remaining_capacity * 100) / acpi_last_full[idx]));
 			} else {
-				strncpy(last_battery_str[idx], "AC", 64);
+				strncpy(last_battery_str[idx], "not present", 64);
 			}
 		}
 		fclose(acpi_bat_fp[idx]);
@@ -2050,7 +2050,7 @@ void get_battery_stuff(char *buffer, unsigned int n, const char *bat, int item)
 
 			if (life == -1) {
 				/* could check now that there is ac */
-				snprintf(last_battery_str[idx], 64, "AC");
+				snprintf(last_battery_str[idx], 64, "not present");
 
 			/* could check that status == 3 here? */
 			} else if (ac && life != 100) {
@@ -2101,10 +2101,11 @@ void get_battery_short_status(char *buffer, unsigned int n, const char *bat)
 	} else if (0 == strncmp("empty", buffer, 5)) {
 		buffer[0] = 'E';
 		memmove(buffer + 1, buffer + 5, n - 5);
-	} else if (0 != strncmp("AC", buffer, 2)) {
+	} else if (0 == strncmp("unknown", buffer, 7)) {
 		buffer[0] = 'U';
-		memmove(buffer + 1, buffer + 2, n - 2);
+		memmove(buffer + 1, buffer + 7, n - 7);
 	}
+	// Otherwise, don't shorten.
 }
 
 int _get_battery_perct(const char *bat)
@@ -2627,6 +2628,7 @@ static void process_parse_stat(struct process *process)
 {
 	char line[BUFFER_LEN] = { 0 }, filename[BUFFER_LEN], procname[BUFFER_LEN];
 	char cmdline[BUFFER_LEN] = { 0 }, cmdline_filename[BUFFER_LEN], cmdline_procname[BUFFER_LEN];
+	char basename[BUFFER_LEN] = { 0 };
 	char tmpstr[BUFFER_LEN] = { 0 };
 	char state[4];
 	int ps, cmdline_ps;
@@ -2674,36 +2676,39 @@ static void process_parse_stat(struct process *process)
 		return;
 	}
 
-	/* Some processes have null-separated arguments, let's fix it */
-	for(int i = 0; i < endl; i++)
-		if (cmdline[i] == 0)
+	/* Some processes have null-separated arguments (see proc(5)); let's fix it */
+	int i = endl;
+	while (i && cmdline[i-1] == 0) {
+		/* Skip past any trailing null characters */
+		--i;
+	}
+	while (i--) {
+		/* Replace null character between arguments with a space */
+		if (cmdline[i] == 0) {
 			cmdline[i] = ' ';
+		}
+	}
 
 	cmdline[endl] = 0;
+
 	/* We want to transform for example "/usr/bin/python program.py" to "python program.py"
 	 * 1. search for first space
 	 * 2. search for last / before first space
-	 * 3. copy string from it's position */
-
-	char * space_ptr = strchr(cmdline, ' ');
-	if (space_ptr == NULL)
-	{
+	 * 3. copy string from its position
+	 */
+	char *space_ptr = strchr(cmdline, ' ');
+	if (space_ptr == NULL) {
 		strcpy(tmpstr, cmdline);
-	}
-	else
-	{
+	} else {
 		long int space_pos = space_ptr - cmdline;
 		strncpy(tmpstr, cmdline, space_pos);
 		tmpstr[space_pos] = 0;
 	}
 
-	char * slash_ptr = strrchr(tmpstr, '/');
-	if (slash_ptr == NULL )
-	{
+	char *slash_ptr = strrchr(tmpstr, '/');
+	if (slash_ptr == NULL) {
 		strncpy(cmdline_procname, cmdline, BUFFER_LEN);
-	}
-	else
-	{
+	} else {
 		long int slash_pos = slash_ptr - tmpstr;
 		strncpy(cmdline_procname, cmdline + slash_pos + 1, BUFFER_LEN - slash_pos);
 		cmdline_procname[BUFFER_LEN - slash_pos] = 0;
@@ -2712,15 +2717,16 @@ static void process_parse_stat(struct process *process)
 	/* Extract cpu times from data in /proc filesystem */
 	lparen = strchr(line, '(');
 	rparen = strrchr(line, ')');
-	if(!lparen || !rparen || rparen < lparen)
+	if (!lparen || !rparen || rparen < lparen)
 		return; // this should not happen
 
 	rc = MIN((unsigned)(rparen - lparen - 1), sizeof(procname) - 1);
 	strncpy(procname, lparen + 1, rc);
 	procname[rc] = '\0';
+	strncpy(basename, procname, strlen(procname) + 1);
 
 	if (strlen(procname) < strlen(cmdline_procname))
-		strncpy(procname, cmdline_procname, strlen(cmdline_procname)+1);
+		strncpy(procname, cmdline_procname, strlen(cmdline_procname) + 1);
 
 	rc = sscanf(rparen + 1, "%3s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lu "
 			"%lu %*s %*s %*s %d %*s %*s %*s %llu %llu", state, &process->user_time,
@@ -2730,43 +2736,13 @@ static void process_parse_stat(struct process *process)
 		return;
 	}
 
-	if(state[0]=='R')
+	if (state[0] == 'R')
 		++ info.run_procs;
 
-	/* remove any "kdeinit: " */
-	if (procname == strstr(procname, "kdeinit")) {
-		snprintf(filename, sizeof(filename), PROCFS_CMDLINE_TEMPLATE,
-				process->pid);
-
-		ps = open(filename, O_RDONLY);
-		if (ps < 0) {
-			/* The process must have finished in the last few jiffies! */
-			return;
-		}
-
-		endl = read(ps, line, BUFFER_LEN - 1);
-		close(ps);
-		if(endl < 0)
-			return;
-		line[endl] = 0;
-
-		/* account for "kdeinit: " */
-		if ((char *) line == strstr(line, "kdeinit: ")) {
-			r = ((char *) line) + 9;
-		} else {
-			r = (char *) line;
-		}
-
-		q = procname;
-		/* stop at space */
-		while (*r && *r != ' ') {
-			*q++ = *r++;
-		}
-		*q = 0;
-	}
-
 	free_and_zero(process->name);
+	free_and_zero(process->basename);
 	process->name = strndup(procname, text_buffer_size.get(*::state));
+	process->basename = strndup(basename, text_buffer_size.get(*::state));
 	process->rss *= getpagesize();
 
 	process->total_cpu_time = process->user_time + process->kernel_time;

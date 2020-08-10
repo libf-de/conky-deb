@@ -22,7 +22,7 @@
 
 include(FindPkgConfig)
 include(CheckFunctionExists)
-include(CheckIncludeFile)
+include(CheckIncludeFiles)
 include(CheckSymbolExists)
 
 # Check for some headers
@@ -105,7 +105,7 @@ endif(BUILD_IRC)
 if(BUILD_IPV6)
 	find_file(IF_INET6 if_inet6 PATHS /proc/net)
 	if(NOT IF_INET6)
-		message(FATAL_ERROR "/proc/net/if_inet6 unavailable")
+		message(WARNING "/proc/net/if_inet6 unavailable")
 	endif(NOT IF_INET6)
 endif(BUILD_IPV6)
 
@@ -119,7 +119,7 @@ if(BUILD_HTTP)
 endif(BUILD_HTTP)
 
 if(BUILD_NCURSES)
-	check_include_file(ncurses.h NCURSES_H)
+	check_include_files(ncurses.h NCURSES_H)
 	find_library(NCURSES_LIB NAMES ncurses)
 	if(NOT NCURSES_H OR NOT NCURSES_LIB)
 		message(FATAL_ERROR "Unable to find ncurses library")
@@ -167,7 +167,7 @@ endif(BUILD_PORT_MONITORS)
 
 # Check for iconv
 if(BUILD_ICONV)
-	check_include_file(iconv.h HAVE_ICONV_H)
+	check_include_files(iconv.h HAVE_ICONV_H)
 	find_library(ICONV_LIBRARY NAMES iconv)
 	if(NOT ICONV_LIBRARY)
 		# maybe iconv() is provided by libc
@@ -422,6 +422,6 @@ if(DEBUG)
 	execute_process(COMMAND
 		${APP_GIT} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git log
 		--since=${VERSION_MAJOR}-${VERSION_MINOR}-01 --pretty=oneline COMMAND
-		${APP_WC} -l COMMAND ${APP_GAWK} "{print $1}" RESULT_VARIABLE RETVAL
+		${APP_WC} -l COMMAND ${APP_AWK} "{print $1}" RESULT_VARIABLE RETVAL
 		OUTPUT_VARIABLE COMMIT_COUNT OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif(DEBUG)

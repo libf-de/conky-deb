@@ -236,7 +236,7 @@
                 <option>apm_adapter</option>
             </command>
         </term>
-        <listitem>Display APM AC adapter status (FreeBSD only) 
+        <listitem>Display APM AC adapter status (FreeBSD, OpenBSD only) 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -245,7 +245,7 @@
                 <option>apm_battery_life</option>
             </command>
         </term>
-        <listitem>Display APM battery life in percent (FreeBSD
+        <listitem>Display APM battery life in percent (FreeBSD, OpenBSD
         only) 
         <para /></listitem>
     </varlistentry>
@@ -257,7 +257,7 @@
         </term>
         <listitem>Display remaining APM battery life in hh:mm:ss or
         "unknown" if AC adapterstatus is on-line or charging
-        (FreeBSD only) 
+        (FreeBSD, OpenBSD only) 
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1849,9 +1849,21 @@
             </command>
             <option>(process)</option>
         </term>
-        <listitem>if PROCESS is running, display everything
-        $if_running and the matching $endif. This uses the
-        ``pidof'' command, so the -x switch is also supported. 
+        <listitem>If PROCESS is running, display everything
+        between $if_running and the corresponding $else or $endif.
+        Note that PROCESS may be either a full command line with
+        arguments (without the directory prefix), or simply the name
+        of an executable. For example, either of the following will
+        be true if there is a running process with the command line
+        <command>/usr/bin/conky -u 5</command>:
+        <simplelist>
+            <member>
+                <command>${if_running conky -u 5}</command> or
+                <command>${if_running conky}</command>
+            </member>
+        </simplelist>
+        It is important not to include trailing spaces. For example,
+        <command>${if_running conky }</command> will be false.
         <para /></listitem>
     </varlistentry>
     <varlistentry>
@@ -1918,7 +1930,7 @@
         changing the WxH will scale the image. If you specify the
         no-cache flag (-n), the image will not be cached.
         Alternately, you can specify the -f int switch to specify a
-        cache flust interval for a particular image. Example:
+        cache flush interval for a particular image. Example:
         ${image /home/brenden/cheeseburger.jpg -p 20,20 -s 200x200}
         will render 'cheeseburger.jpg' at (20,20) scaled to 200x200
         pixels. Conky does not make any attempt to adjust the
@@ -3707,12 +3719,12 @@
             whitespace. Also simple nesting of templates is
             possible this way.</para>
             <para>Here are some examples of template
-            definitions:</para>
+            definitions, note they are placed between [[ ... ]] instead of ' ... ':</para>
             <simplelist>
-                <member>template0 $\1\2</member>
-                <member>template1 \1: ${fs_used \2} / ${fs_size
-                \2}</member>
-                <member>template2 \1 \2</member>
+                <member>template0 = [[$\1\2]]</member>
+                <member>template1 = [[\1: ${fs_used \2} / ${fs_size
+                \2}]]</member>
+                <member>template2 = [[\1 \2]]</member>
             </simplelist>
             <para>The following list shows sample usage of the
             templates defined above, with the equivalent syntax

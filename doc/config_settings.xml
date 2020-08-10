@@ -917,7 +917,7 @@
             <member>'\n' -&gt; newline</member>
             <member>'\\' -&gt; backslash</member>
             <member>'\ ' -&gt; space</member>
-            <member>'\N' -&gt; template argument N</member>
+            <member>'\N' -&gt; template argument N (starting from 1)</member>
         </simplelist>
         <para /></listitem>
     </varlistentry>
@@ -957,6 +957,17 @@
         <listitem>If true, cpu in top will show usage of one
         processor's power. If false, cpu in top will show the usage
         of all processors' power combined. 
+        <para /></listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <command>
+                <option>top_name_verbose</option>
+            </command>
+        </term>
+        <listitem>If true, top name shows the full command line of each
+        process, including arguments (whenever possible). Otherwise,
+        only the basename is displayed. Default value is false.
         <para /></listitem>
     </varlistentry>
     <varlistentry>

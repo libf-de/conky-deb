@@ -116,6 +116,7 @@ void free_all_processes(void)
 	while (pr) {
 		next = pr->next;
 		free_and_zero(pr->name);
+		free_and_zero(pr->basename);
 		free(pr);
 		pr = next;
 	}
@@ -130,7 +131,10 @@ struct process *get_process_by_name(const char *name)
 	struct process *p = first_process;
 
 	while (p) {
-		if (p->name && !strcmp(p->name, name))
+		/* Try matching against the full command line first. If that fails,
+		 * fall back to the basename.
+		 */
+		if ((p->name && !strcmp(p->name, name)) || (p->basename && !strcmp(p->basename, name)))
 			return p;
 		p = p->next;
 	}
@@ -164,6 +168,7 @@ static struct process *new_process(pid_t pid)
 
 	p->pid = pid;
 	p->name = 0;
+	p->basename = 0;
 	p->amount = 0;
 	p->user_time = 0;
 	p->total = 0;
@@ -229,6 +234,7 @@ static void delete_process(struct process *p)
 		first_process = p->next;
 
 	free_and_zero(p->name);
+	free_and_zero(p->basename);
 	/* remove the process from the hash table */
 	unhash_process(p);
 	free(p);
@@ -480,6 +486,7 @@ struct top_data {
 
 static conky::range_config_setting<unsigned int> top_name_width("top_name_width", 0,
 										std::numeric_limits<unsigned int>::max(), 15, true);
+static conky::simple_config_setting<bool> top_name_verbose("top_name_verbose", false, true);
 
 static void print_top_name(struct text_object *obj, char *p, int p_max_size)
 {
@@ -490,7 +497,13 @@ static void print_top_name(struct text_object *obj, char *p, int p_max_size)
 		return;
 
 	width = MIN(p_max_size, (int)top_name_width.get(*state) + 1);
-	snprintf(p, width + 1, "%-*s", width, td->list[td->num]->name);
+	if (top_name_verbose.get(*state)) {
+		/* print the full command line */
+		snprintf(p, width + 1, "%-*s", width, td->list[td->num]->name);
+	} else {
+		/* print only the basename (i.e. executable name) */
+		snprintf(p, width + 1, "%-*s", width, td->list[td->num]->basename);
+	}
 }
 
 static void print_top_mem(struct text_object *obj, char *p, int p_max_size)

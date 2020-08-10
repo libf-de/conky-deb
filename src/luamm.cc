@@ -171,6 +171,14 @@ namespace lua {
 			return nresults;
 		}
 
+		// Overloaded for Lua 5.3+ as lua_gettable and others return an int
+		template<int (*misc)(lua_State *, int), int nresults>
+		int safe_misc_trampoline(lua_State *l)
+		{
+			misc(l, 1);
+			return nresults;
+		}
+
 		int safe_next_trampoline(lua_State *l)
 		{
 			int r = lua_next(l, 1);
@@ -357,6 +365,7 @@ namespace lua {
 		pushinteger(LUA_RIDX_GLOBALS);
 		gettable(REGISTRYINDEX);
 		getfield(-1, name);
+		replace(-2);
 #else
 		getfield(LUA_GLOBALSINDEX, name);
 #endif
