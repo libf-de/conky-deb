@@ -9,8 +9,10 @@ DEB_CXXFLAGS        ?= $(shell dpkg-buildflags --get CXXFLAGS)
 DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
-COMMON_CONF_ARGS=-DCMAKE_BUILD_TYPE=None -DCMAKE_INSTALL_PREFIX=/usr \
-                 -DMAINTAINER_MODE=ON -DRELEASE=True \
+COMMON_CONF_ARGS=-DCMAKE_BUILD_TYPE=None \
+                 -DCMAKE_INSTALL_PREFIX=/usr \
+                 -DMAINTAINER_MODE=ON \
+                 -DRELEASE=True \
                  -DCMAKE_C_FLAGS="$(DEB_CFLAGS) $(DEB_CPPFLAGS)" \
                  -DCMAKE_CXX_FLAGS="$(DEB_CXXFLAGS) $(DEB_CPPFLAGS)"
 
@@ -42,19 +44,30 @@ override_dh_auto_clean:
 override_dh_auto_configure:
 	dh_auto_configure --builddirectory build-std -- \
 	-DDOC_PATH=/usr/share/doc/conky-std \
-	$(COMMON_CONF_ARGS) $(LINUX_CONF_ARGS) -DBUILD_XDBE=ON
+	$(COMMON_CONF_ARGS) $(LINUX_CONF_ARGS) \
+	-DBUILD_XDBE=ON
 	
 	dh_auto_configure --builddirectory build-cli -- \
 	-DDOC_PATH=/usr/share/doc/conky-cli \
-	$(COMMON_CONF_ARGS) -DBUILD_X11=OFF
+	$(COMMON_CONF_ARGS) \
+	-DBUILD_X11=OFF
 	
 	dh_auto_configure --builddirectory build-all -- \
 	-DDOC_PATH=/usr/share/doc/conky-all \
 	$(COMMON_CONF_ARGS) $(LINUX_CONF_ARGS) $(ENABLE_NVIDIA) \
-	-DBUILD_XDBE=ON -DBUILD_CURL=ON -DBUILD_IMLIB2=ON -DBUILD_RSS=ON \
-	-DBUILD_WEATHER_METAR=ON -DBUILD_WEATHER_XOAP=ON -DBUILD_LUA_CAIRO=ON \
-	-DBUILD_LUA_IMLIB2=ON -DBUILD_LUA_RSVG=ON -DBUILD_AUDACIOUS=ON \
-	-DBUILD_XMMS2=ON -DBUILD_EVE=ON -DBUILD_PULSEAUDIO=ON
+	-DBUILD_AUDACIOUS=ON \
+	-DBUILD_CURL=ON \
+	-DBUILD_EVE=ON \
+	-DBUILD_IMLIB2=ON \
+	-DBUILD_LUA_CAIRO=ON \
+	-DBUILD_LUA_IMLIB2=ON \
+	-DBUILD_LUA_RSVG=ON \
+	-DBUILD_PULSEAUDIO=ON \
+	-DBUILD_RSS=ON \
+	-DBUILD_WEATHER_METAR=ON \
+	-DBUILD_WEATHER_XOAP=ON \
+	-DBUILD_XDBE=ON \
+	-DBUILD_XMMS2=ON
 
 override_dh_auto_build:
 	dh_auto_build --builddirectory build-std
