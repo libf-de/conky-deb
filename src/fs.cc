@@ -43,15 +43,23 @@
 #include <sys/statfs.h>
 #endif
 
+#if defined(__sun)
+#include <sys/types.h>
+#include <sys/statvfs.h>
+#endif
+
 #if defined(__FreeBSD__)
 #include "freebsd.h"
 #elif defined(__DragonFly__)
 #include "dragonfly.h"
+#elif defined(__HAIKU__)
+#include "haiku.h"
 #endif
 
 
 #if !defined(HAVE_STRUCT_STATFS_F_FSTYPENAME) && \
-	!defined (__OpenBSD__) && !defined(__FreeBSD__) && !defined(__DragonFly__)
+	!defined (__OpenBSD__) && !defined(__FreeBSD__) && \
+	!defined(__DragonFly__) && !defined(__sun) && !defined(__HAIKU__)
 #include <mntent.h>
 #endif
 
@@ -117,6 +125,15 @@ struct fs_stat *prepare_fs_stat(const char *s)
 
 static void update_fs_stat(struct fs_stat *fs)
 {
+#if defined(__sun)
+    struct statvfs s;
+
+	if (statvfs(fs->path, &s) == 0) {
+		fs->size = (long long)s.f_blocks * s.f_frsize;
+		fs->avail = (long long)s.f_bavail * s.f_frsize;
+		fs->free = (long long)s.f_bfree * s.f_frsize;
+		(void) strncpy(fs->type, s.f_basetype, sizeof (fs->type));
+#else
 	struct statfs64 s;
 
 	if (statfs64(fs->path, &s) == 0) {
@@ -125,6 +142,7 @@ static void update_fs_stat(struct fs_stat *fs)
 		fs->avail = (long long)s.f_bavail * s.f_bsize;
 		fs->free = (long long)s.f_bfree * s.f_bsize;
 		get_fs_type(fs->path, fs->type);
+#endif
 	} else {
 		NORM_ERR("statfs64 '%s': %s", fs->path, strerror(errno));
 		fs->size = 0;
@@ -138,7 +156,7 @@ void get_fs_type(const char *path, char *result)
 {
 
 #if defined(HAVE_STRUCT_STATFS_F_FSTYPENAME) || \
-	defined(__FreeBSD__) || defined (__OpenBSD__) || defined(__DragonFly__)
+	defined(__FreeBSD__) || defined (__OpenBSD__) || defined(__DragonFly__) || defined(__HAIKU__)
 
 	struct statfs64 s;
 	if (statfs64(path, &s) == 0) {
@@ -147,17 +165,18 @@ void get_fs_type(const char *path, char *result)
 		NORM_ERR("statfs64 '%s': %s", path, strerror(errno));
 	}
 	return;
-
+#elif defined(__sun)
+	assert(0);		/* not used - see update_fs_stat() */
 #else				/* HAVE_STRUCT_STATFS_F_FSTYPENAME */
 
 	struct mntent *me;
-	FILE *mtab = setmntent("/etc/mtab", "r");
+	FILE *mtab = setmntent("/proc/mounts", "r");
 	char *search_path;
 	int match;
 	char *slash;
 
 	if (mtab == NULL) {
-		NORM_ERR("setmntent /etc/mtab: %s", strerror(errno));
+		NORM_ERR("setmntent /proc/mounts: %s", strerror(errno));
 		strncpy(result, "unknown", DEFAULT_TEXT_BUFFER_SIZE);
 		return;
 	}
