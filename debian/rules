@@ -9,13 +9,11 @@ DEB_CXXFLAGS        ?= $(shell dpkg-buildflags --get CXXFLAGS)
 DEB_HOST_ARCH_OS    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
-COMMON_CONF_ARGS=-DCMAKE_BUILD_TYPE=None \
+COMMON_CONF_ARGS=-DCMAKE_BUILD_TYPE=RelWithDebInfo \
                  -DCMAKE_INSTALL_PREFIX=/usr \
-                 -DMAINTAINER_MODE=ON \
                  -DRELEASE=True \
                  -DBUILD_DOCS=ON \
                  -DBUILD_PORT_MONITORS=OFF \
-                 -DBUILD_TESTS=OFF \
                  -DCMAKE_C_FLAGS="$(DEB_CFLAGS) $(DEB_CPPFLAGS)" \
                  -DCMAKE_CXX_FLAGS="$(DEB_CXXFLAGS) $(DEB_CPPFLAGS)"
 
