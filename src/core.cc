@@ -122,17 +122,15 @@
  */
 const char *dev_name(const char *path)
 {
-	static char buf[255];	/* should be enough for pathnames */
-	ssize_t buflen;
+	static char buf[PATH_MAX];
 
 	if (!path)
 		return NULL;
 
 #define DEV_NAME(x) \
   x != NULL && strlen(x) > 5 && strncmp(x, "/dev/", 5) == 0 ? x + 5 : x
-	if ((buflen = readlink(path, buf, 254)) == -1)
+	if (realpath(path, buf) == NULL)
 		return DEV_NAME(path);
-	buf[buflen] = '\0';
 	return DEV_NAME(buf);
 #undef DEV_NAME
 }
@@ -742,69 +740,79 @@ struct text_object *construct_text_object(char *s, const char *arg,
 		scan_no_update(obj, arg);
 		obj->callbacks.print = &print_no_update;
 		obj->callbacks.free = &free_no_update;
-	END OBJ(exec, 0)
-		scan_exec_arg(obj, arg);
+	END OBJ_ARG(exec, 0, "exec needs arguments: <command>")
+		scan_exec_arg(obj, arg, EF_EXEC);
 		obj->parse = false;
 		obj->thread = false;
+		register_exec(obj);
 		obj->callbacks.print = &print_exec;
 		obj->callbacks.free = &free_exec;
-	END OBJ(execp, 0)
-		scan_exec_arg(obj, arg);
+	END OBJ_ARG(execi, 0, "execi needs arguments: <interval> <command>")
+		scan_exec_arg(obj, arg, EF_EXECI);
+		obj->parse = false;
+		obj->thread = false;
+		register_execi(obj);
+		obj->callbacks.print = &print_exec;
+		obj->callbacks.free = &free_execi;
+	END OBJ_ARG(execp, 0, "execp needs arguments: <command>")
+		scan_exec_arg(obj, arg, EF_EXEC);
 		obj->parse = true;
 		obj->thread = false;
+		register_exec(obj);
 		obj->callbacks.print = &print_exec;
 		obj->callbacks.free = &free_exec;
-	END OBJ(execbar, 0)
-		scan_exec_arg(obj, arg);
+	END OBJ_ARG(execpi, 0, "execpi needs arguments: <interval> <command>")
+		scan_exec_arg(obj, arg, EF_EXECI);
+		obj->parse = true;
+		obj->thread = false;
+		register_execi(obj);
+		obj->callbacks.print = &print_exec;
+		obj->callbacks.free = &free_execi;
+	END OBJ_ARG(execbar, 0, "execbar needs arguments: [height],[width] <command>")
+		scan_exec_arg(obj, arg, EF_EXEC | EF_BAR);
+		register_exec(obj);
 		obj->callbacks.barval = &execbarval;
 		obj->callbacks.free = &free_exec;
-	END OBJ(execgauge, 0)
-		scan_exec_arg(obj, arg);
+	END OBJ_ARG(execibar, 0, "execibar needs arguments: <interval> [height],[width] <command>")
+		scan_exec_arg(obj, arg, EF_EXECI | EF_BAR);
+		register_execi(obj);
+		obj->callbacks.barval = &execbarval;
+		obj->callbacks.free = &free_execi;
+#ifdef BUILD_X11
+	END OBJ_ARG(execgauge, 0, "execgauge needs arguments: [height],[width] <command>")
+		scan_exec_arg(obj, arg, EF_EXEC | EF_GAUGE);
+		register_exec(obj);
 		obj->callbacks.gaugeval = &execbarval;
 		obj->callbacks.free = &free_exec;
-#ifdef BUILD_X11
-	END OBJ(execgraph, 0)
-		scan_execgraph_arg(obj, arg);
+	END OBJ_ARG(execigauge, 0, "execigauge needs arguments: <interval> [height],[width] <command>")
+		scan_exec_arg(obj, arg, EF_EXECI | EF_GAUGE);
+		register_execi(obj);
+		obj->callbacks.gaugeval = &execbarval;
+		obj->callbacks.free = &free_execi;
+	END OBJ_ARG(execgraph, 0, "execgraph needs arguments: <command> [height],[width] [color1] [color2] [scale] [-t|-l]")
+		scan_exec_arg(obj, arg, EF_EXEC | EF_GRAPH);
+		register_exec(obj);
 		obj->callbacks.graphval = &execbarval;
 		obj->callbacks.free = &free_exec;
-#endif /* BUILD_X11 */
-	END OBJ_ARG(execibar, 0, "execibar needs arguments")
-		scan_execi_bar_arg(obj, arg);
-		obj->callbacks.barval = &execi_barval;
-		obj->callbacks.free = &free_execi;
-#ifdef BUILD_X11
-	END OBJ_ARG(execigraph, 0, "execigraph needs arguments")
-		scan_execgraph_arg(obj, arg);
-		obj->callbacks.graphval = &execi_barval;
-		obj->callbacks.free = &free_execi;
-	END OBJ_ARG(execigauge, 0, "execigauge needs arguments")
-		scan_execi_gauge_arg(obj, arg);
-		obj->callbacks.gaugeval = &execi_barval;
+	END OBJ_ARG(execigraph, 0, "execigraph needs arguments: <interval> <command> [height],[width] [color1] [color2] [scale] [-t|-l]")
+		scan_exec_arg(obj, arg, EF_EXECI | EF_GRAPH);
+		register_execi(obj);
+		obj->callbacks.graphval = &execbarval;
 		obj->callbacks.free = &free_execi;
 #endif /* BUILD_X11 */
-	END OBJ_ARG(execi, 0, "execi needs arguments")
-		scan_execi_arg(obj, arg);
-		obj->parse = false;
-		obj->thread = false;
-		obj->callbacks.print = &print_execi;
-		obj->callbacks.free = &free_execi;
-	END OBJ_ARG(execpi, 0, "execpi needs arguments")
-		scan_execi_arg(obj, arg);
-		obj->parse = true;
-		obj->thread = false;
-		obj->callbacks.print = &print_execi;
-		obj->callbacks.free = &free_execi;
-	END OBJ_ARG(texeci, 0, "texeci needs arguments")
-		scan_execi_arg(obj, arg);
+	END OBJ_ARG(texeci, 0, "texeci needs arguments: <interval> <command>")
+		scan_exec_arg(obj, arg, EF_EXECI);
 		obj->parse = false;
 		obj->thread = true;
-		obj->callbacks.print = &print_execi;
+		register_execi(obj);
+		obj->callbacks.print = &print_exec;
 		obj->callbacks.free = &free_execi;
-	END OBJ_ARG(texecpi, 0, "texecpi needs arguments")
-		scan_execi_arg(obj, arg);
+	END OBJ_ARG(texecpi, 0, "texecpi needs arguments: <interval> <command>")
+		scan_exec_arg(obj, arg, EF_EXECI);
 		obj->parse = true;
 		obj->thread = true;
-		obj->callbacks.print = &print_execi;
+		register_execi(obj);
+		obj->callbacks.print = &print_exec;
 		obj->callbacks.free = &free_execi;
 	END OBJ(fs_bar, &update_fs_stats)
 		init_fs_bar(obj, arg);
@@ -1794,6 +1802,27 @@ struct text_object *construct_text_object(char *s, const char *arg,
 		}
 		obj->callbacks.print = &print_nvidia_value;
 		obj->callbacks.free = &free_nvidia;
+	END OBJ_ARG(nvidiabar, 0, "nvidiabar needs an argument")
+		if (scan_nvidia_args(obj, arg, BAR)) {
+			CRIT_ERR(obj, free_at_crash, "nvidiabar: invalid argument"
+				 " specified: '%s'\n", arg);
+		}
+		obj->callbacks.barval = &get_nvidia_barval;
+		obj->callbacks.free = &free_nvidia;
+	END OBJ_ARG(nvidiagraph, 0, "nvidiagraph needs an argument")
+		if (scan_nvidia_args(obj, arg, GRAPH)) {
+			CRIT_ERR(obj, free_at_crash, "nvidiagraph: invalid argument"
+				 " specified: '%s'\n", arg);
+		}
+		obj->callbacks.graphval = &get_nvidia_barval;
+		obj->callbacks.free = &free_nvidia;
+	END OBJ_ARG(nvidiagauge, 0, "nvidiagauge needs an argument")
+		if (scan_nvidia_args(obj, arg, GAUGE)) {
+			CRIT_ERR(obj, free_at_crash, "nvidiagauge: invalid argument"
+				 " specified: '%s'\n", arg);
+		}
+		obj->callbacks.gaugeval = &get_nvidia_barval;
+		obj->callbacks.free = &free_nvidia;
 #endif /* BUILD_NVIDIA */
 #ifdef BUILD_APCUPSD
 	END OBJ_ARG(apcupsd, &update_apcupsd, "apcupsd needs arguments: <host> <port>")
@@ -2071,7 +2100,6 @@ void free_text_objects(struct text_object *root)
 	if(root && root->prev) {
 		for (obj = root->prev; obj; obj = root->prev) {
 			root->prev = obj->prev;
-
 			if (obj->callbacks.free) {
 				(*obj->callbacks.free)(obj);
 			}

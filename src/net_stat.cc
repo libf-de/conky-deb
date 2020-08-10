@@ -58,9 +58,19 @@ conky::lua_traits<if_up_strictness_>::Map conky::lua_traits<if_up_strictness_>::
 
 static conky::simple_config_setting<if_up_strictness_> if_up_strictness("if_up_strictness",
 																		IFUP_UP, true);
-
+/**
+ * global array of structs containing network statistics for each interface
+ **/
 struct net_stat netstats[MAX_NET_INTERFACES];
 
+/**
+ * Returns pointer to specified interface in netstats array.
+ * If not found then add the specified interface to the array.
+ * The added interface will have all its members initialized to 0,
+ * because clear_net_stats() is called from main() in conky.cc!
+ *
+ * @param[in] dev  device / interface name. Silently ignores char * == NULL
+ **/
 struct net_stat *get_net_stat(const char *dev, void *free_at_crash1, void *free_at_crash2)
 {
 	unsigned int i;
@@ -80,6 +90,10 @@ struct net_stat *get_net_stat(const char *dev, void *free_at_crash1, void *free_
 	for (i = 0; i < MAX_NET_INTERFACES; i++) {
 		if (netstats[i].dev == 0) {
 			netstats[i].dev = strndup(dev, text_buffer_size.get(*state));
+			/* initialize last_read_recv and last_read_trans to -1 denoting
+			 * that they were never read before */
+			netstats[i].last_read_recv  = -1;
+			netstats[i].last_read_trans = -1;
 			return &netstats[i];
 		}
 	}
@@ -272,8 +286,19 @@ void print_v6addrs(struct text_object *obj, char *p, int p_max_size)
 #endif /* __linux__ */
 
 #ifdef BUILD_X11
+
+/**
+ * This function is called periodically to update the download and upload graphs
+ *
+ * - evaluates argument strings like 'eth0 50,120 #FFFFFF #FF0000 0 -l'
+ * - sets the obj->data.opaque pointer to the interface specified
+ *
+ * @param[out] obj  struct which will hold evaluated arguments
+ * @param[in]  arg  argument string to evaluate
+ **/
 void parse_net_stat_graph_arg(struct text_object *obj, const char *arg, void *free_at_crash)
 {
+	/* scan arguments and get interface name back */
 	char *buf = 0;
 	buf = scan_graph(obj, arg, 0);
 
@@ -286,6 +311,12 @@ void parse_net_stat_graph_arg(struct text_object *obj, const char *arg, void *fr
 	obj->data.opaque = get_net_stat(DEFAULTNETDEV, obj, free_at_crash);
 }
 
+/**
+ * returns the download speed in kiB/s for the interface referenced by obj
+ *
+ * @param[in] obj struct containting a member data, which is a struct
+ *                containing a void * to a net_stat struct
+ **/
 double downspeedgraphval(struct text_object *obj)
 {
 	struct net_stat *ns = (struct net_stat *)obj->data.opaque;
@@ -415,6 +446,11 @@ double wireless_link_barval(struct text_object *obj)
 }
 #endif /* BUILD_WLAN */
 
+
+/**
+ * Clears the global array of net_stat structs which contains networks
+ * statistics for every interface.
+ **/
 void clear_net_stats(void)
 {
 #ifdef BUILD_IPV6
