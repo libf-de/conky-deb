@@ -61,6 +61,9 @@
 #include "imlib2.h"
 #endif /* BUILD_IMLIB2 */
 #endif /* BUILD_X11 */
+#ifdef BUILD_NCURSES
+#include <ncurses.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
@@ -157,6 +160,10 @@ static conky::simple_config_setting<bool> disable_auto_reload("disable_auto_relo
 
 /* two strings for internal use */
 static char *tmpstring1, *tmpstring2;
+
+#ifdef BUILD_NCURSES
+extern WINDOW* ncurses_window;
+#endif
 
 enum spacer_state {
 	NO_SPACER = 0,
@@ -422,6 +429,7 @@ struct _x11_stuff_s {
 /* text size */
 
 static int text_start_x, text_start_y;	/* text start position in window */
+static int text_offset_x, text_offset_y; /* offset for start position */
 static int text_width = 1, text_height = 1; /* initially 1 so no zero-sized window is created */
 
 #endif /* BUILD_X11 */
@@ -1372,20 +1380,20 @@ static void draw_string(const char *s)
 			c2.color.alpha = fonts[selected_font].font_alpha;
 			if (utf8_mode.get(*state)) {
 				XftDrawStringUtf8(window.xftdraw, &c2, fonts[selected_font].xftfont,
-					cur_x, cur_y, (const XftChar8 *) s, strlen(s));
+					text_offset_x + cur_x, text_offset_y + cur_y, (const XftChar8 *) s, strlen(s));
 			} else {
 				XftDrawString8(window.xftdraw, &c2, fonts[selected_font].xftfont,
-					cur_x, cur_y, (const XftChar8 *) s, strlen(s));
+					text_offset_x + cur_x, text_offset_y + cur_y, (const XftChar8 *) s, strlen(s));
 			}
 		} else
 #endif
 		{
 			if (utf8_mode.get(*state)) {
-				Xutf8DrawString(display, window.drawable, fonts[selected_font].fontset, window.gc, cur_x, cur_y, s,
-					strlen(s));
+				Xutf8DrawString(display, window.drawable, fonts[selected_font].fontset, window.gc,
+					text_offset_x + cur_x, text_offset_y + cur_y, s, strlen(s));
 			} else {
-				XDrawString(display, window.drawable, window.gc, cur_x, cur_y, s,
-					strlen(s));
+				XDrawString(display, window.drawable, window.gc,
+					text_offset_x + cur_x, text_offset_y + cur_y, s, strlen(s));
 			}
 		}
 		cur_x += width_of_s;
@@ -1443,8 +1451,8 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 
 					XSetLineAttributes(display, window.gc, h, LineSolid,
 						CapButt, JoinMiter);
-					XDrawLine(display, window.drawable, window.gc, cur_x,
-						cur_y - mid / 2, cur_x + w, cur_y - mid / 2);
+					XDrawLine(display, window.drawable, window.gc, text_offset_x + cur_x,
+						text_offset_y + cur_y - mid / 2, text_offset_x + cur_x + w, text_offset_y + cur_y - mid / 2);
 					break;
 				}
 
@@ -1459,8 +1467,8 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					XSetLineAttributes(display, window.gc, h, LineOnOffDash,
 						CapButt, JoinMiter);
 					XSetDashes(display, window.gc, 0, ss, 2);
-					XDrawLine(display, window.drawable, window.gc, cur_x,
-						cur_y - mid / 2, cur_x + w, cur_y - mid / 2);
+					XDrawLine(display, window.drawable, window.gc, text_offset_x + cur_x,
+						text_offset_y + cur_y - mid / 2, text_offset_x + cur_x + w, text_offset_x + cur_y - mid / 2);
 					break;
 				}
 
@@ -1490,10 +1498,10 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					XSetLineAttributes(display, window.gc, 1, LineSolid,
 						CapButt, JoinMiter);
 
-					XDrawRectangle(display, window.drawable, window.gc, cur_x,
-						by, w, h);
-					XFillRectangle(display, window.drawable, window.gc, cur_x,
-						by, w * bar_usage / scale, h);
+					XDrawRectangle(display, window.drawable, window.gc, text_offset_x + cur_x,
+						text_offset_y + by, w, h);
+					XFillRectangle(display, window.drawable, window.gc, text_offset_x + cur_x,
+						text_offset_y + by, w * bar_usage / scale, h);
 					if (h > cur_y_add
 							&& h > font_h) {
 						cur_y_add = h;
@@ -1532,7 +1540,7 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 							CapButt, JoinMiter);
 
 					XDrawArc(display, window.drawable, window.gc,
-							cur_x, by, w, h * 2, 0, 180*64);
+							text_offset_x + cur_x, text_offset_y + by, w, h * 2, 0, 180*64);
 
 #ifdef BUILD_MATH
 					usage = current->arg;
@@ -1542,7 +1550,7 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					py = (float)(by+(h))-(float)(h)*sin(angle);
 
 					XDrawLine(display, window.drawable, window.gc,
-							cur_x + (w/2.), by+(h), (int)(px), (int)(py));
+							text_offset_x + cur_x + (w/2.), text_offset_y + by+(h), text_offset_x + (int)(px), text_offset_y + (int)(py));
 #endif /* BUILD_MATH */
 
 					if (h > cur_y_add
@@ -1586,7 +1594,7 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 						XSetLineAttributes(display, window.gc, 1, LineSolid,
 							CapButt, JoinMiter);
 						XDrawRectangle(display, window.drawable, window.gc,
-							cur_x, by, w, h);
+							text_offset_x + cur_x, text_offset_y + by, w, h);
 					}
 					XSetLineAttributes(display, window.gc, 1, LineSolid,
 						CapButt, JoinMiter);
@@ -1633,8 +1641,8 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 							}
 							/* this is mugfugly, but it works */
 							XDrawLine(display, window.drawable, window.gc,
-									cur_x + i + 1, by + h, cur_x + i + 1,
-									round_to_int((double)by + h - current->graph[j] *
+									text_offset_x + cur_x + i + 1, text_offset_y + by + h, text_offset_x + cur_x + i + 1,
+									text_offset_y + round_to_int((double)by + h - current->graph[j] *
 										(h - 1) / current->scale));
 							++j;
 						}
@@ -1750,16 +1758,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					cur_y += current->arg;
 					break;
 
-				case GOTO:
-					if (current->arg >= 0) {
-						cur_x = (int) current->arg;
-#ifdef BUILD_X11
-						//make sure shades are 1 pixel to the right of the text
-						if(draw_mode == BG) cur_x++;
-#endif
-					}
-					break;
-
 				case TAB:
 				{
 					int start = current->arg;
@@ -1811,6 +1809,23 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied)
 					break;
 				}
 #endif /* BUILD_X11 */
+				case GOTO:
+					if (current->arg >= 0) {
+						cur_x = (int) current->arg;
+#ifdef BUILD_X11
+						//make sure shades are 1 pixel to the right of the text
+						if(draw_mode == BG) cur_x++;
+#endif /* BUILD_X11 */
+#ifdef BUILD_NCURSES
+						if (out_to_ncurses.get(*state)){
+							int x, y;
+							getyx(ncurses_window, y, x);
+							move(y, cur_x);
+						}
+#endif /* BUILD_NCURSES */
+					}
+					break;
+
 			}
 
 #ifdef BUILD_X11
@@ -1897,7 +1912,7 @@ static void draw_text(void)
 
 			int offset = border_inner_margin.get(*state) + bw;
 			XDrawRectangle(display, window.drawable, window.gc,
-				text_start_x - offset, text_start_y - offset,
+				text_offset_x + text_start_x - offset, text_offset_y + text_start_y - offset,
 				text_width + 2*offset, text_height + 2*offset);
 		}
 
@@ -1919,6 +1934,7 @@ static void draw_text(void)
 
 static void draw_stuff(void)
 {
+	text_offset_x = text_offset_y = 0;
 #ifdef BUILD_IMLIB2
 	cimlib_render(text_start_x, text_start_y, window.width, window.height);
 #endif /* BUILD_IMLIB2 */
@@ -1937,33 +1953,28 @@ static void draw_stuff(void)
 	if (out_to_x.get(*state)) {
 		selected_font = 0;
 		if (draw_shades.get(*state) && !draw_outline.get(*state)) {
-			text_start_x++;
+			text_offset_x = text_offset_y = 1;
 			text_start_y++;
 			set_foreground_color(default_shade_color.get(*state));
 			draw_mode = BG;
 			draw_text();
-			text_start_x--;
-			text_start_y--;
+			text_offset_x = text_offset_y = 0;
 		}
 
 		if (draw_outline.get(*state)) {
-			int i, j;
 			selected_font = 0;
 
-			for (i = -1; i < 2; i++) {
-				for (j = -1; j < 2; j++) {
-					if (i == 0 && j == 0) {
+			for (text_offset_x = -1; text_offset_x < 2; text_offset_x++) {
+				for (text_offset_y = -1; text_offset_y < 2; text_offset_y++) {
+					if (text_offset_x == 0 && text_offset_y == 0) {
 						continue;
 					}
-					text_start_x += i;
-					text_start_y += j;
 					set_foreground_color(default_outline_color.get(*state));
 					draw_mode = OUTLINE;
 					draw_text();
-					text_start_x -= i;
-					text_start_y -= j;
 				}
 			}
+			text_offset_x = text_offset_y = 0;
 		}
 
 		set_foreground_color(default_color.get(*state));
