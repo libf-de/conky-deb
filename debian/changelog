@@ -1,3 +1,10 @@
+conky (1.11.6-1) UNRELEASED; urgency=medium
+
+  * Acknowledge NMU, thanks to Boyuan Yang!
+  * New upstream release.
+
+ -- Vincent Cheng <vcheng@debian.org>  Sun, 09 Aug 2020 19:46:49 -0700
+
 conky (1.10.8-1.1) unstable; urgency=high
 
   * Non-maintainer upload.
