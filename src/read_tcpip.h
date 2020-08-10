@@ -1,5 +1,4 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=c
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -32,10 +31,11 @@
 #define _READ_TCP_H
 
 void parse_read_tcpip_arg(struct text_object *, const char *, void *);
-void parse_tcp_ping_arg(struct text_object *obj, const char *arg, void *free_at_crash);
-void print_read_tcp(struct text_object *, char *, int);
-void print_read_udp(struct text_object *, char *, int);
-void print_tcp_ping(struct text_object *, char *, int);
+void parse_tcp_ping_arg(struct text_object *obj, const char *arg,
+                        void *free_at_crash);
+void print_read_tcp(struct text_object *, char *, unsigned int);
+void print_read_udp(struct text_object *, char *, unsigned int);
+void print_tcp_ping(struct text_object *, char *, unsigned int);
 void free_read_tcpip(struct text_object *);
 void free_tcp_ping(struct text_object *);
 

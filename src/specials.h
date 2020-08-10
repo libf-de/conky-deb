@@ -1,5 +1,4 @@
-/* -*- mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=cpp
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -39,47 +38,49 @@
 #define TEMPGRAD "-t"
 
 enum special_types {
-	NONSPECIAL = 0,
-	HORIZONTAL_LINE = 1,
-	STIPPLED_HR,
-	BAR,
-	FG,
-	BG,
-	OUTLINE,
-	ALIGNR,
-	ALIGNC,
-	GAUGE,
-	GRAPH,
-	OFFSET,
-	VOFFSET,
-	FONT,
-	GOTO,
-	TAB
+  NONSPECIAL = 0,
+  HORIZONTAL_LINE = 1,
+  STIPPLED_HR,
+  BAR,
+  FG,
+  BG,
+  OUTLINE,
+  ALIGNR,
+  ALIGNC,
+  GAUGE,
+  GRAPH,
+  OFFSET,
+  VOFFSET,
+  FONT,
+  GOTO,
+  TAB
 };
 
 struct special_t {
-	int type;
-	short height;
-	short width;
-	double arg;
-	double *graph;
-	double scale;			/* maximum value */
-	short show_scale;
-	int graph_width;
-	int graph_allocated;
-	int scaled;			/* auto adjust maximum */
-	unsigned long first_colour;	// for graph gradient
-	unsigned long last_colour;
-	short font_added;
-	char tempgrad;
-	struct special_t *next;
+  int type;
+  short height;
+  short width;
+  double arg;
+  double *graph;
+  double scale; /* maximum value */
+  short show_scale;
+  int graph_width;
+  int graph_allocated;
+  int scaled; /* auto adjust maximum */
+  int scale_log;
+  unsigned long first_colour;  // for graph gradient
+  unsigned long last_colour;
+  short font_added;
+  char tempgrad;
+  struct special_t *next;
 };
 
 /* direct access to the registered specials (FIXME: bad encapsulation) */
 extern struct special_t *specials;
 extern int special_count;
 
-/* forward declare to avoid mutual inclusion between specials.h and text_object.h */
+/* forward declare to avoid mutual inclusion between specials.h and
+ * text_object.h */
 struct text_object;
 
 /* scanning special arguments */
@@ -89,25 +90,27 @@ const char *scan_gauge(struct text_object *, const char *, double);
 void scan_font(struct text_object *, const char *);
 char *scan_graph(struct text_object *, const char *, double);
 void scan_tab(struct text_object *, const char *);
-void scan_stippled_hr(struct text_object *, const char*);
+void scan_stippled_hr(struct text_object *, const char *);
 
 /* printing specials */
-void new_font(struct text_object *, char *, int);
+void new_font(struct text_object *, char *, unsigned int);
 void new_graph(struct text_object *, char *, int, double);
-void new_hr(struct text_object *, char *, int);
-void new_stippled_hr(struct text_object *, char *, int);
+void new_hr(struct text_object *, char *, unsigned int);
+void new_stippled_hr(struct text_object *, char *, unsigned int);
 #endif /* BUILD_X11 */
-void new_gauge(struct text_object *, char *, int, double);
-void new_bar(struct text_object *, char *, int, double);
-void new_fg(struct text_object *, char *, int);
-void new_bg(struct text_object *, char *, int);
-void new_outline(struct text_object *, char *, int);
-void new_offset(struct text_object *, char *, int);
-void new_voffset(struct text_object *, char *, int);
-void new_alignr(struct text_object *, char *, int);
-void new_alignc(struct text_object *, char *, int);
-void new_goto(struct text_object *, char *, int);
-void new_tab(struct text_object *, char *, int);
+void new_gauge(struct text_object *, char *, unsigned int, double);
+void new_bar(struct text_object *, char *, unsigned int, double);
+void new_fg(struct text_object *, char *, unsigned int);
+void new_bg(struct text_object *, char *, unsigned int);
+void new_outline(struct text_object *, char *, unsigned int);
+void new_offset(struct text_object *, char *, unsigned int);
+void new_voffset(struct text_object *, char *, unsigned int);
+void new_alignr(struct text_object *, char *, unsigned int);
+void new_alignc(struct text_object *, char *, unsigned int);
+void new_goto(struct text_object *, char *, unsigned int);
+void new_tab(struct text_object *, char *, unsigned int);
+
+void clear_stored_graphs();
 
 struct special_t *new_special(char *buf, enum special_types t);
 

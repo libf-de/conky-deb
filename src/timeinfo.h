@@ -1,5 +1,4 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
- * vim: ts=4 sw=4 noet ai cindent syntax=c
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -10,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -42,10 +41,11 @@ void scan_time(struct text_object *, const char *);
 void scan_tztime(struct text_object *, const char *);
 
 /* print the time */
-void print_time(struct text_object *, char *, int);
-void print_utime(struct text_object *, char *, int);
-void print_tztime(struct text_object *, char *, int);
-void print_format_time(struct text_object *obj, char *p, int p_max_size);
+void print_time(struct text_object *, char *, unsigned int);
+void print_utime(struct text_object *, char *, unsigned int);
+void print_tztime(struct text_object *, char *, unsigned int);
+void print_format_time(struct text_object *obj, char *p,
+                       unsigned int p_max_size);
 
 /* free object data */
 void free_time(struct text_object *);

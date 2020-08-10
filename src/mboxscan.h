@@ -1,4 +1,4 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2006 Marco Candrian <mac@calmar.ws>
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -31,7 +31,7 @@
 #define _MBOXSCAN_H_
 
 void parse_mboxscan_arg(struct text_object *, const char *);
-void print_mboxscan(struct text_object *, char *, int);
+void print_mboxscan(struct text_object *, char *, unsigned int);
 void free_mboxscan(struct text_object *);
 
 #endif /* _MBOXSCAN_H_ */

@@ -9,12 +9,16 @@ Keep in mind that there is no guarantee that the output will work correctly
 with conky, or that it will be able to convert every conkyrc. However, it
 should provide a good starting point.
 
-Altough you can use this script with only 1 arg and let it overwrite the old
+Although you can use this script with only 1 arg and let it overwrite the old
 config, it's suggested to use 2 args so that the new config is written in a new
 file (so that you have backup if something went wrong).
 
+Optional: Install dos2unix. We will attempt to use this if it is available
+because Conky configs downloaded from Internet sometimes are created on DOS/Windows
+machines with different line endings than Conky configs created on Unix/Linux.
+
 For more information about the new format, read the wiki page
-<http://wiki.conky.be/index.php?title=conky2rc_format>
+<https://github.com/brndnmtthws/conky/wiki>
 ]];
 
 local function quote(s)
@@ -35,7 +39,8 @@ local bool_setting = {
     out_to_ncurses = true, out_to_stderr = true, out_to_x = true, override_utf8_locale = true,
     own_window = true, own_window_argb_visual = true, own_window_transparent = true,
     short_units = true, show_graph_range = true, show_graph_scale = true,
-    times_in_seconds = true, top_cpu_separate = true, uppercase = true, use_xft = true
+    times_in_seconds = true, top_cpu_separate = true, uppercase = true, use_xft = true,
+    draw_blended = true, forced_redraw = true
 };
 
 local num_setting = {
@@ -46,8 +51,8 @@ local num_setting = {
     maximum_width = true, mpd_port = true, music_player_interval = true, net_avg_samples = true,
     own_window_argb_value = true, pad_percents = true, stippled_borders = true,
     text_buffer_size = true, top_name_width = true, total_run_times = true,
-    update_interval = true, update_interval_on_battery = true, xftalpha = true, 
-    xinerama_head = true, 
+    update_interval = true, update_interval_on_battery = true, xftalpha = true,
+    xinerama_head = true,
 };
 
 local split_setting = {
@@ -120,6 +125,9 @@ if conky == nil then --> standalone program
     -- 2 args: 1st is inputfile, 2nd is outputfile
     -- 0, 3 or more args: print usage to STDERR and quit
     if #arg == 1 or #arg == 2 then
+        if os.execute('command -v dos2unix 2&>1') then
+            os.execute('dos2unix ' .. arg[1]);
+        end
         input = io.input(arg[1]);
     else
         io.stderr:write(usage);

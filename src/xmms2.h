@@ -1,4 +1,4 @@
-/* -*- mode: c; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: t -*-
+/*
  *
  * Conky, a system monitor, based on torsmo
  *
@@ -8,7 +8,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -32,49 +32,49 @@
 #include <xmmsclient/xmmsclient.h>
 
 struct xmms2_s {
-	char *artist;
-	char *album;
-	char *title;
-	char *genre;
-	char *comment;
-	char *url;
-	char *date;
-	char *playlist;
-	int tracknr;
-	int bitrate;
-	unsigned int id;
-	int duration;
-	int elapsed;
-	int timesplayed;
-	float size;
+  char *artist;
+  char *album;
+  char *title;
+  char *genre;
+  char *comment;
+  char *url;
+  char *date;
+  char *playlist;
+  int tracknr;
+  int bitrate;
+  unsigned int id;
+  int duration;
+  int elapsed;
+  int timesplayed;
+  float size;
 
-	float progress;
-	int percent;
-	char *status;
-	int conn_state;
+  float progress;
+  int percent;
+  char *status;
+  int conn_state;
 };
 
 int update_xmms2(void);
 
-void print_xmms2_tracknr(struct text_object *, char *, int);
-void print_xmms2_elapsed(struct text_object *, char *, int);
-void print_xmms2_duration(struct text_object *, char *, int);
+void print_xmms2_tracknr(struct text_object *, char *, unsigned int);
+void print_xmms2_elapsed(struct text_object *, char *, unsigned int);
+void print_xmms2_duration(struct text_object *, char *, unsigned int);
 double xmms2_barval(struct text_object *);
-void print_xmms2_smart(struct text_object *, char *, int);
-void print_xmms2_artist(struct text_object *, char *, int);
-void print_xmms2_album(struct text_object *, char *, int);
-void print_xmms2_title(struct text_object *, char *, int);
-void print_xmms2_genre(struct text_object *, char *, int);
-void print_xmms2_comment(struct text_object *, char *, int);
-void print_xmms2_url(struct text_object *, char *, int);
-void print_xmms2_status(struct text_object *, char *, int);
-void print_xmms2_date(struct text_object *, char *, int);
-void print_xmms2_bitrate(struct text_object *, char *, int);
-void print_xmms2_id(struct text_object *, char *, int);
-void print_xmms2_size(struct text_object *, char *, int);
-void print_xmms2_playlist(struct text_object *, char *, int);
-void print_xmms2_timesplayed(struct text_object *, char *, int);
-void print_xmms2_percent(struct text_object *, char *, int);
+void print_xmms2_smart(struct text_object *, char *, unsigned int);
+void print_xmms2_artist(struct text_object *, char *, unsigned int);
+void print_xmms2_album(struct text_object *, char *, unsigned int);
+void print_xmms2_title(struct text_object *, char *, unsigned int);
+void print_xmms2_genre(struct text_object *, char *, unsigned int);
+void print_xmms2_comment(struct text_object *, char *, unsigned int);
+void print_xmms2_url(struct text_object *, char *, unsigned int);
+void print_xmms2_status(struct text_object *, char *, unsigned int);
+void print_xmms2_date(struct text_object *, char *, unsigned int);
+void print_xmms2_bitrate(struct text_object *, char *, unsigned int);
+void print_xmms2_id(struct text_object *, char *, unsigned int);
+void print_xmms2_size(struct text_object *, char *, unsigned int);
+void print_xmms2_playlist(struct text_object *, char *, unsigned int);
+void print_xmms2_timesplayed(struct text_object *, char *, unsigned int);
+void print_xmms2_percent(struct text_object *, char *, unsigned int);
 int if_xmms2_connected(struct text_object *);
 
 void free_xmms2(struct text_object *);
