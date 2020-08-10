@@ -92,9 +92,7 @@ override_dh_compress:
 	dh_compress -Xconvert.lua
 
 override_dh_strip:
-	dh_strip -p conky-std --dbg-package=conky-std-dbg
-	dh_strip -p conky-cli --dbg-package=conky-cli-dbg
-	dh_strip -p conky-all --dbg-package=conky-all-dbg
+	dh_strip --dbgsym-migration='conky-std-dbg (<< 1.11.6-1~), conky-cli-dbg (<< 1.11.6-1~), conky-all-dbg (<< 1.11.6-1~)'
 
 override_dh_makeshlibs:
 	# Do not run ldconfig on private shared libraries in /usr/lib/conky
