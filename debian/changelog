@@ -1,5 +1,6 @@
 conky (1.11.6-2) UNRELEASED; urgency=medium
 
+  * Re-enable tcp_portmon support. (Closes: #968323)
   * Cherrypick upstream patch to make build reproducible.
 
  -- Vincent Cheng <vcheng@debian.org>  Sun, 16 Aug 2020 18:55:40 -0700

@@ -12,8 +12,7 @@ DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 COMMON_CONF_ARGS=-DCMAKE_BUILD_TYPE=RelWithDebInfo \
                  -DCMAKE_INSTALL_PREFIX=/usr \
                  -DRELEASE=True \
-                 -DBUILD_DOCS=ON \
-                 -DBUILD_PORT_MONITORS=OFF \
+                 -DBUILD_DOCS=ON \s
                  -DCMAKE_C_FLAGS="$(DEB_CFLAGS) $(DEB_CPPFLAGS)" \
                  -DCMAKE_CXX_FLAGS="$(DEB_CXXFLAGS) $(DEB_CPPFLAGS)"
 
@@ -87,6 +86,9 @@ override_dh_auto_install:
 	dh_auto_install --builddirectory build-std --destdir debian/conky-std
 	dh_auto_install --builddirectory build-cli --destdir debian/conky-cli
 	dh_auto_install --builddirectory build-all --destdir debian/conky-all
+
+override_dh_install:
+	dh_install -Xlibtcp-portmon.a -Xlibconky_core.a
 
 override_dh_compress:
 	dh_compress -Xconvert.lua
