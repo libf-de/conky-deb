@@ -4,12 +4,11 @@ Priority: optional
 Maintainer: Vincent Cheng <vcheng@debian.org>
 Build-Depends:
  audacious-dev,
- cmake (>= 2.6),
+ cmake,
  debhelper-compat (= 12),
  docbook-xml,
  docbook-xsl,
  docbook2x,
- dpkg-dev (>= 1.15.7),
  gawk,
  less,
  libaudclient-dev,
@@ -36,7 +35,7 @@ Build-Depends:
  libxml2-dev,
  libxmmsclient-dev,
  libxnvctrl-dev [i386 amd64] | nvidia-settings [i386 amd64],
- pkg-config (>= 0.19)
+ pkg-config
 Homepage: https://github.com/brndnmtthws/conky
 Standards-Version: 4.5.0
 Vcs-Git: https://salsa.debian.org/debian/conky.git
@@ -47,9 +46,8 @@ Package: conky-std
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, audacious, moc, mpd, xmms2
-Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-all, conky-cli
-Replaces: conky (<< 1.8.0-1), conky-all, conky-cli
+Replaces: conky-all, conky-cli
 Description: highly configurable system monitor (default version)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
@@ -68,9 +66,8 @@ Package: conky-cli
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, moc, mpd
-Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-all, conky-std
-Replaces: conky (<< 1.8.0-1), conky-all, conky-std
+Replaces: conky-all, conky-std
 Description: highly configurable system monitor (basic version)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
@@ -87,9 +84,8 @@ Package: conky-all
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: apcupsd, audacious, moc, mpd, xmms2
-Breaks: conky (<< 1.8.0-1)
 Conflicts: conky-cli, conky-std
-Replaces: conky (<< 1.8.0-1), conky-cli, conky-std
+Replaces: conky-cli, conky-std
 Description: highly configurable system monitor (all features enabled)
  Conky is a system monitor that can display just about anything,
  either on your root desktop or in its own window.
