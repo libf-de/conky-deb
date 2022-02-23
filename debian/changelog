@@ -1,5 +1,9 @@
-conky (1.11.6-3) UNRELEASED; urgency=medium
+conky (1.12.2-1) UNRELEASED; urgency=medium
 
+  [ Vincent Cheng ]
+  * New upstream release.
+
+  [ Debian Janitor ]
   * Remove constraints unnecessary since buster:
     + Build-Depends: Drop versioned constraint on cmake, dpkg-dev and
       pkg-config.
@@ -10,7 +14,7 @@ conky (1.11.6-3) UNRELEASED; urgency=medium
     + conky-all: Drop versioned constraint on conky in Replaces.
     + conky-all: Drop versioned constraint on conky in Breaks.
 
- -- Debian Janitor <janitor@jelmer.uk>  Mon, 18 Oct 2021 00:15:14 -0000
+ -- Vincent Cheng <vcheng@debian.org>  Wed, 23 Feb 2022 07:43:24 -0800
 
 conky (1.11.6-2) unstable; urgency=medium
 
