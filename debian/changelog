@@ -2,6 +2,10 @@ conky (1.12.2-1) UNRELEASED; urgency=medium
 
   [ Vincent Cheng ]
   * New upstream release.
+    - Drop conky-reproducible-build.patch, merged upstream.
+    - Drop unset-cmake-build-flags.patch, obsolete.
+  * Update to debhelper compat level 13.
+  * Update Standards version to 4.6.0.
 
   [ Debian Janitor ]
   * Remove constraints unnecessary since buster:
