@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2005 Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>,
  *					  Dave Clark <clarkd@skynet.ca>
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -275,7 +275,7 @@ static int compare_mem(void *va, void *vb) {
   return 0;
 }
 
-/* CPU time comparision function for prio queue */
+/* CPU time comparison function for prio queue */
 static int compare_time(void *va, void *vb) {
   auto *a = static_cast<struct process *>(va),
        *b = static_cast<struct process *>(vb);
@@ -286,7 +286,7 @@ static int compare_time(void *va, void *vb) {
 }
 
 #ifdef BUILD_IOSTATS
-/* I/O comparision function for prio queue */
+/* I/O comparison function for prio queue */
 static int compare_io(void *va, void *vb) {
   auto *a = static_cast<struct process *>(va),
        *b = static_cast<struct process *>(vb);

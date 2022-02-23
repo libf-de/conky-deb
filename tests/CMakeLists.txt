@@ -17,12 +17,15 @@ endif()
 set(test_srcs ${test_srcs} test-core.cc)
 set(test_srcs ${test_srcs} test-diskio.cc)
 set(test_srcs ${test_srcs} test-fs.cc)
+if(BUILD_HSV_GRADIENT)
+  set(test_srcs ${test_srcs} test-hsv.cc)
+endif(BUILD_HSV_GRADIENT)
 
 add_executable(test-conky test-common.cc ${test_srcs})
 target_link_libraries(test-conky conky_core)
 catch_discover_tests(test-conky)
 
-if(USING_CLANG_7)
+if(USING_CLANG)
   set(COVERAGE_LCOV_EXCLUDES
       "*/include/c++/v1/*"
       "/usr/include/*"

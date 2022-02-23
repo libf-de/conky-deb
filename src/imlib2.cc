@@ -4,7 +4,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2019 Brenden Matthews, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, et. al.
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -133,11 +133,19 @@ void cimlib_add_image(const char *args) {
   if (tmp != nullptr) {
     tmp += 3;
     sscanf(tmp, "%i,%i", &cur->x, &cur->y);
+#ifdef BUILD_XFT
+    cur->x = xft_dpi_scale(cur->x);
+    cur->y = xft_dpi_scale(cur->y);
+#endif /* BUILD_XFT */
   }
   tmp = strstr(args, "-s ");
   if (tmp != nullptr) {
     tmp += 3;
     if (sscanf(tmp, "%ix%i", &cur->w, &cur->h) != 0) { cur->wh_set = 1; }
+#ifdef BUILD_XFT
+    cur->w = xft_dpi_scale(cur->w);
+    cur->h = xft_dpi_scale(cur->h);
+#endif /* BUILD_XFT */
   }
 
   tmp = strstr(args, "-n");
@@ -147,6 +155,15 @@ void cimlib_add_image(const char *args) {
   if (tmp != nullptr) {
     tmp += 3;
     if (sscanf(tmp, "%d", &cur->flush_interval) != 0) { cur->no_cache = 0; }
+  }
+  tmp = strstr(args, "-i ");
+  if (tmp != nullptr) {
+    tmp += 3;
+    int i;
+    if (sscanf(tmp, "%d", &i) == 1) {
+      cur->x = get_saved_coordinates_x(i);
+      cur->y = get_saved_coordinates_y(i);
+    }
   }
   if (cur->flush_interval < 0) {
     NORM_ERR("Imlib2: flush interval should be >= 0");
@@ -191,8 +208,8 @@ static void cimlib_draw_image(struct image_list_s *cur, int *clip_x,
   w = imlib_image_get_width();
   h = imlib_image_get_height();
   if (cur->wh_set == 0) {
-    cur->w = w;
-    cur->h = h;
+    cur->w = xft_dpi_scale(w);
+    cur->h = xft_dpi_scale(h);
   }
   imlib_context_set_image(buffer);
   imlib_blend_image_onto_image(image, 1, 0, 0, w, h, cur->x, cur->y, cur->w,

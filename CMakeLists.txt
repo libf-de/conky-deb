@@ -3,7 +3,7 @@
 #
 # Please see COPYING for details
 #
-# Copyright (c) 2005-2019 Brenden Matthews, et. al. (see AUTHORS) All rights
+# Copyright (c) 2005-2021 Brenden Matthews, et. al. (see AUTHORS) All rights
 # reserved.
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -53,8 +53,8 @@ add_subdirectory(3rdparty/toluapp)
 set(conky_libs ${conky_libs} toluapp_lib_static)
 
 if(BUILD_TESTS)
-  if(USING_CLANG_7)
-    message(STATUS "Detected clang-7, enabling test coverage reports")
+  if(USING_CLANG)
+    message(STATUS "Detected clang, enabling test coverage reports")
     # Enable coverage checks
     include(CodeCoverage)
     append_coverage_compiler_flags()

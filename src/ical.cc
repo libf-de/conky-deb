@@ -4,7 +4,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -154,6 +154,7 @@ void parse_ical_args(struct text_object *obj, const char *arg,
   opaque->comps = allc;
   opaque->num = num;
   obj->data.opaque = opaque;
+  free(opaque);
 }
 
 void print_ical(struct text_object *obj, char *p, unsigned int p_max_size) {

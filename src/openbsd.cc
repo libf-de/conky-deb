@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2007 Toni Spets
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -174,6 +174,7 @@ void update_meminfo() {
   info.memmax = pagetok(vmtotal.t_rm) + pagetok(vmtotal.t_free);
   info.mem = info.memwithbuffers = pagetok(vmtotal.t_rm);
   info.memeasyfree = info.memfree = info.memmax - info.mem;
+  info.legacymem = info.mem;
 
   if ((swapmode(&swap_used, &swap_avail)) >= 0) {
     info.swapmax = swap_avail;

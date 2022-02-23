@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -107,6 +107,9 @@
 #ifdef BUILD_PULSEAUDIO
 #include "pulseaudio.h"
 #endif /* BUILD_PULSEAUDIO */
+#ifdef BUILD_INTEL_BACKLIGHT
+#include "intel_backlight.h"
+#endif /* BUILD_INTEL_BACKLIGHT */
 
 /* check for OS and include appropriate headers */
 #if defined(__linux__)
@@ -1011,6 +1014,9 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   obj->callbacks.print = &new_offset;
   END OBJ(voffset, nullptr) obj->data.l = arg != nullptr ? atoi(arg) : 1;
   obj->callbacks.print = &new_voffset;
+  END OBJ(save_coordinates, nullptr) obj->data.l =
+      arg != nullptr ? atoi(arg) : 0;
+  obj->callbacks.print = &new_save_coordinates;
   END OBJ_ARG(goto, nullptr, "goto needs arguments") obj->data.l = atoi(arg);
   obj->callbacks.print = &new_goto;
 #ifdef BUILD_X11
@@ -1165,6 +1171,9 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   obj->callbacks.free = &free_mboxscan;
   END OBJ(mem, &update_meminfo) obj->data.s = STRNDUP_ARG;
   obj->callbacks.print = &print_mem;
+  obj->callbacks.free = &gen_free_opaque;
+  END OBJ(legacymem, &update_meminfo) obj->data.s = STRNDUP_ARG;
+  obj->callbacks.print = &print_legacymem;
   obj->callbacks.free = &gen_free_opaque;
   END OBJ(memwithbuffers, &update_meminfo) obj->data.s = STRNDUP_ARG;
   obj->callbacks.print = &print_memwithbuffers;
@@ -1968,6 +1977,11 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   obj->callbacks.free = &free_pulseaudio;
   init_pulseaudio(obj);
 #endif /* BUILD_PULSEAUDIO */
+#ifdef BUILD_INTEL_BACKLIGHT
+  END OBJ(intel_backlight, 0) obj->callbacks.print = &print_intel_backlight;
+  obj->callbacks.free = &free_intel_backlight;
+  init_intel_backlight(obj);
+#endif /* BUILD_INTEL_BACKLIGHT */
   END {
     auto *buf = static_cast<char *>(malloc(text_buffer_size.get(*state)));
 

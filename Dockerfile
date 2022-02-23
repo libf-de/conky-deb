@@ -1,11 +1,15 @@
-FROM ubuntu:bionic AS builder
+FROM ubuntu:focal AS builder
+
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
   apt-get install -qy --no-install-recommends \
-  cmake \
-  git \
-  g++ \
   audacious-dev \
+  ca-certificates \
+  clang \
+  curl \
+  gfortran \
+  git \
+  libarchive-dev \
   libaudclient-dev \
   libcairo2-dev \
   libcurl4-openssl-dev \
@@ -13,12 +17,17 @@ RUN apt-get update \
   libimlib2-dev \
   libircclient-dev \
   libiw-dev \
+  libjsoncpp-dev \
   liblua5.3-dev \
   libmicrohttpd-dev \
   libmysqlclient-dev \
+  libncurses-dev \
   libpulse-dev \
+  librhash-dev \
   librsvg2-dev \
+  libssl-dev \
   libsystemd-dev \
+  libuv1-dev \
   libxdamage-dev \
   libxext-dev \
   libxft-dev \
@@ -26,14 +35,32 @@ RUN apt-get update \
   libxml2-dev \
   libxmmsclient-dev \
   libxnvctrl-dev \
-  ncurses-dev 
+  make \
+  patch \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+# Compile CMake, we need the latest because the bug here (for armv7 builds):
+# https://gitlab.kitware.com/cmake/cmake/-/issues/20568
+WORKDIR /cmake
+RUN curl -Lq https://github.com/Kitware/CMake/releases/download/v3.19.6/cmake-3.19.6.tar.gz -o cmake-3.19.6.tar.gz \
+  && tar xf cmake-3.19.6.tar.gz \
+  && cd cmake-3.19.6 \
+  && CC=clang CXX=clang++ CFLAGS="-D_FILE_OFFSET_BITS=64" CXXFLAGS="-D_FILE_OFFSET_BITS=64" ./bootstrap --system-libs --parallel=5 \
+  && make -j5 \
+  && make -j5 install \
+  && cd \
+  && rm -rf /cmake
 
 COPY . /conky
 WORKDIR /conky/build
+
 ARG X11=yes
 
 RUN sh -c 'if [ "$X11" = "yes" ] ; then \
   cmake \
+  -DCMAKE_C_COMPILER=clang \
+  -DCMAKE_CXX_COMPILER=clang++ \
   -DCMAKE_INSTALL_PREFIX=/opt/conky \
   -DBUILD_AUDACIOUS=ON \
   -DBUILD_HTTP=ON \
@@ -54,6 +81,8 @@ RUN sh -c 'if [ "$X11" = "yes" ] ; then \
   ../ \
   ; else \
   cmake \
+  -DCMAKE_C_COMPILER=clang \
+  -DCMAKE_CXX_COMPILER=clang++ \
   -DCMAKE_INSTALL_PREFIX=/opt/conky \
   -DBUILD_AUDACIOUS=ON \
   -DBUILD_HTTP=ON \
@@ -76,7 +105,7 @@ RUN sh -c 'if [ "$X11" = "yes" ] ; then \
   && make -j5 all \
   && make -j5 install
 
-FROM ubuntu:bionic
+FROM ubuntu:focal
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
@@ -90,10 +119,11 @@ RUN apt-get update \
   libiw30 \
   liblua5.3-0 \
   libmicrohttpd12 \
-  libmysqlclient20 \
-  libncurses5 \
+  libmysqlclient21 \
+  libncurses6 \
   libpulse0 \
   librsvg2-2 \
+  libsm6 \
   libsystemd0 \
   libxcb-xfixes0 \
   libxdamage1 \

@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -395,6 +395,7 @@ double cpu_barval(struct text_object *obj) {
 PRINT_HR_GENERATOR(mem)
 PRINT_HR_GENERATOR(memwithbuffers)
 PRINT_HR_GENERATOR(memeasyfree)
+PRINT_HR_GENERATOR(legacymem)
 PRINT_HR_GENERATOR(memfree)
 PRINT_HR_GENERATOR(memmax)
 PRINT_HR_GENERATOR(memdirty)

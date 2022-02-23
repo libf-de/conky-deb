@@ -8,7 +8,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -181,6 +181,9 @@ static void print_version() {
             << _("  * Own window\n")
 #endif
 #endif /* BUILD_X11 */
+#ifdef BUILD_HSV_GRADIENT
+            << _("  * HSV Gradient\n")
+#endif /* BUILD_HSV_GRADIENT */
 #if defined BUILD_AUDACIOUS || defined BUILD_CMUS || defined BUILD_MPD || \
     defined BUILD_MOC || defined BUILD_XMMS2
             << _("\n Music detection:\n")

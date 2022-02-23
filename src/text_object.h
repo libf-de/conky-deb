@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -115,7 +115,7 @@ struct text_object {
   void *special_data;
   long line;
   bool parse;  /* if true then data.s should still be parsed */
-  bool thread; /* if true then data.s should be set by a seperate thread */
+  bool thread; /* if true then data.s should be set by a separate thread */
 
   struct obj_cb callbacks;
 

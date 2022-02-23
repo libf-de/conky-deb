@@ -1,4 +1,8 @@
-[![Build Status](https://travis-ci.org/brndnmtthws/conky.svg?branch=master)](https://travis-ci.org/brndnmtthws/conky) [![pipeline status](https://gitlab.com/brndnmtthws-oss/conky/badges/master/pipeline.svg)](https://gitlab.com/brndnmtthws-oss/conky/commits/master) [![coverage report](https://gitlab.com/brndnmtthws-oss/conky/badges/master/coverage.svg)](https://gitlab.com/brndnmtthws-oss/conky/commits/master)
+[![Linux build](https://github.com/brndnmtthws/conky/actions/workflows/build-and-test-linux.yaml/badge.svg)](https://github.com/brndnmtthws/conky/actions/workflows/build-and-test-linux.yaml) [![macOS build](https://github.com/brndnmtthws/conky/actions/workflows/build-and-test-macos.yaml/badge.svg)](https://github.com/brndnmtthws/conky/actions/workflows/build-and-test-macos.yaml) [![Docker build](https://github.com/brndnmtthws/conky/actions/workflows/docker.yaml/badge.svg)](https://github.com/brndnmtthws/conky/actions/workflows/docker.yaml) [![AppImage build](https://github.com/brndnmtthws/conky/actions/workflows/publish-appimage.yml/badge.svg)](https://github.com/brndnmtthws/conky/actions/workflows/publish-appimage.yml)
+
+[![pipeline status](https://gitlab.com/brndnmtthws-oss/conky/badges/main/pipeline.svg)](https://gitlab.com/brndnmtthws-oss/conky/commits/main) [![coverage report](https://gitlab.com/brndnmtthws-oss/conky/badges/main/coverage.svg)](https://gitlab.com/brndnmtthws-oss/conky/commits/main)
+
+[💬 Join the Matrix chat](https://matrix.to/#/#conky:frens.io)
 
 <p align="center"><img width="300" src="logo/conky-logotype-horizontal-violet.png"></p>
 
@@ -23,7 +27,8 @@ Conky can display more than 300 built-in objects, including support for:
   own scripts and programs ([more](https://github.com/brndnmtthws/conky/wiki#tutorial)).
 - Built-in [**Imlib2**][imlib2] and [**Cairo**][cairo] bindings for arbitrary drawing
   with Lua ([more](https://github.com/brndnmtthws/conky/wiki/Lua)).
-- Runs on Linux, FreeBSD, OpenBSD, DragonFlyBSD, NetBSD, Solaris, Haiku OS, and macOS!
+- Runs on Linux, FreeBSD, OpenBSD, DragonFlyBSD, NetBSD, Solaris, Haiku, and macOS!
+- [Docker image](https://hub.docker.com/r/brndnmtthws/conky/) available for amd64, armv7, and aarch64 (aka armv8)
 
 ... and much much more.
 
@@ -90,3 +95,12 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing to
 [luawiki]: https://en.wikipedia.org/wiki/Lua_%28programming_language%29
 [imlib2]: https://docs.enlightenment.org/api/imlib2/html/
 [cairo]: https://www.cairographics.org/
+
+## Supporting this project
+
+Conky exists only through the hard work of a collection of volunteers. Please
+consider sponsoring the project's developers if you get value out of Conky.
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/brndnmtthws/conky.svg)](https://starchart.cc/brndnmtthws/conky)

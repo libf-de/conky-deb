@@ -3,7 +3,7 @@
 #
 # Please see COPYING for details
 #
-# Copyright (c) 2005-2019 Brenden Matthews, et. al. (see AUTHORS) All rights
+# Copyright (c) 2005-2021 Brenden Matthews, et. al. (see AUTHORS) All rights
 # reserved.
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -130,6 +130,7 @@ endif(NOT
 if(OS_LINUX)
   check_include_files("linux/soundcard.h" HAVE_SOME_SOUNDCARD_H)
   check_include_files("linux/soundcard.h" HAVE_LINUX_SOUNDCARD_H)
+  check_include_files("linux/sockios.h" HAVE_LINUX_SOCKIOS_H)
 elseif(OS_OPENBSD)
   check_include_files("soundcard.h" HAVE_SOME_SOUNDCARD_H)
 else(OS_LINUX)
@@ -403,7 +404,7 @@ if(BUILD_X11)
         ${X11_INCLUDE_DIR})
   endif(BUILD_LUA_IMLIB2)
   if(BUILD_LUA_RSVG)
-    pkg_check_modules(RSVG REQUIRED librsvg-2.0)
+    pkg_check_modules(RSVG REQUIRED librsvg-2.0>=2.46)
     set(luarsvg_libs ${RSVG_LIBRARIES} ${LUA_LIBRARIES})
     set(luarsvg_includes ${RSVG_INCLUDE_DIRS} ${LUA_INCLUDE_DIRS})
   endif(BUILD_LUA_RSVG)
@@ -464,7 +465,7 @@ if(BUILD_IMLIB2)
 endif(BUILD_IMLIB2)
 
 if(BUILD_JOURNAL)
-  pkg_search_module(SYSTEMD REQUIRED libsystemd libsystemd-journal)
+  pkg_search_module(SYSTEMD REQUIRED libsystemd>=205 libsystemd-journal>=205)
   set(conky_libs ${conky_libs} ${SYSTEMD_LIB} ${SYSTEMD_LDFLAGS})
   set(conky_includes ${conky_includes} ${SYSTEMD_INCLUDE_DIRS})
 endif(BUILD_JOURNAL)

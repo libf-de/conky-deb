@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *   (see AUTHORS)
  * All rights reserved.
  *
@@ -525,7 +525,9 @@ void print_pid_thread_list(struct text_object *obj, char *p,
       }
     }
     closedir(dir);
-    if (p[totallength - 1] == ',') { p[totallength - 1] = 0; }
+    if (totallength > 0 && p[totallength - 1] == ',') {
+      p[totallength - 1] = 0;
+    }
   } else {
     p[0] = 0;
   }
