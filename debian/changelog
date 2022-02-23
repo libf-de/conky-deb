@@ -1,4 +1,4 @@
-conky (1.12.2-1) UNRELEASED; urgency=medium
+conky (1.12.2-1) unstable; urgency=medium
 
   [ Vincent Cheng ]
   * New upstream release.
