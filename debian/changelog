@@ -1,3 +1,17 @@
+conky (1.11.6-3) UNRELEASED; urgency=medium
+
+  * Remove constraints unnecessary since buster:
+    + Build-Depends: Drop versioned constraint on cmake, dpkg-dev and
+      pkg-config.
+    + conky-std: Drop versioned constraint on conky in Replaces.
+    + conky-std: Drop versioned constraint on conky in Breaks.
+    + conky-cli: Drop versioned constraint on conky in Replaces.
+    + conky-cli: Drop versioned constraint on conky in Breaks.
+    + conky-all: Drop versioned constraint on conky in Replaces.
+    + conky-all: Drop versioned constraint on conky in Breaks.
+
+ -- Debian Janitor <janitor@jelmer.uk>  Mon, 18 Oct 2021 00:15:14 -0000
+
 conky (1.11.6-2) unstable; urgency=medium
 
   * Re-enable tcp_portmon support. (Closes: #968323)
