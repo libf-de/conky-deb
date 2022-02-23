@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -166,7 +166,7 @@ struct information {
 
   /* memory information in kilobytes */
   unsigned long long mem, memwithbuffers, memeasyfree, memfree, memmax,
-      memdirty;
+      memdirty, legacymem;
   unsigned long long swap, swapfree, swapmax;
   unsigned long long bufmem, buffers, cached;
 
@@ -300,6 +300,11 @@ long get_current_text_color(void);
 void set_updatereset(int);
 int get_updatereset(void);
 int get_total_updates(void);
+
+int xft_dpi_scale(int value);
+
+int get_saved_coordinates_x(int);
+int get_saved_coordinates_y(int);
 
 /* defined in conky.c */
 int spaced_print(char *, int, const char *, int, ...)

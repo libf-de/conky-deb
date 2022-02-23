@@ -3,7 +3,7 @@
 #
 # Please see COPYING for details
 #
-# Copyright (c) 2005-2019 Brenden Matthews, et. al. (see AUTHORS) All rights
+# Copyright (c) 2005-2021 Brenden Matthews, et. al. (see AUTHORS) All rights
 # reserved.
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -124,8 +124,8 @@ endif(OS_SOLARIS)
 
 # Do version stuff
 set(VERSION_MAJOR "1")
-set(VERSION_MINOR "11")
-set(VERSION_PATCH "6")
+set(VERSION_MINOR "12")
+set(VERSION_PATCH "2")
 
 find_program(APP_AWK awk)
 if(NOT APP_AWK)
@@ -157,13 +157,11 @@ endif(NOT RELEASE)
 
 mark_as_advanced(APP_AWK APP_WC APP_DATE APP_UNAME)
 
-# BUILD_DATE=$(LANG=en_US LC_ALL=en_US LOCALE=en_US date) BUILD_ARCH="$(uname
-# -sr) ($(uname -m))"
-execute_process(COMMAND ${APP_DATE}
-                RESULT_VARIABLE RETVAL
-                OUTPUT_VARIABLE BUILD_DATE
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${APP_UNAME} -srm
+# BUILD_DATE=$(LANG=en_US LC_ALL=en_US LOCALE=en_US date --utc
+# --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y-%m-%d)
+# BUILD_ARCH="$(uname -sm)"
+STRING(TIMESTAMP BUILD_DATE "%Y-%m-%d" UTC)
+execute_process(COMMAND ${APP_UNAME} -sm
                 RESULT_VARIABLE RETVAL
                 OUTPUT_VARIABLE BUILD_ARCH
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -175,7 +173,7 @@ else(RELEASE)
       "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}_pre${COMMIT_COUNT}")
 endif(RELEASE)
 
-set(COPYRIGHT "Copyright Brenden Matthews, et al, 2005-2019")
+set(COPYRIGHT "Copyright Brenden Matthews, et al, 2005-2021")
 
 macro(AC_SEARCH_LIBS FUNCTION_NAME INCLUDES TARGET_VAR)
   if("${TARGET_VAR}" MATCHES "^${TARGET_VAR}$")

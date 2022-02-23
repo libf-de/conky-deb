@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2005 Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>,
  *					  Dave Clark <clarkd@skynet.ca>
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -42,7 +42,7 @@
 
 #include "conky.h"
 #include "text_object.h"
-#define CPU_THRESHHOLD 0 /* threshhold for the cpu diff to appear */
+#define CPU_THRESHHOLD 0 /* threshold for the cpu diff to appear */
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>

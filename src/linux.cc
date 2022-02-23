@@ -6,7 +6,7 @@
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
  * Copyright (c) 2007 Toni Spets
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -181,7 +181,7 @@ int update_meminfo(void) {
   char buf[256];
 
   /* With multi-threading, calculations that require
-   * multple steps to reach a final result can cause havok
+   * multiple steps to reach a final result can cause havok
    * if the intermediary calculations are directly assigned to the
    * information struct (they may be read by other functions in the meantime).
    * These variables keep the calculations local to the function and finish off
@@ -191,7 +191,7 @@ int update_meminfo(void) {
 
   info.memmax = info.memdirty = info.swap = info.swapfree = info.swapmax =
       info.memwithbuffers = info.buffers = info.cached = info.memfree =
-          info.memeasyfree = 0;
+          info.memeasyfree = info.legacymem = 0;
 
   if (!(meminfo_fp = open_file("/proc/meminfo", &reported))) { return 0; }
 
@@ -247,10 +247,10 @@ int update_meminfo(void) {
     */
     curmem -= curbufmem;
     cureasyfree += curbufmem;
-#else
+#else  /* LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0) */
     curmem = info.memmax - memavail;
     cureasyfree += curbufmem;
-#endif
+#endif /* LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0) */
   }
 
   /* Now that we know that every calculation is finished we can wrap up
@@ -258,6 +258,8 @@ int update_meminfo(void) {
   info.mem = curmem;
   info.bufmem = curbufmem;
   info.memeasyfree = cureasyfree;
+  info.legacymem =
+      info.memmax - (info.memfree + info.buffers + info.cached + sreclaimable);
 
   fclose(meminfo_fp);
   return 0;
@@ -580,9 +582,9 @@ void update_net_interfaces(FILE *net_dev_fp, bool is_first_update,
                          nullptr, NULL);
       ns2->addr = ((struct ifreq *)conf.ifc_buf)[k].ifr_ifru.ifru_addr;
       char temp_addr[18];
-      sprintf(temp_addr, "%u.%u.%u.%u, ", ns2->addr.sa_data[2] & 255,
-              ns2->addr.sa_data[3] & 255, ns2->addr.sa_data[4] & 255,
-              ns2->addr.sa_data[5] & 255);
+      snprintf(temp_addr, sizeof(temp_addr), "%u.%u.%u.%u, ",
+               ns2->addr.sa_data[2] & 255, ns2->addr.sa_data[3] & 255,
+               ns2->addr.sa_data[4] & 255, ns2->addr.sa_data[5] & 255);
       if (nullptr == strstr(ns2->addrs, temp_addr))
         strncpy(ns2->addrs + strlen(ns2->addrs), temp_addr, 17);
     }
@@ -695,6 +697,7 @@ void update_net_interfaces(FILE *net_dev_fp, bool is_first_update,
   }
 }
 
+#ifdef BUILD_IPV6
 void update_ipv6_net_stats() {
   FILE *file;
   char v6addr[33];
@@ -759,6 +762,7 @@ void update_ipv6_net_stats() {
 
   fclose(file);
 }
+#endif /* BUILD_IPV6 */
 
 /**
  * Parses information from /proc/net/dev and stores them in ???
@@ -1706,7 +1710,7 @@ void get_acpi_fan(char *p_client_buffer, size_t client_buffer_size) {
      POWER_SUPPLY_TYPE=Mains
      POWER_SUPPLY_ONLINE=1
 
-   Update: it seems the folder name is hardware-dependent. We add an aditional
+   Update: it seems the folder name is hardware-dependent. We add an additional
    adapter argument, specifying the folder name.
 
    Update: on some systems it's /sys/class/power_supply/ADP1 instead of
@@ -2801,7 +2805,7 @@ static void calc_io_each(void) {
 
   for (p = first_process; p; p = p->next) sum += p->read_bytes + p->write_bytes;
 
-  if (sum == 0) sum = 1; /* to avoid having NANs if no I/O occured */
+  if (sum == 0) sum = 1; /* to avoid having NANs if no I/O occurred */
   for (p = first_process; p; p = p->next)
     p->io_perc = 100.0 * (p->read_bytes + p->write_bytes) / (float)sum;
 }
@@ -2922,7 +2926,7 @@ static void process_parse_stat(struct process *process) {
               state, &process->user_time, &process->kernel_time, &nice_val,
               &process->vsize, &process->rss);
   if (rc < 6) {
-    NORM_ERR("scaning data for %s failed, got only %d fields", procname, rc);
+    NORM_ERR("scanning data for %s failed, got only %d fields", procname, rc);
     return;
   }
 

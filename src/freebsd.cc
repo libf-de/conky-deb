@@ -8,7 +8,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -49,7 +49,9 @@
 #include <unistd.h>
 
 #include <dev/acpica/acpiio.h>
+#if 0
 #include <dev/wi/if_wavelan_ieee.h>
+#endif
 
 #include <mutex>
 
@@ -168,6 +170,7 @@ int update_meminfo(void) {
   info.mem = (total_pages - free_pages - inactive_pages) * (pagesize >> 10);
   info.memwithbuffers = info.mem;
   info.memeasyfree = info.memfree = info.memmax - info.mem;
+  info.legacymem = info.mem;
 
   if ((swapmode(&swap_avail, &swap_free)) >= 0) {
     info.swapmax = swap_avail;

@@ -3,7 +3,7 @@
 #
 # Please see COPYING for details
 #
-# Copyright (c) 2005-2019 Brenden Matthews, et. al. (see AUTHORS) All rights
+# Copyright (c) 2005-2021 Brenden Matthews, et. al. (see AUTHORS) All rights
 # reserved.
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -89,7 +89,7 @@ if(BUILD_DOCS)
         COMMAND ${APP_SED} -i'' -e 's/\\x80//g' ${CMAKE_SOURCE_DIR}/README
         COMMAND ${APP_SED} -i'' -e 's/\\x90/-/g' ${CMAKE_SOURCE_DIR}/README
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FIL}.xml
-        COMMENT "Proccessing man page for ${FIL}")
+        COMMENT "Processing man page for ${FIL}")
       add_custom_target(${FIL} ALL
                         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FIL}.html)
     endforeach(FIL)

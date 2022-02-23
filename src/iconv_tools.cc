@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -97,7 +97,7 @@ void iconv_convert(size_t *a, char *buff_in, char *p, size_t p_max_size) {
     }
   }
 
-  /* It is nessecary when we are converting from multibyte to
+  /* It is necessary when we are converting from multibyte to
    * singlebyte codepage */
   // a = outptr - p;
   //(*a) = *a - dummy2;

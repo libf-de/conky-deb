@@ -3,7 +3,7 @@
 #
 # Please see COPYING for details
 #
-# Copyright (c) 2005-2019 Brenden Matthews, et. al. (see AUTHORS) All rights
+# Copyright (c) 2005-2021 Brenden Matthews, et. al. (see AUTHORS) All rights
 # reserved.
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -37,15 +37,15 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 # -std options for all build types
-set(CMAKE_C_FLAGS "-std=c99"
+set(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS}"
     CACHE STRING "Flags used by the C compiler during all build types."
     FORCE)
-set(CMAKE_CXX_FLAGS "-std=c++17"
+set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_CXX_FLAGS}"
     CACHE STRING "Flags used by the C++ compiler during all build types."
     FORCE)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MAINTAINER_MODE)
   set(BUILD_TESTS true)
@@ -75,16 +75,12 @@ if(MAINTAINER_MODE)
       CACHE STRING "Flags used by the compiler during debug builds."
       FORCE)
   endif()
-endif(MAINTAINER_MODE)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(USING_CLANG true)
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.0.0
-     AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0.0)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    set(USING_CLANG_7 true)
-  endif()
-endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      set(USING_CLANG true)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    endif()
+endif(MAINTAINER_MODE)
 
 option(CHECK_CODE_QUALITY "Check code formatting/quality with clang" false)
 
@@ -134,9 +130,11 @@ if(OS_LINUX)
   option(BUILD_PORT_MONITORS "Build TCP portmon support" true)
   option(BUILD_IBM "Support for IBM/Lenovo notebooks" true)
   option(BUILD_HDDTEMP "Support for hddtemp" true)
-  # nvidia may also work on FreeBSD, not sure
-  option(BUILD_NVIDIA "Enable nvidia support" false)
   option(BUILD_IPV6 "Enable if you want IPv6 support" true)
+  if(BUILD_X11)
+    # nvidia may also work on FreeBSD, not sure
+    option(BUILD_NVIDIA "Enable nvidia support" false)
+  endif(BUILD_X11)
 else(OS_LINUX)
   set(BUILD_PORT_MONITORS false)
   set(BUILD_IBM false)
@@ -206,6 +204,7 @@ else(BUILD_X11)
   set(BUILD_XFT false CACHE BOOL "Build Xft (freetype fonts) support" FORCE)
   set(BUILD_IMLIB2 false CACHE BOOL "Enable Imlib2 support" FORCE)
   set(BUILD_XSHAPE false CACHE BOOL "Enable Xshape support" FORCE)
+  set(BUILD_NVIDIA false)
 endif(BUILD_X11)
 
 if(OWN_WINDOW)
@@ -259,6 +258,11 @@ option(BUILD_JOURNAL "Enable support for reading from the systemd journal"
 
 option(BUILD_PULSEAUDIO
        "Enable support for Pulseaudio's default sink and source" false)
+
+option(BUILD_INTEL_BACKLIGHT
+       "Enable support for Intel backlight" false)
+
+option(BUILD_HSV_GRADIENT "Enable gradient in HSV colour space" true)
 
 message(STATUS "CMAKE_C_FLAGS: " ${CMAKE_C_FLAGS})
 message(STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})

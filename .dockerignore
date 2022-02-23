@@ -1,6 +1,11 @@
 Dockerfile
 .dockerignore
 
+# Ignore SCM/CI related stuff
+.github/
+.git/
+.gitlab-ci.yml
+
 .DS_Store
 *~
 .*.swp
@@ -26,3 +31,6 @@ lua/libimlib2.c
 # Ignore vscode stuff
 .vscode
 *.code-workspace
+
+# Ignore tests
+tests/

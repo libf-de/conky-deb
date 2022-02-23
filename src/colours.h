@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -29,10 +29,11 @@
 #ifndef _COLOURS_H
 #define _COLOURS_H
 
+#include <memory>
 #include <string>
 
 unsigned int adjust_colours(unsigned int);
-unsigned long *do_gradient(int, unsigned long, unsigned long);
+std::unique_ptr<unsigned long[]> do_gradient(int, unsigned long, unsigned long);
 
 long get_x11_color(const std::string &colour);
 // XXX: when everyone uses C++ strings, remove this C version

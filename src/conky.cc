@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -58,6 +58,9 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wvariadic-macros"
 #include <X11/Xutil.h>
+#ifdef BUILD_XFT
+#include <X11/Xlib.h>
+#endif /* BUILD_XFT */
 #pragma GCC diagnostic pop
 #include "x11.h"
 #ifdef BUILD_XDAMAGE
@@ -141,6 +144,10 @@
 
 #ifdef BUILD_BUILTIN_CONFIG
 #include "defconfig.h"
+
+#ifdef BUILD_HSV_GRADIENT
+#include "hsv_gradient.h"
+#endif /* BUILD_HSV_GRADIENT */
 
 namespace {
 const char builtin_config_magic[] = "==builtin==";
@@ -270,6 +277,9 @@ static int text_offset_x, text_offset_y; /* offset for start position */
 static int text_width = 1,
            text_height = 1; /* initially 1 so no zero-sized window is created */
 
+#ifdef BUILD_XFT
+static int xft_dpi = -1;
+#endif /* BUILD_XFT */
 #endif /* BUILD_X11 */
 
 /* struct that has all info to be shared between
@@ -317,17 +327,22 @@ static conky::simple_config_setting<std::string> append_file("append_file",
 static FILE *append_fpointer = nullptr;
 
 #ifdef BUILD_HTTP
+#ifdef MHD_YES
+/* older API */
+#define MHD_Result int
+#endif /* MHD_YES */
 std::string webpage;
 struct MHD_Daemon *httpd;
 static conky::simple_config_setting<bool> http_refresh("http_refresh", false,
                                                        true);
 
-int sendanswer(void *cls, struct MHD_Connection *connection, const char *url,
-               const char *method, const char *version, const char *upload_data,
-               size_t *upload_data_size, void **con_cls) {
+MHD_Result sendanswer(void *cls, struct MHD_Connection *connection,
+                      const char *url, const char *method, const char *version,
+                      const char *upload_data, size_t *upload_data_size,
+                      void **con_cls) {
   struct MHD_Response *response = MHD_create_response_from_buffer(
       webpage.length(), (void *)webpage.c_str(), MHD_RESPMEM_PERSISTENT);
-  int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+  MHD_Result ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
   MHD_destroy_response(response);
   if (cls || url || method || version || upload_data || upload_data_size ||
       con_cls) {}  // make compiler happy
@@ -486,6 +501,18 @@ int calc_text_width(const char *s) {
 #endif /* BUILD_X11 */
 }
 
+int xft_dpi_scale(int value) {
+#if defined(BUILD_X11) && defined(BUILD_XFT)
+  if (use_xft.get(*state) && xft_dpi > 0) {
+    return (value * xft_dpi + (value > 0 ? 48 : -48)) / 96;
+  } else {
+    return value;
+  }
+#else  /* defined(BUILD_X11) && defined(BUILD_XFT) */
+  return value;
+#endif /* defined(BUILD_X11) && defined(BUILD_XFT) */
+}
+
 /* formatted text to render on screen, generated in generate_text(),
  * drawn in draw_stuff() */
 
@@ -586,10 +613,10 @@ void human_readable(long long num, char *buf, int size) {
     return;
   }
   if (short_units.get(*state)) {
-    width = 5;
+    width = 6;
     format = "%.*f %.1s";
   } else {
-    width = 7;
+    width = 8;
     format = "%.*f %-.3s";
   }
 
@@ -737,7 +764,6 @@ void evaluate(const char *text, char *p, int p_max_size) {
    * callbacks and generate_text_internal() after callbacks.
    */
   extract_variable_text_internal(&subroot, text);
-  conky::run_all_callbacks();
   generate_text_internal(p, p_max_size, subroot);
   DBGP2("evaluated '%s' to '%s'", text, p);
 
@@ -821,8 +847,9 @@ int get_string_width(const char *s) { return *s != 0 ? calc_text_width(s) : 0; }
 
 #ifdef BUILD_X11
 static inline int get_border_total() {
-  return border_inner_margin.get(*state) + border_outer_margin.get(*state) +
-         border_width.get(*state);
+  return xft_dpi_scale(border_inner_margin.get(*state)) +
+         xft_dpi_scale(border_outer_margin.get(*state)) +
+         xft_dpi_scale(border_width.get(*state));
 }
 
 static int get_string_width_special(char *s, int special_index) {
@@ -914,15 +941,15 @@ static void update_text_area() {
   if (fixed_size == 0)
 #endif
   {
-    text_width = minimum_width.get(*state);
+    text_width = xft_dpi_scale(minimum_width.get(*state));
     text_height = 0;
     last_font_height = font_height();
     for_each_line(text_buffer, text_size_updater);
     text_width += 1;
-    if (text_height < minimum_height.get(*state)) {
-      text_height = minimum_height.get(*state);
+    if (text_height < xft_dpi_scale(minimum_height.get(*state))) {
+      text_height = xft_dpi_scale(minimum_height.get(*state));
     }
-    int mw = maximum_width.get(*state);
+    int mw = xft_dpi_scale(maximum_width.get(*state));
     if (text_width > mw && mw > 0) { text_width = mw; }
   }
 
@@ -932,21 +959,21 @@ static void update_text_area() {
     case TOP_LEFT:
     case TOP_RIGHT:
     case TOP_MIDDLE:
-      y = workarea[1] + gap_y.get(*state);
+      y = workarea[1] + xft_dpi_scale(gap_y.get(*state));
       break;
 
     case BOTTOM_LEFT:
     case BOTTOM_RIGHT:
     case BOTTOM_MIDDLE:
     default:
-      y = workarea[3] - text_height - gap_y.get(*state);
+      y = workarea[3] - text_height - xft_dpi_scale(gap_y.get(*state));
       break;
 
     case MIDDLE_LEFT:
     case MIDDLE_RIGHT:
     case MIDDLE_MIDDLE:
       y = workarea[1] + (workarea[3] - workarea[1]) / 2 - text_height / 2 -
-          gap_y.get(*state);
+          xft_dpi_scale(gap_y.get(*state));
       break;
   }
   switch (align) {
@@ -954,20 +981,20 @@ static void update_text_area() {
     case BOTTOM_LEFT:
     case MIDDLE_LEFT:
     default:
-      x = workarea[0] + gap_x.get(*state);
+      x = workarea[0] + xft_dpi_scale(gap_x.get(*state));
       break;
 
     case TOP_RIGHT:
     case BOTTOM_RIGHT:
     case MIDDLE_RIGHT:
-      x = workarea[2] - text_width - gap_x.get(*state);
+      x = workarea[2] - text_width - xft_dpi_scale(gap_x.get(*state));
       break;
 
     case TOP_MIDDLE:
     case BOTTOM_MIDDLE:
     case MIDDLE_MIDDLE:
       x = workarea[0] + (workarea[2] - workarea[0]) / 2 - text_width / 2 -
-          gap_x.get(*state);
+          xft_dpi_scale(gap_x.get(*state));
       break;
   }
 #ifdef OWN_WINDOW
@@ -1005,6 +1032,12 @@ static int cur_x, cur_y; /* current x and y for drawing */
 static int draw_mode; /* FG, BG or OUTLINE */
 #ifdef BUILD_X11
 static long current_color;
+
+static int saved_coordinates_x[100];
+static int saved_coordinates_y[100];
+
+int get_saved_coordinates_x(int i) { return saved_coordinates_x[i]; }
+int get_saved_coordinates_y(int i) { return saved_coordinates_y[i]; }
 
 static int text_size_updater(char *s, int special_index) {
   int w = 0;
@@ -1058,7 +1091,7 @@ static int text_size_updater(char *s, int special_index) {
   w += get_string_width(s);
 
   if (w > text_width) { text_width = w; }
-  int mw = maximum_width.get(*state);
+  int mw = xft_dpi_scale(maximum_width.get(*state));
   if (text_width > mw && mw > 0) { text_width = mw; }
 
   text_height += last_font_height;
@@ -1176,7 +1209,7 @@ static void draw_string(const char *s) {
   }
 #ifdef BUILD_X11
   if (out_to_x.get(*state)) {
-    int mw = maximum_width.get(*state);
+    int mw = xft_dpi_scale(maximum_width.get(*state));
     if (text_width == mw) {
       /* this means the text is probably pushing the limit,
        * so we'll chop it */
@@ -1271,7 +1304,7 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
 #ifdef BUILD_X11
   int font_h = 0;
   int cur_y_add = 0;
-  int mw = maximum_width.get(*state);
+  int mw = xft_dpi_scale(maximum_width.get(*state));
 #endif /* BUILD_X11 */
   char *p = s;
   int orig_special_index = special_index;
@@ -1354,8 +1387,8 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
             if (w == 0) { w = text_start_x + text_width - cur_x - 1; }
             if (w < 0) { w = 0; }
 
-            XSetLineAttributes(display, window.gc, 1, LineSolid, CapButt,
-                               JoinMiter);
+            XSetLineAttributes(display, window.gc, xft_dpi_scale(1), LineSolid,
+                               CapButt, JoinMiter);
 
             XDrawRectangle(display, window.drawable, window.gc,
                            text_offset_x + cur_x, text_offset_y + by, w, h);
@@ -1433,8 +1466,8 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
             }
             if (w < 0) { w = 0; }
             if (draw_graph_borders.get(*state)) {
-              XSetLineAttributes(display, window.gc, 1, LineSolid, CapButt,
-                                 JoinMiter);
+              XSetLineAttributes(display, window.gc, xft_dpi_scale(1),
+                                 LineSolid, CapButt, JoinMiter);
               XDrawRectangle(display, window.drawable, window.gc,
                              text_offset_x + cur_x, text_offset_y + by, w, h);
             }
@@ -1443,11 +1476,16 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
 
             /* in case we don't have a graph yet */
             if (current->graph != nullptr) {
-              unsigned long *tmpcolour = nullptr;
+              std::unique_ptr<unsigned long[]> tmpcolour;
 
               if (current->last_colour != 0 || current->first_colour != 0) {
+#ifdef BUILD_HSV_GRADIENT
+                tmpcolour = do_hsv_gradient(w - 1, current->last_colour,
+                                            current->first_colour);
+#else  /* BUILD_HSV_GRADIENT */
                 tmpcolour = do_gradient(w - 1, current->last_colour,
                                         current->first_colour);
+#endif /* BUILD_HSV_GRADIENT */
               }
               colour_idx = 0;
               for (i = w - 2; i > -1; i--) {
@@ -1472,7 +1510,6 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
                                                   current->scale));
                 ++j;
               }
-              free_and_zero(tmpcolour);
             }
             if (h > cur_y_add && h > font_h) { cur_y_add = h; }
             if (show_graph_range.get(*state)) {
@@ -1581,6 +1618,13 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
 
         case VOFFSET:
           cur_y += current->arg;
+          break;
+
+        case SAVE_COORDINATES:
+          saved_coordinates_x[static_cast<int>(current->arg)] =
+              cur_x - text_start_x;
+          saved_coordinates_y[static_cast<int>(current->arg)] =
+              cur_y - text_start_y - last_font_height;
           break;
 
         case TAB: {
@@ -1714,13 +1758,13 @@ static void draw_text() {
 #ifdef BUILD_X11
   if (out_to_x.get(*state)) {
     cur_y = text_start_y;
-    int bw = border_width.get(*state);
+    int bw = xft_dpi_scale(border_width.get(*state));
 
     /* draw borders */
     if (draw_borders.get(*state) && bw > 0) {
       if (stippled_borders.get(*state) != 0) {
-        char ss[2] = {stippled_borders.get(*state),
-                      stippled_borders.get(*state)};
+        char ss[2] = {(char)xft_dpi_scale(stippled_borders.get(*state)),
+                      (char)xft_dpi_scale(stippled_borders.get(*state))};
         XSetLineAttributes(display, window.gc, bw, LineOnOffDash, CapButt,
                            JoinMiter);
         XSetDashes(display, window.gc, 0, ss, 2);
@@ -1729,7 +1773,7 @@ static void draw_text() {
                            JoinMiter);
       }
 
-      int offset = border_inner_margin.get(*state) + bw;
+      int offset = xft_dpi_scale(border_inner_margin.get(*state)) + bw;
       XDrawRectangle(display, window.drawable, window.gc,
                      text_offset_x + text_start_x - offset,
                      text_offset_y + text_start_y - offset,
@@ -1775,7 +1819,6 @@ static void draw_stuff() {
     selected_font = 0;
     if (draw_shades.get(*state) && !draw_outline.get(*state)) {
       text_offset_x = text_offset_y = 1;
-      text_start_y++;
       set_foreground_color(default_shade_color.get(*state));
       draw_mode = BG;
       draw_text();
@@ -2139,7 +2182,7 @@ void main_loop() {
 
                 text_width = window.width - 2 * border_total;
                 text_height = window.height - 2 * border_total;
-                int mw = maximum_width.get(*state);
+                int mw = xft_dpi_scale(maximum_width.get(*state));
                 if (text_width > mw && mw > 0) { text_width = mw; }
               }
 
@@ -2183,8 +2226,7 @@ void main_loop() {
             if (own_window.get(*state)) {
               /* if an ordinary window with decorations */
               if ((own_window_type.get(*state) == TYPE_NORMAL) &&
-                  not TEST_HINT(own_window_hints.get(*state),
-                                HINT_UNDECORATED)) {
+                  !TEST_HINT(own_window_hints.get(*state), HINT_UNDECORATED)) {
                 /* allow conky to hold input focus. */
                 break;
               }
@@ -2290,7 +2332,7 @@ void main_loop() {
     if (g_sigusr2_pending != 0) {
       g_sigusr2_pending = 0;
       // refresh view;
-      NORM_ERR("recieved SIGUSR2. refreshing.");
+      NORM_ERR("received SIGUSR2. refreshing.");
       update_text();
       draw_stuff();
 #ifdef BUILD_NCURSES
@@ -2512,6 +2554,12 @@ static void X11_create_window() {
   if (out_to_x.get(*state)) {
     setup_fonts();
     load_fonts(utf8_mode.get(*state));
+#ifdef BUILD_XFT
+    if (use_xft.get(*state)) {
+      auto dpi = XGetDefault(display, "Xft", "dpi");
+      if (dpi) { xft_dpi = atoi(dpi); }
+    }
+#endif                  /* BUILD_XFT */
     update_text_area(); /* to position text/window on screen */
 
 #ifdef OWN_WINDOW
@@ -2772,7 +2820,7 @@ void initialisation(int argc, char **argv) {
         break;
 
       case 'u':
-        state->pushinteger(strtol(optarg, &conv_end, 10));
+        state->pushinteger(xft_dpi_scale(strtol(optarg, &conv_end, 10)));
         if (*conv_end != 0) {
           CRIT_ERR(nullptr, nullptr, "'%s' is a wrong update-interval", optarg);
         }

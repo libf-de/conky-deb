@@ -2,6 +2,7 @@
 *~
 .*.swp
 Doxyfile
+patches/
 doc/conky.1
 README
 build*/
@@ -22,3 +23,5 @@ lua/libimlib2.c
 # Ignore vscode stuff
 .vscode
 *.code-workspace
+.idea/
+

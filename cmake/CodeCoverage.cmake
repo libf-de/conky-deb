@@ -69,14 +69,28 @@ find_program(LCOV_PATH
                    lcov.perl
              PATHS ENV PATH)
 find_program(LLVM_COV_PATH
-             NAMES llvm-cov80
+             NAMES
+                   llvm-cov110
+                   llvm-cov-11
+                   llvm-cov100
+                   llvm-cov-10
+                   llvm-cov90
+                   llvm-cov-9
+                   llvm-cov80
                    llvm-cov-8
                    llvm-cov70
                    llvm-cov-7
                    llvm-cov
              PATHS ENV PATH)
 find_program(LLVM_PROFDATA_PATH
-             NAMES llvm-profdata80
+             NAMES
+                   llvm-profdata110
+                   llvm-profdata-11
+                   llvm-profdata100
+                   llvm-profdata-10
+                   llvm-profdata90
+                   llvm-profdata-9
+                   llvm-profdata80
                    llvm-profdata-8
                    llvm-profdata70
                    llvm-profdata-7

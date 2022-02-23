@@ -3,7 +3,7 @@
 #
 # Please see COPYING for details
 #
-# Copyright (c) 2005-2019 Brenden Matthews, et. al. (see AUTHORS) All rights
+# Copyright (c) 2005-2021 Brenden Matthews, et. al. (see AUTHORS) All rights
 # reserved.
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -281,6 +281,16 @@ if(BUILD_PULSEAUDIO)
   set(pulseaudio pulseaudio.cc pulseaudio.h)
   set(optional_sources ${optional_sources} ${pulseaudio})
 endif(BUILD_PULSEAUDIO)
+
+if(BUILD_INTEL_BACKLIGHT)
+  set(intel_backlight intel_backlight.cc intel_backlight.h)
+  set(optional_sources ${optional_sources} ${intel_backlight})
+endif(BUILD_INTEL_BACKLIGHT)
+
+if(BUILD_HSV_GRADIENT)
+  set(hsv_gradient hsv_gradient.cc hsv_gradient.h)
+  set(optional_sources ${optional_sources} ${hsv_gradient})
+endif(BUILD_HSV_GRADIENT)
 
 if(BUILD_TESTS)
   # Create a library strictly for testing

@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -127,6 +127,7 @@ void update_meminfo() {
   info.mem = ((total_pages - free_pages - inactive_pages) * pagesize) >> 10;
   info.memwithbuffers = info.mem;
   info.memeasyfree = info.memfree = info.memmax - info.mem;
+  info.legacymem = info.mem;
 
   if (swapmode(&swap_avail, &swap_free) >= 0) {
     info.swapmax = swap_avail;

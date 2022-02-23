@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -43,7 +43,7 @@ conky::simple_config_setting<std::string> _template[10] = {
 
 /* backslash_escape - do the actual substitution task for template objects
  *
- * The field templates is used for substituting the \N occurences. Set it to
+ * The field templates is used for substituting the \N occurrences. Set it to
  * nullptr to leave them as they are.
  */
 static char *backslash_escape(const char *src, char **templates,
@@ -84,7 +84,8 @@ static char *backslash_escape(const char *src, char **templates,
           dup_len += strlen(templates[tmpl_num - 1]);
           src_dup =
               static_cast<char *>(realloc(src_dup, dup_len * sizeof(char)));
-          sprintf(src_dup + dup_idx, "%s", templates[tmpl_num - 1]);
+          snprintf(src_dup + dup_idx, dup_len - dup_idx, "%s",
+                   templates[tmpl_num - 1]);
           dup_idx += strlen(templates[tmpl_num - 1]);
           p += digits;
         }

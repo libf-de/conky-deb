@@ -8,7 +8,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2019 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -153,7 +153,7 @@ static int push_ifblock(struct ifblock_stack_obj **ifblock_stack_top,
       *ifblock_stack_top = stackobj;
       break;
     default:
-      CRIT_ERR(nullptr, nullptr, "push_ifblock() missuse detected!");
+      CRIT_ERR(nullptr, nullptr, "push_ifblock() misuse detected!");
   }
   return 0;
 }
