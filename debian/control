@@ -33,7 +33,6 @@ Build-Depends:
  libxext-dev,
  libxft-dev,
  libxml2-dev,
- libxmmsclient-dev,
  libxnvctrl-dev [i386 amd64] | nvidia-settings [i386 amd64],
  pkg-config
 Homepage: https://github.com/brndnmtthws/conky
@@ -45,7 +44,7 @@ Rules-Requires-Root: no
 Package: conky-std
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Suggests: apcupsd, audacious, moc, mpd, xmms2
+Suggests: apcupsd, audacious, moc, mpd
 Conflicts: conky-all, conky-cli
 Replaces: conky-all, conky-cli
 Description: highly configurable system monitor (default version)
@@ -83,7 +82,7 @@ Description: highly configurable system monitor (basic version)
 Package: conky-all
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Suggests: apcupsd, audacious, moc, mpd, xmms2
+Suggests: apcupsd, audacious, moc, mpd
 Conflicts: conky-cli, conky-std
 Replaces: conky-cli, conky-std
 Description: highly configurable system monitor (all features enabled)
@@ -98,7 +97,7 @@ Description: highly configurable system monitor (all features enabled)
  X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
  Weather, wireless, IBM, nvidia, eve-online, Imlib2,
  apcupsd, I/O stats, argb, Lua and the cairo and imlib2 Lua bindings,
- Audacious, XMMS2, PulseAudio, iCal, iconv, IRC, and systemd journal.
+ Audacious, PulseAudio, iCal, iconv, IRC, and systemd journal.
 
 Package: conky
 Section: oldlibs
