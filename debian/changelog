@@ -1,3 +1,11 @@
+conky (1.12.2-2) unstable; urgency=medium
+
+  [ Arnaud Rebillout ]
+  * Drop support for xmms2 since it has been removed from Debian bookworm.
+    (Closes: #1009346)
+
+ -- Vincent Cheng <vcheng@debian.org>  Fri, 15 Apr 2022 02:06:37 -0700
+
 conky (1.12.2-1) unstable; urgency=medium
 
   [ Vincent Cheng ]
