@@ -34,7 +34,7 @@ conky-all includes almost all of the available support:
 X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
 Weather, wireless, IBM, nvidia, eve-online, Imlib2, ALSA mixer,
 apcupsd, I/O stats, argb, Lua and the cairo and imlib2 lua bindings,
-Audacious, XMMS2, PulseAudio, iCal, iconv, IRC, and systemd journal.
+Audacious, PulseAudio, iCal, iconv, IRC, and systemd journal.
 
 Please check upstream documentation and source files when updating this
 package, some features might be removed or changed, others added, so that
