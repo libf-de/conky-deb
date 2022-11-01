@@ -36,7 +36,7 @@ Build-Depends:
  libxnvctrl-dev [i386 amd64] | nvidia-settings [i386 amd64],
  pkg-config
 Homepage: https://github.com/brndnmtthws/conky
-Standards-Version: 4.6.0
+Standards-Version: 4.6.1
 Vcs-Git: https://salsa.debian.org/debian/conky.git
 Vcs-Browser: https://salsa.debian.org/debian/conky
 Rules-Requires-Root: no

@@ -1,3 +1,12 @@
+conky (1.12.2-3) UNRELEASED; urgency=medium
+
+  * debian/copyright: use spaces rather than tabs to start continuation lines.
+  * Remove obsolete field Name from debian/upstream/metadata (already present in
+    machine-readable debian/copyright).
+  * Update standards version to 4.6.1, no changes needed.
+
+ -- Debian Janitor <janitor@jelmer.uk>  Thu, 13 Oct 2022 09:32:57 -0000
+
 conky (1.12.2-2) unstable; urgency=medium
 
   [ Arnaud Rebillout ]

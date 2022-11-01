@@ -29,7 +29,7 @@ Files: src/libtcp-portmon.cc
        src/apcupsd.cc
        src/apcupsd.h
 Copyright: 2005-2007 Philip Kovacs <pkovacs@users.sourceforge.net>
-	   2009 Jaromir Smrcek <jaromir.smrcek@zoner.com>
+           2009 Jaromir Smrcek <jaromir.smrcek@zoner.com>
 License: LGPL-2.1+
 
 Files: src/libmpdclient.cc
