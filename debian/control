@@ -36,7 +36,7 @@ Build-Depends:
  python3-jinja2,
  python3-yaml
 Homepage: https://github.com/brndnmtthws/conky
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: https://salsa.debian.org/debian/conky.git
 Vcs-Browser: https://salsa.debian.org/debian/conky
 Rules-Requires-Root: no

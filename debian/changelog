@@ -3,12 +3,12 @@ conky (1.17.0-1) UNRELEASED; urgency=medium
   [ Vincent Cheng ]
   * New upstream release.
   * Update build-deps for doc generation (pandoc, pyyaml, jinja2).
+  * Update standards version to 4.6.2, no changes needed.
 
   [ Debian Janitor ]
   * debian/copyright: use spaces rather than tabs to start continuation lines.
   * Remove obsolete field Name from debian/upstream/metadata (already present in
     machine-readable debian/copyright).
-  * Update standards version to 4.6.1, no changes needed.
   * Set upstream metadata fields: Bug-Submit.
 
  -- Vincent Cheng <vcheng@debian.org>  Tue, 03 Jan 2023 00:19:55 -0800
