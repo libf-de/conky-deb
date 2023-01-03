@@ -1,38 +1,60 @@
 name: Build and test on Linux
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     strategy:
       matrix:
         os:
-          - ubuntu-18.04
           - ubuntu-20.04
+          - ubuntu-22.04
         x11: [ON, OFF]
+        wayland: [ON, OFF]
         compiler:
           - clang
           - gcc
         compiler_version:
-          - 7
           - 9
           - 10
           - 11
+          - 12
+          - 13
+          - 14
         exclude:
+          - compiler: gcc
+            compiler_version: 12
+          - compiler: gcc
+            compiler_version: 13
+          - compiler: gcc
+            compiler_version: 14
           - os: ubuntu-20.04
             compiler: gcc
-            compiler_version: 7
-          - compiler: gcc
             compiler_version: 11
           - compiler: clang
-            compiler_version: 7
-          - os: ubuntu-18.04
-            compiler: clang
-            compiler_version: 7
-          - os: ubuntu-18.04
+            compiler_version: 9
+          - os: ubuntu-22.04
             compiler: clang
             compiler_version: 10
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             compiler: clang
             compiler_version: 11
+          - os: ubuntu-22.04
+            compiler: clang
+            compiler_version: 12
+          - os: ubuntu-20.04
+            compiler: clang
+            compiler_version: 13
+          - os: ubuntu-20.04
+            compiler: clang
+            compiler_version: 14
     runs-on: ${{ matrix.os }}
     steps:
       - run: sudo apt-get -qq update
@@ -41,15 +63,13 @@ jobs:
           sudo apt-get install -yqq --no-install-recommends \
             audacious-dev \
             cmake \
-            docbook2x \
             gawk \
             lcov \
             libaudclient-dev \
-            libc++-${{ matrix.compiler_version }}-dev \
-            libc++abi-${{ matrix.compiler_version }}-dev \
             libcairo2-dev \
             libcurl4-gnutls-dev \
             libcurl4-gnutls-dev \
+            libdbus-glib-1-dev \
             libglib2.0-dev \
             libical-dev \
             libimlib2-dev \
@@ -61,6 +81,8 @@ jobs:
             libpulse-dev \
             librsvg2-dev \
             libsystemd-dev \
+            libwayland-bin \
+            libwayland-dev \
             libx11-dev \
             libxdamage-dev \
             libxext-dev \
@@ -69,11 +91,20 @@ jobs:
             libxml2-dev \
             libxmmsclient-dev \
             libxnvctrl-dev \
-            ncurses-dev
+            ncurses-dev \
+            ninja-build \
+            wayland-protocols
+      - name: Install libc++
+        if: matrix.compiler == 'clang'
+        run: |
+          sudo apt-get install -yqq --no-install-recommends \
+            libc++-${{ matrix.compiler_version }}-dev \
+            libc++abi-${{ matrix.compiler_version }}-dev
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Configure with CMake
         run: |
+          set -x # show the commands we're running
           [[ "${{ matrix.compiler }}" == "clang"* ]] && CC=clang-${{ matrix.compiler_version }}
           [[ "${{ matrix.compiler }}" == "clang"* ]] && CXX=clang++-${{ matrix.compiler_version }}
 
@@ -82,13 +113,13 @@ jobs:
 
 
           # Enable librsvg by default, disable for older versions of Ubuntu
-          # because we need librsvg>=2.46
+          # because we need librsvg>=2.52
           RSVG_ENABLED=ON
-          [[ "${{ matrix.os }}" == "ubuntu-18.04"* ]] && RSVG_ENABLED=OFF
+          [[ "${{ matrix.os }}" == "ubuntu-20.04"* ]] && RSVG_ENABLED=OFF
 
           mkdir build
           cd build
-          cmake ..                               \
+          cmake .. -G Ninja                      \
             -DBUILD_AUDACIOUS=ON                 \
             -DBUILD_HTTP=ON                      \
             -DBUILD_ICAL=ON                      \
@@ -105,14 +136,14 @@ jobs:
             -DBUILD_RSS=ON                       \
             -DBUILD_TESTS=ON                     \
             -DBUILD_WLAN=ON                      \
+            -DBUILD_WAYLAND=${{ matrix.wayland }}\
             -DBUILD_X11=${{ matrix.x11 }}        \
             -DBUILD_XMMS2=ON                     \
             -DCMAKE_C_COMPILER=$CC               \
             -DCMAKE_CXX_COMPILER=$CXX            \
             -DMAINTAINER_MODE=ON
       - name: Compile
-        working-directory: build
-        run: make -j5
+        run: cmake --build build
       - name: Test
         working-directory: build
-        run: make test
+        run: ctest

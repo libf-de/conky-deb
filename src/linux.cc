@@ -99,7 +99,7 @@ struct sysfs {
 };
 
 /* To be used inside upspeed/f downspeed/f as ${gw_iface} variable */
-char e_iface[50];
+char e_iface[64];
 
 /* To use ${iface X} where X is a number and will
  * return the current X NIC name */
@@ -186,12 +186,13 @@ int update_meminfo(void) {
    * information struct (they may be read by other functions in the meantime).
    * These variables keep the calculations local to the function and finish off
    * the function by assigning the results to the information struct */
-  unsigned long long shmem = 0, sreclaimable = 0, curmem = 0, curbufmem = 0,
-                     cureasyfree = 0, memavail = 0;
+  unsigned long long sreclaimable = 0, curmem = 0, curbufmem = 0,
+                     cureasyfree = 0;
 
   info.memmax = info.memdirty = info.swap = info.swapfree = info.swapmax =
       info.memwithbuffers = info.buffers = info.cached = info.memfree =
-          info.memeasyfree = info.legacymem = 0;
+          info.memeasyfree = info.legacymem = info.shmem = info.memavail =
+              info.free_bufcache = 0;
 
   if (!(meminfo_fp = open_file("/proc/meminfo", &reported))) { return 0; }
 
@@ -213,9 +214,9 @@ int update_meminfo(void) {
     } else if (strncmp(buf, "Dirty:", 6) == 0) {
       sscanf(buf, "%*s %llu", &info.memdirty);
     } else if (strncmp(buf, "MemAvailable:", 13) == 0) {
-      sscanf(buf, "%*s %llu", &memavail);
+      sscanf(buf, "%*s %llu", &info.memavail);
     } else if (strncmp(buf, "Shmem:", 6) == 0) {
-      sscanf(buf, "%*s %llu", &shmem);
+      sscanf(buf, "%*s %llu", &info.shmem);
     } else if (strncmp(buf, "SReclaimable:", 13) == 0) {
       sscanf(buf, "%*s %llu", &sreclaimable);
     }
@@ -230,7 +231,7 @@ int update_meminfo(void) {
      Note: when shared memory is swapped out, shmem decreases and swapfree
      decreases - we want this.
   */
-  curbufmem = (info.cached - shmem) + info.buffers + sreclaimable;
+  curbufmem = (info.cached - info.shmem) + info.buffers + sreclaimable;
 
   /* Calculate the memory usage.
    *
@@ -248,7 +249,7 @@ int update_meminfo(void) {
     curmem -= curbufmem;
     cureasyfree += curbufmem;
 #else  /* LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0) */
-    curmem = info.memmax - memavail;
+    curmem = info.memmax - info.memavail;
     cureasyfree += curbufmem;
 #endif /* LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0) */
   }
@@ -260,6 +261,7 @@ int update_meminfo(void) {
   info.memeasyfree = cureasyfree;
   info.legacymem =
       info.memmax - (info.memfree + info.buffers + info.cached + sreclaimable);
+  info.free_bufcache = info.cached + info.buffers + sreclaimable;
 
   fclose(meminfo_fp);
   return 0;
@@ -382,10 +384,10 @@ int update_gateway_info2(void) {
         break;
       }
       if (!(dest || mask) && ((flags & RTF_GATEWAY) || !gate)) {
-        snprintf(e_iface, 49, "%s", iface);
+        snprintf(e_iface, 64, "%s", iface);
       }
       if (1U == x) {
-        snprintf(interfaces_arr[x++], iface_len - 1, "%s", iface);
+        snprintf(interfaces_arr[x++], iface_len, "%s", iface);
         continue;
       } else if (0 == strcmp(iface, interfaces_arr[x - 1])) {
         continue;
@@ -394,7 +396,7 @@ int update_gateway_info2(void) {
         strcmpreturn = strcmp(iface, interfaces_arr[z]);
       }
       if (strcmpreturn == 1) {
-        snprintf(interfaces_arr[x++], iface_len - 1, "%s", iface);
+        snprintf(interfaces_arr[x++], iface_len, "%s", iface);
       }
     }
     fclose(fp);
@@ -421,7 +423,7 @@ int update_gateway_info(void) {
       }
       if (!(dest || mask) && ((flags & RTF_GATEWAY) || !gate)) {
         gw_info.count++;
-        snprintf(e_iface, 49, "%s", iface);
+        snprintf(e_iface, 64, "%s", iface);
         std::unique_lock<std::mutex> lock(gw_info.mutex);
         gw_info.iface = save_set_string(gw_info.iface, iface);
         ina.s_addr = gate;
@@ -576,11 +578,8 @@ void update_net_interfaces(FILE *net_dev_fp, bool is_first_update,
     for (unsigned int k = 0; k < conf.ifc_len / sizeof(struct ifreq); k++) {
       struct net_stat *ns2;
 
-      if (!(((struct ifreq *)conf.ifc_buf) + k)) break;
-
-      ns2 = get_net_stat(((struct ifreq *)conf.ifc_buf)[k].ifr_ifrn.ifrn_name,
-                         nullptr, NULL);
-      ns2->addr = ((struct ifreq *)conf.ifc_buf)[k].ifr_ifru.ifru_addr;
+      ns2 = get_net_stat(conf.ifc_req[k].ifr_ifrn.ifrn_name, nullptr, NULL);
+      ns2->addr = conf.ifc_req[k].ifr_ifru.ifru_addr;
       char temp_addr[18];
       snprintf(temp_addr, sizeof(temp_addr), "%u.%u.%u.%u, ",
                ns2->addr.sa_data[2] & 255, ns2->addr.sa_data[3] & 255,
@@ -952,9 +951,9 @@ void get_cpu_count(void) {
         subtoken = strtok_r(str2, "-", &saveptr2);
         if (subtoken == nullptr) break;
         if (subtoken1 < 0)
-          subtoken1 = atoi(subtoken);
+          subtoken1 = strtol(subtoken, nullptr, 10);
         else
-          subtoken2 = atoi(subtoken);
+          subtoken2 = strtol(subtoken, nullptr, 10);
       }
       if (subtoken2 > 0) info.cpu_count += subtoken2 - subtoken1;
     }
@@ -1184,8 +1183,8 @@ static int get_first_file_in_a_directory(const char *dir, char *s,
  */
 static void get_dev_path(const char *dir, const char *dev, char *out_buf) {
   struct dirent **namelist;
-  char path[256] = {'\0'};
-  char name[256] = {'\0'};
+  char path[512] = {'\0'};
+  char name[512] = {'\0'};
   bool found = false;
   size_t size;
   int name_fd;
@@ -1196,7 +1195,7 @@ static void get_dev_path(const char *dir, const char *dev, char *out_buf) {
   /* "0" numbered case */
   ret = sscanf(dev, "%d", &n);
   if (ret == 1) {
-    snprintf(out_buf, 255, "hwmon%d/device", n);
+    snprintf(out_buf, 256, "hwmon%d/device", n);
     return;
   }
 
@@ -1212,7 +1211,7 @@ static void get_dev_path(const char *dir, const char *dev, char *out_buf) {
   for (i = 0; i < n; i++) {
     if (found) continue;
 
-    snprintf(path, 256, "%s%s/name", dir, namelist[i]->d_name);
+    snprintf(path, 512, "%s%s/name", dir, namelist[i]->d_name);
     name_fd = open(path, O_RDONLY);
     if (name_fd < 0) continue;
     size = read(name_fd, name, strlen(dev));
@@ -1223,7 +1222,7 @@ static void get_dev_path(const char *dir, const char *dev, char *out_buf) {
     ret = strncmp(dev, name, strlen(dev));
     if (!ret) {
       found = true;
-      snprintf(out_buf, 255, "%s/device", namelist[i]->d_name);
+      snprintf(out_buf, 512, "%s/device", namelist[i]->d_name);
     }
     close(name_fd);
   }
@@ -1241,7 +1240,7 @@ not_found:
 static int open_sysfs_sensor(const char *dir, const char *dev, const char *type,
                              int n, int *divisor, char *devtype) {
   char path[256];
-  char buf[256];
+  char buf[512];
   int fd;
   int divfd;
 
@@ -1337,7 +1336,7 @@ static int open_sysfs_sensor(const char *dir, const char *dev, const char *type,
       NORM_ERR("open_sysfs_sensor(): can't read from sysfs");
     } else {
       divbuf[divn] = '\0';
-      *divisor = atoi(divbuf);
+      *divisor = strtol(divbuf, nullptr, 10);
     }
     close(divfd);
   }
@@ -1363,7 +1362,7 @@ static double get_sysfs_info(int *fd, int divisor, char *devtype, char *type) {
       NORM_ERR("get_sysfs_info(): read from %s failed\n", devtype);
     } else {
       buf[n] = '\0';
-      val = atoi(buf);
+      val = strtol(buf, nullptr, 10);
     }
   }
 
@@ -1579,6 +1578,26 @@ char get_freq(char *p_client_buffer, size_t client_buffer_size,
   return 1;
 }
 
+#define CPUFREQ_GOVERNOR "cpufreq/scaling_governor"
+
+/* print the CPU scaling governor */
+void print_cpugovernor(struct text_object *obj, char *p,
+                       unsigned int p_max_size) {
+  FILE *fp;
+  char buf[64];
+  unsigned int cpu = obj->data.i;
+
+  cpu--;
+  snprintf(buf, 63, "%s/cpu%d/%s", CPUFREQ_PREFIX, cpu, CPUFREQ_GOVERNOR);
+  if ((fp = fopen(buf, "r")) != nullptr) {
+    while (fscanf(fp, "%63s", buf) == 1) {
+      snprintf(p, p_max_size, "%s", buf);
+      fclose(fp);
+      return;
+    }
+  }
+}
+
 #define CPUFREQ_VOLTAGE "cpufreq/scaling_voltages"
 
 /* /sys/devices/system/cpu/cpu0/cpufreq/scaling_voltages looks something
@@ -1670,8 +1689,8 @@ void print_voltage_v(struct text_object *obj, char *p,
 
 void get_acpi_fan(char *p_client_buffer, size_t client_buffer_size) {
   static int reported = 0;
-  char buf[256];
-  char buf2[256];
+  char buf[512];
+  char buf2[512];
   FILE *fp;
 
   if (!p_client_buffer || client_buffer_size <= 0) { return; }
@@ -1682,7 +1701,7 @@ void get_acpi_fan(char *p_client_buffer, size_t client_buffer_size) {
     return;
   }
 
-  snprintf(buf2, sizeof(buf2), "%s%s/state", ACPI_FAN_DIR, buf);
+  snprintf(buf2, sizeof(buf2), "%s%.256s/state", ACPI_FAN_DIR, buf);
 
   fp = open_file(buf2, &reported);
   if (!fp) {
@@ -1721,8 +1740,8 @@ void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size,
                          const char *adapter) {
   static int reported = 0;
 
-  char buf[256];
-  char buf2[256];
+  char buf[512];
+  char buf2[512];
   struct stat sb;
   FILE *fp;
 
@@ -1760,7 +1779,7 @@ void get_acpi_ac_adapter(char *p_client_buffer, size_t client_buffer_size,
       return;
     }
 
-    snprintf(buf2, sizeof(buf2), "%s%s/state", ACPI_AC_ADAPTER_DIR, buf);
+    snprintf(buf2, sizeof(buf2), "%s%.256s/state", ACPI_AC_ADAPTER_DIR, buf);
 
     fp = open_file(buf2, &reported);
     if (!fp) {
@@ -2327,6 +2346,38 @@ void get_battery_short_status(char *buffer, unsigned int n, const char *bat) {
     memmove(buffer + 1, buffer + 7, n - 7);
   }
   // Otherwise, don't shorten.
+}
+
+void get_battery_power_draw(char *buffer, unsigned int n, const char *bat) {
+  static int reported = 0;
+  char current_now_path[256], voltage_now_path[256], current_now_val[256],
+      voltage_now_val[256];
+  char *ptr;
+  long current_now, voltage_now;
+  FILE *current_now_file;
+  FILE *voltage_now_file;
+  double result;
+
+  snprintf(current_now_path, 255, SYSFS_BATTERY_BASE_PATH "/%s/current_now",
+           bat);
+  snprintf(voltage_now_path, 255, SYSFS_BATTERY_BASE_PATH "/%s/voltage_now",
+           bat);
+
+  current_now_file = open_file(current_now_path, &reported);
+  voltage_now_file = open_file(voltage_now_path, &reported);
+
+  if (current_now_file != nullptr && voltage_now_file != nullptr) {
+    fgets(current_now_val, 256, current_now_file);
+    fgets(voltage_now_val, 256, voltage_now_file);
+
+    current_now = strtol(current_now_val, &ptr, 10);
+    voltage_now = strtol(voltage_now_val, &ptr, 10);
+
+    result = (double)(current_now * voltage_now) / (double)1000000000000;
+    snprintf(buffer, n, "%.1f", result);
+    fclose(current_now_file);
+    fclose(voltage_now_file);
+  }
 }
 
 int _get_battery_perct(const char *bat) {

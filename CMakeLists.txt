@@ -47,19 +47,19 @@ set(conky_sources ${CMAKE_BINARY_DIR}/config.h ${CMAKE_BINARY_DIR}/build.h)
 add_subdirectory(lua)
 add_subdirectory(data)
 add_subdirectory(doc)
+if(BUILD_EXTRAS)
+  add_subdirectory(extras)
+endif(BUILD_EXTRAS)
 
 # Include 3rdparty toluapp
 add_subdirectory(3rdparty/toluapp)
 set(conky_libs ${conky_libs} toluapp_lib_static)
 
 if(BUILD_TESTS)
-  if(USING_CLANG)
-    message(STATUS "Detected clang, enabling test coverage reports")
+  if(CODE_COVERAGE)
     # Enable coverage checks
     include(CodeCoverage)
     append_coverage_compiler_flags()
-  else()
-    message(STATUS "NOT enabling test coverage reports")
   endif()
   include(Catch)
 endif()
@@ -76,23 +76,7 @@ if(NOT DEFINED DOC_PATH)
 endif(NOT DEFINED DOC_PATH)
 set(DOC_FILES extras/convert.lua data/conky_no_x11.conf data/conky.conf)
 
-set(HTML_PATH "${DOC_PATH}/html")
-set(HTML_FILES
-    doc/config_settings.html
-    doc/docs.html
-    doc/lua.html
-    doc/variables.html)
-
-set(MAN_PATH "share/man/man1")
-set(MAN_FILES doc/conky.1)
-
 install(FILES ${DOC_FILES} DESTINATION ${DOC_PATH})
-
-if(BUILD_DOCS)
-  install(FILES ${HTML_FILES} DESTINATION ${HTML_PATH})
-
-  install(FILES ${MAN_FILES} DESTINATION ${MAN_PATH})
-endif(BUILD_DOCS)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   install(FILES conky.desktop DESTINATION share/applications)
@@ -104,3 +88,14 @@ if(CHECK_CODE_QUALITY)
   find_package(ClangTidy)
   find_package(ClangFormat)
 endif(CHECK_CODE_QUALITY)
+
+# uninstall target
+if(NOT TARGET uninstall)
+  configure_file(
+      "${CMAKE_MODULE_PATH}/UninstallConky.cmake.in"
+    "${CMAKE_BINARY_DIR}/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
+
+  add_custom_target(uninstall
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_BINARY_DIR}/cmake_uninstall.cmake)
+endif()

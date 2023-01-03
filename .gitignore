@@ -20,8 +20,13 @@ lua/libimlib2.c
 *.a
 /config.h
 
+# Compiler cache
+.cache
+
 # Ignore vscode stuff
 .vscode
 *.code-workspace
 .idea/
 
+# Ignore nix stuff
+/result

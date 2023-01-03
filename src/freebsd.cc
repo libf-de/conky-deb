@@ -149,7 +149,8 @@ int check_mount(struct text_object *obj) {
 }
 
 int update_meminfo(void) {
-  u_int total_pages, inactive_pages, free_pages;
+  u_int total_pages, inactive_pages, free_pages, wire_pages, active_pages,
+      bufferspace, laundry_pages;
   unsigned long swap_avail, swap_free;
 
   int pagesize = getpagesize();
@@ -166,11 +167,33 @@ int update_meminfo(void) {
     fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_inactive_count\"\n");
   }
 
+  if (GETSYSCTL("vm.stats.vm.v_wire_count", wire_pages)) {
+    fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_wire_count\"\n");
+  }
+
+  if (GETSYSCTL("vm.stats.vm.v_active_count", active_pages)) {
+    fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_active_count\"\n");
+  }
+
+  if (GETSYSCTL("vfs.bufspace", bufferspace)) {
+    fprintf(stderr, "Cannot read sysctl \"vfs.bufspace\"\n");
+  }
+
+  if (GETSYSCTL("vm.stats.vm.v_laundry_count", laundry_pages)) {
+    fprintf(stderr, "Cannot read sysctl \"vm.stats.vm.v_laundry_count\"\n");
+  }
+
   info.memmax = total_pages * (pagesize >> 10);
   info.mem = (total_pages - free_pages - inactive_pages) * (pagesize >> 10);
   info.memwithbuffers = info.mem;
-  info.memeasyfree = info.memfree = info.memmax - info.mem;
+  info.memeasyfree = info.memmax - info.mem;
+  info.memfree = free_pages * (pagesize >> 10);
   info.legacymem = info.mem;
+  info.memwired = wire_pages * (pagesize >> 10);
+  info.memactive = active_pages * (pagesize >> 10);
+  info.meminactive = inactive_pages * (pagesize >> 10);
+  info.memlaundry = laundry_pages * (pagesize >> 10);
+  info.buffers = bufferspace / 1024;
 
   if ((swapmode(&swap_avail, &swap_free)) >= 0) {
     info.swapmax = swap_avail;
@@ -458,6 +481,25 @@ int get_battery_perct(const char *) {
 
   get_battery_stats(nullptr, &batcapacity, NULL, NULL);
   return batcapacity;
+}
+
+void get_battery_power_draw(char *buffer, unsigned int n, const char *bat) {
+  int rate = 0;
+  double ret = 0;
+
+  /*
+   * hw.acpi.battery.rate returns battery discharge rate in mW,
+   * or -1 (according to docs, but also 0 in practice) when not discharging.
+   *
+   * ref. acpi_battery(4)
+   */
+  if (GETSYSCTL("hw.acpi.battery.rate", rate)) {
+    fprintf(stderr, "Cannot read sysctl \"hw.acpi.battery.rate\"\n");
+  }
+
+  if (rate > 0) { ret = (double)rate / (double)1000; }
+
+  snprintf(buffer, n, "%.1f", ret);
 }
 
 double get_battery_perct_bar(struct text_object *obj) {

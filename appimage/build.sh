@@ -30,10 +30,11 @@ pushd "$BUILD_DIR"
 
 # configure build files with cmake
 # we need to explicitly set the install prefix, as CMake's default is /usr/local for some reason...
-cmake                                  \
+cmake -G Ninja                         \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo    \
   -DRELEASE=ON                         \
   -DBUILD_AUDACIOUS=ON                 \
+  -DBUILD_DOCS=ON                      \
   -DBUILD_HTTP=ON                      \
   -DBUILD_ICAL=ON                      \
   -DBUILD_ICONV=ON                     \
@@ -47,15 +48,16 @@ cmake                                  \
   -DBUILD_NVIDIA=ON                    \
   -DBUILD_PULSEAUDIO=ON                \
   -DBUILD_RSS=ON                       \
+  -DBUILD_WAYLAND=OFF                  \
   -DBUILD_WLAN=ON                      \
   -DBUILD_X11=ON                       \
   -DBUILD_XMMS2=ON                     \
-  -DCMAKE_INSTALL_PREFIX=/usr          \
+  -DCMAKE_INSTALL_PREFIX=./AppDir/usr  \
   "$REPO_ROOT"
 
 # build project and install files into AppDir
-make -j4
-make install DESTDIR=AppDir
+cmake --build .
+cmake --install .
 
 wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
 
@@ -74,4 +76,13 @@ chmod +x appimagetool-x86_64.AppImage
 
 ./appimagetool-x86_64.AppImage AppDir --sign --sign-key E3034071
 
-mv conky*.AppImage "$OLD_CWD"
+for f in conky*.AppImage
+do
+  sha256sum $f > $f.sha256
+done
+
+mv conky*.AppImage* "$OLD_CWD"
+
+# gzip & copy the man page, which will be attached to releases
+gzip doc/conky.1
+mv doc/conky.1.gz "$OLD_CWD"

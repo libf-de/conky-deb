@@ -328,29 +328,12 @@ if(BUILD_X11)
 
     # check for Xft
     if(BUILD_XFT)
-      find_path(freetype_INCLUDE_PATH
-                config/ftconfig.h
-                ${INCLUDE_SEARCH_PATH}
-                /usr/include/freetype2
-                /usr/local/include/freetype2
-                /usr/pkg/include/freetype2)
-      if(freetype_INCLUDE_PATH)
-        set(freetype_FOUND true)
-        set(conky_includes ${conky_includes} ${freetype_INCLUDE_PATH})
-      else(freetype_INCLUDE_PATH)
-        find_path(freetype_INCLUDE_PATH
-                  freetype/config/ftconfig.h
-                  ${INCLUDE_SEARCH_PATH}
-                  /usr/include/freetype2
-                  /usr/local/include/freetype2
-                  /usr/pkg/include/freetype2)
-        if(freetype_INCLUDE_PATH)
-          set(freetype_FOUND true)
-          set(conky_includes ${conky_includes} ${freetype_INCLUDE_PATH})
-        else(freetype_INCLUDE_PATH)
-          message(FATAL_ERROR "Unable to find freetype library")
-        endif(freetype_INCLUDE_PATH)
-      endif(freetype_INCLUDE_PATH)
+      if(FREETYPE_INCLUDE_DIR_freetype2)
+        set(FREETYPE_FOUND true)
+        set(conky_includes ${conky_includes} ${FREETYPE_INCLUDE_DIR_freetype2})
+      else(FREETYPE_INCLUDE_DIR_freetype2)
+        message(FATAL_ERROR "Unable to find freetype library")
+      endif(FREETYPE_INCLUDE_DIR_freetype2)
       if(NOT X11_Xft_FOUND)
         message(FATAL_ERROR "Unable to find Xft library")
       endif(NOT X11_Xft_FOUND)
@@ -368,6 +351,43 @@ if(BUILD_X11)
     message(FATAL_ERROR "Unable to find X11 library")
   endif(X11_FOUND)
 endif(BUILD_X11)
+
+if(BUILD_WAYLAND)
+  find_package(Wayland REQUIRED)
+  set(conky_libs ${conky_libs} ${Wayland_CLIENT_LIBRARY})
+  set(conky_includes ${conky_includes} ${Wayland_CLIENT_INCLUDE_DIR})
+
+  find_package(PkgConfig)
+
+  pkg_check_modules(wayland-protocols QUIET wayland-protocols>=1.13)
+  if(Wayland_FOUND AND wayland-protocols_FOUND)
+    # find Wayland protocols
+    pkg_get_variable(Wayland_PROTOCOLS_DIR wayland-protocols pkgdatadir)
+
+    # find 'wayland-scanner' executable
+    pkg_get_variable(Wayland_SCANNER wayland-scanner wayland_scanner)
+  else(Wayland_FOUND AND wayland-protocols_FOUND)
+    message(FATAL_ERROR "Unable to find wayland-scanner and xdg-shell protocol")
+  endif(Wayland_FOUND AND wayland-protocols_FOUND)
+
+  if(OS_DARWIN OR OS_DRAGONFLY OR OS_FREEBSD OR OS_NETBSD OR OS_OPENBSD)
+    pkg_check_modules(EPOLL REQUIRED epoll-shim)
+    set(conky_libs ${conky_libs} ${EPOLL_LIBRARIES})
+    set(conky_includes ${conky_includes} ${EPOLL_INCLUDE_DIRS})
+  endif(OS_DARWIN OR OS_DRAGONFLY OR OS_FREEBSD OR OS_NETBSD OR OS_OPENBSD)
+
+  pkg_check_modules(PANGOCAIRO pangocairo)
+  set(conky_libs ${conky_libs} ${PANGOCAIRO_LIBRARIES})
+  set(conky_includes ${conky_includes} ${PANGOCAIRO_INCLUDE_DIRS})
+
+  pkg_check_modules(PANGOFC pangofc)
+  set(conky_libs ${conky_libs} ${PANGOFC_LIBRARIES})
+  set(conky_includes ${conky_includes} ${PANGOFC_INCLUDE_DIRS})
+
+  pkg_check_modules(PANGOFT2 pangoft2)
+  set(conky_libs ${conky_libs} ${PANGOFT2_LIBRARIES})
+  set(conky_includes ${conky_includes} ${PANGOFT2_INCLUDE_DIRS})
+endif(BUILD_WAYLAND)
 
 # Otherwise, use the most recent Lua version
 pkg_search_module(LUA
@@ -387,7 +407,7 @@ include_directories(3rdparty/toluapp/include)
 if(BUILD_X11)
   # Check for libraries used by Lua bindings
   if(BUILD_LUA_CAIRO)
-    pkg_check_modules(CAIRO REQUIRED cairo cairo-xlib)
+    pkg_check_modules(CAIRO REQUIRED cairo>=1.14 cairo-xlib)
     set(luacairo_libs ${CAIRO_LIBRARIES} ${LUA_LIBRARIES})
     set(luacairo_includes ${CAIRO_INCLUDE_DIRS} ${LUA_INCLUDE_DIRS})
     find_program(APP_PATCH patch)
@@ -404,7 +424,7 @@ if(BUILD_X11)
         ${X11_INCLUDE_DIR})
   endif(BUILD_LUA_IMLIB2)
   if(BUILD_LUA_RSVG)
-    pkg_check_modules(RSVG REQUIRED librsvg-2.0>=2.46)
+    pkg_check_modules(RSVG REQUIRED librsvg-2.0>=2.52)
     set(luarsvg_libs ${RSVG_LIBRARIES} ${LUA_LIBRARIES})
     set(luarsvg_includes ${RSVG_INCLUDE_DIRS} ${LUA_INCLUDE_DIRS})
   endif(BUILD_LUA_RSVG)
@@ -441,11 +461,6 @@ if(BUILD_RSS)
   set(WANT_LIBXML2 true)
 endif(BUILD_RSS)
 
-if(BUILD_WEATHER_METAR)
-  set(WANT_CURL true)
-  set(BUILD_WEATHER true)
-endif(BUILD_WEATHER_METAR)
-
 if(BUILD_NVIDIA)
   find_path(XNVCtrl_INCLUDE_PATH NVCtrl/NVCtrl.h ${INCLUDE_SEARCH_PATH})
   find_library(XNVCtrl_LIB NAMES XNVCtrl)
@@ -476,6 +491,12 @@ if(BUILD_PULSEAUDIO)
   set(conky_includes ${conky_includes} ${PULSEAUDIO_INCLUDE_DIRS})
 endif(BUILD_PULSEAUDIO)
 
+if(WANT_CURL)
+  pkg_check_modules(CURL REQUIRED libcurl)
+  set(conky_libs ${conky_libs} ${CURL_LIBRARIES})
+  set(conky_includes ${conky_includes} ${CURL_INCLUDE_DIRS})
+endif(WANT_CURL)
+
 # Common libraries
 if(WANT_GLIB)
   pkg_check_modules(GLIB REQUIRED glib-2.0>=2.36)
@@ -501,37 +522,44 @@ endif(WANT_LIBXML2)
 # Look for doc generation programs
 if(BUILD_DOCS)
   # Used for doc generation
-  find_program(APP_DB2X_XSLTPROC db2x_xsltproc)
-  if(NOT APP_DB2X_XSLTPROC)
-    message(FATAL_ERROR "Unable to find program 'db2x_xsltproc'")
-  endif(NOT APP_DB2X_XSLTPROC)
-  find_program(APP_DB2X_MANXML db2x_manxml)
-  if(NOT APP_DB2X_MANXML)
-    message(FATAL_ERROR "Unable to find program 'db2x_manxml'")
-  endif(NOT APP_DB2X_MANXML)
-  find_program(APP_XSLTPROC xsltproc)
-  if(NOT APP_XSLTPROC)
-    message(FATAL_ERROR "Unable to find program 'xsltproc'")
-  endif(NOT APP_XSLTPROC)
-  find_program(APP_MAN man)
-  if(NOT APP_MAN)
-    message(FATAL_ERROR "Unable to find program 'man'")
-  endif(NOT APP_MAN)
-  find_program(APP_LESS less)
-  if(NOT APP_LESS)
-    message(FATAL_ERROR "Unable to find program 'less'")
-  endif(NOT APP_LESS)
-  find_program(APP_SED sed)
-  if(NOT APP_SED)
-    message(FATAL_ERROR "Unable to find program 'sed'")
-  endif(NOT APP_SED)
-  mark_as_advanced(APP_DB2X_XSLTPROC
-                   APP_DB2X_MANXML
-                   APP_XSLTPROC
-                   APP_MAN
-                   APP_SED
-                   APP_LESS)
+  find_program(APP_PANDOC pandoc)
+
+  if(NOT APP_PANDOC)
+    message(FATAL_ERROR "Unable to find program 'pandoc'")
+  endif(NOT APP_PANDOC)
+  mark_as_advanced(APP_PANDOC)
 endif(BUILD_DOCS)
+
+
+if(BUILD_DOCS OR BUILD_EXTRAS)
+  # Python3 with Jinja2 and PyYaml required for manpage generation.
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import yaml"
+    RESULT_VARIABLE EXIT_CODE
+    OUTPUT_QUIET
+  )
+
+  if(NOT ${EXIT_CODE} EQUAL 0)
+    message(
+      FATAL_ERROR
+      "The \"PyYAML\" Python3 package is not installed. Please install it using the following command: \"pip3 install pyyaml\"."
+    )
+  endif()
+
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import jinja2"
+    RESULT_VARIABLE EXIT_CODE
+    OUTPUT_QUIET
+  )
+
+  if(NOT ${EXIT_CODE} EQUAL 0)
+    message(
+      FATAL_ERROR
+      "The \"Jinja2\" Python3 package is not installed. Please install it using the following command: \"pip3 install Jinja2\"."
+    )
+  endif()
+endif(BUILD_DOCS OR BUILD_EXTRAS)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(DEBUG true)
