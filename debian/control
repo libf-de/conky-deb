@@ -25,6 +25,7 @@ Build-Depends:
  librsvg2-dev (>= 2.52),
  libsystemd-dev [linux-any],
  libtool,
+ libwayland-dev,
  libx11-dev,
  libxdamage-dev,
  libxext-dev,
@@ -34,7 +35,8 @@ Build-Depends:
  pandoc,
  pkg-config,
  python3-jinja2,
- python3-yaml
+ python3-yaml,
+ wayland-protocols
 Homepage: https://github.com/brndnmtthws/conky
 Standards-Version: 4.6.2
 Vcs-Git: https://salsa.debian.org/debian/conky.git
@@ -58,7 +60,7 @@ Description: highly configurable system monitor (default version)
  need special features.
  It includes the following support:
  .
- X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
+ Wayland, X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon,
  wireless, ncurses, apcupsd, I/O stats, argb and Lua.
 
 Package: conky-cli
@@ -94,7 +96,7 @@ Description: highly configurable system monitor (all features enabled)
  .
  This is a full conky with most compile options enabled:
  .
- X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
+ Wayland, X11, XDamage, XDBE, Xft, MPD, MOC, math, hddtemp, portmon, RSS,
  Weather, wireless, IBM, nvidia, eve-online, Imlib2,
  apcupsd, I/O stats, argb, Lua and the cairo and imlib2 Lua bindings,
  Audacious, PulseAudio, iCal, iconv, IRC, and systemd journal.

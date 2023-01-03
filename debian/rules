@@ -46,11 +46,14 @@ override_dh_auto_configure:
 	dh_auto_configure --builddirectory build-std -- \
 	-DDOC_PATH=/usr/share/doc/conky-std \
 	$(COMMON_CONF_ARGS) $(LINUX_CONF_ARGS) \
+	-DBUILD_WAYLAND=ON \
+	-DBUILD_X11=ON \
 	-DBUILD_XDBE=ON
 	
 	dh_auto_configure --builddirectory build-cli -- \
 	-DDOC_PATH=/usr/share/doc/conky-cli \
 	$(COMMON_CONF_ARGS) \
+	-DBUILD_WAYLAND=OFF \
 	-DBUILD_X11=OFF
 	
 	dh_auto_configure --builddirectory build-all -- \
@@ -68,8 +71,10 @@ override_dh_auto_configure:
 	-DBUILD_LUA_RSVG=ON \
 	-DBUILD_PULSEAUDIO=ON \
 	-DBUILD_RSS=ON \
+	-DBUILD_WAYLAND=ON \
 	-DBUILD_WEATHER_METAR=ON \
 	-DBUILD_WEATHER_XOAP=ON \
+	-DBUILD_X11=ON \
 	-DBUILD_XDBE=ON
 
 override_dh_auto_build:
