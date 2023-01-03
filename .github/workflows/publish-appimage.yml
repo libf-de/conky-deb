@@ -6,9 +6,16 @@ on:
     tags:
       - v*
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      discussions: write
     steps:
       - run: sudo apt-get -qq update
       - name: Install dependencies
@@ -16,12 +23,13 @@ jobs:
           sudo apt-get install -yqq --no-install-recommends \
             audacious-dev \
             cmake \
-            docbook2x \
             gawk \
             lcov \
             libaudclient-dev \
             libcairo2-dev \
             libcurl4-gnutls-dev \
+            libdbus-glib-1-dev \
+            libfuse2 \
             libglib2.0-dev \
             libical-dev \
             libimlib2-dev \
@@ -33,6 +41,7 @@ jobs:
             libpulse-dev \
             librsvg2-dev \
             libsystemd-dev \
+            libwayland-dev \
             libx11-dev \
             libxdamage-dev \
             libxext-dev \
@@ -41,49 +50,45 @@ jobs:
             libxml2-dev \
             libxmmsclient-dev \
             libxnvctrl-dev \
-            ncurses-dev
+            ncurses-dev \
+            ninja-build \
+            pandoc \
+            python3 \
+            &&
+            pip3 install --upgrade pyyaml
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Import GPG Deploy Key
         run: |
           echo "${{ secrets.GPG_DEPLOY_KEY }}" > appimage/secret.gpg
           gpg --import appimage/secret.gpg
       - name: Build AppImage
-        run: ./appimage/build.sh
-      - name: Archive AppImage
-        uses: actions/upload-artifact@v2
+        run: CC=clang-14 CXX=clang++-14 ./appimage/build.sh
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: conky-appimage
-          path: conky*.AppImage
-      - name: Get Name of Artifact
-        run: |
-          ARTIFACT_PATHNAME=$(ls conky*.AppImage | head -n 1)
-          ARTIFACT_NAME=$(basename $ARTIFACT_PATHNAME)
-          echo "ARTIFACT_PATHNAME=${ARTIFACT_PATHNAME}" >> $GITHUB_ENV
-          echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
-      - name: Print Name of Artifact
-        run: |
-          echo ARTIFACT_PATHNAME=${{ env.ARTIFACT_PATHNAME }}
-          echo ARTIFACT_NAME=${{ env.ARTIFACT_NAME }}
+          name: conky-x86_64.AppImage
+          path: conky-x86_64.AppImage
+      - name: Upload AppImage checksum artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: conky-x86_64.AppImage.sha256
+          path: conky-x86_64.AppImage.sha256
+      - name: Upload man page artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: conky.1.gz
+          path: conky.1.gz
       - name: Create Conky Release
         id: create_release
-        uses: actions/create-release@v1
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Conky ${{ github.ref }}
           draft: false
           prerelease: false
-      - name: Upload Conky Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ${{ env.ARTIFACT_PATHNAME }}
-          asset_name: ${{ env.ARTIFACT_NAME }}
-          asset_content_type: application/x-executable
+          discussion_category_name: General
+          generate_release_notes: true
+          files: |
+            conky-x86_64.AppImage
+            conky-x86_64.AppImage.sha256
+            conky.1.gz

@@ -27,6 +27,14 @@
 #include "conky.h"
 #include "logging.h"
 
+#ifdef BUILD_X11
+#include "x11.h"
+#endif /* BUILD_X11 */
+
+#ifdef BUILD_GUI
+#include "gui.h"
+#endif /* BUILD_GUI */
+
 extern "C" {
 #include <tolua++.h>
 }
@@ -87,17 +95,24 @@ class lua_load_setting : public conky::simple_config_setting<std::string> {
 };
 
 lua_load_setting lua_load;
+
 conky::simple_config_setting<std::string> lua_startup_hook("lua_startup_hook",
                                                            std::string(), true);
 conky::simple_config_setting<std::string> lua_shutdown_hook("lua_shutdown_hook",
                                                             std::string(),
                                                             true);
-#ifdef BUILD_X11
+#ifdef BUILD_GUI
 conky::simple_config_setting<std::string> lua_draw_hook_pre("lua_draw_hook_pre",
                                                             std::string(),
                                                             true);
 conky::simple_config_setting<std::string> lua_draw_hook_post(
     "lua_draw_hook_post", std::string(), true);
+
+#ifdef BUILD_MOUSE_EVENTS
+conky::simple_config_setting<std::string> lua_mouse_hook("lua_mouse_hook",
+                                                         std::string(), true);
+#endif /* BUILD_MOUSE_EVENTS */
+
 #endif
 }  // namespace
 
@@ -464,7 +479,7 @@ void llua_shutdown_hook() {
   llua_do_call(lua_shutdown_hook.get(*state).c_str(), 0);
 }
 
-#ifdef BUILD_X11
+#ifdef BUILD_GUI
 void llua_draw_pre_hook() {
   if ((lua_L == nullptr) || lua_draw_hook_pre.get(*state).empty()) { return; }
   llua_do_call(lua_draw_hook_pre.get(*state).c_str(), 0);
@@ -474,6 +489,37 @@ void llua_draw_post_hook() {
   if ((lua_L == nullptr) || lua_draw_hook_post.get(*state).empty()) { return; }
   llua_do_call(lua_draw_hook_post.get(*state).c_str(), 0);
 }
+
+#ifdef BUILD_MOUSE_EVENTS
+template <typename EventT>
+bool llua_mouse_hook(const EventT &ev) {
+  if ((lua_L == nullptr) || lua_mouse_hook.get(*state).empty()) {
+    return false;
+  }
+  const std::string func = "conky_" + lua_mouse_hook.get(*state);
+  lua_getglobal(lua_L, func.c_str());
+
+  ev.push_lua_table(lua_L);
+
+  bool result = false;
+  if (lua_pcall(lua_L, 1, 1, 0) != 0) {
+    NORM_ERR("llua_mouse_hook: function %s execution failed: %s", func.c_str(),
+             lua_tostring(lua_L, -1));
+    lua_pop(lua_L, 1);
+  } else {
+    result = lua_toboolean(lua_L, -1);
+    lua_pop(lua_L, 1);
+  }
+
+  return result;
+}
+
+template bool llua_mouse_hook<mouse_scroll_event>(const mouse_scroll_event &ev);
+template bool llua_mouse_hook<mouse_button_event>(const mouse_button_event &ev);
+template bool llua_mouse_hook<mouse_move_event>(const mouse_move_event &ev);
+template bool llua_mouse_hook<mouse_crossing_event>(
+    const mouse_crossing_event &ev);
+#endif /* BUILD_MOUSE_EVENTS */
 
 void llua_set_userdata(const char *key, const char *type, void *value) {
   tolua_pushusertype(lua_L, value, type);
@@ -485,13 +531,20 @@ void llua_setup_window_table(int text_start_x, int text_start_y, int text_width,
   if (lua_L == nullptr) { return; }
   lua_newtable(lua_L);
 
+#ifdef BUILD_X11
   if (out_to_x.get(*state)) {
     llua_set_userdata("drawable", "Drawable", (void *)&window.drawable);
     llua_set_userdata("visual", "Visual", window.visual);
     llua_set_userdata("display", "Display", display);
+  }
+#endif /*BUILD_X11*/
 
+#ifdef BUILD_GUI
+  if (out_to_gui(*state)) {
+#ifdef BUILD_X11
     llua_set_number("width", window.width);
     llua_set_number("height", window.height);
+#endif /*BUILD_X11*/
     llua_set_number("border_inner_margin", border_inner_margin.get(*state));
     llua_set_number("border_outer_margin", border_outer_margin.get(*state));
     llua_set_number("border_width", border_width.get(*state));
@@ -503,6 +556,7 @@ void llua_setup_window_table(int text_start_x, int text_start_y, int text_width,
 
     lua_setglobal(lua_L, "conky_window");
   }
+#endif /*BUILD_GUI*/
 }
 
 void llua_update_window_table(int text_start_x, int text_start_y,
@@ -516,8 +570,10 @@ void llua_update_window_table(int text_start_x, int text_start_y,
     return;
   }
 
+#ifdef BUILD_X11
   llua_set_number("width", window.width);
   llua_set_number("height", window.height);
+#endif /*BUILD_X11*/
 
   llua_set_number("text_start_x", text_start_x);
   llua_set_number("text_start_y", text_start_y);
@@ -526,7 +582,7 @@ void llua_update_window_table(int text_start_x, int text_start_y,
 
   lua_setglobal(lua_L, "conky_window");
 }
-#endif /* BUILD_X11 */
+#endif /* BUILD_GUI */
 
 void llua_setup_info(struct information *i, double u_interval) {
   if (lua_L == nullptr) { return; }

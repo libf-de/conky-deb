@@ -31,6 +31,7 @@ void print_disk_protect_queue(struct text_object *, char *, unsigned int);
 
 void print_ioscheduler(struct text_object *, char *, unsigned int);
 void print_laptop_mode(struct text_object *, char *, unsigned int);
+void print_cpugovernor(struct text_object *, char *, unsigned int);
 
 int update_gateway_info(void);
 int update_gateway_info2(void);
@@ -59,7 +60,7 @@ void print_distribution(struct text_object *, char *, unsigned int);
 
 void determine_longstat_file(void);
 
-extern char e_iface[50];
+extern char e_iface[64];
 extern char interfaces_arr[MAX_NET_INTERFACES][64];
 
 #endif /* _LINUX_H */

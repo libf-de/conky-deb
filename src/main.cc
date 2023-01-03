@@ -33,6 +33,7 @@
 #include "build.h"
 #include "config.h"
 #include "conky.h"
+#include "display-output.hh"
 #include "lua-config.hh"
 
 #ifdef BUILD_X11
@@ -100,9 +101,6 @@ static void print_version() {
 #ifdef BUILD_MYSQL
             << _("  * MySQL\n")
 #endif /* BUILD_MYSQL */
-#ifdef BUILD_WEATHER_METAR
-            << _("  * Weather (METAR)\n")
-#endif /* BUILD_WEATHER_METAR */
 #ifdef BUILD_WLAN
             << _("  * wireless\n")
 #endif /* BUILD_WLAN */
@@ -180,10 +178,10 @@ static void print_version() {
 #ifdef OWN_WINDOW
             << _("  * Own window\n")
 #endif
+#ifdef BUILD_MOUSE_EVENTS
+            << _("  * Mouse evenets\n")
+#endif
 #endif /* BUILD_X11 */
-#ifdef BUILD_HSV_GRADIENT
-            << _("  * HSV Gradient\n")
-#endif /* BUILD_HSV_GRADIENT */
 #if defined BUILD_AUDACIOUS || defined BUILD_CMUS || defined BUILD_MPD || \
     defined BUILD_MOC || defined BUILD_XMMS2
             << _("\n Music detection:\n")
@@ -367,6 +365,8 @@ int main(int argc, char **argv) {
     std::cerr << PACKAGE_NAME ": " << e.what() << std::endl;
     return EXIT_FAILURE;
   }
+
+  conky::shutdown_display_outputs();
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
   kvm_close(kd);

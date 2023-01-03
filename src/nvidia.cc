@@ -101,6 +101,8 @@
 #include "temphelper.h"
 #include "x11.h"
 
+#include <memory>
+
 // Separators for nvidia string parsing
 // (sample: "perf=0, nvclock=324, nvclockmin=324, nvclockmax=324 ; perf=1,
 // nvclock=549, nvclockmin=549, nvclockmax=549")
@@ -327,7 +329,8 @@ class nvidia_s {
         attribute(ATTR_GPU_TEMP),
         token(0),
         search(SEARCH_FIRST),
-        target_id(0) {}
+        target_id(0),
+        is_percentage(false) {}
   const char *command;
   const char *arg;
   QUERY_ID query;
@@ -337,6 +340,7 @@ class nvidia_s {
   SEARCH_ID search;
   //  added new field for GPU id
   int target_id;
+  bool is_percentage;
 };
 
 // Cache by value
@@ -357,8 +361,6 @@ struct nvidia_c_string {
   int perfmax = -1;
 };
 
-static Display *nvdisplay = nullptr;
-
 // Maximum number of GPU connected:
 // For cache default value: choosed a model of direct access to array instead of
 // list for speed improvement value based on the incoming quad Naples tech
@@ -366,6 +368,12 @@ static Display *nvdisplay = nullptr;
 const int MAXNUMGPU = 64;
 
 namespace {
+
+// Deleter for nv display to use with std::unique_ptr
+void close_nvdisplay(Display *dp) { XCloseDisplay(dp); }
+
+using unique_display_t = std::unique_ptr<Display, decltype(&close_nvdisplay)>;
+
 class nvidia_display_setting
     : public conky::simple_config_setting<std::string> {
   typedef conky::simple_config_setting<std::string> Base;
@@ -374,8 +382,11 @@ class nvidia_display_setting
   virtual void lua_setter(lua::state &l, bool init);
   virtual void cleanup(lua::state &l);
 
+  std::string nvdisplay;
+
  public:
   nvidia_display_setting() : Base("nvidia_display", std::string(), false) {}
+  virtual unique_display_t get_nvdisplay();
 };
 
 void nvidia_display_setting::lua_setter(lua::state &l, bool init) {
@@ -383,25 +394,25 @@ void nvidia_display_setting::lua_setter(lua::state &l, bool init) {
 
   Base::lua_setter(l, init);
 
-  std::string str = do_convert(l, -1).first;
-  if (!str.empty()) {
-    nvdisplay = XOpenDisplay(str.c_str());
-    if (nvdisplay == nullptr) {
-      CRIT_ERR(nullptr, NULL, "can't open nvidia display: %s",
-               XDisplayName(str.c_str()));
-    }
-  }
+  nvdisplay = do_convert(l, -1).first;
 
   ++s;
 }  // namespace
 
+unique_display_t nvidia_display_setting::get_nvdisplay() {
+  if (!nvdisplay.empty()) {
+    unique_display_t nvd(XOpenDisplay(nvdisplay.c_str()), &close_nvdisplay);
+    if (!nvd) {
+      NORM_ERR(nullptr, NULL, "can't open nvidia display: %s",
+               XDisplayName(nvdisplay.c_str()));
+    }
+    return nvd;
+  }
+  return unique_display_t(nullptr, &close_nvdisplay);
+}  // namespace
+
 void nvidia_display_setting::cleanup(lua::state &l) {
   lua::stack_sentry s(l, -1);
-
-  if (nvdisplay && nvdisplay != display) {
-    XCloseDisplay(nvdisplay);
-    nvdisplay = nullptr;
-  }
 
   l.pop();
 }
@@ -590,6 +601,7 @@ int set_nvidia_query(struct text_object *obj, const char *arg,
       nvs->attribute = ATTR_UTILS_STRING;
       nvs->token = (char *)"graphics";
       nvs->search = SEARCH_FIRST;
+      nvs->is_percentage = true;
       break;
     case ARG_MEM_BW_UTIL:  // Memory bandwidth utilization %
       nvs->query = QUERY_STRING_VALUE;
@@ -597,6 +609,7 @@ int set_nvidia_query(struct text_object *obj, const char *arg,
       nvs->attribute = ATTR_UTILS_STRING;
       nvs->token = (char *)"memory";
       nvs->search = SEARCH_FIRST;
+      nvs->is_percentage = true;
       break;
     case ARG_VIDEO_UTIL:  // Video engine utilization %
       nvs->query = QUERY_STRING_VALUE;
@@ -604,6 +617,7 @@ int set_nvidia_query(struct text_object *obj, const char *arg,
       nvs->attribute = ATTR_UTILS_STRING;
       nvs->token = (char *)"video";
       nvs->search = SEARCH_FIRST;
+      nvs->is_percentage = true;
       break;
     case ARG_PCIE_UTIL:  // PCIe bandwidth utilization %
       nvs->query = QUERY_STRING_VALUE;
@@ -611,6 +625,7 @@ int set_nvidia_query(struct text_object *obj, const char *arg,
       nvs->attribute = ATTR_UTILS_STRING;
       nvs->token = (char *)"PCIe";
       nvs->search = SEARCH_FIRST;
+      nvs->is_percentage = true;
       break;
 
     case ARG_MEM:  // Amount of used memory
@@ -636,6 +651,7 @@ int set_nvidia_query(struct text_object *obj, const char *arg,
       nvs->query = QUERY_SPECIAL;
       nvs->target = TARGET_GPU;
       nvs->attribute = ATTR_MEM_UTIL;
+      nvs->is_percentage = true;
       break;
 
     case ARG_FAN_SPEED:  // Fan speed
@@ -647,6 +663,7 @@ int set_nvidia_query(struct text_object *obj, const char *arg,
       nvs->query = QUERY_VALUE;
       nvs->target = TARGET_COOLER;
       nvs->attribute = ATTR_FAN_LEVEL;
+      nvs->is_percentage = true;
       break;
 
     case ARG_IMAGEQUALITY:  // Image quality
@@ -738,7 +755,8 @@ static int cache_nvidia_value(TARGET_ID tid, ATTR_ID aid, Display *dpy,
 // Retrieve attribute value via nvidia interface
 static int get_nvidia_value(TARGET_ID tid, ATTR_ID aid, int gid,
                             const char *arg) {
-  Display *dpy = nvdisplay ? nvdisplay : display;
+  auto nvdpy = nvidia_display.get_nvdisplay();
+  Display *dpy = nvdpy ? nvdpy.get() : display;
   int value;
 
   // Check if the aid is cacheable
@@ -768,7 +786,8 @@ static int get_nvidia_value(TARGET_ID tid, ATTR_ID aid, int gid,
 // Retrieve attribute string via nvidia interface
 static char *get_nvidia_string(TARGET_ID tid, ATTR_ID aid, int gid,
                                const char *arg) {
-  Display *dpy = nvdisplay ? nvdisplay : display;
+  auto nvdpy = nvidia_display.get_nvdisplay();
+  Display *dpy = nvdpy ? nvdpy.get() : display;
   char *str;
 
   // Query nvidia interface
@@ -940,7 +959,8 @@ void print_nvidia_value(struct text_object *obj, char *p,
   int event_base;
   int error_base;
 
-  Display *dpy = nvdisplay ? nvdisplay : display;
+  auto nvdpy = nvidia_display.get_nvdisplay();
+  Display *dpy = nvdpy ? nvdpy.get() : display;
 
   if (!dpy) {
     NORM_ERR("%s: no display set (try setting nvidia_display)", __func__);
@@ -1022,7 +1042,11 @@ void print_nvidia_value(struct text_object *obj, char *p,
 
   // Print result
   if (value != -1) {
-    snprintf(p, p_max_size, "%d", value);
+    if (nvs->is_percentage) {
+      percent_print(p, p_max_size, value);
+    } else {
+      snprintf(p, p_max_size, "%d", value);
+    }
   } else if (str != nullptr) {
     snprintf(p, p_max_size, "%s", str);
     free_and_zero(str);
@@ -1039,7 +1063,8 @@ double get_nvidia_barval(struct text_object *obj) {
   int event_base;
   int error_base;
 
-  Display *dpy = nvdisplay ? nvdisplay : display;
+  auto nvdpy = nvidia_display.get_nvdisplay();
+  Display *dpy = nvdpy ? nvdpy.get() : display;
 
   if (!dpy) {
     NORM_ERR("%s: no display set (try setting nvidia_display)", __func__);

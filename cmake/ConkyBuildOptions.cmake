@@ -37,50 +37,19 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 # -std options for all build types
-set(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS}"
-    CACHE STRING "Flags used by the C compiler during all build types."
-    FORCE)
-set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_CXX_FLAGS}"
-    CACHE STRING "Flags used by the C++ compiler during all build types."
-    FORCE)
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MAINTAINER_MODE)
+  set(CMAKE_COMPILE_WARNING_AS_ERROR true)
   set(BUILD_TESTS true)
-  # some extra debug flags when in 'maintainer mode'
-  if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
-    # Some flags are only supported on GCC >= 7.0, such as -Wimplicit-
-    # fallthrough=2
-    set(
-      CMAKE_C_FLAGS_DEBUG
-      "-ggdb -Wall -W -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -pedantic -Werror -Wno-unknown-pragmas -Wno-error=pragmas -Wimplicit-fallthrough=2"
-      CACHE STRING "Flags used by the compiler during debug builds."
-      FORCE)
-    set(
-      CMAKE_CXX_FLAGS_DEBUG
-      "-ggdb -Wall -W -Wextra -Wunused -pedantic -Werror -Wno-format -Wno-unknown-pragmas -Wno-error=pragmas -Wimplicit-fallthrough=2"
-      CACHE STRING "Flags used by the compiler during debug builds."
-      FORCE)
-  else()
-    set(
-      CMAKE_C_FLAGS_DEBUG
-      "-ggdb -Wall -W -Wextra -Wunused -Wdeclaration-after-statement -Wundef -Wendif-labels -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Winline -Wmissing-noreturn -Wmissing-format-attribute -Wredundant-decls -pedantic -Werror -Wno-unknown-pragmas -Wno-error=pragmas"
-      CACHE STRING "Flags used by the compiler during debug builds."
-      FORCE)
-    set(
-      CMAKE_CXX_FLAGS_DEBUG
-      "-ggdb -Wall -W -Wextra -Wunused -pedantic -Werror -Wno-format -Wno-unknown-pragmas -Wno-error=pragmas"
-      CACHE STRING "Flags used by the compiler during debug builds."
-      FORCE)
-  endif()
-
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-      set(USING_CLANG true)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    endif()
 endif(MAINTAINER_MODE)
+
+# Always use libc++ when compiling w/ clang
+add_compile_options($<$<COMPILE_LANG_AND_ID:CXX,Clang>:-stdlib=libc++>)
+add_link_options($<$<COMPILE_LANG_AND_ID:CXX,Clang>:-stdlib=libc++>)
 
 option(CHECK_CODE_QUALITY "Check code formatting/quality with clang" false)
 
@@ -88,8 +57,10 @@ option(RELEASE "Build release package" false)
 mark_as_advanced(RELEASE)
 
 option(MAINTAINER_MODE "Enable maintainer mode" false)
+option(CODE_COVERAGE "Enable code coverage report generation" false)
 
 option(BUILD_DOCS "Build documentation" false)
+option(BUILD_EXTRAS "Build extras (includes syntax files for editors)" false)
 
 option(BUILD_I18N "Enable if you want internationalization support" true)
 if(BUILD_I18N)
@@ -180,6 +151,8 @@ else(BUILD_NCURSES)
     FORCE)
 endif(BUILD_NCURSES)
 
+option(BUILD_WAYLAND "Build Wayland support" false)
+
 option(BUILD_X11 "Build X11 support" true)
 if(BUILD_X11)
   option(OWN_WINDOW "Enable own_window support" true)
@@ -196,6 +169,7 @@ if(BUILD_X11)
   option(BUILD_XFT "Build Xft (freetype fonts) support" true)
   option(BUILD_IMLIB2 "Enable Imlib2 support" true)
   option(BUILD_XSHAPE "Enable Xshape support" true)
+  option(BUILD_MOUSE_EVENTS "Enable mouse event support" true)
 else(BUILD_X11)
   set(OWN_WINDOW false CACHE BOOL "Enable own_window support" FORCE)
   set(BUILD_XDAMAGE false CACHE BOOL "Build Xdamage support" FORCE)
@@ -204,8 +178,17 @@ else(BUILD_X11)
   set(BUILD_XFT false CACHE BOOL "Build Xft (freetype fonts) support" FORCE)
   set(BUILD_IMLIB2 false CACHE BOOL "Enable Imlib2 support" FORCE)
   set(BUILD_XSHAPE false CACHE BOOL "Enable Xshape support" FORCE)
+  set(BUILD_MOUSE_EVENTS false CACHE BOOL "Enable mouse event support" FORCE)
   set(BUILD_NVIDIA false)
 endif(BUILD_X11)
+
+# if we build with any GUI support
+if(BUILD_X11)
+  set(BUILD_GUI true)
+endif(BUILD_X11)
+if(BUILD_WAYLAND)
+  set(BUILD_GUI true)
+endif(BUILD_WAYLAND)
 
 if(OWN_WINDOW)
   option(BUILD_ARGB "Build ARGB (real transparency) support" true)
@@ -233,10 +216,10 @@ option(BUILD_CURL "Enable if you want Curl support" false)
 
 option(BUILD_RSS "Enable if you want RSS support" false)
 
-option(BUILD_WEATHER_METAR "Enable METAR weather support" true)
-if(BUILD_WEATHER_METAR OR BUILD_RSS)
+if(BUILD_RSS)
+  # if RSS is enabled, curl is required
   set(BUILD_CURL true)
-endif(BUILD_WEATHER_METAR OR BUILD_RSS)
+endif(BUILD_RSS)
 
 option(BUILD_APCUPSD "Enable APCUPSD support" true)
 
@@ -261,8 +244,6 @@ option(BUILD_PULSEAUDIO
 
 option(BUILD_INTEL_BACKLIGHT
        "Enable support for Intel backlight" false)
-
-option(BUILD_HSV_GRADIENT "Enable gradient in HSV colour space" true)
 
 message(STATUS "CMAKE_C_FLAGS: " ${CMAKE_C_FLAGS})
 message(STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
