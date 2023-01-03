@@ -2,6 +2,7 @@ conky (1.17.0-1) UNRELEASED; urgency=medium
 
   [ Vincent Cheng ]
   * New upstream release.
+  * Update build-deps for doc generation (pandoc, pyyaml, jinja2).
 
   [ Debian Janitor ]
   * debian/copyright: use spaces rather than tabs to start continuation lines.
