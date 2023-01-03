@@ -1,5 +1,5 @@
+build-std/extras/vim/syntax/conkyrc.vim usr/share/vim/addons/syntax/
 data/conky.conf etc/conky/
 data/conky_no_x11.conf etc/conky/
 debian/conky.py usr/share/apport/package-hooks/
 extras/vim/ftdetect/conkyrc.vim usr/share/vim/addons/ftdetect/
-extras/vim/syntax/conkyrc.vim usr/share/vim/addons/syntax/
