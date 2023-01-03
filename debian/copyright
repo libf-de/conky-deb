@@ -4,7 +4,7 @@ Upstream-Contact: Brenden Matthews <brenden@rty.ca>
 Source: https://github.com/brndnmtthws/conky
 
 Files: *
-Copyright: 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+Copyright: 2005-2023 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
            2004 Hannu Saransaari, Lauri Hakkarainen
            2005 Adi Zaimi, Dan Piponi <dan@tanelorn.demon.co.uk>
            2007 Toni Spets
@@ -14,6 +14,10 @@ Copyright: 2005-2009 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
            2008 Phil Sutter <phil@nwl.cc>
            2009 Yeon-Hyeong Yang <lbird94@gmail.com>
 License: GPL-3.0+
+
+Files: 3rdparty/toluapp/*
+Copyright: 2009 Ariel Manzur
+License: Expat
 
 Files: src/smapi.cc
        src/smapi.h
@@ -48,8 +52,27 @@ Copyright: 2005 Jason Tan <jtan325@gmail.com>
            2006 Steve Langasek, Laszlo Boszormenyi, Bartosz Fenski
            2007-2008 Kapil Hari Paranjape <kapil@debian.org>
            2009-2010 Cesare Tirabassi <norsetto@ubuntu.com>
-           2011-2022 Vincent Cheng <vcheng@debian.org>
+           2011-2023 Vincent Cheng <vcheng@debian.org>
 License: GPL-3.0+
+
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
 
 License: GPL-3.0+
  This program is free software: you can redistribute it and/or modify
