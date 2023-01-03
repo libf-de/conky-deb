@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+conky -q -c /usr/share/doc/conky-all/conky.conf -i 10
+
+echo "run: OK"

@@ -1,0 +1,7 @@
+Tests: conky-std
+Depends: conky-std, xauth, xvfb
+Restrictions: allow-stderr
+
+Tests: conky-all
+Depends: conky-all, xauth, xvfb
+Restrictions: allow-stderr
