@@ -3,6 +3,7 @@ conky (1.17.0-1) unstable; urgency=medium
   [ Vincent Cheng ]
   * New upstream release.
   * Add support for wayland in conky-std and conky-all.
+    - Add build-dep on libwayland-dev and wayland-protocols.
   * Update build-deps for doc generation (pandoc, pyyaml, jinja2).
   * Update standards version to 4.6.2, no changes needed.
 
