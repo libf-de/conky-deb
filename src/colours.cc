@@ -32,9 +32,7 @@
 #ifdef BUILD_X11
 #include "x11.h"
 #endif /*BUILD_X11*/
-#ifdef BUILD_WAYLAND
 #include "x11-color.h"
-#endif /*BUILD_WAYLAND*/
 
 /* precalculated: 31/255, and 63/255 */
 #define CONST_8_TO_5_BITS 0.12156862745098
@@ -87,8 +85,6 @@ unsigned int adjust_colours(unsigned int colour) {
   return colour;
 }
 
-#ifdef BUILD_GUI
-#ifdef BUILD_WAYLAND
 static int hex_nibble_value(char c) {
   if (c >= '0' && c <= '9') {
     return c - '0';
@@ -100,18 +96,30 @@ static int hex_nibble_value(char c) {
   return -1;
 }
 
-long manually_get_x11_color(const char *name) {
+Colour Colour::from_argb32(uint32_t argb) {
+  Colour out;
+  out.alpha = argb >> 24;
+  out.red = (argb >> 16) % 256;
+  out.green = (argb >> 8) % 256;
+  out.blue = argb % 256;
+  return out;
+}
+
+Colour error_colour { 0xff, 0x00, 0x00, 0xff };
+
+Colour parse_color(const char *name) {
   unsigned short r, g, b;
   size_t len = strlen(name);
   if (OsLookupColor(-1, name, len, &r, &g, &b)) {
-    return 0x000000ff | ((r & 0xff) << 24) | ((g & 0xff) << 16) |
-           ((b & 0xff) << 8);
+    Colour out = {(uint8_t)r, (uint8_t)g, (uint8_t)b, 0xff};
+    return out;
   }
   if (name[0] == '#') {
     name++;
     len--;
   }
   if (len == 6 || len == 8) {
+    bool skip_alpha = (len == 6);
     unsigned char argb[4] = {0xff, 0, 0, 0};
     for (size_t i = 0; i + 1 < len; i += 2) {
       int nib1 = hex_nibble_value(name[i]);
@@ -119,54 +127,20 @@ long manually_get_x11_color(const char *name) {
       if (nib1 < 0 || nib2 < 0) { goto err; }
       int val = (nib1 << 4) + nib2;
 
-      argb[3 - i / 2] = val;
+      argb[skip_alpha + i / 2] = val;
     }
-    long out;
-    memcpy(static_cast<void *>(&out), argb, 4);
+    Colour out;
+    out.alpha = argb[0];
+    out.red = argb[1];
+    out.green = argb[2];
+    out.blue = argb[3];
     return out;
   }
 err:
   NORM_ERR("can't parse X color '%s' (%d)", name, len);
-  return 0xFF00FF;
-}
-#endif /* BUILD_WAYLAND */
-
-long get_x11_color(const char *name) {
-#ifdef BUILD_X11
-#ifdef BUILD_WAYLAND
-  if (!display) { return manually_get_x11_color(name); }
-#endif /*BUILD_WAYLAND*/
-  assert(display != nullptr);
-  XColor color;
-
-  color.pixel = 0;
-  if (XParseColor(display, DefaultColormap(display, screen), name, &color) ==
-      0) {
-    /* lets check if it's a hex colour with the # missing in front
-     * if yes, then do something about it */
-    char newname[DEFAULT_TEXT_BUFFER_SIZE];
-
-    newname[0] = '#';
-    strncpy(&newname[1], name, DEFAULT_TEXT_BUFFER_SIZE - 1);
-    /* now lets try again */
-    if (XParseColor(display, DefaultColormap(display, screen), &newname[0],
-                    &color) == 0) {
-      NORM_ERR("can't parse X color '%s'", name);
-      return 0xFF00FF;
-    }
-  }
-  if (XAllocColor(display, DefaultColormap(display, screen), &color) == 0) {
-    NORM_ERR("can't allocate X color '%s'", name);
-  }
-
-  return static_cast<long>(color.pixel);
-#endif /*BUILD_X11*/
-#ifdef BUILD_WAYLAND
-  return manually_get_x11_color(name);
-#endif /*BUILD_WAYLAND*/
+  return error_colour;
 }
 
-long get_x11_color(const std::string &colour) {
-  return get_x11_color(colour.c_str());
+Colour parse_color(const std::string &colour) {
+  return parse_color(colour.c_str());
 }
-#endif /*BUILD_GUI*/

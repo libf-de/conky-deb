@@ -33,6 +33,7 @@
 #include "bsdapm.h"
 #include "build.h"
 #include "colours.h"
+#include "colour-settings.h"
 #include "combine.h"
 #include "diskio.h"
 #include "entropy.h"
@@ -403,7 +404,7 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
 
 #ifdef BUILD_GUI
   if (s[0] == '#') {
-    obj->data.l = get_x11_color(s);
+    obj->data.l = parse_color(s).to_argb32();
     obj->callbacks.print = &new_fg;
   } else
 #endif /* BUILD_GUI */
@@ -750,67 +751,50 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
 #endif /* BUILD_GUI */
   END OBJ(color, nullptr)
 #ifdef BUILD_GUI
-      if (out_to_gui(*state)) {
-    obj->data.l =
-        arg != nullptr ? get_x11_color(arg) : default_color.get(*state);
-    set_current_text_color(obj->data.l);
+  if (out_to_gui(*state)) {
+    Colour c = arg != nullptr ? parse_color(arg) : default_color.get(*state);
+    obj->data.l = c.to_argb32();
+    set_current_text_color(c);
   }
 #endif /* BUILD_GUI */
 #ifdef BUILD_NCURSES
   if (out_to_ncurses.get(*state)) {
-    obj->data.l = COLOR_WHITE;
-    if (arg != nullptr) {
-      if (strcasecmp(arg, "red") == 0) {
-        obj->data.l = COLOR_RED;
-      } else if (strcasecmp(arg, "green") == 0) {
-        obj->data.l = COLOR_GREEN;
-      } else if (strcasecmp(arg, "yellow") == 0) {
-        obj->data.l = COLOR_YELLOW;
-      } else if (strcasecmp(arg, "blue") == 0) {
-        obj->data.l = COLOR_BLUE;
-      } else if (strcasecmp(arg, "magenta") == 0) {
-        obj->data.l = COLOR_MAGENTA;
-      } else if (strcasecmp(arg, "cyan") == 0) {
-        obj->data.l = COLOR_CYAN;
-      } else if (strcasecmp(arg, "black") == 0) {
-        obj->data.l = COLOR_BLACK;
-      }
-    }
-    set_current_text_color(obj->data.l);
-    init_pair(obj->data.l, obj->data.l, COLOR_BLACK);
+    Colour c = arg != nullptr ? parse_color(arg) : default_color.get(*state);
+    obj->data.l = c.to_argb32();
+    set_current_text_color(c);
   }
 #endif /* BUILD_NCURSES */
   obj->callbacks.print = &new_fg;
 #ifdef BUILD_GUI
-  END OBJ(color0, nullptr) obj->data.l = color[0].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color0, nullptr) Colour c = color[0].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color1, nullptr) obj->data.l = color[1].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color1, nullptr) Colour c = color[1].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color2, nullptr) obj->data.l = color[2].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color2, nullptr) Colour c = color[2].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color3, nullptr) obj->data.l = color[3].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color3, nullptr) Colour c = color[3].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color4, nullptr) obj->data.l = color[4].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color4, nullptr) Colour c = color[4].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color5, nullptr) obj->data.l = color[5].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color5, nullptr) Colour c = color[5].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color6, nullptr) obj->data.l = color[6].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color6, nullptr) Colour c = color[6].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color7, nullptr) obj->data.l = color[7].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color7, nullptr) Colour c = color[7].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color8, nullptr) obj->data.l = color[8].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color8, nullptr) Colour c = color[8].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
-  END OBJ(color9, nullptr) obj->data.l = color[9].get(*state);
-  set_current_text_color(obj->data.l);
+  END OBJ(color9, nullptr) Colour c = color[9].get(*state);
+  obj->data.l = c.to_argb32(); set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(font, nullptr) scan_font(obj, arg);
   obj->callbacks.print = &new_font;
@@ -1455,13 +1439,15 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   END OBJ(shadecolor, nullptr)
 #ifdef BUILD_GUI
       obj->data.l =
-      arg != nullptr ? get_x11_color(arg) : default_shade_color.get(*state);
+      (arg != nullptr ? parse_color(arg) : default_shade_color.get(*state))
+        .to_argb32();
   obj->callbacks.print = &new_bg;
 #endif /* BUILD_GUI */
   END OBJ(outlinecolor, nullptr)
 #ifdef BUILD_GUI
       obj->data.l =
-      arg != nullptr ? get_x11_color(arg) : default_outline_color.get(*state);
+      (arg != nullptr ? parse_color(arg) : default_outline_color.get(*state))
+        .to_argb32();
   obj->callbacks.print = &new_outline;
 #endif /* BUILD_GUI */
   END OBJ(stippled_hr, nullptr)
