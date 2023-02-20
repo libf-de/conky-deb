@@ -20,7 +20,7 @@ Build-Depends:
  libiw-dev [linux-any],
  libkvm-dev [kfreebsd-any],
  liblua5.3-dev,
- libncurses5-dev,
+ libncurses-dev,
  libpulse-dev,
  librsvg2-dev (>= 2.52),
  libsystemd-dev [linux-any],
