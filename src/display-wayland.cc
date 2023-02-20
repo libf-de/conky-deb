@@ -166,7 +166,7 @@ void update_text();
 extern int need_to_update;
 int get_border_total();
 extern conky::range_config_setting<int> maximum_width;
-extern long current_color;
+extern Colour current_color;
 
 /* for pango_fonts */
 struct pango_font {
@@ -279,7 +279,7 @@ struct window {
   struct wl_shm *shm;
   struct wl_surface *surface;
   struct zwlr_layer_surface_v1 *layer_surface;
-  int scale;
+  int scale, pending_scale;
   cairo_surface_t *cairo_surface;
   cairo_t *cr;
   PangoLayout *layout;
@@ -324,7 +324,7 @@ static void output_done(void *data, struct wl_output *wl_output) {}
 void output_scale(void *data, struct wl_output *wl_output, int32_t factor) {
   /* For now, assume we have one output and adopt its scale unconditionally. */
   /* We should also re-render immediately when scale changes. */
-  global_window->scale = factor;
+  global_window->pending_scale = factor;
 }
 #endif
 
@@ -441,7 +441,6 @@ bool display_output_wayland::initialize() {
   struct wl_surface *surface =
       wl_compositor_create_surface(wl_globals.compositor);
   global_window = window_create(surface, wl_globals.shm, 1, 1);
-  global_window->scale = 1;
   window_allocate_buffer(global_window);
 
   global_window->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
@@ -451,7 +450,6 @@ bool display_output_wayland::initialize() {
   zwlr_layer_surface_v1_add_listener(global_window->layer_surface,
                                      &layer_surface_listener, nullptr);
 
-  wl_surface_set_buffer_scale(global_window->surface, global_window->scale);
   wl_surface_commit(global_window->surface);
   wl_display_roundtrip(global_display);
 
@@ -522,14 +520,20 @@ bool display_output_wayland::main_loop_wait(double t) {
 
     int fixed_size = 0;
 
+    bool scale_changed = global_window->scale != global_window->pending_scale;
+
     /* resize window if it isn't right size */
     if ((fixed_size == 0) && (text_width + 2 * border_total != width ||
-                              text_height + 2 * border_total != height)) {
+                              text_height + 2 * border_total != height ||
+                              scale_changed)) {
       /* clamp text_width to configured maximum */
       if (maximum_width.get(*state)) {
         int mw = global_window->scale * maximum_width.get(*state);
         if (text_width > mw && mw > 0) { text_width = mw; }
       }
+
+      /* pending scale will be applied by resizing the window */
+      global_window->scale = global_window->pending_scale;
 
       width = text_width + 2 * border_total;
       height = text_height + 2 * border_total;
@@ -661,19 +665,17 @@ void display_output_wayland::cleanup() {
   free_fonts(utf8_mode.get(*state));
 }
 
-void display_output_wayland::set_foreground_color(long c) {
-#ifdef BUILD_ARGB
-  current_color = (c & ~0xff) | own_window_argb_value.get(*state);
-#else
+void display_output_wayland::set_foreground_color(Colour c) {
   current_color = c;
+#ifdef BUILD_ARGB
+ current_color.alpha = own_window_argb_value.get(*state);
 #endif /* BUILD_ARGB */
-  uint8_t r = current_color >> 24;
-  uint8_t g = current_color >> 16;
-  uint8_t b = current_color >> 8;
-  uint8_t a = current_color;
   if (global_window->cr) {
-    cairo_set_source_rgba(global_window->cr, r / 255.0, g / 255.0, b / 255.0,
-                          a / 255.0);
+    cairo_set_source_rgba(global_window->cr,
+                          current_color.red / 255.0,
+                          current_color.green / 255.0,
+                          current_color.blue / 255.0,
+                          current_color.alpha / 255.0);
   }
 }
 
@@ -703,9 +705,9 @@ void display_output_wayland::draw_string_at(int x, int y, const char *s,
   adjust_coords(x, y);
   pango_layout_set_text(window->layout, s, strlen(s));
   cairo_save(window->cr);
-  uint8_t r = current_color >> 24;
-  uint8_t g = current_color >> 16;
-  uint8_t b = current_color >> 8;
+  uint8_t r = current_color.red;
+  uint8_t g = current_color.green;
+  uint8_t b = current_color.blue;
   unsigned int a = pango_fonts[selected_font].font_alpha;
   cairo_set_source_rgba(global_window->cr, r / 255.0, g / 255.0, b / 255.0,
                         a / 65535.);
@@ -798,24 +800,24 @@ void display_output_wayland::end_draw_stuff() {
 void display_output_wayland::clear_text(int exposures) {
   struct window *window = global_window;
   cairo_save(window->cr);
-  long color = 0;
+  Colour color;
 #ifdef OWN_WINDOW
   color = background_colour.get(*state);
   if (set_transparent.get(*state)) {
-    color &= ~0xff;
+    color.alpha = 0;
   } else {
 #ifdef BUILD_ARGB
-    color |= (own_window_argb_value.get(*state));
+    color.alpha = own_window_argb_value.get(*state);
 #else
-    color |= 0xff;
+    color.alpha = 0xff;
 #endif
   }
 #endif
-  uint8_t r = color >> 24;
-  uint8_t g = color >> 16;
-  uint8_t b = color >> 8;
-  uint8_t a = color;
-  cairo_set_source_rgba(window->cr, r / 255.0, g / 255.0, b / 255.0, a / 255.);
+  cairo_set_source_rgba(window->cr,
+                        color.red / 255.0,
+                        color.green / 255.0,
+                        color.blue / 255.0,
+                        color.alpha / 255.0);
   cairo_set_operator(window->cr, CAIRO_OPERATOR_SOURCE);
   cairo_paint(window->cr);
   cairo_restore(window->cr);
@@ -1040,18 +1042,19 @@ static cairo_surface_t *create_shm_surface_from_pool(
 
 void window_allocate_buffer(struct window *window) {
   assert(window->shm != nullptr);
+
+  int scale = window->pending_scale;
   struct shm_pool *pool;
   pool = shm_pool_create(window->shm, data_length_for_shm_surface(
-                                          &window->rectangle, window->scale));
+                                          &window->rectangle, scale));
   if (!pool) {
     fprintf(stderr, "could not allocate shm pool\n");
     return;
   }
 
   window->cairo_surface = create_shm_surface_from_pool(
-      window->shm, &window->rectangle, pool, window->scale);
-  cairo_surface_set_device_scale(window->cairo_surface, window->scale,
-                                 window->scale);
+      window->shm, &window->rectangle, pool, scale);
+  cairo_surface_set_device_scale(window->cairo_surface, scale, scale);
 
   if (!window->cairo_surface) {
     shm_pool_destroy(pool);
@@ -1078,7 +1081,8 @@ struct window *window_create(struct wl_surface *surface, struct wl_shm *shm,
   window->rectangle.y = 0;
   window->rectangle.width = width;
   window->rectangle.height = height;
-  window->scale = 1;
+  window->scale = 0;
+  window->pending_scale = 1;
 
   window->surface = surface;
   window->shm = shm;
@@ -1123,7 +1127,7 @@ void window_resize(struct window *window, int width, int height) {
 
 void window_commit_buffer(struct window *window) {
   assert(window->cairo_surface != nullptr);
-  wl_surface_set_buffer_scale(global_window->surface, global_window->scale);
+  wl_surface_set_buffer_scale(global_window->surface, global_window->pending_scale);
   wl_surface_attach(window->surface,
                     get_buffer_from_cairo_surface(window->cairo_surface), 0, 0);
   /* repaint all the pixels in the surface, change size to only repaint changed

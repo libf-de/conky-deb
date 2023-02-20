@@ -27,7 +27,9 @@
 #include <config.h>
 
 #include "conky.h"
+#include "colours.h"
 #include "display-ncurses.hh"
+#include "gui.h"
 #include "nc.h"
 
 #include <iostream>
@@ -60,6 +62,44 @@ extern void init_ncurses_output() {}
 
 #ifdef BUILD_NCURSES
 
+#define COLORS_BUILTIN 8
+
+Colour ncurses_colors[COLORS_BUILTIN + COLORS_CUSTOM] = {
+    {0x00, 0x00, 0x00, 0xff}, // BLACK
+    {0xff, 0x00, 0x00, 0xff}, // RED
+    {0x00, 0xff, 0x00, 0xff}, // GREEN
+    {0xff, 0xff, 0x00, 0xff}, // YELLOW
+    {0x00, 0x00, 0xff, 0xff}, // BLUE
+    {0xff, 0x00, 0xff, 0xff}, // MAGENTA
+    {0x00, 0xff, 0xff, 0xff}, // CYAN
+    {0xff, 0xff, 0xff, 0xff}, // WHITE
+};
+
+  // Find the nearest ncurses color.
+  int to_ncurses(const Colour& c) {
+    int mindiff = INT_MAX;
+    int best_nccolor = 0;
+    for (int nccolor = 0; nccolor < COLORS_BUILTIN + COLORS_CUSTOM; nccolor++) {
+      const Colour& other = ncurses_colors[nccolor];
+      int diff = abs(c.red - other.red) +
+                 abs(c.green - other.green) +
+                 abs(c.blue - other.blue);
+
+      if (diff < mindiff) {
+        mindiff = diff;
+        best_nccolor = nccolor;
+      }
+    }
+    return best_nccolor;
+  }
+
+Colour from_ncurses(int nccolor) {
+    if (nccolor >= 0 && nccolor < COLORS_BUILTIN + COLORS_CUSTOM) {
+        return ncurses_colors[nccolor];
+    }
+    return error_colour;
+}
+
 display_output_ncurses::display_output_ncurses()
     : display_output_console("ncurses") {
   priority = 1;
@@ -74,14 +114,22 @@ bool display_output_ncurses::detect() {
 }
 
 bool display_output_ncurses::initialize() {
+  for(int i = 0; i < COLORS_CUSTOM; i++) {
+    Colour c = color[i].get(*state);
+    init_color(COLORS_BUILTIN + i, (1000*c.red)/255, (1000*c.green)/255, (1000*c.blue)/255);
+    ncurses_colors[COLORS_BUILTIN + i] = c;
+  }
+
   is_active = ncurses_window != nullptr;
   return is_active;
 }
 
 bool display_output_ncurses::shutdown() { return false; }
 
-void display_output_ncurses::set_foreground_color(long c) {
-  attron(COLOR_PAIR(c));
+void display_output_ncurses::set_foreground_color(Colour c) {
+  int nccolor = to_ncurses(c);
+  init_pair(nccolor, nccolor, COLOR_BLACK);
+  attron(COLOR_PAIR(nccolor));
 }
 
 void display_output_ncurses::begin_draw_text() {
