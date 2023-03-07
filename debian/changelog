@@ -1,3 +1,10 @@
+conky (1.18.3-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fix memory leak by caching X11 pixel values. (Closes: #1032259)
+
+ -- Vincent Cheng <vcheng@debian.org>  Mon, 06 Mar 2023 23:06:03 -0800
+
 conky (1.18.1-1) unstable; urgency=medium
 
   * New upstream release.
