@@ -3,9 +3,15 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - web/**
+      - doc/**
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - web/**
+      - doc/**
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -39,7 +45,8 @@ jobs:
       - run: mkdir build
       - name: Configure with CMake
         working-directory: build
-        run: cmake .. -G Ninja                 \
+        run: |
+          cmake .. -G Ninja                    \
           -DMAINTAINER_MODE=ON                 \
           -DBUILD_WAYLAND=OFF                  \
           -DBUILD_TESTS=ON
