@@ -32,8 +32,8 @@
 #include "algebra.h"
 #include "bsdapm.h"
 #include "build.h"
-#include "colours.h"
 #include "colour-settings.h"
+#include "colours.h"
 #include "combine.h"
 #include "diskio.h"
 #include "entropy.h"
@@ -725,11 +725,9 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   DBGP2("Adding $cpubar for CPU %d", obj->data.i);
 #ifdef BUILD_GUI
   END OBJ(cpugraph, &update_cpu_usage) get_cpu_count();
-  char *buf = nullptr;
   SCAN_CPU(arg, obj->data.i);
-  buf = scan_graph(obj, arg, 1);
+  scan_graph(obj, arg, 1);
   DBGP2("Adding $cpugraph for CPU %d", obj->data.i);
-  free_and_zero(buf);
   obj->callbacks.graphval = &cpu_barval;
   obj->callbacks.free = &free_cpu;
   END OBJ(loadgraph, &update_load_average) scan_loadgraph_arg(obj, arg);
@@ -751,7 +749,7 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
 #endif /* BUILD_GUI */
   END OBJ(color, nullptr)
 #ifdef BUILD_GUI
-  if (out_to_gui(*state)) {
+      if (out_to_gui(*state)) {
     Colour c = arg != nullptr ? parse_color(arg) : default_color.get(*state);
     obj->data.l = c.to_argb32();
     set_current_text_color(c);
@@ -767,34 +765,44 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   obj->callbacks.print = &new_fg;
 #ifdef BUILD_GUI
   END OBJ(color0, nullptr) Colour c = color[0].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color1, nullptr) Colour c = color[1].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color2, nullptr) Colour c = color[2].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color3, nullptr) Colour c = color[3].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color4, nullptr) Colour c = color[4].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color5, nullptr) Colour c = color[5].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color6, nullptr) Colour c = color[6].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color7, nullptr) Colour c = color[7].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color8, nullptr) Colour c = color[8].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(color9, nullptr) Colour c = color[9].get(*state);
-  obj->data.l = c.to_argb32(); set_current_text_color(c);
+  obj->data.l = c.to_argb32();
+  set_current_text_color(c);
   obj->callbacks.print = &new_fg;
   END OBJ(font, nullptr) scan_font(obj, arg);
   obj->callbacks.print = &new_font;
@@ -1234,13 +1242,9 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   END OBJ(memwithbuffersbar, &update_meminfo) scan_bar(obj, arg, 1);
   obj->callbacks.barval = &mem_with_buffers_barval;
 #ifdef BUILD_GUI
-  END OBJ(memgraph, &update_meminfo) char *buf = nullptr;
-  buf = scan_graph(obj, arg, 1);
-  free_and_zero(buf);
+  END OBJ(memgraph, &update_meminfo) scan_graph(obj, arg, 1);
   obj->callbacks.graphval = &mem_barval;
-  END OBJ(memwithbuffersgraph, &update_meminfo) char *buf = nullptr;
-  buf = scan_graph(obj, arg, 1);
-  free_and_zero(buf);
+  END OBJ(memwithbuffersgraph, &update_meminfo) scan_graph(obj, arg, 1);
   obj->callbacks.graphval = &mem_with_buffers_barval;
 #endif /* BUILD_GUI*/
 #ifdef HAVE_SOME_SOUNDCARD_H
@@ -1440,14 +1444,14 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
 #ifdef BUILD_GUI
       obj->data.l =
       (arg != nullptr ? parse_color(arg) : default_shade_color.get(*state))
-        .to_argb32();
+          .to_argb32();
   obj->callbacks.print = &new_bg;
 #endif /* BUILD_GUI */
   END OBJ(outlinecolor, nullptr)
 #ifdef BUILD_GUI
       obj->data.l =
       (arg != nullptr ? parse_color(arg) : default_outline_color.get(*state))
-        .to_argb32();
+          .to_argb32();
   obj->callbacks.print = &new_outline;
 #endif /* BUILD_GUI */
   END OBJ(stippled_hr, nullptr)
@@ -1819,8 +1823,9 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   END OBJ_ARG(
       lua_graph, nullptr,
       "lua_graph needs arguments: <function name> [height],[width] [gradient "
-      "colour 1] [gradient colour 2] [scale] [-t] [-l]") char *buf = nullptr;
-  buf = scan_graph(obj, arg, 100);
+      "colour 1] [gradient colour 2] [scale] [-t] [-l]") auto [buf, skip] =
+      scan_command(arg);
+  scan_graph(obj, arg + skip, 100);
   if (buf != nullptr) {
     obj->data.s = buf;
   } else {
@@ -1957,9 +1962,7 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   END OBJ(apcupsd_loadbar, &update_apcupsd) scan_bar(obj, arg, 100);
   obj->callbacks.barval = &apcupsd_loadbarval;
 #ifdef BUILD_GUI
-  END OBJ(apcupsd_loadgraph, &update_apcupsd) char *buf = nullptr;
-  buf = scan_graph(obj, arg, 100);
-  free_and_zero(buf);
+  END OBJ(apcupsd_loadgraph, &update_apcupsd) scan_graph(obj, arg, 100);
   obj->callbacks.graphval = &apcupsd_loadbarval;
   END OBJ(apcupsd_loadgauge, &update_apcupsd) scan_gauge(obj, arg, 100);
   obj->callbacks.gaugeval = &apcupsd_loadbarval;
