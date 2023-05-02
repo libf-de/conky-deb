@@ -30,3 +30,7 @@ lua/libimlib2.c
 
 # Ignore nix stuff
 /result
+
+# Ignore Debian Logs
+debian/*.log
+debian/debhelper-build-stamp
