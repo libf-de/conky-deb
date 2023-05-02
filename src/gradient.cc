@@ -57,6 +57,7 @@ Colour gradient_factory::convert_to_rgb(long *const array) {
   c.red = scaled_rgb[0] / SCALE;
   c.green = scaled_rgb[1] / SCALE;
   c.blue = scaled_rgb[2] / SCALE;
+  c.alpha = 255;
 
   return c;
 }
@@ -156,7 +157,7 @@ void hsv_gradient_factory::convert_from_scaled_rgb(long *const scaled,
   auto value = get_value(scaled);
   auto minimum = get_minimum(scaled);
   auto chroma = value - minimum;
-  auto saturation = (SCALE360 * chroma) / value;
+  long saturation = (SCALE360 * (uint64_t)chroma) / value;
 
   target[0] = get_hue(scaled, chroma, value);
   target[1] = saturation;
@@ -199,7 +200,7 @@ namespace {
 // Using Rec.2020 color space
 // Y' = 0.2627 x R + 0.6780 x G + 0.0593 x B
 long get_luma(long *const rgb) {
-  return 360L * (2627L * rgb[0] + 6780L * rgb[1] + 593L * rgb[2]) / 10000L;
+  return 360L * (uint64_t)(2627L * rgb[0] + 6780L * rgb[1] + 593L * rgb[2]) / 10000L;
 }
 
 // Using Rec.2020 color space
